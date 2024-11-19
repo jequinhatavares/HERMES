@@ -2,12 +2,8 @@
 #include "mywifi.h"
 
 
-
-
 WiFiServer  _server = WiFiServer(SERVER_PORT);
 WiFiClient  _client;
-
-
 
 //uint64_t id = ESP.getEfuseMac();
 
