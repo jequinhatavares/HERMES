@@ -1,5 +1,7 @@
 #include "mywifi.h"
 
+IPAddress myIP;
+
 
 String Get_WiFiStatus(int Status){
     switch(Status){
@@ -76,7 +78,6 @@ void searchAP(){
         // Attempt to connect to the found network
         WiFi.begin( current_ssid.c_str() , PASS);
 
-        int wait = 1500;
         // Wait for the Wi-Fi connection to establish or until timeout is reached
         WiFiStatus = WiFi.status();
         while(WiFiStatus != WL_CONNECTED){

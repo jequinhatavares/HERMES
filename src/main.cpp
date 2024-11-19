@@ -29,8 +29,7 @@ void setup(){
 
     searchAP();
 
-    Serial.print("My IP ");
-    Serial.print(myIP);
+
 }
 
 void loop(){

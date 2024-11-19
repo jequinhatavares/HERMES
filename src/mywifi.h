@@ -11,7 +11,7 @@
 #include <WiFiClient.h>
 #include <WiFiServer.h>
 
-IPAddress myIP;
+
 
 #if defined(ESP32)
 #include <WiFi.h>
