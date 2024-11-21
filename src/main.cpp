@@ -1,6 +1,6 @@
 #include <Arduino.h>
-#include "mywifi.h"
-
+#include <wifi_hal.h>
+//#include "../lib/wifi_hal/wifi_hal.h"
 
 WiFiServer  _server = WiFiServer(SERVER_PORT);
 WiFiClient  _client;
