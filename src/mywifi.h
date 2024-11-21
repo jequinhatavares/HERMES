@@ -23,12 +23,31 @@
 
 String Get_WiFiStatus(int Status);
 
+#if defined(ESP8266)
 void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnected& info);
+
+void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisconnected& info);
 
 void onStationModeGotIPHandler(const WiFiEventStationModeGotIP& info);
 
-void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& info);
+void onStationModeConnectedHandler(const WiFiEventStationModeConnected& info);
 
+void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& info);
+#endif
+
+#if defined(ESP32)
+
+void onSoftAPModeStationConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info);
+
+void onSoftAPModeStationDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info);
+
+void onStationModeGotIPHandler(WiFiEvent_t event, WiFiEventInfo_t info);
+
+void onStationModeConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info);
+
+void onStationModeDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info);
+
+#endif
 void startWifiAP();
 
 void searchAP();

@@ -32,7 +32,7 @@ void setup(){
 }
 
 void loop(){
-
+    String response;
     //Serial.print("Search for clients");
     // Act like an AP and wait for incoming requests
     WiFiClient client = _server.accept();
@@ -42,6 +42,8 @@ void loop(){
             Serial.println("Connected to client");
             String request = client.readStringUntil('\r');
             printf("Received: %s\n", request.c_str());
+            response = String("Response from AP:");
+            client.println(response.c_str());
         }
 
         // close the connection:

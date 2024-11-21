@@ -1,10 +1,13 @@
 #include "mywifi.h"
 
 IPAddress myIP;
-
+#ifdef ESP8266
 WiFiEventHandler wifiConnectHandler;
+WiFiEventHandler wifiAPLoseSta;
+WiFiEventHandler wifiSTAConnectedHandler;
 WiFiEventHandler wifiDisconnectHandler;
 WiFiEventHandler wifiAPGotSta;
+#endif
 
 String Get_WiFiStatus(int Status){
     switch(Status){
@@ -27,22 +30,57 @@ String Get_WiFiStatus(int Status){
     }
 }
 
-
+#ifdef ESP8266
 void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnected& info) {
-    Serial.println("Connected To The WiFi Network\n");
+    Serial.println("[WIFI_EVENTS] Got station connected\n");
+}
+
+void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisconnected& info) {
+    Serial.println("[WIFI_EVENTS] Got station disconnected\n");
 }
 
 void onStationModeGotIPHandler(const WiFiEventStationModeGotIP& info) {
-    Serial.print("Local ESP32 IP: ");
+    Serial.print("[WIFI_EVENTS] Local ESP8266 IP: ");
     Serial.println(WiFi.localIP());
 }
-
+void onStationModeConnectedHandler(const WiFiEventStationModeConnected& info) {
+    Serial.println("[WIFI_EVENTS] Connected to AP\n");
+    //WiFi.begin(SSID_PREFIX,PASS);
+}
 void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& info) {
-    Serial.println("Disconnected From WiFi Network\n");
+    Serial.println("[WIFI_EVENTS] Disconnected From AP\n");
+    Serial.print("WiFi lost connection. Reason: ");
+    Serial.println(info.reason);
     // Attempt Re-Connection
     //WiFi.begin(SSID_PREFIX,PASS);
 }
+#endif
 
+#ifdef ESP32
+void onSoftAPModeStationConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info){
+  Serial.println("[WIFI_EVENTS] Got station connected\n");
+}
+void onSoftAPModeStationDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info) {
+    Serial.println("[WIFI_EVENTS] Got station disconnected\n");
+}
+
+void onStationModeGotIPHandler(WiFiEvent_t event, WiFiEventInfo_t info){
+  Serial.println("[WIFI_EVENTS] Local ESP32 IP: ");
+  Serial.println(WiFi.localIP());
+}
+void onStationModeConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info) {
+    Serial.println("[WIFI_EVENTS] Connected to AP\n");
+    //WiFi.begin(SSID_PREFIX,PASS);
+}
+
+void onStationModeDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info){
+  Serial.println("[WIFI_EVENTS] Disconnected From AP\n");
+  Serial.print("WiFi lost connection. Reason: ");
+  Serial.println(info.wifi_sta_disconnected.reason);
+  //Serial.println("Trying to Reconnect");
+  //WiFi.begin(ssid, password);
+}
+#endif
 
 void startWifiAP(){
     // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
@@ -50,11 +88,22 @@ void startWifiAP(){
     // Start the Access Point with the SSID defined in SSID_PREFIX
     WiFi.softAP(SSID_PREFIX, PASS);
 
+    #ifdef ESP8266
     //WiFi callback handlers
     wifiAPGotSta = WiFi.onSoftAPModeStationConnected(onSoftAPModeStationConnectedHandler);
+    wifiAPLoseSta = WiFi.onSoftAPModeStationDisconnected(onSoftAPModeStationDisconnectedHandler);
     wifiConnectHandler = WiFi.onStationModeGotIP(onStationModeGotIPHandler);
+    wifiSTAConnectedHandler = WiFi.onStationModeConnected(onStationModeConnectedHandler);
     wifiDisconnectHandler = WiFi.onStationModeDisconnected(onStationModeDisconnectedHandler);
-    // Begin the server to listen for client connections
+    #endif
+
+    #ifdef ESP32
+    WiFi.onEvent(onSoftAPModeStationConnectedHandler, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_CONNECTED);
+    WiFi.onEvent(onSoftAPModeStationDisconnectedHandler, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+    WiFi.onEvent(onStationModeGotIPHandler, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
+    WiFi.onEvent(onStationModeConnectedHandler, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_CONNECTED);
+    WiFi.onEvent(onStationModeDisconnectedHandler, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+    #endif
 
 }
 
