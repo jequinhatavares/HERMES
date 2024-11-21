@@ -2,7 +2,11 @@
 
 IPAddress myIP;
 
-
+/**
+ *
+ * @param Status
+ * @return
+ */
 String Get_WiFiStatus(int Status){
     switch(Status){
         case WL_IDLE_STATUS:
@@ -31,6 +35,8 @@ void startWifiAP(){
     WiFi.mode(WIFI_AP_STA);
     // Start the Access Point with the SSID defined in SSID_PREFIX
     WiFi.softAP(SSID_PREFIX, PASS);
+    //Init Wifi Event Handlers
+    initWifiEventHandlers();
 
 }
 

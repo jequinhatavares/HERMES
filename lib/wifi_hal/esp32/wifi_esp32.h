@@ -14,5 +14,7 @@ void onStationModeConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info);
 
 void onStationModeDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info);
 
+void initWifiEventHandlers();
+
 #endif//ESP32
 #endif //ESP32WIFI_H

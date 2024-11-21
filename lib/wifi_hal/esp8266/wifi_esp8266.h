@@ -12,5 +12,7 @@ void onStationModeGotIPHandler(const WiFiEventStationModeGotIP& info);
 void onStationModeConnectedHandler(const WiFiEventStationModeConnected& info);
 
 void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& info);
+
+void initWifiEventHandlers();
 #endif
 #endif //JESSICA_WIFIROUTING_ESP8266WIFI_H
