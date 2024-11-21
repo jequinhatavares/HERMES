@@ -7,7 +7,10 @@ WiFiClient  _client;
 
 //uint64_t id = ESP.getEfuseMac();
 
-
+/***void WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info){
+    Serial.println("Connected to AP successfully!");
+    WiFi.onEvent(WiFiStationConnected, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_CONNECTED);
+***/
 void setup(){
     Serial.begin(115200);
     #ifdef ESP32

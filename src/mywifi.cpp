@@ -2,6 +2,9 @@
 
 IPAddress myIP;
 
+WiFiEventHandler wifiConnectHandler;
+WiFiEventHandler wifiDisconnectHandler;
+WiFiEventHandler wifiAPGotSta;
 
 String Get_WiFiStatus(int Status){
     switch(Status){
@@ -40,6 +43,7 @@ void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& in
     //WiFi.begin(SSID_PREFIX,PASS);
 }
 
+
 void startWifiAP(){
     // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
     WiFi.mode(WIFI_AP_STA);
@@ -47,9 +51,9 @@ void startWifiAP(){
     WiFi.softAP(SSID_PREFIX, PASS);
 
     //WiFi callback handlers
-    WiFi.onSoftAPModeStationConnected(onSoftAPModeStationConnectedHandler);
-    WiFi.onStationModeGotIP(onStationModeGotIPHandler);
-    WiFi. onStationModeDisconnected(onStationModeDisconnectedHandler);
+    wifiAPGotSta = WiFi.onSoftAPModeStationConnected(onSoftAPModeStationConnectedHandler);
+    wifiConnectHandler = WiFi.onStationModeGotIP(onStationModeGotIPHandler);
+    wifiDisconnectHandler = WiFi.onStationModeDisconnected(onStationModeDisconnectedHandler);
     // Begin the server to listen for client connections
 
 }
