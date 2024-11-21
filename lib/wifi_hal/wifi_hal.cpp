@@ -38,6 +38,8 @@ void startWifiAP(){
     //Init Wifi Event Handlers
     initWifiEventHandlers();
 
+    Serial.printf("My MAC: %s", WiFi.macAddress().c_str());
+
 }
 
 
@@ -92,7 +94,7 @@ void searchAP(){
         }
         myIP = WiFi.localIP();
         //TODO send message to AP the connection
-        message = String ("Hello" ) + String( myIP.toString().c_str());
+        message = String ("Hello" ) + String( WiFi.macAddress());
         sendMessage(message,client);
         //client.stop(); //Dont disconect
         //WiFi.disconnect();
