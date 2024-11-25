@@ -11,6 +11,9 @@
 #include <WiFiClient.h>
 #include <WiFiServer.h>
 
+extern WiFiClient parent;
+extern bool initializeAP;
+
 #if defined(ESP8266)
     #include "esp8266/wifi_esp8266.h"
 #endif
@@ -19,16 +22,25 @@
     #include "esp32/wifi_esp32.h"
 #endif
 
+typedef struct List_t {
+    String item[10];
+    int len = 0;
+} List;
 
 String Get_WiFiStatus(int Status);
 
 void startWifiAP();
 
-void searchAP();
+List searchAP();
 
-bool sendMessage(String message, WiFiClient curr_client);
+//bool sendMessage(String message, WiFiClient curr_client);
 
 bool waitForClient(WiFiClient curr_client, int max_wait);
 
+void connectAP(const char*);
+
+IPAddress getGatewayIP();
+
+IPAddress getMyIP();
 
 #endif //WIFI_H

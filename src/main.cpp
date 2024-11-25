@@ -1,10 +1,14 @@
 #include <Arduino.h>
 #include <wifi_hal.h>
+#include <transport_hal.h>
 //#include "../lib/wifi_hal/wifi_hal.h"
 
-WiFiServer  _server = WiFiServer(SERVER_PORT);
-WiFiClient  _client;
 
+#define MAX_CLIENTS 4
+WiFiClient clients[MAX_CLIENTS];
+int curr_client = 0;
+
+//bool initializeAP;
 //uint64_t id = ESP.getEfuseMac();
 
 /***void WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info){
@@ -27,38 +31,46 @@ void setup(){
 
     startWifiAP();
 
-    _server.begin();
+    //initializeAP = false;
 
-    searchAP();
+    /*const char** ssids = searchAP();
+    for (int i=0; i<10; i++){
+        Serial.printf("Found SSID: %s", ssids[i]);
+    }*/
 
+    List list = searchAP();
+    for (int i=0; i<list.len; i++){
+        Serial.printf("Found SSID: %s\n", list.item[i].c_str());
+    }
+
+    if(list.len != 0){
+        // choose a prefered parent
+        connectAP(list.item[0].c_str());
+        begin_transport();
+        Serial.printf("Connected. MyIP: %s; Gateway: %s\n", getMyIP().toString().c_str(), getGatewayIP().toString().c_str());
+
+        char msg[50] = "Hello, from your son";
+        IPAddress gateway = getGatewayIP();
+        sendMessage(gateway, msg);
+        //Serial.print("AP initialized\n");
+    } else {
+        Serial.print("Not Find any AP, must be root\n");
+        begin_transport();
+    }
+    WiFi.mode(WIFI_AP_STA);
 }
 
+//WiFiClient client;
+bool client_defined = false;
+char buffer[256] = "";
 void loop(){
-    String response;
     // Act like an AP and wait for incoming requests
-    WiFiClient client = _server.accept();
-    if (client) {
-
-        if (client.connected()) {
-            Serial.println("Connected to client\n");
-            String request = client.readStringUntil('\r');
-            printf("Received: %s\n", request.c_str());
-        }
-
-        if (waitForClient(client, 1500)) {
-            Serial.print("Sending message to client\n");
-            response = String("HELLO from AP:");
-            client.println(response.c_str());
-        }
-        // close the connection:
-        client.stop();
-    }
-    count ++;
-    //Send message to APS
-    if(count == 1500){
-        //Trying to send message to the AP
-        //_server.send("Periodic Check from AP\n");
-        _client.write("Hello from client");
-        count = 0;
+    int packet_size = incomingMessage();
+    if (packet_size > 0){
+        Serial.printf("PacketSize: %d\n", packet_size);
+        Serial.print("Theres incoming messages\n");
+        receiveMessage(buffer);
+        Serial.printf("Received: %s", buffer);
+        sendMessage(Udp.remoteIP(),"echo");
     }
 }

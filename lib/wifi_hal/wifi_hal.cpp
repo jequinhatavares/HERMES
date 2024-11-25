@@ -1,5 +1,8 @@
 #include "wifi_hal.h"
 
+//WiFiClient parent;
+//bool initializeAP;
+
 IPAddress myIP;
 
 /**
@@ -54,86 +57,78 @@ bool waitForClient(WiFiClient curr_client, int max_wait)
 
     return true;
 }
+/***void client(){
+    // Connect to the choosen AP
+    if (!parent.connect(SERVER_IP_ADDR, SERVER_PORT)){
+        return;
+    }
+    else{
+        //parent = client;
+        initializeAP = true;
+    }
+    myIP = WiFi.localIP();
+    //TODO send message to AP the connection
+    message = String ("Hello" ) + String( WiFi.macAddress());
 
-void searchAP(){
-    int n = WiFi.scanNetworks();//Number of scanned wifi networks
-    String message;
-    bool inicializedAP = false;
-    int WiFiStatus;
-
-    Serial.printf("Number of scanned Networks: %i\n",n);
-
-    for (int i = 0; i < n; ++i) {
-        String current_ssid = WiFi.SSID(i);
-        Serial.printf("SSID: %s\n",current_ssid.c_str());
-        if(current_ssid != "JessicaNode"){
-            continue;
-        }
-
-        //TODO Save the RSSI: WiFi.RSSI(i)
-        WiFi.mode(WIFI_STA);
-        //Connect to node
-        WiFiClient client;
-
-        // Attempt to connect to the found network
-        WiFi.begin( current_ssid.c_str() , PASS);
-
-        // Wait for the Wi-Fi connection to establish or until timeout is reached
-        WiFiStatus = WiFi.status();
-        while(WiFiStatus != WL_CONNECTED){
-            delay(150);
-            WiFiStatus = WiFi.status();
-            Serial.println(Get_WiFiStatus(WiFiStatus));
-        }
-
-        /***#ifdef ESP32
-        if (WiFi.status() == WL_CONNECT_FAILED){
-            Serial.print("Attempting automatic reconnect\n");
-            WiFi.disconnect(true);
-            delay(250);
-            WiFi.begin( current_ssid.c_str(), PASS);
-        }
-        #endif***/
-
-        // Check if the connection was unsuccessful after the timeout
-
-        // Connect to the choosen AP
-        if (!client.connect(SERVER_IP_ADDR, SERVER_PORT)){
-            return;
-        }
-        else{
-            inicializedAP = true;
-        }
-        myIP = WiFi.localIP();
-        //TODO send message to AP the connection
-        message = String ("Hello" ) + String( WiFi.macAddress());
-
-        Serial.print("Sending message to AP\n");
-        sendMessage(message,client);
-        if (waitForClient(client, 1000)){
-            String response = client.readStringUntil('\r');
-            client.readStringUntil('\n');
-            Serial.printf("Received from AP:  %s\n",response.c_str());
-        }
-
-
-        //client.stop(); //Dont disconect
-        //WiFi.disconnect();
-
+    Serial.print("Sending message to AP\n");
+    sendMessage(message,parent);
+    if (waitForClient(parent, 1000)){
+        String response = parent.readStringUntil('\r');
+        parent.readStringUntil('\n');
+        Serial.printf("Received from AP:  %s\n",response.c_str());
     }
 
-    WiFi.mode(WIFI_AP_STA);
 
-    // Delete the scan result to free memory for code below.
+    //client.stop(); //Dont disconect
+    //WiFi.disconnect();
+}***/
+
+List searchAP(){
+    int n = WiFi.scanNetworks();//Number of scanned wifi networks
+    String message;
+    int WiFiStatus;
+    List listAPs;
+
+    Serial.printf("Number of scanned Networks: %i\n",n);
+    for (int i = 0; i < n; ++i) {
+        String current_ssid = WiFi.SSID(i);
+        Serial.printf("SSID: %s\n", current_ssid.c_str());
+        if (current_ssid != "JessicaNode") {
+            continue;
+        }
+        //return current_ssid.c_str();
+        listAPs.item[listAPs.len] = const_cast<char*>(current_ssid.c_str());
+        listAPs.len++;
+    }
+   // Delete the scan result to free memory for code below.
     WiFi.scanDelete();
-    if(inicializedAP){
-        Serial.print("AP inicialized\n");
-    }else{Serial.print("Not Find any AP, must be root\n");}
-
+    return listAPs;
+    //return listAPs;
 }
-
+/*
 bool sendMessage(String message,  WiFiClient curr_client)
 {
     curr_client.println(message.c_str());
     return true;
+}*/
+
+void connectAP(const char * SSID) {
+
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(SSID, PASS);
+
+    // Wait for the Wi-Fi connection to establish or until timeout is reached
+    while(WiFi.status() != WL_CONNECTED){
+        delay(150);
+        Serial.println(Get_WiFiStatus(WiFi.status()));
+    }
+
+}
+
+IPAddress getGatewayIP(){
+    return WiFi.gatewayIP();
+}
+
+IPAddress getMyIP(){
+    return WiFi.localIP();
 }
