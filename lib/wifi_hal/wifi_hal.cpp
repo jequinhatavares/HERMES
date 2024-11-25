@@ -42,6 +42,18 @@ void startWifiAP(){
 
 }
 
+bool waitForClient(WiFiClient curr_client, int max_wait)
+{
+    int wait = max_wait;
+    while(curr_client.connected() && !curr_client.available() && wait--)
+        delay(3);
+
+    /* Return false if the client isn't ready to communicate */
+    if (WiFi.status() == WL_DISCONNECTED || !curr_client.connected())
+        return false;
+
+    return true;
+}
 
 void searchAP(){
     int n = WiFi.scanNetworks();//Number of scanned wifi networks
@@ -95,7 +107,16 @@ void searchAP(){
         myIP = WiFi.localIP();
         //TODO send message to AP the connection
         message = String ("Hello" ) + String( WiFi.macAddress());
+
+        Serial.print("Sending message to AP\n");
         sendMessage(message,client);
+        if (waitForClient(client, 1000)){
+            String response = client.readStringUntil('\r');
+            client.readStringUntil('\n');
+            Serial.printf("Received from AP:  %s\n",response.c_str());
+        }
+
+
         //client.stop(); //Dont disconect
         //WiFi.disconnect();
 

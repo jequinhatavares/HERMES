@@ -28,5 +28,7 @@ void searchAP();
 
 bool sendMessage(String message, WiFiClient curr_client);
 
+bool waitForClient(WiFiClient curr_client, int max_wait);
+
 
 #endif //WIFI_H
