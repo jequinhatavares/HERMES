@@ -2,11 +2,13 @@
 #include <wifi_hal.h>
 #include <transport_hal.h>
 //#include "../lib/wifi_hal/wifi_hal.h"
-
+//#include "../lib/transport_hal/esp32/udp_esp32.h"
 
 #define MAX_CLIENTS 4
 WiFiClient clients[MAX_CLIENTS];
 int curr_client = 0;
+
+//WiFiUDP Udp;
 
 //bool initializeAP;
 //uint64_t id = ESP.getEfuseMac();
@@ -71,6 +73,6 @@ void loop(){
         Serial.print("Theres incoming messages\n");
         receiveMessage(buffer);
         Serial.printf("Received: %s", buffer);
-        sendMessage(Udp.remoteIP(),"echo");
+        //sendMessage(Udp.remoteIP(),"echo");
     }
 }

@@ -22,7 +22,7 @@ extern bool initializeAP;
     #include "esp32/wifi_esp32.h"
 #endif
 
-typedef struct List_t {
+typedef struct List{
     String item[10];
     int len = 0;
 } List;

@@ -2,20 +2,13 @@
 #ifndef TRANSPORT_HAL_H
 #define TRANSPORT_HAL_H
 
-#define UDP_PORT  500
+#define UDP_PORT 500
 
-#ifdef ESP8266
-    #include <WiFiUdp.h>
+#if defined(ESP32)
+    #include "esp32/udp_esp32.h"
 #endif
-#ifdef ESP32
-    #include <WiFiUdp.h>
+#if defined(ESP8266)
+    #include "esp8266/udp_esp8266.h"
 #endif
-
-extern WiFiUDP Udp;
-
-int incomingMessage();
-void receiveMessage(char* buffer);
-void sendMessage(IPAddress, const char *);
-void begin_transport();
 
 #endif //TRANSPORT_HAL_H

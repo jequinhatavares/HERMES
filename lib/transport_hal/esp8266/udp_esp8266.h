@@ -1,0 +1,17 @@
+#ifndef UDP_ESP8266_H
+#define UDP_ESP8266_H
+#ifdef ESP8266
+
+#include <WiFiUdp.h>
+
+#define UDP_PORT 500
+
+extern WiFiUDP Udp;
+
+void sendMessage(IPAddress, const char *);
+int incomingMessage();
+void receiveMessage(char* buffer);
+void begin_transport();
+
+#endif
+#endif //UDP_ESP8266_H
