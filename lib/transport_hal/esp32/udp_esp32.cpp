@@ -8,11 +8,11 @@ WiFiUDP Udp;
 
 void sendMessage(IPAddress const address, const char * msg){
     Udp.beginPacket(address, UDP_PORT);
-    //char reply[] = "Packet received!\n";
-    //Udp.write(msg);
+    char reply[] = "Packet received!\n";
+
+    Udp.write((const uint8_t*) msg, 255);
     Udp.endPacket();
 }
-
 
 int incomingMessage(){
     int packetSize = Udp.parsePacket();
