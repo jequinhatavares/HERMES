@@ -2,10 +2,6 @@
 #ifndef WIFI_H
 #define WIFI_H
 
-#define SSID_PREFIX      		"JessicaNode"
-#define PASS      		        "123456789"
-#define SERVER_IP_ADDR			"192.168.4.1"
-#define SERVER_PORT				4011
 
 
 #include <WiFiClient.h>
@@ -29,14 +25,18 @@ typedef struct List{
 
 String Get_WiFiStatus(int Status);
 
-void startWifiAP();
+void startWifiAP(const char* SSID, const char* PASS);
 
-List searchAP();
+List searchAP(String);
 
-void connectToAP(const char*);
+void connectToAP(const char*, const char*);
 
 IPAddress getGatewayIP();
 
 IPAddress getMyIP();
+
+String getMyMAC();
+
+void changeWifiMode(int);
 
 #endif //WIFI_H

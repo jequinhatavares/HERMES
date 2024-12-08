@@ -36,18 +36,17 @@ String Get_WiFiStatus(int Status){
  *
  * @return void
  */
-
-void startWifiAP(){
+void startWifiAP(const char* SSID, const char* PASS){
     // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
     WiFi.mode(WIFI_AP_STA);
 
     //IPAddress localIP(192,168,1,1);
     //IPAddress gateway(192,168,1,1);
     //IPAddress subnet(255,255,255,0);
-//
+
     //WiFi.softAPConfig(localIP, gateway, subnet);
     // Start the Access Point with the SSID defined in SSID_PREFIX
-    WiFi.softAP(SSID_PREFIX, PASS);
+    WiFi.softAP(SSID, PASS);
     //Init Wifi Event Handlers
     initWifiEventHandlers();
 
@@ -61,9 +60,9 @@ void startWifiAP(){
  *
  * @return A List structure containing the SSIDs of Wi-Fi networks
  */
-
-List searchAP(){
+List searchAP(String SSID){
     int n = WiFi.scanNetworks();//Number of scanned wifi networks
+    int index;
     String message;
     int WiFiStatus;
     List listAPs;
@@ -71,13 +70,17 @@ List searchAP(){
     Serial.printf("Number of scanned Networks: %i\n",n);
     for (int i = 0; i < n; ++i) {
         String current_ssid = WiFi.SSID(i);
+        String string = "ola";
         Serial.printf("SSID: %s\n", current_ssid.c_str());
-        if (current_ssid != "JessicaNode") {
+        index = current_ssid.indexOf(SSID);
+        //Check if the AP corresponds to a node of the mesh network
+        if(index == -1){
             continue;
         }
         //return current_ssid.c_str();
         listAPs.item[listAPs.len] = const_cast<char*>(current_ssid.c_str());
         listAPs.len++;
+
     }
    // Delete the scan result to free memory for code below.
     WiFi.scanDelete();
@@ -92,7 +95,7 @@ List searchAP(){
  * @param SSID - The SSID of the Wi-Fi network to connect to.
  * @return void
  */
-void connectToAP(const char * SSID) {
+void connectToAP(const char * SSID, const char * PASS) {
 
     WiFi.mode(WIFI_STA);
     WiFi.begin(SSID, PASS);
@@ -102,7 +105,6 @@ void connectToAP(const char * SSID) {
         delay(150);
         Serial.println(Get_WiFiStatus(WiFi.status()));
     }
-
 }
 
 /**
@@ -123,4 +125,37 @@ IPAddress getGatewayIP(){
  */
 IPAddress getMyIP(){
     return WiFi.localIP();
+}
+
+/**
+ * getMyMAC
+ * Retrieves the MAC address of the device
+ *
+ * @return The MAC address as a String.
+ */
+String getMyMAC(){
+    //Serial.printf("My MAC: %s", WiFi.macAddress().c_str());
+    return WiFi.macAddress();
+}
+/**
+ * changeWifiMode
+ * Changes the Wi-Fi mode of the device to the specified mode (Access Point, Station, or both).
+ *
+ * @param mode An integer representing the desired Wi-Fi mode:
+ *             1 for Station (STA),
+ *             2 for Access Point (AP),
+ *             3 for both AP and STA.
+ * @return void
+ */
+void changeWifiMode(int mode){
+    switch (mode) {
+        case WIFI_STA:
+            WiFi.mode(WIFI_STA);
+        case WIFI_AP:
+            WiFi.mode(WIFI_AP);
+        case WIFI_AP_STA:
+            WiFi.mode(WIFI_AP_STA);
+        default:
+            return;
+    }
 }

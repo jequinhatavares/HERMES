@@ -8,7 +8,15 @@
 WiFiClient clients[MAX_CLIENTS];
 int curr_client = 0;
 
+#define SSID_PREFIX      		"JessicaNode"
+#define PASS      		        "123456789"
+
+
 int count = 0;
+
+struct node{
+    IPAddress ip;
+};
 
 void setup(){
     Serial.begin(115200);
@@ -21,7 +29,16 @@ void setup(){
         Serial.print("ESP8266");
     #endif
 
-    startWifiAP();
+
+    //strcat(SSID_PREFIX, getMyMAC().c_str());
+
+    //strcat("s", "h");
+    //String SSID = SSID_PREFIX + getMyMAC();
+    char ssid[256]; // Make sure this buffer is large enough to hold the entire SSID
+    strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
+    strcat(ssid, getMyMAC().c_str());
+    //Serial.printf(ssid);
+    startWifiAP(ssid,PASS);
 
     //initializeAP = false;
 
@@ -30,14 +47,14 @@ void setup(){
         Serial.printf("Found SSID: %s", ssids[i]);
     }*/
 
-    List list = searchAP();
+    List list = searchAP(SSID_PREFIX);
     for (int i=0; i<list.len; i++){
         Serial.printf("Found SSID: %s\n", list.item[i].c_str());
     }
 
     if(list.len != 0){
         // choose a prefered parent
-        connectAP(list.item[0].c_str());
+        connectToAP(list.item[0].c_str(), PASS);
         begin_transport();
         Serial.printf("Connected. MyIP: %s; Gateway: %s\n", getMyIP().toString().c_str(), getGatewayIP().toString().c_str());
 
@@ -49,7 +66,8 @@ void setup(){
         Serial.print("Not Find any AP, must be root\n");
         begin_transport();
     }
-    WiFi.mode(WIFI_AP_STA);
+    changeWifiMode(3);
+    //WiFi.mode(WIFI_AP_STA);
 }
 
 //WiFiClient client;
