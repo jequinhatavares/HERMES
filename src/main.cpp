@@ -2,8 +2,6 @@
 #include <wifi_hal.h>
 //#include "../lib/wifi_hal/wifi_hal.h"
 
-WiFiServer  _server = WiFiServer(SERVER_PORT);
-WiFiClient  _client;
 
 //uint64_t id = ESP.getEfuseMac();
 
@@ -27,7 +25,7 @@ void setup(){
 
     startWifiAP();
 
-    _server.begin();
+    AP.begin();
 
     searchAP();
 
@@ -36,29 +34,32 @@ void setup(){
 void loop(){
     String response;
     // Act like an AP and wait for incoming requests
-    WiFiClient client = _server.accept();
-    if (client) {
+    //APSTAMode();
+    WiFiClient myclients = AP.accept();
+    if (myclients) {
 
-        if (client.connected()) {
+        if (myclients.connected()) {
             Serial.println("Connected to client\n");
-            String request = client.readStringUntil('\r');
+            String request = myclients.readStringUntil('\r');
             printf("Received: %s\n", request.c_str());
         }
 
-        if (waitForClient(client, 1500)) {
+        if (waitForClient(myclients, 1500)) {
             Serial.print("Sending message to client\n");
-            response = String("HELLO from AP:");
-            client.println(response.c_str());
+            response = String("HELLO from AP");
+            myclients.println(response.c_str());
         }
         // close the connection:
-        client.stop();
+        //myclient.stop();
     }
     count ++;
     //Send message to APS
-    if(count == 1500){
+    if(count == 15000){
         //Trying to send message to the AP
         //_server.send("Periodic Check from AP\n");
-        _client.write("Hello from client");
+        APSTAMode();
+        STA.write("Hello from client");
         count = 0;
+
     }
 }

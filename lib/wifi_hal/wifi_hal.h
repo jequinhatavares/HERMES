@@ -19,6 +19,8 @@
     #include "esp32/wifi_esp32.h"
 #endif
 
+extern WiFiServer  AP;
+extern WiFiClient  STA;
 
 String Get_WiFiStatus(int Status);
 
@@ -29,6 +31,12 @@ void searchAP();
 bool sendMessage(String message, WiFiClient curr_client);
 
 bool waitForClient(WiFiClient curr_client, int max_wait);
+
+void STAMode();
+
+void APMode();
+
+void APSTAMode();
 
 
 #endif //WIFI_H

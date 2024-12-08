@@ -1,6 +1,8 @@
 #include "wifi_hal.h"
 
 IPAddress myIP;
+WiFiServer  AP = WiFiServer(SERVER_PORT);
+WiFiClient  STA;
 
 /**
  *
@@ -72,8 +74,7 @@ void searchAP(){
 
         //TODO Save the RSSI: WiFi.RSSI(i)
         WiFi.mode(WIFI_STA);
-        //Connect to node
-        WiFiClient client;
+
 
         // Attempt to connect to the found network
         WiFi.begin( current_ssid.c_str() , PASS);
@@ -98,7 +99,7 @@ void searchAP(){
         // Check if the connection was unsuccessful after the timeout
 
         // Connect to the choosen AP
-        if (!client.connect(SERVER_IP_ADDR, SERVER_PORT)){
+        if (!STA.connect(SERVER_IP_ADDR, SERVER_PORT)){
             return;
         }
         else{
@@ -109,15 +110,15 @@ void searchAP(){
         message = String ("Hello" ) + String( WiFi.macAddress());
 
         Serial.print("Sending message to AP\n");
-        sendMessage(message,client);
-        if (waitForClient(client, 1000)){
-            String response = client.readStringUntil('\r');
-            client.readStringUntil('\n');
+        sendMessage(message,STA);
+        if (waitForClient(STA, 1000)){
+            String response = STA.readStringUntil('\r');
+            STA.readStringUntil('\n');
             Serial.printf("Received from AP:  %s\n",response.c_str());
         }
 
 
-        //client.stop(); //Dont disconect
+        //STA.stop(); //Dont disconect
         //WiFi.disconnect();
 
     }
@@ -130,6 +131,18 @@ void searchAP(){
         Serial.print("AP inicialized\n");
     }else{Serial.print("Not Find any AP, must be root\n");}
 
+}
+
+void STAMode(){
+    WiFi.mode(WIFI_STA);
+}
+
+void APMode(){
+    WiFi.mode(WIFI_AP);
+}
+
+void APSTAMode(){
+    WiFi.mode(WIFI_AP_STA);
 }
 
 bool sendMessage(String message,  WiFiClient curr_client)
