@@ -36,6 +36,12 @@ String Get_WiFiStatus(int Status){
 void startWifiAP(){
     // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
     WiFi.mode(WIFI_AP_STA);
+
+    //IPAddress localIP(192,168,1,1);
+    //IPAddress gateway(192,168,1,1);
+    //IPAddress subnet(255,255,255,0);
+//
+    //WiFi.softAPConfig(localIP, gateway, subnet);
     // Start the Access Point with the SSID defined in SSID_PREFIX
     WiFi.softAP(SSID_PREFIX, PASS);
     //Init Wifi Event Handlers
