@@ -1,14 +1,13 @@
 #include "wifi_hal.h"
 
-//WiFiClient parent;
-//bool initializeAP;
-
 IPAddress myIP;
 
 /**
+ * Get_WiFiStatus
+ * Converts a Wi-Fi status code into a human-readable string.
  *
- * @param Status
- * @return
+ * @param Status -Wi-Fi status code
+ * @return A string describing the Wi-Fi status
  */
 String Get_WiFiStatus(int Status){
     switch(Status){
@@ -31,7 +30,12 @@ String Get_WiFiStatus(int Status){
     }
 }
 
-
+/**
+ * startWifiAP
+ * Configures and starts the device as a Wi-Fi Access Point (AP)
+ *
+ * @return void
+ */
 
 void startWifiAP(){
     // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
@@ -51,43 +55,12 @@ void startWifiAP(){
 
 }
 
-bool waitForClient(WiFiClient curr_client, int max_wait)
-{
-    int wait = max_wait;
-    while(curr_client.connected() && !curr_client.available() && wait--)
-        delay(3);
-
-    /* Return false if the client isn't ready to communicate */
-    if (WiFi.status() == WL_DISCONNECTED || !curr_client.connected())
-        return false;
-
-    return true;
-}
-/***void client(){
-    // Connect to the choosen AP
-    if (!parent.connect(SERVER_IP_ADDR, SERVER_PORT)){
-        return;
-    }
-    else{
-        //parent = client;
-        initializeAP = true;
-    }
-    myIP = WiFi.localIP();
-    //TODO send message to AP the connection
-    message = String ("Hello" ) + String( WiFi.macAddress());
-
-    Serial.print("Sending message to AP\n");
-    sendMessage(message,parent);
-    if (waitForClient(parent, 1000)){
-        String response = parent.readStringUntil('\r');
-        parent.readStringUntil('\n');
-        Serial.printf("Received from AP:  %s\n",response.c_str());
-    }
-
-
-    //client.stop(); //Dont disconect
-    //WiFi.disconnect();
-}***/
+/**
+ * searchAP
+ * Scans for available Wi-Fi networks and filters them based on their SSID
+ *
+ * @return A List structure containing the SSIDs of Wi-Fi networks
+ */
 
 List searchAP(){
     int n = WiFi.scanNetworks();//Number of scanned wifi networks
@@ -111,14 +84,15 @@ List searchAP(){
     return listAPs;
     //return listAPs;
 }
-/*
-bool sendMessage(String message,  WiFiClient curr_client)
-{
-    curr_client.println(message.c_str());
-    return true;
-}*/
 
-void connectAP(const char * SSID) {
+/**
+ * connectToAP
+ * Connects the device to a specified Wi-Fi Access Point (AP) using the provided SSID and a predefined password.
+ *
+ * @param SSID - The SSID of the Wi-Fi network to connect to.
+ * @return void
+ */
+void connectToAP(const char * SSID) {
 
     WiFi.mode(WIFI_STA);
     WiFi.begin(SSID, PASS);
@@ -131,10 +105,22 @@ void connectAP(const char * SSID) {
 
 }
 
+/**
+ * getGatewayIP
+ * Retrieves the IP address of the AP that the device is connected to.
+ *
+ * @return The gateway IP address as an IPAddress object.
+ */
 IPAddress getGatewayIP(){
     return WiFi.gatewayIP();
 }
 
+/**
+ * getMyIP
+ * Retrieves the device local IP address assigned by the Access Point it is connected to.
+ *
+ * @return The local IP address as an IPAddress object.
+ */
 IPAddress getMyIP(){
     return WiFi.localIP();
 }

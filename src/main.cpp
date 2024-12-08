@@ -8,16 +8,6 @@
 WiFiClient clients[MAX_CLIENTS];
 int curr_client = 0;
 
-//WiFiUDP Udp;
-
-//bool initializeAP;
-//uint64_t id = ESP.getEfuseMac();
-
-/***void WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info){
-    Serial.println("Connected to AP successfully!");
-    WiFi.onEvent(WiFiStationConnected, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_CONNECTED);
-***/
-
 int count = 0;
 
 void setup(){

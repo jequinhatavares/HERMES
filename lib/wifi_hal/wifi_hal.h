@@ -33,11 +33,7 @@ void startWifiAP();
 
 List searchAP();
 
-//bool sendMessage(String message, WiFiClient curr_client);
-
-bool waitForClient(WiFiClient curr_client, int max_wait);
-
-void connectAP(const char*);
+void connectToAP(const char*);
 
 IPAddress getGatewayIP();
 
