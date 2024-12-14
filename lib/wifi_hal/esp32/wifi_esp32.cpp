@@ -11,6 +11,7 @@
  */
 void onSoftAPModeStationConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info){
     Serial.println("[WIFI_EVENTS] Got station connected\n");
+
 }
 
 /**

@@ -31,9 +31,15 @@ List searchAP(String);
 
 void connectToAP(const char*, const char*);
 
+void stopWifiAP();
+
+int numberOfSTAConnected();
+
 IPAddress getGatewayIP();
 
-IPAddress getMyIP();
+IPAddress getMySTAIP();
+
+IPAddress getMyAPIP();
 
 String getMyMAC();
 

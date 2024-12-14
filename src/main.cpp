@@ -56,18 +56,26 @@ void setup(){
         // choose a prefered parent
         connectToAP(list.item[0].c_str(), PASS);
         begin_transport();
-        Serial.printf("Connected. MyIP: %s; Gateway: %s\n", getMyIP().toString().c_str(), getGatewayIP().toString().c_str());
+        Serial.printf("Connected. My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
 
         char msg[50] = "Hello, from your son";
         IPAddress gateway = getGatewayIP();
         sendMessage(gateway, msg);
         //Serial.print("AP initialized\n");
+        IPAddress broadcastIP = WiFi.broadcastIP();
+
+        Serial.print("Broadcast IP:");
+        Serial.print(broadcastIP);
+
     } else {
         Serial.print("Not Find any AP, must be root\n");
+        Serial.printf("My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
         begin_transport();
     }
     changeWifiMode(3);
     //WiFi.mode(WIFI_AP_STA);
+    Serial.print("My SoftAP IP: ");
+    Serial.print(WiFi.softAPIP());
 }
 
 //WiFiClient client;

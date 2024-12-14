@@ -37,16 +37,22 @@ String Get_WiFiStatus(int Status){
  * @return void
  */
 void startWifiAP(const char* SSID, const char* PASS){
-    // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
-    WiFi.mode(WIFI_AP_STA);
 
-    //IPAddress localIP(192,168,1,1);
-    //IPAddress gateway(192,168,1,1);
+    //IPAddress localIP(2,2,2,2);
+    //IPAddress gateway(2,2,2,2);
     //IPAddress subnet(255,255,255,0);
-
-    //WiFi.softAPConfig(localIP, gateway, subnet);
+    IPAddress localIP(3,3,3,3);
+    IPAddress gateway(3,3,3,3);
+    IPAddress subnet(255,255,255,0);
+    // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
+    //WiFi.config(localIP, (uint8)0, (uint8)0, (uint8)0);
+    WiFi.mode(WIFI_AP_STA);
     // Start the Access Point with the SSID defined in SSID_PREFIX
+    WiFi.softAPConfig(localIP, gateway, subnet);
     WiFi.softAP(SSID, PASS);
+    Serial.print("My SoftAP IP:");
+    Serial.print(WiFi.softAPIP());
+
     //Init Wifi Event Handlers
     initWifiEventHandlers();
 
@@ -106,7 +112,26 @@ void connectToAP(const char * SSID, const char * PASS) {
         Serial.println(Get_WiFiStatus(WiFi.status()));
     }
 }
+/**
+ * stopWifiAP
+ * Stops the Wi-Fi Access Point (AP) mode, disconnecting all connected stations.
+ *
+ * @return void
+ */
+void stopWifiAP(){
+    WiFi.softAPdisconnect();
+}
 
+/**
+ * numberOfSTAConnected
+ * Retrieves the number of stations (devices) currently connected to the ESP32/ESP8266 in AP mode.
+ *
+ * @return The number of connected stations as an integer.
+ */
+int numberOfSTAConnected(){
+    int n = WiFi.softAPgetStationNum();
+    return n;
+}
 /**
  * getGatewayIP
  * Retrieves the IP address of the AP that the device is connected to.
@@ -114,6 +139,7 @@ void connectToAP(const char * SSID, const char * PASS) {
  * @return The gateway IP address as an IPAddress object.
  */
 IPAddress getGatewayIP(){
+
     return WiFi.gatewayIP();
 }
 
@@ -123,7 +149,7 @@ IPAddress getGatewayIP(){
  *
  * @return The local IP address as an IPAddress object.
  */
-IPAddress getMyIP(){
+IPAddress getMySTAIP(){
     return WiFi.localIP();
 }
 
@@ -136,6 +162,17 @@ IPAddress getMyIP(){
 String getMyMAC(){
     //Serial.printf("My MAC: %s", WiFi.macAddress().c_str());
     return WiFi.macAddress();
+}
+
+/**
+ * getMyAPIP
+ * Retrieves the IP address of the device as a Wi-Fi Access Point (AP).
+ *
+ * @return The IP address as an IPAddress object.
+ */
+
+IPAddress getMyAPIP(){
+    return WiFi.softAPIP();
 }
 /**
  * changeWifiMode
