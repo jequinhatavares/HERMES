@@ -18,6 +18,13 @@ void sendMessage(IPAddress const address, const char * msg){
     Udp.endPacket();
 }
 
+void broadcastMessage(){
+    const char* msg = "Broadcast";
+    Udp.beginPacket(IPAddress(255,255,255,255), UDP_PORT);
+    Udp.write(msg);
+    Udp.endPacket();
+}
+
 /**
  * incomingMessage
  * Checks for incoming UDP packets and returns the size of the received packet.

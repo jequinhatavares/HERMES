@@ -9,6 +9,7 @@
 extern WiFiUDP Udp;
 
 void sendMessage(IPAddress, const char *);
+void broadcastMessage();
 int incomingMessage();
 void receiveMessage(char* buffer);
 void begin_transport();

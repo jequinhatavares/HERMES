@@ -29,24 +29,33 @@ String Get_WiFiStatus(int Status){
             return "NONE";
     }
 }
-
+/**
+ * startWifiSTA
+ * Configures and starts the device in Wi-Fi Station (STA) mode with static IP settings.
+ *
+ * @param localIP  The static IP address for the device.
+ * @param gateway  The default gateway IP address.
+ * @param subnet   The subnet mask to define the network.
+ * @param dns      The DNS server IP address for domain name resolution.
+ *
+ * @return void
+ */
+void startWifiSTA(const IPAddress& localIP, const IPAddress& gateway, const IPAddress& subnet, const IPAddress& dns){
+    // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
+    WiFi.mode(WIFI_STA);
+    WiFi.config(localIP, gateway, subnet, dns);
+}
 /**
  * startWifiAP
  * Configures and starts the device as a Wi-Fi Access Point (AP)
  *
  * @return void
  */
-void startWifiAP(const char* SSID, const char* PASS){
+void startWifiAP(const char* SSID, const char* PASS, const IPAddress& localIP, const IPAddress& gateway, const IPAddress& subnet){
 
-    //IPAddress localIP(2,2,2,2);
-    //IPAddress gateway(2,2,2,2);
-    //IPAddress subnet(255,255,255,0);
-    IPAddress localIP(3,3,3,3);
-    IPAddress gateway(3,3,3,3);
-    IPAddress subnet(255,255,255,0);
     // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
-    //WiFi.config(localIP, (uint8)0, (uint8)0, (uint8)0);
-    WiFi.mode(WIFI_AP_STA);
+    //WiFi.config(localIP, gateway, subnet, gateway);
+    WiFi.mode(WIFI_AP);
     // Start the Access Point with the SSID defined in SSID_PREFIX
     WiFi.softAPConfig(localIP, gateway, subnet);
     WiFi.softAP(SSID, PASS);
@@ -56,7 +65,7 @@ void startWifiAP(const char* SSID, const char* PASS){
     //Init Wifi Event Handlers
     initWifiEventHandlers();
 
-    Serial.printf("My MAC: %s", WiFi.macAddress().c_str());
+    Serial.printf("My MAC: %s\n", WiFi.macAddress().c_str());
 
 }
 
@@ -67,6 +76,7 @@ void startWifiAP(const char* SSID, const char* PASS){
  * @return A List structure containing the SSIDs of Wi-Fi networks
  */
 List searchAP(String SSID){
+    WiFi.mode(WIFI_STA);
     int n = WiFi.scanNetworks();//Number of scanned wifi networks
     int index;
     String message;

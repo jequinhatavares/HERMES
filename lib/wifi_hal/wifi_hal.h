@@ -25,7 +25,9 @@ typedef struct List{
 
 String Get_WiFiStatus(int Status);
 
-void startWifiAP(const char* SSID, const char* PASS);
+void startWifiSTA(const IPAddress& localIP, const IPAddress& gateway, const IPAddress& subnet, const IPAddress& dns);
+
+void startWifiAP(const char* SSID, const char* PASS, const IPAddress& localIP, const IPAddress& gateway, const IPAddress& subnet);
 
 List searchAP(String);
 
@@ -39,9 +41,9 @@ IPAddress getGatewayIP();
 
 IPAddress getMySTAIP();
 
-IPAddress getMyAPIP();
-
 String getMyMAC();
+
+IPAddress getMyAPIP();
 
 void changeWifiMode(int);
 

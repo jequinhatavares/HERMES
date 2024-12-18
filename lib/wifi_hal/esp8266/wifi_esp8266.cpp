@@ -40,8 +40,6 @@ void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisc
 void onStationModeGotIPHandler(const WiFiEventStationModeGotIP& info) {
     Serial.print("[WIFI_EVENTS] Local STA ESP8266 IP: ");
     Serial.println(info.ip);
-
-
 }
 
 /**
@@ -53,9 +51,6 @@ void onStationModeGotIPHandler(const WiFiEventStationModeGotIP& info) {
  */
 void onStationModeConnectedHandler(const WiFiEventStationModeConnected& info) {
     Serial.println("[WIFI_EVENTS] Connected to AP\n");
-    Serial.printf("[WIFI_EVENTS] My STA IP:");
-    Serial.println(WiFi.localIP());
-
 }
 
 /**

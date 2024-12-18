@@ -7,16 +7,29 @@
 #define MAX_CLIENTS 4
 WiFiClient clients[MAX_CLIENTS];
 int curr_client = 0;
+bool isFirstMessage = true;
 
 #define SSID_PREFIX      		"JessicaNode"
 #define PASS      		        "123456789"
 
+IPAddress localIP;
+IPAddress gateway;
+IPAddress subnet;
+IPAddress dns;
+
+void setIPs(int n){
+    localIP = IPAddress(n,n,n,n);
+    gateway = IPAddress(n,n,n,n);
+    subnet = IPAddress(255,255,255,0);
+    dns = IPAddress(n,n,n,n);
+}
 
 int count = 0;
 
 struct node{
     IPAddress ip;
 };
+
 
 void setup(){
     Serial.begin(115200);
@@ -38,34 +51,38 @@ void setup(){
     strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
     strcat(ssid, getMyMAC().c_str());
     //Serial.printf(ssid);
-    startWifiAP(ssid,PASS);
 
-    //initializeAP = false;
-
-    /*const char** ssids = searchAP();
-    for (int i=0; i<10; i++){
-        Serial.printf("Found SSID: %s", ssids[i]);
-    }*/
+    setIPs(2);
+    //startWifiSTA(localIP, gateway, subnet, dns);
+    startWifiAP(ssid,PASS, localIP, gateway, subnet);
 
     List list = searchAP(SSID_PREFIX);
     for (int i=0; i<list.len; i++){
         Serial.printf("Found SSID: %s\n", list.item[i].c_str());
     }
-
+    delay(1000);
     if(list.len != 0){
         // choose a prefered parent
         connectToAP(list.item[0].c_str(), PASS);
         begin_transport();
         Serial.printf("Connected. My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
 
-        char msg[50] = "Hello, from your son";
-        IPAddress gateway = getGatewayIP();
-        sendMessage(gateway, msg);
-        //Serial.print("AP initialized\n");
-        IPAddress broadcastIP = WiFi.broadcastIP();
+        char msg[50] = "Hello, from your son-";
+        char ipStr[16];
+        changeWifiMode(1);
+        IPAddress myIP = getMySTAIP();
+        Serial.print(WiFi.softAPIP());
+        // Convert IP address to string format
+        snprintf(ipStr, sizeof(ipStr), "%u.%u.%u.%u", myIP[0], myIP[1], myIP[2], myIP[3]);
+        // Concatenate the IP string to the message
+        strncat(msg, ipStr, sizeof(msg) - strlen(msg) - 1);
 
-        Serial.print("Broadcast IP:");
-        Serial.print(broadcastIP);
+        //IPAddress parentIP =IPAddress(3,3,3,3);
+        //IPAddress AP = IPAddress(3,3,3,3);
+        sendMessage(getGatewayIP(), msg);
+        //Serial.print("AP initialized\n");
+        //IPAddress broadcastIP = WiFi.broadcastIP();
+
 
     } else {
         Serial.print("Not Find any AP, must be root\n");
@@ -81,6 +98,8 @@ void setup(){
 //WiFiClient client;
 bool client_defined = false;
 char buffer[256] = "";
+IPAddress ip;
+
 void loop(){
     // Act like an AP and wait for incoming requests
     int packet_size = incomingMessage();
@@ -88,7 +107,19 @@ void loop(){
         Serial.printf("PacketSize: %d\n", packet_size);
         Serial.print("Theres incoming messages\n");
         receiveMessage(buffer);
-        Serial.printf("Received: %s", buffer);
+        Serial.printf("Received: %s\n", buffer);
+        for (int i = 0; i < strlen(buffer); i++) {
+            if (buffer[i] == '-') {
+                sscanf(&buffer[i + 1], "%hhu.%hhu.%hhu.%hhu", &ip[0], &ip[1], &ip[2], &ip[3]);
+                Serial.printf("Find child IP: %i.%i.%i.%i\n", ip[0], ip[1], ip[2], ip[3]);
+                break;
+            }
+        }
+        if (isFirstMessage || strcmp(buffer, "Response from your parent") != 0 ){
+            sendMessage(ip,"Response from your parent");
+            isFirstMessage = false;
+        }
+
         //sendMessage(Udp.remoteIP(),"echo");
     }
 }
