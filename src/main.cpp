@@ -70,10 +70,10 @@ void setup(){
         char msg[50] = "Hello, from your son-";
         char ipStr[16];
         changeWifiMode(1);
-        IPAddress myIP = getMySTAIP();
+        IPAddress my_ip = getMySTAIP();
         Serial.print(WiFi.softAPIP());
         // Convert IP address to string format
-        snprintf(ipStr, sizeof(ipStr), "%u.%u.%u.%u", myIP[0], myIP[1], myIP[2], myIP[3]);
+        snprintf(ipStr, sizeof(ipStr), "%u.%u.%u.%u", my_ip[0], my_ip[1], my_ip[2], my_ip[3]);
         // Concatenate the IP string to the message
         strncat(msg, ipStr, sizeof(msg) - strlen(msg) - 1);
 
