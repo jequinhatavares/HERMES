@@ -1,3 +1,4 @@
+#if defined(ESP32) || defined(ESP8266)
 #include <Arduino.h>
 #include <wifi_hal.h>
 #include <transport_hal.h>
@@ -123,3 +124,12 @@ void loop(){
         //sendMessage(Udp.remoteIP(),"echo");
     }
 }
+#endif
+
+#ifdef PC
+#include <stdio.h>
+int main(){
+    printf("Hello Winda\n");
+    return 0;
+}
+#endif
