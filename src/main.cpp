@@ -18,11 +18,20 @@ IPAddress gateway;
 IPAddress subnet;
 IPAddress dns;
 
-void setIPs(int n){
-    localIP = IPAddress(n,n,n,n);
-    gateway = IPAddress(n,n,n,n);
+//void setIPs(int n){
+//    localIP = IPAddress(n,n,n,n);
+//    gateway = IPAddress(n,n,n,n);
+//    subnet = IPAddress(255,255,255,0);
+//    dns = IPAddress(n,n,n,n);
+//}
+
+void setIPs(const char* MAC){
+    Serial.printf("setIPs Mac: %s\n",MAC);
+    Serial.printf("Mac[0]: %c\n",MAC[0]);
+    Serial.printf("Mac size: %i\n",sizeof(MAC));
+    localIP = IPAddress(MAC[5],MAC[4],MAC[3],MAC[2]);
+    gateway = IPAddress(MAC[5],MAC[4],MAC[3],MAC[2]);
     subnet = IPAddress(255,255,255,0);
-    dns = IPAddress(n,n,n,n);
 }
 
 int count = 0;
@@ -53,7 +62,7 @@ void setup(){
     strcat(ssid, getMyMAC().c_str());
     //Serial.printf(ssid);
 
-    setIPs(2);
+    setIPs(getMyMAC().c_str());
     //startWifiSTA(localIP, gateway, subnet, dns);
     startWifiAP(ssid,PASS, localIP, gateway, subnet);
 
