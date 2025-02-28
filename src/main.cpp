@@ -129,7 +129,7 @@ void loop(){
 #ifdef PC
 #include <stdio.h>
 int main(){
-    printf("Hello Winda\n");
+    printf("Hello World\n");
     return 0;
 }
 #endif
