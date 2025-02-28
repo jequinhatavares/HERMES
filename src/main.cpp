@@ -1,16 +1,36 @@
+#if defined(ESP32) || defined(ESP8266)
 #include <Arduino.h>
 #include <wifi_hal.h>
+#include <transport_hal.h>
 //#include "../lib/wifi_hal/wifi_hal.h"
+//#include "../lib/transport_hal/esp32/udp_esp32.h"
 
+#define MAX_CLIENTS 4
+WiFiClient clients[MAX_CLIENTS];
+int curr_client = 0;
+bool isFirstMessage = true;
 
-//uint64_t id = ESP.getEfuseMac();
+#define SSID_PREFIX      		"JessicaNode"
+#define PASS      		        "123456789"
 
-/***void WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info){
-    Serial.println("Connected to AP successfully!");
-    WiFi.onEvent(WiFiStationConnected, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_CONNECTED);
-***/
+IPAddress localIP;
+IPAddress gateway;
+IPAddress subnet;
+IPAddress dns;
+
+void setIPs(int n){
+    localIP = IPAddress(n,n,n,n);
+    gateway = IPAddress(n,n,n,n);
+    subnet = IPAddress(255,255,255,0);
+    dns = IPAddress(n,n,n,n);
+}
 
 int count = 0;
+
+struct node{
+    IPAddress ip;
+};
+
 
 void setup(){
     Serial.begin(115200);
@@ -23,43 +43,93 @@ void setup(){
         Serial.print("ESP8266");
     #endif
 
-    startWifiAP();
 
-    AP.begin();
+    //strcat(SSID_PREFIX, getMyMAC().c_str());
 
-    searchAP();
+    //strcat("s", "h");
+    //String SSID = SSID_PREFIX + getMyMAC();
+    char ssid[256]; // Make sure this buffer is large enough to hold the entire SSID
+    strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
+    strcat(ssid, getMyMAC().c_str());
+    //Serial.printf(ssid);
 
+    setIPs(2);
+    //startWifiSTA(localIP, gateway, subnet, dns);
+    startWifiAP(ssid,PASS, localIP, gateway, subnet);
+
+    List list = searchAP(SSID_PREFIX);
+    for (int i=0; i<list.len; i++){
+        Serial.printf("Found SSID: %s\n", list.item[i].c_str());
+    }
+    delay(1000);
+    if(list.len != 0){
+        // choose a prefered parent
+        connectToAP(list.item[0].c_str(), PASS);
+        begin_transport();
+        Serial.printf("Connected. My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
+
+        char msg[50] = "Hello, from your son-";
+        char ipStr[16];
+        changeWifiMode(1);
+        IPAddress my_ip = getMySTAIP();
+        Serial.print(WiFi.softAPIP());
+        // Convert IP address to string format
+        snprintf(ipStr, sizeof(ipStr), "%u.%u.%u.%u", my_ip[0], my_ip[1], my_ip[2], my_ip[3]);
+        // Concatenate the IP string to the message
+        strncat(msg, ipStr, sizeof(msg) - strlen(msg) - 1);
+
+        //IPAddress parentIP =IPAddress(3,3,3,3);
+        //IPAddress AP = IPAddress(3,3,3,3);
+        sendMessage(getGatewayIP(), msg);
+        //Serial.print("AP initialized\n");
+        //IPAddress broadcastIP = WiFi.broadcastIP();
+
+
+    } else {
+        Serial.print("Not Find any AP, must be root\n");
+        Serial.printf("My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
+        begin_transport();
+    }
+    changeWifiMode(3);
+    //WiFi.mode(WIFI_AP_STA);
+    Serial.print("My SoftAP IP: ");
+    Serial.print(WiFi.softAPIP());
 }
+
+//WiFiClient client;
+bool client_defined = false;
+char buffer[256] = "";
+IPAddress ip;
 
 void loop(){
-    String response;
     // Act like an AP and wait for incoming requests
-    //APSTAMode();
-    WiFiClient myclients = AP.accept();
-    if (myclients) {
-
-        if (myclients.connected()) {
-            Serial.println("Connected to client\n");
-            String request = myclients.readStringUntil('\r');
-            printf("Received: %s\n", request.c_str());
+    int packet_size = incomingMessage();
+    if (packet_size > 0){
+        Serial.printf("PacketSize: %d\n", packet_size);
+        Serial.print("Theres incoming messages\n");
+        receiveMessage(buffer);
+        Serial.printf("Received: %s\n", buffer);
+        for (int i = 0; i < strlen(buffer); i++) {
+            if (buffer[i] == '-') {
+                sscanf(&buffer[i + 1], "%hhu.%hhu.%hhu.%hhu", &ip[0], &ip[1], &ip[2], &ip[3]);
+                Serial.printf("Find child IP: %i.%i.%i.%i\n", ip[0], ip[1], ip[2], ip[3]);
+                break;
+            }
+        }
+        if (isFirstMessage || strcmp(buffer, "Response from your parent") != 0 ){
+            sendMessage(ip,"Response from your parent");
+            isFirstMessage = false;
         }
 
-        if (waitForClient(myclients, 1500)) {
-            Serial.print("Sending message to client\n");
-            response = String("HELLO from AP");
-            myclients.println(response.c_str());
-        }
-        // close the connection:
-        //myclient.stop();
-    }
-    count ++;
-    //Send message to APS
-    if(count == 15000){
-        //Trying to send message to the AP
-        //_server.send("Periodic Check from AP\n");
-        APSTAMode();
-        STA.write("Hello from client");
-        count = 0;
-
+        //sendMessage(Udp.remoteIP(),"echo");
     }
 }
+#endif
+
+#ifdef PC
+#include <stdio.h>
+int main(){
+    printf("Hello World\n");
+    return 0;
+}
+#endif
