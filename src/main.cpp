@@ -74,6 +74,7 @@ struct node{
 void setup(){
     Serial.begin(115200);
     uint8_t MAC[6];
+    int i;
     #ifdef ESP32
         Serial.print("ESP32");
         //esp_log_level_set("wifi", ESP_LOG_VERBOSE);
@@ -97,6 +98,7 @@ void setup(){
     setIPs(MAC);
 
     startWifiAP(ssid,PASS, localIP, gateway, subnet);
+    begin_transport();
 
     if(!iamRoot){
         List list = searchAP(SSID_PREFIX);
@@ -104,7 +106,6 @@ void setup(){
             Serial.printf("Found SSID: %s\n", list.item[i].c_str());
         }
         delay(1000);
-        begin_transport();
         if(list.len != 0){
             // choose a prefered parent
             connectToAP(list.item[0].c_str(), PASS);
@@ -113,7 +114,7 @@ void setup(){
             char msg[50] = "Hello, from your son-";
             char ipStr[16];
             //delay(4000);
-            /changeWifiMode(1);
+            //changeWifiMode(1);
 
             //IPAddress my_ip = getMySTAIP();
             // Convert IP address to string format
@@ -123,13 +124,16 @@ void setup(){
 
             //IPAddress parentIP =IPAddress(3,3,3,3);
             //IPAddress AP = IPAddress(3,3,3,3);
+            IPAddress gatewayIP = IPAddress(227,96,230,135);
+            for(i=0;i<10;i++){
 
-            sendMessage(getGatewayIP(), msg);
+                sendMessage(gatewayIP, msg);
+                Serial.printf("Message %i sent to %s\n",i+1,getGatewayIP().toString().c_str());
+                delay(1000);
+            }
+
             //Serial.print("AP initialized\n");
             //IPAddress broadcastIP = WiFi.broadcastIP();
-        } else {
-            Serial.print("Not Find any AP, must be root\n");
-            Serial.printf("My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
         }
     }
 
