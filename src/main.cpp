@@ -2,6 +2,8 @@
 #include <Arduino.h>
 #include <wifi_hal.h>
 #include <transport_hal.h>
+#include <cstdio>
+#include <cstring>
 //#include "../lib/wifi_hal/wifi_hal.h"
 //#include "../lib/transport_hal/esp32/udp_esp32.h"
 
@@ -25,14 +27,40 @@ IPAddress dns;
 //    dns = IPAddress(n,n,n,n);
 //}
 
-void setIPs(const char* MAC){
-    Serial.printf("setIPs Mac: %s\n",MAC);
-    Serial.printf("Mac[0]: %c\n",MAC[0]);
-    Serial.printf("Mac size: %i\n",sizeof(MAC));
-    localIP = IPAddress(MAC[5],MAC[4],MAC[3],MAC[2]);
-    gateway = IPAddress(MAC[5],MAC[4],MAC[3],MAC[2]);
+/**
+ * setIPs
+ * Configures the device's IP address
+ * @param MAC Pointer to a 6-byte array representing the MAC address.
+ * @return void
+ *
+ * Example:
+ * Given the MAC address: CC:50:E3:60:E6:87
+ * The generated IP address will be: 227.96.230.135
+ */
+void setIPs(const uint8_t* MAC){
+    //Serial.printf("setIPs Mac: %s\n",MAC);
+    //Serial.printf("Mac[2]: %c\n",MAC[2]);
+    //Serial.printf("Mac size: %i\n",sizeof(MAC));
+    localIP = IPAddress(MAC[2],MAC[3],MAC[4],MAC[5]);
+    gateway = IPAddress(MAC[2],MAC[3],MAC[4],MAC[5]);
     subnet = IPAddress(255,255,255,0);
 }
+
+/**
+ * parseMAC
+ * Converts a MAC address from string format (e.g., "CC:50:E3:60:E6:87") into a 6-byte array.
+ *
+ * @param macStr Pointer to a string representing the MAC address in hexadecimal format.
+ * @param macArray Pointer to a 6-byte array where the parsed MAC address will be stored.
+ * @return void
+ */
+void parseMAC(const char* macStr, uint8_t* macArray) {
+    sscanf(macStr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+           &macArray[0], &macArray[1], &macArray[2],
+           &macArray[3], &macArray[4], &macArray[5]);
+    //Serial.printf("Parsed MAC Bytes: %d:%d:%d:%d:%d:%d\n",macArray[0],macArray[1], macArray[2], macArray[3], macArray[4], macArray[5]);
+}
+
 
 int count = 0;
 
@@ -43,6 +71,7 @@ struct node{
 
 void setup(){
     Serial.begin(115200);
+    uint8_t MAC[6];
     #ifdef ESP32
         Serial.print("ESP32");
         //esp_log_level_set("wifi", ESP_LOG_VERBOSE);
@@ -62,7 +91,8 @@ void setup(){
     strcat(ssid, getMyMAC().c_str());
     //Serial.printf(ssid);
 
-    setIPs(getMyMAC().c_str());
+    parseMAC(getMyMAC().c_str(), MAC);
+    setIPs(MAC);
     //startWifiSTA(localIP, gateway, subnet, dns);
     startWifiAP(ssid,PASS, localIP, gateway, subnet);
 
