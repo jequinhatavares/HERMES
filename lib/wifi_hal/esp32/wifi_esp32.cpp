@@ -64,6 +64,7 @@ void onStationModeDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info){
     Serial.println("[WIFI_EVENTS] Disconnected From AP\n");
     Serial.print("WiFi lost connection. Reason: ");
     Serial.println(info.wifi_sta_disconnected.reason);
+    WiFi.reconnect();
     //Serial.println("Trying to Reconnect");
     //WiFi.begin(ssid, password);
 }

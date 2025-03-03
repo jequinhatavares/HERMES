@@ -65,6 +65,7 @@ void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& in
     Serial.println("[WIFI_EVENTS] Disconnected From AP\n");
     Serial.print("WiFi lost connection. Reason: ");
     Serial.println(info.reason);
+    WiFi.reconnect();
     // Attempt Re-Connection
     //WiFi.begin(SSID_PREFIX,PASS);
 }
@@ -141,13 +142,13 @@ void startWifiAP(const char* SSID, const char* PASS, const IPAddress& localIP, c
     // Start the Access Point with the SSID defined in SSID_PREFIX
     WiFi.softAPConfig(localIP, gateway, subnet);
     WiFi.softAP(SSID, PASS);
-    Serial.print("My SoftAP IP:");
-    Serial.print(WiFi.softAPIP());
+    //Serial.print("My SoftAP IP:");
+    //Serial.print(WiFi.softAPIP());
 
     //Init Wifi Event Handlers
     initWifiEventHandlers();
 
-    Serial.printf("My MAC: %s\n", WiFi.macAddress().c_str());
+    //Serial.printf("My MAC: %s\n", WiFi.macAddress().c_str());
 
 }
 

@@ -20,6 +20,8 @@ IPAddress gateway;
 IPAddress subnet;
 IPAddress dns;
 
+bool iamRoot = false;
+
 //void setIPs(int n){
 //    localIP = IPAddress(n,n,n,n);
 //    gateway = IPAddress(n,n,n,n);
@@ -93,46 +95,48 @@ void setup(){
 
     parseMAC(getMyMAC().c_str(), MAC);
     setIPs(MAC);
-    //startWifiSTA(localIP, gateway, subnet, dns);
+
     startWifiAP(ssid,PASS, localIP, gateway, subnet);
 
-    List list = searchAP(SSID_PREFIX);
-    for (int i=0; i<list.len; i++){
-        Serial.printf("Found SSID: %s\n", list.item[i].c_str());
-    }
-    delay(1000);
-    if(list.len != 0){
-        // choose a prefered parent
-        connectToAP(list.item[0].c_str(), PASS);
+    if(!iamRoot){
+        List list = searchAP(SSID_PREFIX);
+        for (int i=0; i<list.len; i++){
+            Serial.printf("Found SSID: %s\n", list.item[i].c_str());
+        }
+        delay(1000);
         begin_transport();
-        Serial.printf("Connected. My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
+        if(list.len != 0){
+            // choose a prefered parent
+            connectToAP(list.item[0].c_str(), PASS);
+            Serial.printf("Connected. My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
 
-        char msg[50] = "Hello, from your son-";
-        char ipStr[16];
-        changeWifiMode(1);
-        IPAddress my_ip = getMySTAIP();
-        Serial.print(WiFi.softAPIP());
-        // Convert IP address to string format
-        snprintf(ipStr, sizeof(ipStr), "%u.%u.%u.%u", my_ip[0], my_ip[1], my_ip[2], my_ip[3]);
-        // Concatenate the IP string to the message
-        strncat(msg, ipStr, sizeof(msg) - strlen(msg) - 1);
+            char msg[50] = "Hello, from your son-";
+            char ipStr[16];
+            //delay(4000);
+            /changeWifiMode(1);
 
-        //IPAddress parentIP =IPAddress(3,3,3,3);
-        //IPAddress AP = IPAddress(3,3,3,3);
-        sendMessage(getGatewayIP(), msg);
-        //Serial.print("AP initialized\n");
-        //IPAddress broadcastIP = WiFi.broadcastIP();
+            //IPAddress my_ip = getMySTAIP();
+            // Convert IP address to string format
+            //snprintf(ipStr, sizeof(ipStr), "%u.%u.%u.%u", my_ip[0], my_ip[1], my_ip[2], my_ip[3]);
+            // Concatenate the IP string to the message
+            //strncat(msg, ipStr, sizeof(msg) - strlen(msg) - 1);
 
+            //IPAddress parentIP =IPAddress(3,3,3,3);
+            //IPAddress AP = IPAddress(3,3,3,3);
 
-    } else {
-        Serial.print("Not Find any AP, must be root\n");
-        Serial.printf("My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
-        begin_transport();
+            sendMessage(getGatewayIP(), msg);
+            //Serial.print("AP initialized\n");
+            //IPAddress broadcastIP = WiFi.broadcastIP();
+        } else {
+            Serial.print("Not Find any AP, must be root\n");
+            Serial.printf("My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
+        }
     }
+
+    //startWifiAP(ssid,PASS, localIP, gateway, subnet);
     changeWifiMode(3);
     //WiFi.mode(WIFI_AP_STA);
-    Serial.print("My SoftAP IP: ");
-    Serial.print(WiFi.softAPIP());
+    Serial.printf("My SoftAP IP: %s\nMy STA IP %s\nGateway IP: %s\n", getMyAPIP().toString().c_str(), getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
 }
 
 //WiFiClient client;
