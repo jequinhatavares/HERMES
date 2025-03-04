@@ -8,8 +8,6 @@
 //#include "../lib/transport_hal/esp32/udp_esp32.h"
 
 #define MAX_CLIENTS 4
-WiFiClient clients[MAX_CLIENTS];
-int curr_client = 0;
 bool isFirstMessage = true;
 
 #define SSID_PREFIX      		"JessicaNode"
