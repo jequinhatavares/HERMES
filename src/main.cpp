@@ -144,7 +144,7 @@ void setup(){
 }
 
 //WiFiClient client;
-bool client_defined = false;
+//bool client_defined = false;
 char buffer[256] = "";
 IPAddress ip;
 
