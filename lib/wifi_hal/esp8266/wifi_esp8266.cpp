@@ -233,7 +233,6 @@ int numberOfSTAConnected(){
  * @return The gateway IP address as an IPAddress object.
  */
 IPAddress getGatewayIP(){
-
     return WiFi.gatewayIP();
 }
 
@@ -264,7 +263,6 @@ String getMyMAC(){
  *
  * @return The IP address as an IPAddress object.
  */
-
 IPAddress getMyAPIP(){
     return WiFi.softAPIP();
 }

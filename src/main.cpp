@@ -20,7 +20,7 @@ IPAddress gateway;
 IPAddress subnet;
 IPAddress dns;
 
-bool iamRoot = false;
+bool iamRoot = true;
 
 //void setIPs(int n){
 //    localIP = IPAddress(n,n,n,n);
@@ -93,12 +93,13 @@ void setup(){
     strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
     strcat(ssid, getMyMAC().c_str());
     //Serial.printf(ssid);
+    //changeWifiMode(3);
 
     parseMAC(getMyMAC().c_str(), MAC);
     setIPs(MAC);
 
-    startWifiAP(ssid,PASS, localIP, gateway, subnet);
     begin_transport();
+    startWifiAP(ssid,PASS, localIP, gateway, subnet);
 
     if(!iamRoot){
         List list = searchAP(SSID_PREFIX);
@@ -126,8 +127,7 @@ void setup(){
             //IPAddress AP = IPAddress(3,3,3,3);
             IPAddress gatewayIP = IPAddress(227,96,230,135);
             for(i=0;i<10;i++){
-
-                sendMessage(gatewayIP, msg);
+                sendMessage(getGatewayIP(), msg);
                 Serial.printf("Message %i sent to %s\n",i+1,getGatewayIP().toString().c_str());
                 delay(1000);
             }
