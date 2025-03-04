@@ -20,7 +20,7 @@ IPAddress gateway;
 IPAddress subnet;
 IPAddress dns;
 
-bool iamRoot = true;
+bool iamRoot = false;
 
 //void setIPs(int n){
 //    localIP = IPAddress(n,n,n,n);
@@ -39,15 +39,17 @@ bool iamRoot = true;
  * Given the MAC address: CC:50:E3:60:E6:87
  * The generated IP address will be: 227.96.230.135
  */
+
 void setIPs(const uint8_t* MAC){
     //Serial.printf("setIPs Mac: %s\n",MAC);
     //Serial.printf("Mac[2]: %c\n",MAC[2]);
     //Serial.printf("Mac size: %i\n",sizeof(MAC));
-    localIP = IPAddress(MAC[2],MAC[3],MAC[4],MAC[5]);
-    gateway = IPAddress(MAC[2],MAC[3],MAC[4],MAC[5]);
+    localIP = IPAddress(MAC[5],MAC[4],MAC[3],1);
+    gateway = IPAddress(MAC[5],MAC[4],MAC[3],1);
     subnet = IPAddress(255,255,255,0);
 }
-
+//227:96:230:135 root
+//227:96:237:119
 /**
  * parseMAC
  * Converts a MAC address from string format (e.g., "CC:50:E3:60:E6:87") into a 6-byte array.
@@ -98,8 +100,9 @@ void setup(){
     parseMAC(getMyMAC().c_str(), MAC);
     setIPs(MAC);
 
-    begin_transport();
     startWifiAP(ssid,PASS, localIP, gateway, subnet);
+    begin_transport();
+
 
     if(!iamRoot){
         List list = searchAP(SSID_PREFIX);
@@ -117,27 +120,24 @@ void setup(){
             //delay(4000);
             //changeWifiMode(1);
 
-            //IPAddress my_ip = getMySTAIP();
+            IPAddress my_ip = getMySTAIP();
             // Convert IP address to string format
-            //snprintf(ipStr, sizeof(ipStr), "%u.%u.%u.%u", my_ip[0], my_ip[1], my_ip[2], my_ip[3]);
+            snprintf(ipStr, sizeof(ipStr), "%u.%u.%u.%u", my_ip[0], my_ip[1], my_ip[2], my_ip[3]);
             // Concatenate the IP string to the message
-            //strncat(msg, ipStr, sizeof(msg) - strlen(msg) - 1);
+            strncat(msg, ipStr, sizeof(msg) - strlen(msg) - 1);
 
-            //IPAddress parentIP =IPAddress(3,3,3,3);
-            //IPAddress AP = IPAddress(3,3,3,3);
-            IPAddress gatewayIP = IPAddress(227,96,230,135);
-            for(i=0;i<10;i++){
-                sendMessage(getGatewayIP(), msg);
-                Serial.printf("Message %i sent to %s\n",i+1,getGatewayIP().toString().c_str());
-                delay(1000);
-            }
+
+            sendMessage(getGatewayIP(), msg);
+            Serial.printf("Message:%s - sent to %s\n",msg,getGatewayIP().toString().c_str());
+            delay(1000);
+
 
             //Serial.print("AP initialized\n");
             //IPAddress broadcastIP = WiFi.broadcastIP();
         }
     }
 
-    //startWifiAP(ssid,PASS, localIP, gateway, subnet);
+    //if(iamRoot)begin_transport();
     changeWifiMode(3);
     //WiFi.mode(WIFI_AP_STA);
     Serial.printf("My SoftAP IP: %s\nMy STA IP %s\nGateway IP: %s\n", getMyAPIP().toString().c_str(), getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
