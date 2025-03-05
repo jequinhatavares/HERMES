@@ -23,9 +23,29 @@ TableInfo* RoutingTable = &RTable;
 
 NodeEntry* findNode(int nodeIP[4]){
     NodeEntry* entry = (NodeEntry*) tableRead(RoutingTable, &nodeIP);
-
     return entry;
 }
+
+int* findRouteToNode(int nodeIP[4]){
+    int i;
+
+    //Check if the node is my parent
+    if(isIPEqual(nodeIP,parent)){
+        //Return the address of the child itself (translated to its STA addr)
+    }
+    //Check if node is my child
+    for(i=0; i<numberOfChildren; i++){
+        if(isIPEqual(nodeIP,children[i])){
+            //Return the address of the child itself (translated to its STA addr)
+        }
+    }
+
+    //Check in the routing table the next hop to the destination
+    NodeEntry *entry = findNode(nodeIP);
+    return entry->nextHopIP;
+
+}
+
 
 
 //NodeEntry RoutingTable[MAX_NODES];

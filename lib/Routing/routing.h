@@ -10,6 +10,9 @@ typedef struct NodeEntry {
 } NodeEntry;
 
 extern TableInfo* RoutingTable;
+extern int **children;
+extern int numberOfChildren
+extern int parent[4];
 
 NodeEntry* findNode(int nodeIP[4]);
 
