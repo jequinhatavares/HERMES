@@ -15,5 +15,6 @@ extern int numberOfChildren
 extern int parent[4];
 
 NodeEntry* findNode(int nodeIP[4]);
+int* findRouteToNode(int nodeIP[4]);
 
 #endif //ROUTING_H
