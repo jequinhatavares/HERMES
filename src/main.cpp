@@ -125,6 +125,7 @@ void setup(){
             strncat(msg, ipStr, sizeof(msg) - strlen(msg) - 1);
 
 
+
             sendMessage(getGatewayIP(), msg);
             Serial.printf("Message:%s - sent to %s\n",msg,getGatewayIP().toString().c_str());
             delay(1000);
