@@ -1,12 +1,13 @@
 #include "routing.h"
 #include "table.h"
 #include <stdio.h>
-//int parent[4];
+
+int parent[4];
 
 bool isIPEqual(void* a, void* b){
     int* aIP = (int*) a;
     int* bIP = (int*) b;
-    printf("In Function is IPEqual\n");
+    //printf("In Function is IPEqual\n");
     if(aIP[0] == bIP[0] && aIP[1] == bIP[1] && aIP[2] == bIP[2] && aIP[3] == bIP[3]){
         return true;
     }
@@ -33,29 +34,31 @@ TableInfo TTable = {
 };
 TableInfo* ChildrenTable = &TTable;
 
-NodeEntry* findNode(TableInfo* Table, int nodeIP[4]){
-    NodeEntry* entry = (NodeEntry*) tableRead(Table, nodeIP);
-    return entry;
+void* findNode(TableInfo* Table, int nodeIP[4]){
+    return tableRead(Table, nodeIP);
 }
-/*
+
 int* findRouteToNode(int nodeIP[4]){
     //Check if the node is my parent
     if(isIPEqual(nodeIP,parent)){
         //Return the address of the parent itself
+        return parent;
     }
 
     //Check if node is my child
-    if(findNode(ChildrenTable,nodeIP) != nullptr)
+    childEntry* Entry = (childEntry*) findNode(ChildrenTable,nodeIP);
+    if(Entry != nullptr)
     {
+        return Entry->STAIP;
         //Return the address of the child itself (translated to its STA addr)
     }
 
     //Check in the routing table the next hop to the destination
-    NodeEntry *entry = findNode(RoutingTable, nodeIP);
+    NodeEntry *entry = (NodeEntry*)findNode(RoutingTable, nodeIP);
     return entry->nextHopIP;
 
 }
-*/
+
 
 
 

@@ -9,19 +9,19 @@ typedef struct NodeEntry {
     int nextHopIP[4];
 } NodeEntry;
 
-typedef struct childrenEntry{
+typedef struct childEntry{
     int APIP[4];
     int STAIP[4];
-}childrenEntry;
+}childEntry;
 
 
 extern TableInfo* RoutingTable;
 extern TableInfo* ChildrenTable;
 extern int numberOfChildren;
-//extern int parent[4];
+extern int parent[4];
 
 bool isIPEqual(void* a, void* b);
-NodeEntry* findNode(TableInfo* Table, int nodeIP[4]);
+void* findNode(TableInfo* Table, int nodeIP[4]);
 int* findRouteToNode(int nodeIP[4]);
 
 #endif //ROUTING_H

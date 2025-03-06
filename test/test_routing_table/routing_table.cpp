@@ -11,7 +11,11 @@ void test_ip_equal_func(){
 }
 
 void printStruct(TableEntry* Table){
-    printf("K: %i V: %i\n",((int*)Table->key)[0],((int*)Table->value)[0]);
+    printf("K: %i.%i.%i.%i "
+           "V: hopDistance:%i "
+           "nextHop: %i.%i.%i.%i\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
+           ((NodeEntry *)Table->value)->hopDistance,
+           ((NodeEntry *)Table->value)->nextHopIP[0],((NodeEntry *)Table->value)->nextHopIP[1],((NodeEntry *)Table->value)->nextHopIP[2],((NodeEntry *)Table->value)->nextHopIP[3]);
 }
 
 void test_ip_equal_pfunc(){
@@ -24,7 +28,7 @@ void test_ip_equal_pfunc(){
     TableInfo* R = &RTable;
 }
 
-void test_add_new_node(){
+void test_add_node(){
     NodeEntry node ={
             .nodeIP = {1,1,1,1},
             .hopDistance = 1,
@@ -34,29 +38,53 @@ void test_add_new_node(){
 
     tableAdd(RoutingTable, newNode->nodeIP,newNode);
     tablePrint(RoutingTable,printStruct);
-    NodeEntry* foundEntry = findNode(RoutingTable,newNode->nodeIP);
-    //NodeEntry *entry =(NodeEntry*) RoutingTable->table[0].value;
+    NodeEntry* foundEntry = (NodeEntry*) findNode(RoutingTable,newNode->nodeIP);
 
-    TEST_ASSERT(RoutingTable->table[0].key == newNode->nodeIP );
     TEST_ASSERT(foundEntry != nullptr);
-    TEST_ASSERT(foundEntry->nodeIP[0] == newNode->nodeIP[0]);
     TEST_ASSERT(isIPEqual(foundEntry->nodeIP,node.nodeIP));
-
-
+    TEST_ASSERT(isIPEqual(foundEntry->nextHopIP,node.nextHopIP));
+    TEST_ASSERT(foundEntry->hopDistance == node.hopDistance);
     TEST_ASSERT(RoutingTable->numberOfItems == 1);
 }
 
 void test_remove_node(){
     int nodeIP[4] = {1,1,1,1};
-    tableRemove(RoutingTable,nodeIP);
+    NodeEntry node ={
+            .nodeIP = {1,1,1,1},
+            .hopDistance = 1,
+            .nextHopIP = {1,1,1,1},
+    };
+    NodeEntry* newNode = &node;
 
-    NodeEntry* findedEntry = findNode(RoutingTable,nodeIP);
-    TEST_ASSERT(isIPEqual(findedEntry->nodeIP, nullptr));
+    tableAdd(RoutingTable, newNode->nodeIP,newNode);
+    tablePrint(RoutingTable,printStruct);
+
+    tableRemove(RoutingTable,nodeIP);
+    tablePrint(RoutingTable,printStruct);
 
     TEST_ASSERT(RoutingTable->numberOfItems == 0);
+
+    NodeEntry* foundEntry =(NodeEntry*) findNode(RoutingTable,nodeIP);
+    TEST_ASSERT(foundEntry == nullptr);
+
 }
 
 void test_find_path_to_child(){
+    int childIP[4] = {1,1,1,1};
+    int* nextHop;
+    NodeEntry node ={
+            .nodeIP = {1,1,1,1},
+            .hopDistance = 1,
+            .nextHopIP = {1,1,1,1},
+    };
+    NodeEntry* childNode = &node;
+
+    tableAdd(RoutingTable, childNode->nodeIP,childNode);
+    tableAdd(ChildrenTable, childNode->nodeIP,childNode);
+
+    tablePrint(RoutingTable,printStruct);
+    tablePrint(ChildrenTable,printStruct);
+    nextHop = findRouteToNode(childIP);
 
 }
 
@@ -74,8 +102,8 @@ void tearDown(void){}
 int main(int argc, char** argv){
     UNITY_BEGIN();
     RUN_TEST(test_ip_equal_func);
-    RUN_TEST(test_add_new_node);
-    //RUN_TEST(test_remove_node);
+    //RUN_TEST(test_add_node);
+    RUN_TEST(test_remove_node);
     UNITY_END();
 }
 

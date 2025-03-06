@@ -102,7 +102,7 @@ void tableRemove(TableInfo* T, void* key){
     int i, index = tableFind(T, key);
     if(index == -1) return;
     T->table[index].value = nullptr;
-    for (int i = index; i < MaxSize-1; i++) {
+    for (int i = index; i < T->numberOfItems-1; i++) {
         T->table[i].key= T->table[i+1].key;
         T->table[i].value= T->table[i+1].value;
     }
