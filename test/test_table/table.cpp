@@ -10,10 +10,8 @@ bool intEqual(void* a, void* b){
     return *(int*) a == *(int*) b;
 }
 bool vectorEqual(void* a, void* b){
-    printf("Func vectorEqual\n");
     int* ap = (int* )a;
     int* bp = (int* )b;
-    printf("a: %i,%i,%i,%i b: %i,%i,%i,%i\n",ap[0], ap[1], ap[2], bp[3],bp[0], bp[1], bp[2], bp[3]);
     if(ap[0]==bp[0] && ap[1]==bp[1] && ap[2]==bp[2] && ap[3]==bp[3]){
         return true;
     }
@@ -145,7 +143,7 @@ void test_vector_key(){
     tableAdd(T,value2.vector,&value2);
     TEST_ASSERT(T->numberOfItems == 2);
 
-    tablePrint(T,printStruct);
+    //tablePrint(T,printStruct);
 
     struct IP* result1 = (struct IP*) tableRead(T,value1.vector);
     //printf("Result1: %i == %i\n", (*result1).vector[0], valueCopy1[0]);
@@ -154,7 +152,7 @@ void test_vector_key(){
     TEST_ASSERT((*result1).metric == value1.metric);
     TEST_ASSERT((*result1).nextvector[0] == value1.nextvector[0]);
 
-    tablePrint(T,printStruct);
+    //tablePrint(T,printStruct);
     struct IP* result2 = (struct IP*) tableRead(T,value2.vector);
     //printf("Result2: %i == %i\n", (*result2).vector[0], valueCopy2[0]);
 

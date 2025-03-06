@@ -1,12 +1,12 @@
 #include "routing.h"
 #include "table.h"
-
+#include <stdio.h>
 //int parent[4];
 
 bool isIPEqual(void* a, void* b){
     int* aIP = (int*) a;
     int* bIP = (int*) b;
-
+    printf("In Function is IPEqual\n");
     if(aIP[0] == bIP[0] && aIP[1] == bIP[1] && aIP[2] == bIP[2] && aIP[3] == bIP[3]){
         return true;
     }
@@ -34,7 +34,7 @@ TableInfo TTable = {
 TableInfo* ChildrenTable = &TTable;
 
 NodeEntry* findNode(TableInfo* Table, int nodeIP[4]){
-    NodeEntry* entry = (NodeEntry*) tableRead(Table, &nodeIP);
+    NodeEntry* entry = (NodeEntry*) tableRead(Table, nodeIP);
     return entry;
 }
 /*

@@ -10,6 +10,10 @@ void test_ip_equal_func(){
     TEST_ASSERT_FALSE(isIPEqual(ipa, ipb));
 }
 
+void printStruct(TableEntry* Table){
+    printf("K: %i V: %i\n",((int*)Table->key)[0],((int*)Table->value)[0]);
+}
+
 void test_ip_equal_pfunc(){
     TableEntry table[10];
     TableInfo RTable = {
@@ -29,18 +33,15 @@ void test_add_new_node(){
     NodeEntry* newNode = &node;
 
     tableAdd(RoutingTable, newNode->nodeIP,newNode);
-    NodeEntry* findedEntry = findNode(RoutingTable,newNode->nodeIP);
+    tablePrint(RoutingTable,printStruct);
+    NodeEntry* foundEntry = findNode(RoutingTable,newNode->nodeIP);
     //NodeEntry *entry =(NodeEntry*) RoutingTable->table[0].value;
 
-    //TEST_ASSERT(RoutingTable->table[0].key == newNode->nodeIP );
-    //TEST_ASSERT(findedEntry->hopDistance == newNode->hopDistance );
+    TEST_ASSERT(RoutingTable->table[0].key == newNode->nodeIP );
+    TEST_ASSERT(foundEntry != nullptr);
+    TEST_ASSERT(foundEntry->nodeIP[0] == newNode->nodeIP[0]);
+    TEST_ASSERT(isIPEqual(foundEntry->nodeIP,node.nodeIP));
 
-    //TEST_ASSERT(findedEntry != nullptr);
-    //TEST_ASSERT(isIPEqual(findedEntry->nodeIP,node.nodeIP));
-    //TEST_ASSERT(isIPEqual(findedEntry->nodeIP,findedEntry->nodeIP));
-
-    //TEST_ASSERT(isIPEqual(node.nodeIP,node.nodeIP));
-    //TEST_ASSERT(isIPEqual(newNode->nodeIP,newNode->nodeIP));
 
     TEST_ASSERT(RoutingTable->numberOfItems == 1);
 }
