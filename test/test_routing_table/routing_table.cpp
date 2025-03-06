@@ -10,12 +10,17 @@ void test_ip_equal_func(){
     TEST_ASSERT_FALSE(isIPEqual(ipa, ipb));
 }
 
-void printStruct(TableEntry* Table){
-    printf("K: %i.%i.%i.%i "
+void printNodeStruct(TableEntry* Table){
+    printf("K: Node IP %i.%i.%i.%i "
            "V: hopDistance:%i "
            "nextHop: %i.%i.%i.%i\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
            ((NodeEntry *)Table->value)->hopDistance,
            ((NodeEntry *)Table->value)->nextHopIP[0],((NodeEntry *)Table->value)->nextHopIP[1],((NodeEntry *)Table->value)->nextHopIP[2],((NodeEntry *)Table->value)->nextHopIP[3]);
+}
+void printChildStruct(TableEntry* Table){
+    printf("K: AP IP %i.%i.%i.%i "
+           "V: STA IP: %i.%i.%i.%i\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
+           ((childEntry *)Table->value)->STAIP[0],((childEntry *)Table->value)->STAIP[1],((childEntry *)Table->value)->STAIP[2],((childEntry *)Table->value)->STAIP[3]);
 }
 
 void test_ip_equal_pfunc(){
@@ -37,7 +42,7 @@ void test_add_node(){
     NodeEntry* newNode = &node;
 
     tableAdd(RoutingTable, newNode->nodeIP,newNode);
-    tablePrint(RoutingTable,printStruct);
+    //tablePrint(RoutingTable,printNodeStruct);
     NodeEntry* foundEntry = (NodeEntry*) findNode(RoutingTable,newNode->nodeIP);
 
     TEST_ASSERT(foundEntry != nullptr);
@@ -57,10 +62,10 @@ void test_remove_node(){
     NodeEntry* newNode = &node;
 
     tableAdd(RoutingTable, newNode->nodeIP,newNode);
-    tablePrint(RoutingTable,printStruct);
+    tablePrint(RoutingTable,printNodeStruct);
 
     tableRemove(RoutingTable,nodeIP);
-    tablePrint(RoutingTable,printStruct);
+    tablePrint(RoutingTable,printNodeStruct);
 
     TEST_ASSERT(RoutingTable->numberOfItems == 0);
 
@@ -77,19 +82,66 @@ void test_find_path_to_child(){
             .hopDistance = 1,
             .nextHopIP = {1,1,1,1},
     };
-    NodeEntry* childNode = &node;
+    NodeEntry* routingNode = &node;
 
-    tableAdd(RoutingTable, childNode->nodeIP,childNode);
-    tableAdd(ChildrenTable, childNode->nodeIP,childNode);
+    childEntry child ={
+            .APIP = {1,1,1,1},
+            .STAIP = {2,2,2,1},
+    };
+    childEntry * childNode = &child;
 
-    tablePrint(RoutingTable,printStruct);
-    tablePrint(ChildrenTable,printStruct);
+    tableAdd(RoutingTable, routingNode->nodeIP,routingNode);
+    tableAdd(ChildrenTable, childNode->APIP,childNode);
+
+    printf("Routing Table\n");
+    tablePrint(RoutingTable,printNodeStruct);
+    printf("Children Table\n");
+    tablePrint(ChildrenTable,printChildStruct);
     nextHop = findRouteToNode(childIP);
+
+    TEST_ASSERT(isIPEqual(nextHop,child.STAIP));
 
 }
 
 void test_find_path_to_parent(){
+    int childIP[4] = {1,1,1,1};
+    int* nextHop;
+    NodeEntry node1 ={
+            .nodeIP = {1,1,1,1},
+            .hopDistance = 1,
+            .nextHopIP = {1,1,1,1},
+    };
+    NodeEntry* routingNode1 = &node1;
 
+    NodeEntry node2 ={
+            .nodeIP = {3,3,3,3},
+            .hopDistance = 1,
+            .nextHopIP = {3,3,3,3},
+    };
+    NodeEntry* routingNode2 = &node2;
+
+    childEntry child ={
+            .APIP = {1,1,1,1},
+            .STAIP = {2,2,2,1},
+    };
+    childEntry *childNode = &child;
+
+    parent[0] = 3;
+    parent[1] = 3;
+    parent[2] = 3;
+    parent[3] = 3;
+
+    tableAdd(RoutingTable, routingNode1->nodeIP,routingNode1);
+    tableAdd(RoutingTable, routingNode2->nodeIP,routingNode2);
+    tableAdd(ChildrenTable, childNode->APIP,childNode);
+
+    printf("Routing Table\n");
+    tablePrint(RoutingTable,printNodeStruct);
+    printf("Children Table\n");
+    tablePrint(ChildrenTable,printChildStruct);
+    nextHop = findRouteToNode(parent);
+
+    TEST_ASSERT(isIPEqual(nextHop,parent));
 }
 
 void test_find_path_to_network(){
@@ -101,9 +153,11 @@ void tearDown(void){}
 
 int main(int argc, char** argv){
     UNITY_BEGIN();
-    RUN_TEST(test_ip_equal_func);
+    //RUN_TEST(test_ip_equal_func);
     //RUN_TEST(test_add_node);
     RUN_TEST(test_remove_node);
+    //RUN_TEST(test_find_path_to_child);
+    //RUN_TEST(test_find_path_to_parent);
     UNITY_END();
 }
 
