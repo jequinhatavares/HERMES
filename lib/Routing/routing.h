@@ -5,16 +5,23 @@
 
 typedef struct NodeEntry {
     int nodeIP[4];
-    int HopDistance;
+    int hopDistance;
     int nextHopIP[4];
 } NodeEntry;
 
-extern TableInfo* RoutingTable;
-extern int **children;
-extern int numberOfChildren
-extern int parent[4];
+typedef struct childrenEntry{
+    int APIP[4];
+    int STAIP[4];
+}childrenEntry;
 
-NodeEntry* findNode(int nodeIP[4]);
+
+extern TableInfo* RoutingTable;
+extern TableInfo* ChildrenTable;
+extern int numberOfChildren;
+//extern int parent[4];
+
+bool isIPEqual(void* a, void* b);
+NodeEntry* findNode(TableInfo* Table, int nodeIP[4]);
 int* findRouteToNode(int nodeIP[4]);
 
 #endif //ROUTING_H

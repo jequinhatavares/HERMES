@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "table.h"
 
 //int NumberOfItems = 0;
@@ -35,8 +36,11 @@ int tableFind(TableInfo* T, void* Key){
     int i;
     for(i=0; i<T->numberOfItems; i++){
         //if(Table[i].key == Key)
-        if(T->isEqual(T->table[i].key, Key))
+        bool result = T->isEqual(T->table[i].key, Key);
+        if(result){
+            //printf("tableFind Returned: %i\n",i);
             return i;
+        }
     }
     return -1;
 }
@@ -52,6 +56,7 @@ int tableFind(TableInfo* T, void* Key){
 void* tableRead(TableInfo* T, void* key){
     int i = tableFind(T, key);
     if (i==-1) return nullptr;
+    //printf("tableRead value: %i\n",((int*)T->table[i].value)[0]);
     return T->table[i].value;
 }
 
@@ -102,4 +107,11 @@ void tableRemove(TableInfo* T, void* key){
         T->table[i].value= T->table[i+1].value;
     }
     T->numberOfItems --;
+}
+
+void tablePrint(TableInfo* T, void (*print)(TableEntry*)){
+    int i;
+    for(i=0; i<T->numberOfItems; i++){
+        print(&T->table[i]);
+    }
 }
