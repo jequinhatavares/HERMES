@@ -115,3 +115,12 @@ void tablePrint(TableInfo* T, void (*print)(TableEntry*)){
         print(&T->table[i]);
     }
 }
+
+void tableClean(TableInfo* T){
+    int i;
+    for (int i = 0; i < T->numberOfItems; i++) {
+        T->table[i].key = nullptr;
+        T->table[i].value = nullptr;
+    }
+    T->numberOfItems = 0;
+}

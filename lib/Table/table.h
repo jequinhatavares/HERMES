@@ -30,5 +30,6 @@ void tableAdd(TableInfo*, void* key, void* value);
 void tableUpdate(TableInfo*, void* key, void* value);
 void tableRemove(TableInfo*, void* key);
 void tablePrint(TableInfo* T, void (*print)(TableEntry*));
+void tableClean(TableInfo* T);
 
 #endif //TABLE_H
