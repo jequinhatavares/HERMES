@@ -46,42 +46,22 @@ int* findRouteToNode(int nodeIP[4]){
     }
 
     //Check if node is my child
-    childEntry* Entry = (childEntry*) findNode(ChildrenTable,nodeIP);
-    if(Entry != nullptr)
+    childEntry* childEntry1 = (childEntry*) findNode(ChildrenTable,nodeIP);
+    if(childEntry1 != nullptr)
     {
-        return Entry->STAIP;
+        return childEntry1->STAIP;
         //Return the address of the child itself (translated to its STA addr)
     }
 
     //Check in the routing table the next hop to the destination
     NodeEntry *entry = (NodeEntry*)findNode(RoutingTable, nodeIP);
+
+    childEntry* childEntry2 = (childEntry*) findNode(ChildrenTable,entry->nextHopIP);
+    if(childEntry2 != nullptr){//If the next Hop is one of my children the IP needs to be translated to its STA IP to forward the message
+        return childEntry2->STAIP;
+    }
     return entry->nextHopIP;
 
 }
-
-
-
-
-//NodeEntry RoutingTable[MAX_NODES];
-/*
-void newNode(int nodeIP[4], int HopDistance, int nextHopIP[4]){
-    int i;
-    for(i=0; i<4; i++){
-        RoutingTable[NumberOfNodes-1].nodeIP[i] = nodeIP[i];
-        RoutingTable[NumberOfNodes-1].nextHopIP[i] = nextHopIP[i];
-    }
-    RoutingTable[NumberOfNodes-1].HopDistance= HopDistance;
-}
-
-int findRoute(int ip[4]){
-    int i;
-    for(i=0; i<MAX_NODES; i++){
-        if(RoutingTable[i].nodeIP[0] == ip[0] && RoutingTable[i].nodeIP[1] == ip[1] && RoutingTable[i].nodeIP[2] == ip[2] && RoutingTable[i].nodeIP[3] == ip[3]){
-            return i;
-        }
-    }
-    return -1;
-}
-*/
 
 
