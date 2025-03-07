@@ -109,6 +109,14 @@ void tableRemove(TableInfo* T, void* key){
     T->numberOfItems --;
 }
 
+/**
+ * tablePrint
+ * Prints the contents of the table using a user-defined print function.
+ *
+ * @param T - A pointer to the table.
+ * @param print - A function pointer to print a table entry.
+ * @return void
+ */
 void tablePrint(TableInfo* T, void (*print)(TableEntry*)){
     int i;
     for(i=0; i<T->numberOfItems; i++){
@@ -116,6 +124,13 @@ void tablePrint(TableInfo* T, void (*print)(TableEntry*)){
     }
 }
 
+/**
+ * tableClean
+ * Clears all entries in the table by setting keys and values to nullptr and resetting the item count.
+ *
+ * @param T - A pointer to the table.
+ * @return void
+ */
 void tableClean(TableInfo* T){
     int i;
     for (int i = 0; i < T->numberOfItems; i++) {
