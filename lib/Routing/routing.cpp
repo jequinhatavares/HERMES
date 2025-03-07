@@ -1,5 +1,5 @@
 #include "routing.h"
-#include "table.h"
+
 #include <stdio.h>
 
 int parent[4];

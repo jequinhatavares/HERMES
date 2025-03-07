@@ -1,7 +1,8 @@
 #ifndef ROUTING_H
 #define ROUTING_H
 
-#include "table.h"
+//#include "table.h"
+#include "../Table/table.h"
 
 typedef struct NodeEntry {
     int nodeIP[4];
@@ -17,7 +18,6 @@ typedef struct childEntry{
 
 extern TableInfo* RoutingTable;
 extern TableInfo* ChildrenTable;
-extern int numberOfChildren;
 extern int parent[4];
 
 bool isIPEqual(void* a, void* b);

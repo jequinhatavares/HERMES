@@ -4,21 +4,19 @@
 #include <transport_hal.h>
 #include <cstdio>
 #include <cstring>
+#include "lifecycle.h"
 //#include "../lib/wifi_hal/wifi_hal.h"
 //#include "../lib/transport_hal/esp32/udp_esp32.h"
 
 #define MAX_CLIENTS 4
 bool isFirstMessage = true;
 
-#define SSID_PREFIX      		"JessicaNode"
-#define PASS      		        "123456789"
-
 IPAddress localIP;
 IPAddress gateway;
 IPAddress subnet;
 IPAddress dns;
 
-bool iamRoot = false;
+bool iamRoot = true;
 
 //void setIPs(int n){
 //    localIP = IPAddress(n,n,n,n);
@@ -39,9 +37,6 @@ bool iamRoot = false;
  */
 
 void setIPs(const uint8_t* MAC){
-    //Serial.printf("setIPs Mac: %s\n",MAC);
-    //Serial.printf("Mac[2]: %c\n",MAC[2]);
-    //Serial.printf("Mac size: %i\n",sizeof(MAC));
     localIP = IPAddress(MAC[5],MAC[4],MAC[3],1);
     gateway = IPAddress(MAC[5],MAC[4],MAC[3],1);
     subnet = IPAddress(255,255,255,0);
@@ -63,32 +58,21 @@ void parseMAC(const char* macStr, uint8_t* macArray) {
     //Serial.printf("Parsed MAC Bytes: %d:%d:%d:%d:%d:%d\n",macArray[0],macArray[1], macArray[2], macArray[3], macArray[4], macArray[5]);
 }
 
-
-int count = 0;
-
-struct node{
-    IPAddress ip;
-};
-
-
 void setup(){
     Serial.begin(115200);
     uint8_t MAC[6];
     int i;
     #ifdef ESP32
-        Serial.print("ESP32");
+        Serial.print("ESP32\n");
         //esp_log_level_set("wifi", ESP_LOG_VERBOSE);
     #endif
 
     #ifdef ESP8266
-        Serial.print("ESP8266");
+        Serial.print("ESP8266\n");
     #endif
 
+    Serial.printf("My MAC addr: %s\n",getMyMAC().c_str());
 
-    //strcat(SSID_PREFIX, getMyMAC().c_str());
-
-    //strcat("s", "h");
-    //String SSID = SSID_PREFIX + getMyMAC();
     char ssid[256]; // Make sure this buffer is large enough to hold the entire SSID
     strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
     strcat(ssid, getMyMAC().c_str());
@@ -99,42 +83,13 @@ void setup(){
     setIPs(MAC);
 
     startWifiAP(ssid,PASS, localIP, gateway, subnet);
+
     begin_transport();
 
-
     if(!iamRoot){
-        List list = searchAP(SSID_PREFIX);
-        for (int i=0; i<list.len; i++){
-            Serial.printf("Found SSID: %s\n", list.item[i].c_str());
-        }
-        delay(1000);
-        if(list.len != 0){
-            // choose a prefered parent
-            connectToAP(list.item[0].c_str(), PASS);
-            Serial.printf("Connected. My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
-
-            char msg[50] = "Hello, from your son-";
-            char ipStr[16];
-            //delay(4000);
-            //changeWifiMode(1);
-
-            IPAddress my_ip = getMySTAIP();
-            // Convert IP address to string format
-            snprintf(ipStr, sizeof(ipStr), "%u.%u.%u.%u", my_ip[0], my_ip[1], my_ip[2], my_ip[3]);
-            // Concatenate the IP string to the message
-            strncat(msg, ipStr, sizeof(msg) - strlen(msg) - 1);
-
-
-
-            sendMessage(getGatewayIP(), msg);
-            Serial.printf("Message:%s - sent to %s\n",msg,getGatewayIP().toString().c_str());
-            delay(1000);
-
-
-            //Serial.print("AP initialized\n");
-            //IPAddress broadcastIP = WiFi.broadcastIP();
-        }
+       joinNetwork();
     }
+
 
     //if(iamRoot)begin_transport();
     changeWifiMode(3);
