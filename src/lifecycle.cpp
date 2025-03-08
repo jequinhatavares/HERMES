@@ -1,9 +1,12 @@
 #include "lifecycle.h"
 
-
 void joinNetwork(){
-    int wait = 1000000;
+    int wait = 1000000, packetSize = 0;
+    IPAddress mySTAIP;
+    messageParameters params;
+    char buffer[256] = "";
     List list = searchAP(SSID_PREFIX);
+    parentSelectionInfo *possibleParents = nullptr;
     for (int i=0; i<list.len; i++){
         Serial.printf("Found SSID: %s\n", list.item[i].c_str());
     }
@@ -13,13 +16,26 @@ void joinNetwork(){
         for (int i = 0; i < list.len; i++) {
             connectToAP(list.item[i].c_str(), PASS);
             Serial.printf("Connected to potential parent. My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
-            //encodeMessage(msg, parentDiscoveryRequest, .IP={1,1,1,1});
+            mySTAIP = getMySTAIP();
+            delay(1000);
+            params.IP[0] = mySTAIP[0]; params.IP[1] = mySTAIP[1]; params.IP[2] = mySTAIP[2]; params.IP[3] = mySTAIP[3];
+
+            encodeMessage(msg, parentDiscoveryRequest, params);
             sendMessage(getGatewayIP(), msg);
 
+            Serial.printf("Waiting for parent response\n");
+
             //wait for the AP to respond
-            while((incomingMessage() == 0) && (wait !=0)){
-                wait --;
+            while((packetSize =incomingMessage()) == 0){
+                //Serial.printf("Waiting for parent response\n");
+            };
+
+            if (packetSize > 0){
+                receiveMessage(buffer);
+                Serial.printf("Parent Response: %s\n", buffer);
+                decodeParentInfoResponse(buffer, possibleParents, i);
             }
+
         }
         // choose a prefered parent
         //connectToAP(list.item[0].c_str(), PASS);

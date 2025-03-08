@@ -10,6 +10,7 @@
 #define PASS      		        "123456789"
 
 
+
 void joinNetwork();
 
 #endif //LIFECYCLE_H

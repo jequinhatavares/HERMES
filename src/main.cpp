@@ -100,17 +100,33 @@ void setup(){
 //WiFiClient client;
 //bool client_defined = false;
 char buffer[256] = "";
-IPAddress ip;
+IPAddress ip, childIP;
 
 void loop(){
     // Act like an AP and wait for incoming requests
+    char *msg= nullptr;
+    char messageType;
+    messageParameters params;
+    IPAddress myIP;
     int packet_size = incomingMessage();
+
     if (packet_size > 0){
         Serial.printf("PacketSize: %d\n", packet_size);
         Serial.print("Theres incoming messages\n");
         receiveMessage(buffer);
         Serial.printf("Received: %s\n", buffer);
-        for (int i = 0; i < strlen(buffer); i++) {
+        sscanf(buffer, "%c %hhu.%hhu.%hhu.%hhu", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
+       if( messageType == 0){
+           Serial.printf("Message Type 0\n");
+           params.hopDistance = 0;
+           params.childrenNumber = 0;
+           myIP = getMyAPIP();
+           params.IP[0] = myIP[0]; params.IP[1] = myIP[1]; params.IP[2] = myIP[2]; params.IP[3] = myIP[3];
+           encodeMessage(msg,parentInfoResponse,params);
+           sendMessage(childIP,msg);
+       }
+
+        /***for (int i = 0; i < strlen(buffer); i++) {
             if (buffer[i] == '-') {
                 sscanf(&buffer[i + 1], "%hhu.%hhu.%hhu.%hhu", &ip[0], &ip[1], &ip[2], &ip[3]);
                 Serial.printf("Find child IP: %i.%i.%i.%i\n", ip[0], ip[1], ip[2], ip[3]);
@@ -120,7 +136,7 @@ void loop(){
         if (isFirstMessage || strcmp(buffer, "Response from your parent") != 0 ){
             sendMessage(ip,"Response from your parent");
             isFirstMessage = false;
-        }
+        }**/
 
         //sendMessage(Udp.remoteIP(),"echo");
     }
