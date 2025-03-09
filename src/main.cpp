@@ -16,7 +16,7 @@ IPAddress gateway;
 IPAddress subnet;
 IPAddress dns;
 
-bool iamRoot = true;
+bool iamRoot = true ;
 
 //void setIPs(int n){
 //    localIP = IPAddress(n,n,n,n);
@@ -104,8 +104,8 @@ IPAddress ip, childIP;
 
 void loop(){
     // Act like an AP and wait for incoming requests
-    char *msg= nullptr;
-    char messageType;
+    char msg[50] = "";
+    int messageType;
     messageParameters params;
     IPAddress myIP;
     int packet_size = incomingMessage();
@@ -115,13 +115,17 @@ void loop(){
         Serial.print("Theres incoming messages\n");
         receiveMessage(buffer);
         Serial.printf("Received: %s\n", buffer);
-        sscanf(buffer, "%c %hhu.%hhu.%hhu.%hhu", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
-       if( messageType == 0){
+        sscanf(buffer, "%d %hhu.%hhu.%hhu.%hhu", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
+        Serial.printf("Message Type; %c\n", messageType);
+        int int_messageType = messageType - '0';
+
+        if( messageType == 0){
            Serial.printf("Message Type 0\n");
            params.hopDistance = 0;
            params.childrenNumber = 0;
            myIP = getMyAPIP();
            params.IP[0] = myIP[0]; params.IP[1] = myIP[1]; params.IP[2] = myIP[2]; params.IP[3] = myIP[3];
+
            encodeMessage(msg,parentInfoResponse,params);
            sendMessage(childIP,msg);
        }

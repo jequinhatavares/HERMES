@@ -6,7 +6,7 @@ void joinNetwork(){
     messageParameters params;
     char buffer[256] = "";
     List list = searchAP(SSID_PREFIX);
-    parentSelectionInfo *possibleParents = nullptr;
+    parentSelectionInfo possibleParents[10] ;
     for (int i=0; i<list.len; i++){
         Serial.printf("Found SSID: %s\n", list.item[i].c_str());
     }
@@ -34,10 +34,11 @@ void joinNetwork(){
                 receiveMessage(buffer);
                 Serial.printf("Parent Response: %s\n", buffer);
                 decodeParentInfoResponse(buffer, possibleParents, i);
+                Serial.printf("possibleParents Info- nrChildren: %i rootHopDistance: %i IP: %i.%i.%i.%i\n", possibleParents[i].childrenNumber, possibleParents[i].rootHopDistance,possibleParents[i].parentIP[0], possibleParents[i].parentIP[1], possibleParents[i].parentIP[2], possibleParents[i].parentIP[3]);
             }
 
         }
-        // choose a prefered parent
+        // choose a preferred parent
         //connectToAP(list.item[0].c_str(), PASS);
         //Serial.printf("Connected. My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
 
