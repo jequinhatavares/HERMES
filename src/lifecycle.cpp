@@ -8,13 +8,13 @@ void joinNetwork(){
     List list = searchAP(SSID_PREFIX);
     parentInfo possibleParents[10] ;
     for (int i=0; i<list.len; i++){
-        Serial.printf("Found SSID: %s\n", list.item[i].c_str());
+        Serial.printf("Found SSID: %s\n", list.item[i]);
     }
     delay(1000);
     if(list.len != 0){
         char msg[50] = "";
         for (int i = 0; i < list.len; i++) {
-            connectToAP(list.item[i].c_str(), PASS);
+            connectToAP(list.item[i], PASS);
             Serial.printf("Connected to potential parent. My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
             mySTAIP = getMySTAIP();
             delay(1000);
