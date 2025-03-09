@@ -6,7 +6,7 @@ void joinNetwork(){
     messageParameters params;
     char buffer[256] = "";
     List list = searchAP(SSID_PREFIX);
-    parentSelectionInfo possibleParents[10] ;
+    parentInfo possibleParents[10] ;
     for (int i=0; i<list.len; i++){
         Serial.printf("Found SSID: %s\n", list.item[i].c_str());
     }
@@ -34,33 +34,34 @@ void joinNetwork(){
                 receiveMessage(buffer);
                 Serial.printf("Parent Response: %s\n", buffer);
                 decodeParentInfoResponse(buffer, possibleParents, i);
-                Serial.printf("possibleParents Info- nrChildren: %i rootHopDistance: %i IP: %i.%i.%i.%i\n", possibleParents[i].childrenNumber, possibleParents[i].rootHopDistance,possibleParents[i].parentIP[0], possibleParents[i].parentIP[1], possibleParents[i].parentIP[2], possibleParents[i].parentIP[3]);
+                Serial.printf("possibleParents Info- nrChildren: %i rootHopDistance: %i IP: %i.%i.%i.%i\n", possibleParents[i].nrOfChildren, possibleParents[i].rootHopDistance,possibleParents[i].parentIP[0], possibleParents[i].parentIP[1], possibleParents[i].parentIP[2], possibleParents[i].parentIP[3]);
             }
 
         }
-        // choose a preferred parent
-        //connectToAP(list.item[0].c_str(), PASS);
-        //Serial.printf("Connected. My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
-
-
-        //char ipStr[16];
-
-        //IPAddress my_ip = getMySTAIP();
-        // Convert IP address to string format
-        //snprintf(ipStr, sizeof(ipStr), "%u.%u.%u.%u", my_ip[0], my_ip[1], my_ip[2], my_ip[3]);
-        // Concatenate the IP string to the message
-        //strncat(msg, ipStr, sizeof(msg) - strlen(msg) - 1);
-
-
-        //sendMessage(getGatewayIP(), msg);
-        //Serial.printf("Message:%s - sent to %s\n",msg,getGatewayIP().toString().c_str());
-        //delay(1000);
-
-
-        //Serial.print("AP initialized\n");
-        //IPAddress broadcastIP = WiFi.broadcastIP();
+        parentInfo preferredParent = chooseParent(possibleParents,list.len);
     }
 
 }
 
 void createAP(){}
+
+parentInfo chooseParent(parentInfo* possibleParents, int n){
+    parentInfo preferredParent;
+    int minHop = 10000, parentIndex;
+    for (int i = 0; i < n; i++) {
+        if(possibleParents[i].rootHopDistance < minHop){
+           minHop = possibleParents[i].rootHopDistance;
+           parentIndex = i;
+        }
+        //Tie with another potential parent.
+        if(possibleParents[i].rootHopDistance == minHop){
+            //If the current parent has fewer children, it becomes the new preferred parent.
+            if(possibleParents[i].nrOfChildren < possibleParents[parentIndex].nrOfChildren){
+                minHop = possibleParents[i].rootHopDistance;
+                parentIndex = i;
+            }
+            //If the number of children is the same or greater, the preferred parent does not change
+        }
+    }
+    return possibleParents[parentIndex];
+}

@@ -2,7 +2,6 @@
 #define MESSAGES_H
 
 
-
 typedef struct messageParameters{
     int IP[4] = {0,0,0,0};
     int hopDistance = -1;
@@ -18,14 +17,14 @@ typedef enum messageType{
     parentRegistrationRequest, //2
 }messageType;
 
-typedef struct parentSelectionInfo{
+typedef struct parentInfo{
     int parentIP[4];
     int rootHopDistance;
-    int childrenNumber;
-}parentSelectionInfo;
+    int nrOfChildren;
+}parentInfo;
 
 void encodeMessage(char* msg, messageType type, messageParameters parameters);
 int decodeMessage(char* msg);
-void decodeParentInfoResponse(char* msg, parentSelectionInfo *parents, int i);
+void decodeParentInfoResponse(char* msg, parentInfo *parents, int i);
 
 #endif //MESSAGES_H

@@ -5,14 +5,20 @@
 
 void test_pdr_correct(){
     char msg[20] = "";
-    messageEncode(msg, parentDiscoveryRequest, .IP={1,1,1,1});
+    messageParameters params;
+    params.IP[0] = 1; params.IP[1] = 1; params.IP[2] = 1; params.IP[3] = 1;
+
+    encodeMessage(msg, parentDiscoveryRequest, params);
     printf(msg);
     TEST_ASSERT(strcmp(msg, "0 1.1.1.1") == 0);
 }
 
 void test_pir_incorrect(){
     char msg[20] = "";
-    messageEncode(msg, parentInfoResponse, .IP={1,1,1,1});
+    messageParameters params;
+    params.IP[0] = 1; params.IP[1] = 1; params.IP[2] = 1; params.IP[3] = 1;
+
+    encodeMessage(msg, parentInfoResponse, params);
     //printf(msg);
     TEST_ASSERT(strcmp(msg, "") == 0);
 }

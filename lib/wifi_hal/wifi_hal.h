@@ -1,16 +1,14 @@
 
 #ifndef WIFI_H
 #define WIFI_H
-#include <WiFiClient.h>
-#include <WiFiServer.h>
 
-extern WiFiClient parent;
+
 extern bool initializeAP;
 
 //IPAddress myIP;
 
 typedef struct List_ {
-    String item[10];
+    char* item[10];
     int len = 0;
 } List;
 

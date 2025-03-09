@@ -12,5 +12,6 @@
 
 
 void joinNetwork();
+parentInfo chooseParent(parentInfo* possibleParents, int n);
 
 #endif //LIFECYCLE_H
