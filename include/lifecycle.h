@@ -6,13 +6,38 @@
 #include <wifi_hal.h>
 #include <messages.h>
 #include <routing.h>
+#include <state_machine.h>
+#include <snake_queue.h>
 
 #define SSID_PREFIX      		"JessicaNode"
 #define PASS      		        "123456789"
 
-
-
-void joinNetwork();
+State initNode(Event event);
+State search(Event event);
+State joinNetwork(Event event);
+State idle(Event event);
+State handleMessages(Event event);
 parentInfo chooseParent(parentInfo* possibleParents, int n);
+
+//s before the name means state and e means event
+#define sInit ((State) 0)
+#define sSearch ((State) 1)
+#define sChooseParent ((State) 2)
+#define sIdle ((State) 3)
+#define sHandleMessages ((State) 4)
+#define sOrphan ((State) 5)
+#define sError ((State) 6)
+
+#define eSuccess ((Event) 0)
+#define eSearch ((Event) 1)
+#define eMessage ((Event) 2)
+#define eError ((Event) 3)
+
+extern StateMachine* SM;
+
+extern CircularBuffer* CBuffer;
+
+
+//#define eMessage ((Event) 4)
 
 #endif //LIFECYCLE_H

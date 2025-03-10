@@ -1,6 +1,48 @@
 #include "lifecycle.h"
 
-void joinNetwork(){
+
+StateMachine SM_ = {
+        .current_state = sInit,
+        .TransitionTable = {
+                [sInit] = initNode,
+                [sSearch] = search,
+                [sChooseParent] = joinNetwork,
+                [sIdle] = idle,
+                [sHandleMessages] = handleMessages,
+        },
+};
+
+StateMachine* SM = &SM_;
+
+static CircularBuffer cb_ = {
+        .head=0,
+        .tail=0,
+        .size=0,
+        .table = {0, 0, 0, 0,
+                  0, 0, 0, 0, },
+};
+
+CircularBuffer* CBuffer = &cb_;
+
+
+State initNode(Event event){
+    return sSearch;
+}
+
+State search(Event event){
+    return sChooseParent;
+}
+
+State idle(Event event){
+    return sChooseParent;
+}
+
+State handleMessages(Event event){
+    return sIdle;
+}
+
+
+State joinNetwork(Event event){
     int wait = 1000000, packetSize = 0;
     IPAddress mySTAIP;
     messageParameters params;
@@ -51,7 +93,7 @@ void joinNetwork(){
         rootHopDistance = preferredParent.rootHopDistance + 1;
         hasParent = true;
     }
-
+    return sIdle;
 }
 
 void createAP(){}

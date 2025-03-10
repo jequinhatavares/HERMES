@@ -36,7 +36,6 @@ bool isIPEqual(void* a, void* b){
     return false;
 }
 
-
 void* findNode(TableInfo* Table, int nodeIP[4]){
     return tableRead(Table, nodeIP);
 }

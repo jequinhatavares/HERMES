@@ -110,6 +110,7 @@ void loop(){
     IPAddress myIP;
     int packet_size = incomingMessage();
 
+
     if (packet_size > 0){
         Serial.printf("PacketSize: %d\n", packet_size);
         Serial.print("Theres incoming messages\n");
@@ -143,6 +144,9 @@ void loop(){
         }**/
 
         //sendMessage(Udp.remoteIP(),"echo");
+    }
+    while(){
+
     }
 }
 #endif
