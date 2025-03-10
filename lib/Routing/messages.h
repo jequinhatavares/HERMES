@@ -18,6 +18,7 @@ typedef enum messageType{
 }messageType;
 
 typedef struct parentInfo{
+    char* ssid;
     int parentIP[4];
     int rootHopDistance;
     int nrOfChildren;

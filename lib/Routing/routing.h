@@ -20,6 +20,10 @@ extern TableInfo* RoutingTable;
 extern TableInfo* ChildrenTable;
 extern int parent[4];
 
+extern int rootHopDistance;
+extern int numberOfChildren;
+extern bool hasParent;
+
 bool isIPEqual(void* a, void* b);
 void* findNode(TableInfo* Table, int nodeIP[4]);
 int* findRouteToNode(int nodeIP[4]);

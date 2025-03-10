@@ -5,40 +5,51 @@ void joinNetwork(){
     IPAddress mySTAIP;
     messageParameters params;
     char buffer[256] = "";
+    parentInfo possibleParents[10];
+
+    //Find nodes in the network
     List list = searchAP(SSID_PREFIX);
-    parentInfo possibleParents[10] ;
+
     for (int i=0; i<list.len; i++){
         Serial.printf("Found SSID: %s\n", list.item[i]);
     }
     delay(1000);
     if(list.len != 0){
         char msg[50] = "";
+        //Connect to each parent to request their information in order to select the preferred parent.
         for (int i = 0; i < list.len; i++) {
             connectToAP(list.item[i], PASS);
             Serial.printf("Connected to potential parent. My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
             mySTAIP = getMySTAIP();
             delay(1000);
-            params.IP[0] = mySTAIP[0]; params.IP[1] = mySTAIP[1]; params.IP[2] = mySTAIP[2]; params.IP[3] = mySTAIP[3];
 
+            //Send a Parent Discovery Request to the connected parent
+            params.IP[0] = mySTAIP[0]; params.IP[1] = mySTAIP[1]; params.IP[2] = mySTAIP[2]; params.IP[3] = mySTAIP[3];
             encodeMessage(msg, parentDiscoveryRequest, params);
             sendMessage(getGatewayIP(), msg);
 
             Serial.printf("Waiting for parent response\n");
 
-            //wait for the AP to respond
-            while((packetSize =incomingMessage()) == 0){
-                //Serial.printf("Waiting for parent response\n");
-            };
+            //Wait for the parent to respond
+            while((packetSize =incomingMessage()) == 0);
 
             if (packetSize > 0){
                 receiveMessage(buffer);
                 Serial.printf("Parent Response: %s\n", buffer);
                 decodeParentInfoResponse(buffer, possibleParents, i);
+                possibleParents[i].ssid = list.item[i];
                 Serial.printf("possibleParents Info- nrChildren: %i rootHopDistance: %i IP: %i.%i.%i.%i\n", possibleParents[i].nrOfChildren, possibleParents[i].rootHopDistance,possibleParents[i].parentIP[0], possibleParents[i].parentIP[1], possibleParents[i].parentIP[2], possibleParents[i].parentIP[3]);
             }
 
         }
+        //With all the information gathered from the potential parents, select the preferred parent
         parentInfo preferredParent = chooseParent(possibleParents,list.len);
+        //Connect to the preferred parent
+        connectToAP(preferredParent.ssid, PASS);
+        parent[0] = preferredParent.parentIP[0]; parent[1] = preferredParent.parentIP[1];
+        parent[2] = preferredParent.parentIP[2]; parent[3] = preferredParent.parentIP[3];
+        rootHopDistance = preferredParent.rootHopDistance + 1;
+        hasParent = true;
     }
 
 }
