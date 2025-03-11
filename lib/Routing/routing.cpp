@@ -1,12 +1,12 @@
 #include "routing.h"
 
-
-int parent[4];
+bool iamRoot = false;
 int rootHopDistance = -1;
 int numberOfChildren = 0;
 bool hasParent = false;
+int parent[4];
 
-//TableInfo* RoutingTable = tableCreate(isIPEqual);
+//TableInfo* routingTable = tableCreate(isIPEqual);
 
 //Initialize Routing Table
 TableEntry table[10];
@@ -15,7 +15,7 @@ TableInfo RTable = {
     .isEqual = isIPEqual,
     .table = table
 };
-TableInfo* RoutingTable = &RTable;
+TableInfo* routingTable = &RTable;
 
 //Initialize the table that translates the AP-STA IP addresses of my children
 TableEntry Ttable[10];
@@ -24,7 +24,7 @@ TableInfo TTable = {
         .isEqual = isIPEqual,
         .table = Ttable,
 };
-TableInfo* ChildrenTable = &TTable;
+TableInfo* childrenTable = &TTable;
 
 bool isIPEqual(void* a, void* b){
     int* aIP = (int*) a;
@@ -48,7 +48,7 @@ int* findRouteToNode(int nodeIP[4]){
     }
 
     //Check if node is my child
-    childEntry* childEntry1 = (childEntry*) findNode(ChildrenTable,nodeIP);
+    childEntry* childEntry1 = (childEntry*) findNode(childrenTable,nodeIP);
     if(childEntry1 != nullptr)
     {
         return childEntry1->STAIP;
@@ -56,9 +56,9 @@ int* findRouteToNode(int nodeIP[4]){
     }
 
     //Check in the routing table the next hop to the destination
-    NodeEntry *entry = (NodeEntry*)findNode(RoutingTable, nodeIP);
+    NodeEntry *entry = (NodeEntry*)findNode(routingTable, nodeIP);
 
-    childEntry* childEntry2 = (childEntry*) findNode(ChildrenTable,entry->nextHopIP);
+    childEntry* childEntry2 = (childEntry*) findNode(childrenTable,entry->nextHopIP);
     if(childEntry2 != nullptr){//If the next Hop is one of my children the IP needs to be translated to its STA IP to forward the message
         return childEntry2->STAIP;
     }

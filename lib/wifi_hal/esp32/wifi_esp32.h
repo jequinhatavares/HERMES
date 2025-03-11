@@ -30,6 +30,8 @@ void connectToAP(const char*, const char*);
 
 void stopWifiAP();
 
+void disconnectFromAP();
+
 int numberOfSTAConnected();
 
 IPAddress getGatewayIP();

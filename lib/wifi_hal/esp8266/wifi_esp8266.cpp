@@ -177,7 +177,7 @@ void searchAP(String SSID){
         if(index == -1){
             continue;
         }
-        //return current_ssid.c_str();
+
         strcpy(ssidList.item[ssidList.len], current_ssid.c_str());
         ssidList.len++;
 
@@ -215,7 +215,21 @@ void connectToAP(const char * SSID, const char * PASS) {
 void stopWifiAP(){
     WiFi.softAPdisconnect();
 }
-
+/**
+ * disconnectFromAP
+ * Disconnects the device from the current Wi-Fi access point and waits
+ * until the disconnection is complete.
+ *
+ * @return void
+ */
+void disconnectFromAP(){
+    WiFi.disconnect();
+    //while(WiFi.status() != WL_DISCONNECTED){
+      //  delay(150);
+        //Serial.println(Get_WiFiStatus(WiFi.status()));
+        //WiFi.disconnect();
+    //}
+}
 /**
  * numberOfSTAConnected
  * Retrieves the number of stations (devices) currently connected to the ESP32/ESP8266 in AP mode.

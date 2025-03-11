@@ -1,5 +1,11 @@
 #include "lifecycle.h"
 
+IPAddress localIP;
+IPAddress gateway;
+IPAddress subnet;
+IPAddress dns;
+
+char messageBuffer[256] = "";
 
 StateMachine SM_ = {
         .current_state = sInit,
@@ -22,14 +28,34 @@ static CircularBuffer cb_ = {
                   0, 0, 0, 0, },
 };
 
-CircularBuffer* CBuffer = &cb_;
+CircularBuffer* stateMachineEngine = &cb_;
 
 
 State initNode(Event event){
+    uint8_t MAC[6];
+    char ssid[256]; // Make sure this buffer is large enough to hold the entire SSID
+    strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
+    strcat(ssid, getMyMAC().c_str());
+
+    Serial.print("Entered Init State\n");
+    parseMAC(getMyMAC().c_str(), MAC);
+    setIPs(MAC);
+
+    startWifiAP(ssid,PASS, localIP, gateway, subnet);
+
+    begin_transport();
+
+    if(iamRoot){
+        numberOfChildren = 0;
+        rootHopDistance = 0;
+        return sIdle;
+    }
+    insertFirst(stateMachineEngine, eSuccess);
     return sSearch;
 }
 
 State search(Event event){
+    Serial.print("Entered Search State\n");
     //Find nodes in the network
     do{
         searchAP(SSID_PREFIX);
@@ -40,10 +66,12 @@ State search(Event event){
         Serial.printf("Found SSID: %s\n", ssidList.item[i]);
     }
     delay(1000);
+    insertFirst(stateMachineEngine, eSuccess);
     return sChooseParent;
 }
 
 State joinNetwork(Event event){
+    Serial.print("Entered choose parent State\n");
     int wait = 1000000, packetSize = 0;
     IPAddress mySTAIP;
     messageParameters params;
@@ -54,6 +82,7 @@ State joinNetwork(Event event){
         char msg[50] = "";
         //Connect to each parent to request their information in order to select the preferred parent.
         for (int i = 0; i < ssidList.len; i++) {
+            Serial.print("Before connecting to AP\n");
             connectToAP(ssidList.item[i], PASS);
             Serial.printf("Connected to potential parent. My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
             mySTAIP = getMySTAIP();
@@ -76,6 +105,10 @@ State joinNetwork(Event event){
                 possibleParents[i].ssid = ssidList.item[i];
                 Serial.printf("possibleParents Info- nrChildren: %i rootHopDistance: %i IP: %i.%i.%i.%i\n", possibleParents[i].nrOfChildren, possibleParents[i].rootHopDistance,possibleParents[i].parentIP[0], possibleParents[i].parentIP[1], possibleParents[i].parentIP[2], possibleParents[i].parentIP[3]);
             }
+            if(ssidList.len != 1){
+                Serial.print("Disconnecting from AP\n");
+                disconnectFromAP();
+            }
         }
         //With all the information gathered from the potential parents, select the preferred parent
         parentInfo preferredParent = chooseParent(possibleParents,ssidList.len);
@@ -91,10 +124,33 @@ State joinNetwork(Event event){
 }
 
 State idle(Event event){
-    return sChooseParent;
+    Serial.print("Entered Idle State\n");
+    if (event == eMessage){
+        insertFirst(stateMachineEngine, eMessage);
+        return sHandleMessages;
+    }
+    return sIdle;
 }
 
 State handleMessages(Event event){
+    Serial.print("Entered handle Messages State\n");
+    char msg[50] = "";
+    int messageType;
+    messageParameters params;
+    IPAddress myIP;
+    IPAddress childIP;
+
+    sscanf(messageBuffer, "%d %hhu.%hhu.%hhu.%hhu", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
+    if( messageType == 0){
+        Serial.printf("Message Type 0\n");
+        params.hopDistance = 0;
+        params.childrenNumber = 0;
+        myIP = getMyAPIP();
+        params.IP[0] = myIP[0]; params.IP[1] = myIP[1]; params.IP[2] = myIP[2]; params.IP[3] = myIP[3];
+
+        encodeMessage(msg,parentInfoResponse,params);
+        sendMessage(childIP,msg);
+    }
     return sIdle;
 }
 
@@ -118,4 +174,34 @@ parentInfo chooseParent(parentInfo* possibleParents, int n){
         }
     }
     return possibleParents[parentIndex];
+}
+/**
+ * parseMAC
+ * Converts a MAC address from string format (e.g., "CC:50:E3:60:E6:87") into a 6-byte array.
+ *
+ * @param macStr Pointer to a string representing the MAC address in hexadecimal format.
+ * @param macArray Pointer to a 6-byte array where the parsed MAC address will be stored.
+ * @return void
+ */
+void parseMAC(const char* macStr, uint8_t* macArray) {
+    sscanf(macStr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+           &macArray[0], &macArray[1], &macArray[2],
+           &macArray[3], &macArray[4], &macArray[5]);
+    //Serial.printf("Parsed MAC Bytes: %d:%d:%d:%d:%d:%d\n",macArray[0],macArray[1], macArray[2], macArray[3], macArray[4], macArray[5]);
+}
+
+/**
+ * setIPs
+ * Configures the device's IP address
+ * @param MAC Pointer to a 6-byte array representing the MAC address.
+ * @return void
+ *
+ * Example:
+ * Given the MAC address: CC:50:E3:60:E6:87
+ * The generated IP address will be: 227.96.230.135
+ */
+void setIPs(const uint8_t* MAC){
+    localIP = IPAddress(MAC[5],MAC[4],MAC[3],1) ;
+    gateway = IPAddress(MAC[5],MAC[4],MAC[3],1) ;
+    subnet = IPAddress(255,255,255,0) ;
 }

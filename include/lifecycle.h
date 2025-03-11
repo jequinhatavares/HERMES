@@ -8,6 +8,7 @@
 #include <routing.h>
 #include <state_machine.h>
 #include <snake_queue.h>
+#include <cstring>
 
 #define SSID_PREFIX      		"JessicaNode"
 #define PASS      		        "123456789"
@@ -34,9 +35,17 @@ parentInfo chooseParent(parentInfo* possibleParents, int n);
 #define eError ((Event) 3)
 
 extern StateMachine* SM;
-extern CircularBuffer* CBuffer;
+extern CircularBuffer* stateMachineEngine;
 
+extern IPAddress localIP;
+extern IPAddress gateway;
+extern IPAddress subnet;
+extern IPAddress dns;
 
+extern char messageBuffer[256];
+
+void parseMAC(const char* macStr, uint8_t* macArray);
+void setIPs(const uint8_t* MAC);
 
 //#define eMessage ((Event) 4)
 

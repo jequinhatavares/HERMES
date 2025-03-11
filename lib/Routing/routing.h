@@ -16,10 +16,11 @@ typedef struct childEntry{
 }childEntry;
 
 
-extern TableInfo* RoutingTable;
-extern TableInfo* ChildrenTable;
+extern TableInfo* routingTable;
+extern TableInfo* childrenTable;
 extern int parent[4];
 
+extern bool iamRoot;
 extern int rootHopDistance;
 extern int numberOfChildren;
 extern bool hasParent;

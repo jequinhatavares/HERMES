@@ -66,7 +66,7 @@ void onStationModeDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info){
     Serial.println("[WIFI_EVENTS] Disconnected From AP\n");
     Serial.print("[WIFI_EVENTS] WiFi lost connection. Reason: ");
     Serial.println(info.wifi_sta_disconnected.reason);
-    WiFi.reconnect();
+    //WiFi.reconnect();
     //Serial.println("Trying to Reconnect");
     //WiFi.begin(ssid, password);
 }
@@ -78,8 +78,8 @@ void onStationModeDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info){
  * @return void
  */
 void initWifiEventHandlers(){
-    WiFi.onEvent(onSoftAPModeStationConnectedHandler, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_CONNECTED);
-    WiFi.onEvent(onSoftAPModeStationDisconnectedHandler, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+    WiFi.onEvent(onSoftAPModeStationConnectedHandler, WiFiEvent_t::ARDUINO_EVENT_WIFI_AP_STACONNECTED);
+    WiFi.onEvent(onSoftAPModeStationDisconnectedHandler, WiFiEvent_t::ARDUINO_EVENT_WIFI_AP_STADISCONNECTED);
     WiFi.onEvent(onStationModeGotIPHandler, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
     WiFi.onEvent(onStationModeConnectedHandler, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_CONNECTED);
     WiFi.onEvent(onStationModeDisconnectedHandler, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
@@ -153,7 +153,6 @@ void startWifiAP(const char* SSID, const char* PASS, const IPAddress& localIP, c
 
 }
 
-
 /**
  * searchAP
  * Scans for available Wi-Fi networks and filters them based on their SSID
@@ -178,14 +177,12 @@ void searchAP(String SSID){
         if(index == -1){
             continue;
         }
-        //return current_ssid.c_str();
-        ssidList.item[ssidList.len] = const_cast<char*>(current_ssid.c_str());
+        strcpy(ssidList.item[ssidList.len], current_ssid.c_str());
         ssidList.len++;
 
     }
    // Delete the scan result to free memory for code below.
     WiFi.scanDelete();
-    return ssidList;
     //return ssidList;
 }
 
@@ -217,6 +214,21 @@ void stopWifiAP(){
     WiFi.softAPdisconnect();
 }
 
+/**
+ * disconnectFromAP
+ * Disconnects the device from the current Wi-Fi access point and waits
+ * until the disconnection is complete.
+ *
+ * @return void
+ */
+void disconnectFromAP(){
+    WiFi.disconnect();
+    //while(WiFi.status() != WL_DISCONNECTED){
+      //  delay(150);
+        //Serial.println(Get_WiFiStatus(WiFi.status()));
+        //WiFi.disconnect();
+    //}
+}
 /**
  * numberOfSTAConnected
  * Retrieves the number of stations (devices) currently connected to the ESP32/ESP8266 in AP mode.
