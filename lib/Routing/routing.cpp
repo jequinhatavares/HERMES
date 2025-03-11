@@ -1,6 +1,6 @@
 #include "routing.h"
 
-bool iamRoot = false;
+bool iamRoot = true;
 int rootHopDistance = -1;
 int numberOfChildren = 0;
 bool hasParent = false;

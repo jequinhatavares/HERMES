@@ -147,6 +147,8 @@ State handleMessages(Event event){
         params.childrenNumber = 0;
         myIP = getMyAPIP();
         params.IP[0] = myIP[0]; params.IP[1] = myIP[1]; params.IP[2] = myIP[2]; params.IP[3] = myIP[3];
+        params.childrenNumber = numberOfChildren;
+        params.hopDistance = rootHopDistance;
 
         encodeMessage(msg,parentInfoResponse,params);
         sendMessage(childIP,msg);
