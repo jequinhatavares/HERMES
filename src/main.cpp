@@ -16,7 +16,7 @@ IPAddress gateway;
 IPAddress subnet;
 IPAddress dns;
 
-bool iamRoot = true ;
+bool iamRoot = false ;
 
 //void setIPs(int n){
 //    localIP = IPAddress(n,n,n,n);
@@ -87,7 +87,8 @@ void setup(){
     begin_transport();
 
     if(!iamRoot){
-       joinNetwork(eSuccess);
+        search(eSuccess);
+        joinNetwork(eSuccess);
     }
 
 
@@ -117,7 +118,7 @@ void loop(){
         receiveMessage(buffer);
         Serial.printf("Received: %s\n", buffer);
         sscanf(buffer, "%d %hhu.%hhu.%hhu.%hhu", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
-        Serial.printf("Message Type; %c\n", messageType);
+
 
         if( messageType == 0){
            Serial.printf("Message Type 0\n");

@@ -76,12 +76,12 @@ State joinNetwork(Event event){
                 possibleParents[i].ssid = ssidList.item[i];
                 Serial.printf("possibleParents Info- nrChildren: %i rootHopDistance: %i IP: %i.%i.%i.%i\n", possibleParents[i].nrOfChildren, possibleParents[i].rootHopDistance,possibleParents[i].parentIP[0], possibleParents[i].parentIP[1], possibleParents[i].parentIP[2], possibleParents[i].parentIP[3]);
             }
-
         }
         //With all the information gathered from the potential parents, select the preferred parent
         parentInfo preferredParent = chooseParent(possibleParents,ssidList.len);
         //Connect to the preferred parent
-        connectToAP(preferredParent.ssid, PASS);
+        if(ssidList.len != 1)connectToAP(preferredParent.ssid, PASS);
+        Serial.printf("Preferred Parent- IP: %i.%i.%i.%i nrChildren: %i rootHopDistance: %i\n",preferredParent.parentIP[0], preferredParent.parentIP[1], preferredParent.parentIP[2], preferredParent.parentIP[3], preferredParent.nrOfChildren, preferredParent.rootHopDistance);
         parent[0] = preferredParent.parentIP[0]; parent[1] = preferredParent.parentIP[1];
         parent[2] = preferredParent.parentIP[2]; parent[3] = preferredParent.parentIP[3];
         rootHopDistance = preferredParent.rootHopDistance + 1;

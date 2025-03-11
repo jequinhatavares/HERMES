@@ -5,10 +5,8 @@
 
 extern bool initializeAP;
 
-//IPAddress myIP;
-
 typedef struct List {
-    char* item[10];
+    char item[10][50];
     int len = 0;
 } List;
 

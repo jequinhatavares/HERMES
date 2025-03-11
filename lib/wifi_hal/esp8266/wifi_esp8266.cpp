@@ -65,7 +65,7 @@ void onStationModeConnectedHandler(const WiFiEventStationModeConnected& info) {
  */
 void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& info) {
     Serial.println("[WIFI_EVENTS] Disconnected From AP\n");
-    Serial.print("WiFi lost connection. Reason: ");
+    Serial.print("[WIFI_EVENTS] WiFi lost connection. Reason: ");
     Serial.println(info.reason);
     WiFi.reconnect();
     // Attempt Re-Connection
@@ -171,7 +171,6 @@ void searchAP(String SSID){
     Serial.printf("Number of scanned Networks: %i\n",n);
     for (int i = 0; i < n; ++i) {
         String current_ssid = WiFi.SSID(i);
-        String string = "ola";
         Serial.printf("SSID: %s\n", current_ssid.c_str());
         index = current_ssid.indexOf(SSID);
         //Check if the AP corresponds to a node of the mesh network
@@ -179,7 +178,7 @@ void searchAP(String SSID){
             continue;
         }
         //return current_ssid.c_str();
-        ssidList.item[ssidList.len] = const_cast<char*>(current_ssid.c_str());
+        strcpy(ssidList.item[ssidList.len], current_ssid.c_str());
         ssidList.len++;
 
     }
