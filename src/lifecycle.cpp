@@ -30,17 +30,18 @@ State initNode(Event event){
 }
 
 State search(Event event){
+    //Find nodes in the network
+    do{
+        searchAP(SSID_PREFIX);
+    }while ( ssidList.len == 0 );
+
+    //Print the found networks
+    for (int i=0; i<ssidList.len; i++){
+        Serial.printf("Found SSID: %s\n", ssidList.item[i]);
+    }
+    delay(1000);
     return sChooseParent;
 }
-
-State idle(Event event){
-    return sChooseParent;
-}
-
-State handleMessages(Event event){
-    return sIdle;
-}
-
 
 State joinNetwork(Event event){
     int wait = 1000000, packetSize = 0;
@@ -49,18 +50,11 @@ State joinNetwork(Event event){
     char buffer[256] = "";
     parentInfo possibleParents[10];
 
-    //Find nodes in the network
-    List list = searchAP(SSID_PREFIX);
-
-    for (int i=0; i<list.len; i++){
-        Serial.printf("Found SSID: %s\n", list.item[i]);
-    }
-    delay(1000);
-    if(list.len != 0){
+    if(ssidList.len != 0){
         char msg[50] = "";
         //Connect to each parent to request their information in order to select the preferred parent.
-        for (int i = 0; i < list.len; i++) {
-            connectToAP(list.item[i], PASS);
+        for (int i = 0; i < ssidList.len; i++) {
+            connectToAP(ssidList.item[i], PASS);
             Serial.printf("Connected to potential parent. My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
             mySTAIP = getMySTAIP();
             delay(1000);
@@ -79,13 +73,13 @@ State joinNetwork(Event event){
                 receiveMessage(buffer);
                 Serial.printf("Parent Response: %s\n", buffer);
                 decodeParentInfoResponse(buffer, possibleParents, i);
-                possibleParents[i].ssid = list.item[i];
+                possibleParents[i].ssid = ssidList.item[i];
                 Serial.printf("possibleParents Info- nrChildren: %i rootHopDistance: %i IP: %i.%i.%i.%i\n", possibleParents[i].nrOfChildren, possibleParents[i].rootHopDistance,possibleParents[i].parentIP[0], possibleParents[i].parentIP[1], possibleParents[i].parentIP[2], possibleParents[i].parentIP[3]);
             }
 
         }
         //With all the information gathered from the potential parents, select the preferred parent
-        parentInfo preferredParent = chooseParent(possibleParents,list.len);
+        parentInfo preferredParent = chooseParent(possibleParents,ssidList.len);
         //Connect to the preferred parent
         connectToAP(preferredParent.ssid, PASS);
         parent[0] = preferredParent.parentIP[0]; parent[1] = preferredParent.parentIP[1];
@@ -96,7 +90,14 @@ State joinNetwork(Event event){
     return sIdle;
 }
 
-void createAP(){}
+State idle(Event event){
+    return sChooseParent;
+}
+
+State handleMessages(Event event){
+    return sIdle;
+}
+
 
 parentInfo chooseParent(parentInfo* possibleParents, int n){
     parentInfo preferredParent;

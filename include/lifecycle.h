@@ -34,8 +34,8 @@ parentInfo chooseParent(parentInfo* possibleParents, int n);
 #define eError ((Event) 3)
 
 extern StateMachine* SM;
-
 extern CircularBuffer* CBuffer;
+
 
 
 //#define eMessage ((Event) 4)

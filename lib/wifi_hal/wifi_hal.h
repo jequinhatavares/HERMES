@@ -7,11 +7,12 @@ extern bool initializeAP;
 
 //IPAddress myIP;
 
-typedef struct List_ {
+typedef struct List {
     char* item[10];
     int len = 0;
 } List;
 
+extern List ssidList;
 
 #if defined(ESP8266)
     #include "esp8266/wifi_esp8266.h"

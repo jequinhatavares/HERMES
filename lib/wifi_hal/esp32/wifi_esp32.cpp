@@ -1,6 +1,8 @@
 #ifdef ESP32
 #include "wifi_esp32.h"
 
+List ssidList;
+
 /**
  * onSoftAPModeStationConnectedHandler
  * Event handler called when a station (client) successfully connects to the device running in Soft AP mode.
@@ -158,7 +160,7 @@ void startWifiAP(const char* SSID, const char* PASS, const IPAddress& localIP, c
  *
  * @return A List structure containing the SSIDs of Wi-Fi networks
  */
-List searchAP(String SSID){
+void searchAP(String SSID){
     WiFi.mode(WIFI_STA);
     int n = WiFi.scanNetworks();//Number of scanned wifi networks
     int index;
@@ -177,14 +179,14 @@ List searchAP(String SSID){
             continue;
         }
         //return current_ssid.c_str();
-        listAPs.item[listAPs.len] = const_cast<char*>(current_ssid.c_str());
-        listAPs.len++;
+        ssidList.item[ssidList.len] = const_cast<char*>(current_ssid.c_str());
+        ssidList.len++;
 
     }
    // Delete the scan result to free memory for code below.
     WiFi.scanDelete();
-    return listAPs;
-    //return listAPs;
+    return ssidList;
+    //return ssidList;
 }
 
 /**

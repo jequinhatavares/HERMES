@@ -24,7 +24,7 @@ void startWifiSTA(const IPAddress& localIP, const IPAddress& gateway, const IPAd
 
 void startWifiAP(const char* SSID, const char* PASS, const IPAddress& localIP, const IPAddress& gateway, const IPAddress& subnet);
 
-List searchAP(String);
+void searchAP(String);
 
 void connectToAP(const char*, const char*);
 
