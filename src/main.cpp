@@ -61,7 +61,7 @@ void parseMAC(const char* macStr, uint8_t* macArray) {
 void setup(){
     Serial.begin(115200);
     uint8_t MAC[6];
-    int i;
+
     #ifdef ESP32
         Serial.print("ESP32\n");
         //esp_log_level_set("wifi", ESP_LOG_VERBOSE);
@@ -87,7 +87,7 @@ void setup(){
     begin_transport();
 
     if(!iamRoot){
-       joinNetwork();
+       joinNetwork(eSuccess);
     }
 
 
@@ -118,7 +118,6 @@ void loop(){
         Serial.printf("Received: %s\n", buffer);
         sscanf(buffer, "%d %hhu.%hhu.%hhu.%hhu", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
         Serial.printf("Message Type; %c\n", messageType);
-        int int_messageType = messageType - '0';
 
         if( messageType == 0){
            Serial.printf("Message Type 0\n");
@@ -145,9 +144,7 @@ void loop(){
 
         //sendMessage(Udp.remoteIP(),"echo");
     }
-    while(){
 
-    }
 }
 #endif
 

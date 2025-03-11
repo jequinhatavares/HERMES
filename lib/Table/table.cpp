@@ -13,7 +13,7 @@
  * @return TableInfo* - A pointer to the created table.
  */
 TableInfo* tableCreate(bool (*pFunction)(void* a, void* b)){
-    static TableEntry table[MaxSize];
+    static TableEntry table[TableMaxSize];
     static TableInfo Table = {
             .numberOfItems = 0,
             .isEqual = pFunction,

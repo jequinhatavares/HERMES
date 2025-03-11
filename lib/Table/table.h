@@ -1,7 +1,7 @@
 #ifndef TABLE_H
 #define TABLE_H
 
-#define MaxSize 10
+#define TableMaxSize 10
 
 /*
 bool defaultEqual(void* a, void* b){

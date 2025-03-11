@@ -21,7 +21,7 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
 
 int decodeMessage(char* msg){
     messageType type;
-    sscanf(msg, "%i", type);
+    sscanf(msg, "%d", type);
     return type;
 }
 
