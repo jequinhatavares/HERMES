@@ -6,14 +6,20 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
     //char * msg = nullptr;
     switch (type) {
         case parentDiscoveryRequest:
-            sprintf(msg,"0 %i.%i.%i.%i",parameters.IP[0],parameters.IP[1],parameters.IP[2],parameters.IP[3]);
+            sprintf(msg,"0 %i.%i.%i.%i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
             break;
         case parentInfoResponse:
-            //Serial.printf("Parameters- hopDistance: %i numberChildren: %i IP: %i.%i.%i.%i\n", parameters.hopDistance,parameters.childrenNumber,parameters.IP[0],parameters.IP[1],parameters.IP[2],parameters.IP[3]);
-            sprintf(msg,"1 %i.%i.%i.%i %i %i",parameters.IP[0],parameters.IP[1],parameters.IP[2],parameters.IP[3],parameters.hopDistance, parameters.childrenNumber);
+            //Serial.printf("Parameters- hopDistance: %i numberChildren: %i IP1: %i.%i.%i.%i\n", parameters.hopDistance,parameters.childrenNumber,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
+            sprintf(msg,"1 %i.%i.%i.%i %i %i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
+                    parameters.hopDistance, parameters.childrenNumber);
             break;
         case parentRegistrationRequest:
+            sprintf(msg,"2 %i.%i.%i.%i %i.%i.%i.%i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
+                    parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
+        case fullRoutingTableUpdate:
+
+        case partialRoutingTableUpdate:
         default:
             break;
     }

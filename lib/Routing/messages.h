@@ -3,7 +3,7 @@
 
 
 typedef struct messageParameters{
-    int IP[4] = {0,0,0,0};
+    int IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};
     int hopDistance = -1;
     int childrenNumber = -1;
 }messageParameters;
@@ -15,6 +15,8 @@ typedef enum messageType{
     parentDiscoveryRequest, //0
     parentInfoResponse, //1
     parentRegistrationRequest, //2
+    fullRoutingTableUpdate, //3
+    partialRoutingTableUpdate, //4
 }messageType;
 
 typedef struct parentInfo{
