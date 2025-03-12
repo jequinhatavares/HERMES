@@ -41,17 +41,17 @@ void test_add_node(){
     };
     NodeEntry* newNode = &node;
 
-    tableAdd(RoutingTable, newNode->nodeIP,newNode);
-    //tablePrint(RoutingTable,printNodeStruct);
-    NodeEntry* foundEntry = (NodeEntry*) findNode(RoutingTable,newNode->nodeIP);
+    tableAdd(routingTable, newNode->nodeIP,newNode);
+    //tablePrint(routingTable,printNodeStruct);
+    NodeEntry* foundEntry = (NodeEntry*) findNode(routingTable,newNode->nodeIP);
 
     TEST_ASSERT(foundEntry != nullptr);
     TEST_ASSERT(isIPEqual(foundEntry->nodeIP,node.nodeIP));
     TEST_ASSERT(isIPEqual(foundEntry->nextHopIP,node.nextHopIP));
     TEST_ASSERT(foundEntry->hopDistance == node.hopDistance);
-    TEST_ASSERT(RoutingTable->numberOfItems == 1);
+    TEST_ASSERT(routingTable->numberOfItems == 1);
 
-    tableRemove(RoutingTable,newNode->nodeIP);
+    tableRemove(routingTable,newNode->nodeIP);
 }
 
 void test_remove_node(){
@@ -63,15 +63,15 @@ void test_remove_node(){
     };
     NodeEntry* newNode = &node;
 
-    tableAdd(RoutingTable, newNode->nodeIP,newNode);
-    tablePrint(RoutingTable,printNodeStruct);
+    tableAdd(routingTable, newNode->nodeIP,newNode);
+    tablePrint(routingTable,printNodeStruct);
 
-    tableRemove(RoutingTable,nodeIP);
-    tablePrint(RoutingTable,printNodeStruct);
+    tableRemove(routingTable,nodeIP);
+    tablePrint(routingTable,printNodeStruct);
 
-    TEST_ASSERT(RoutingTable->numberOfItems == 0);
+    TEST_ASSERT(routingTable->numberOfItems == 0);
 
-    NodeEntry* foundEntry =(NodeEntry*) findNode(RoutingTable,nodeIP);
+    NodeEntry* foundEntry =(NodeEntry*) findNode(routingTable,nodeIP);
     TEST_ASSERT(foundEntry == nullptr);
 
 }
@@ -91,20 +91,20 @@ void test_table_clean(){
     };
     childEntry * childNode = &child;
 
-    tableAdd(RoutingTable, routingNode->nodeIP,routingNode);
-    tableAdd(ChildrenTable, childNode->APIP,childNode);
+    tableAdd(routingTable, routingNode->nodeIP,routingNode);
+    tableAdd(childrenTable, childNode->APIP,childNode);
 
-    TEST_ASSERT(RoutingTable->numberOfItems == 1);
-    TEST_ASSERT(ChildrenTable->numberOfItems == 1);
+    TEST_ASSERT(routingTable->numberOfItems == 1);
+    TEST_ASSERT(childrenTable->numberOfItems == 1);
 
-    tableClean(RoutingTable);
-    tableClean(ChildrenTable);
+    tableClean(routingTable);
+    tableClean(childrenTable);
 
-    TEST_ASSERT(RoutingTable->numberOfItems == 0);
-    TEST_ASSERT(ChildrenTable->numberOfItems == 0);
+    TEST_ASSERT(routingTable->numberOfItems == 0);
+    TEST_ASSERT(childrenTable->numberOfItems == 0);
 
-    NodeEntry* searchRoutingNode =(NodeEntry *) findNode(RoutingTable,node.nodeIP);
-    childEntry * searchChildNode =(childEntry *)findNode(ChildrenTable,node.nodeIP);
+    NodeEntry* searchRoutingNode =(NodeEntry *) findNode(routingTable,node.nodeIP);
+    childEntry * searchChildNode =(childEntry *)findNode(childrenTable,node.nodeIP);
 
     TEST_ASSERT(searchRoutingNode == nullptr);
     TEST_ASSERT(searchChildNode == nullptr);
@@ -125,19 +125,19 @@ void test_find_path_to_child(){
     };
     childEntry * childNode = &child;
 
-    tableAdd(RoutingTable, routingNode->nodeIP,routingNode);
-    tableAdd(ChildrenTable, childNode->APIP,childNode);
+    tableAdd(routingTable, routingNode->nodeIP,routingNode);
+    tableAdd(childrenTable, childNode->APIP,childNode);
 
     printf("Routing Table\n");
-    tablePrint(RoutingTable,printNodeStruct);
+    tablePrint(routingTable,printNodeStruct);
     printf("Children Table\n");
-    tablePrint(ChildrenTable,printChildStruct);
+    tablePrint(childrenTable,printChildStruct);
     nextHop = findRouteToNode(childIP);
 
     TEST_ASSERT(isIPEqual(nextHop,child.STAIP));
 
-    tableClean(RoutingTable);
-    tableClean(ChildrenTable);
+    tableClean(routingTable);
+    tableClean(childrenTable);
 
 }
 
@@ -170,20 +170,20 @@ void test_find_path_to_parent(){
     parent[2] = 3;
     parent[3] = 3;
 
-    tableAdd(RoutingTable, routingNode1->nodeIP,routingNode1);
-    tableAdd(RoutingTable, routingNode2->nodeIP,routingNode2);
-    tableAdd(ChildrenTable, childNode->APIP,childNode);
+    tableAdd(routingTable, routingNode1->nodeIP,routingNode1);
+    tableAdd(routingTable, routingNode2->nodeIP,routingNode2);
+    tableAdd(childrenTable, childNode->APIP,childNode);
 
     printf("Routing Table\n");
-    tablePrint(RoutingTable,printNodeStruct);
+    tablePrint(routingTable,printNodeStruct);
     printf("Children Table\n");
-    tablePrint(ChildrenTable,printChildStruct);
+    tablePrint(childrenTable,printChildStruct);
     nextHop = findRouteToNode(parent);
 
     TEST_ASSERT(isIPEqual(nextHop,parent));
 
-    tableClean(RoutingTable);
-    tableClean(ChildrenTable);
+    tableClean(routingTable);
+    tableClean(childrenTable);
 }
 
 void test_find_path_to_network(){
@@ -222,24 +222,24 @@ void test_find_path_to_network(){
     parent[2] = 3;
     parent[3] = 3;
 
-    tableAdd(RoutingTable, routingNode1->nodeIP,routingNode1);
-    tableAdd(RoutingTable, routingNode2->nodeIP,routingNode2);
-    tableAdd(RoutingTable, routingNode3->nodeIP,routingNode3);
-    tableAdd(ChildrenTable, childNode->APIP,childNode);
+    tableAdd(routingTable, routingNode1->nodeIP,routingNode1);
+    tableAdd(routingTable, routingNode2->nodeIP,routingNode2);
+    tableAdd(routingTable, routingNode3->nodeIP,routingNode3);
+    tableAdd(childrenTable, childNode->APIP,childNode);
 
-    TEST_ASSERT(RoutingTable->numberOfItems == 3);
-    TEST_ASSERT(ChildrenTable->numberOfItems == 1);
+    TEST_ASSERT(routingTable->numberOfItems == 3);
+    TEST_ASSERT(childrenTable->numberOfItems == 1);
 
     printf("Routing Table\n");
-    tablePrint(RoutingTable,printNodeStruct);
+    tablePrint(routingTable,printNodeStruct);
     printf("Children Table\n");
-    tablePrint(ChildrenTable,printChildStruct);
+    tablePrint(childrenTable,printChildStruct);
     nextHop = findRouteToNode(node3.nodeIP);
 
     TEST_ASSERT(isIPEqual(nextHop,child.STAIP));
 
-    tableClean(RoutingTable);
-    tableClean(ChildrenTable);
+    tableClean(routingTable);
+    tableClean(childrenTable);
 
 }
 void setUp(void){}
