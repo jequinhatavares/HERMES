@@ -5,7 +5,7 @@
 #include "../Table/table.h"
 
 typedef struct NodeEntry {
-    int nodeIP[4];
+    //int nodeIP[4];
     int hopDistance;
     int nextHopIP[4];
 } NodeEntry;

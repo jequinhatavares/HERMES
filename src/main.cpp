@@ -40,10 +40,10 @@ void setup(){
 
     Serial.printf("My MAC addr: %s\n",getMyMAC().c_str());
 
-    Advance(SM, eSuccess);
+    Advance(SM, eSuccess);//Init
     if(!iamRoot){
-        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
-        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
+        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Search APs
+        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Choose Parent
     }
 
     changeWifiMode(3);

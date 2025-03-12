@@ -76,26 +76,33 @@ int* findRouteToNode(int nodeIP[4]){
 }
 
 void updateRoutingTable(int nodeIP[4], int nextHopIP[4], int hopDistance){
-    static NodeEntry* node;
+    NodeEntry n;
+    NodeEntry* node = &n;
+    Serial.printf("1\n");
     node->nextHopIP[0] = nextHopIP[0];
     node->nextHopIP[1] = nextHopIP[1];
     node->nextHopIP[2] = nextHopIP[2];
     node->nextHopIP[3] = nextHopIP[3];
     node->hopDistance = hopDistance + 1 ;
     //The node is not yet in the table
-    if(findNode(routingTable, nodeIP) == nullptr){
+    Serial.printf("2\n");
+    //NodeEntry *ptr = (NodeEntry*) findNode(routingTable, nodeIP);
+    tablePrint(routingTable, printNodeStruct);
+    if( findNode(routingTable, nodeIP) == nullptr){
+        Serial.printf("3\n");
         tableAdd(routingTable, nodeIP, node);
     }else{//The node is already present in the table
+        Serial.printf("4\n");
         tableUpdate(routingTable, nodeIP, node);
     }
 }
 
 void updateChildrenTable(int APIP[4], int STAIP[4]){
     //The node is not yet in the table
-    if(findNode(routingTable, APIP) == nullptr){
-        tableAdd(routingTable, APIP, STAIP);
+    if(findNode(childrenTable, APIP) == nullptr){
+        tableAdd(childrenTable, APIP, STAIP);
     }else{//The node is already present in the table
-        tableUpdate(routingTable, APIP, STAIP);
+        tableUpdate(childrenTable, APIP, STAIP);
     }
 }
 

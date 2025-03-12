@@ -36,6 +36,7 @@ State initNode(Event event){
     char ssid[256]; // Make sure this buffer is large enough to hold the entire SSID
     strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
     strcat(ssid, getMyMAC().c_str());
+    int myIP[4];
 
     Serial.print("Entered Init State\n");
     parseMAC(getMyMAC().c_str(), MAC);
@@ -50,6 +51,8 @@ State initNode(Event event){
         rootHopDistance = 0;
         return sIdle;
     }
+    myIP[0] = localIP[0]; myIP[1] = localIP[1]; myIP[2] = localIP[2]; myIP[3] = localIP[3];
+    updateRoutingTable(myIP,myIP,0);
     insertFirst(stateMachineEngine, eSuccess);
     return sSearch;
 }
@@ -135,7 +138,7 @@ State joinNetwork(Event event){
             receiveMessage(buffer);
             Serial.printf("Parent Response: %s\n", buffer);
             decodeFullRoutingTableUpdate(buffer);
-            Serial.printf("Routing Table\n", buffer);
+            Serial.printf("Routing Table\n");
             tablePrint(routingTable,printNodeStruct);
         }
 
@@ -154,7 +157,7 @@ State idle(Event event){
 
 State handleMessages(Event event){
     Serial.print("Entered handle Messages State\n");
-    char msg[50] = "";
+    char msg[50] = "", msg2[300] = "";
     int messageType;
     messageParameters params;
     IPAddress myIP;
@@ -179,8 +182,8 @@ State handleMessages(Event event){
 
         sscanf(messageBuffer, "%d %hhu.%hhu.%hhu.%hhu", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
         params.routingTable = routingTable;
-        encodeMessage(msg,fullRoutingTableUpdate,params);
-        sendMessage(childIP,msg);
+        encodeMessage(msg2,fullRoutingTableUpdate,params);
+        sendMessage(childIP,msg2);
         //TODO send message to all network about the new node
     }
     if( messageType == fullRoutingTableUpdate){
@@ -214,6 +217,7 @@ parentInfo chooseParent(parentInfo* possibleParents, int n){
             //If the number of children is the same or greater, the preferred parent does not change
         }
     }
+    //TODO colocar esta função mais segura: este parentIndex pode não ser inicializado: Retornar um ponteiro
     return possibleParents[parentIndex];
 }
 /**

@@ -6,7 +6,7 @@
 
 
 void encodeMessage(char * msg, messageType type, messageParameters parameters){
-    char *tempMsg = nullptr;
+    char tempMsg[37] = "";//35
 
     switch (type) {
         case parentDiscoveryRequest:
@@ -94,7 +94,7 @@ void decodeFullRoutingTableUpdate(char * msg){
 
     if (type == fullRoutingTableUpdate){
         while (token != NULL) {
-            printf("% s\n", token);
+            //Serial.printf("% s\n", token);
             sscanf(token, "%d.%d.%d.%d %d.%d.%d.%d %d",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],
                    &nextHopIP[0],&nextHopIP[1],&nextHopIP[2],&nextHopIP[3], &hopDistance);
             token = strtok(NULL, "| ");
