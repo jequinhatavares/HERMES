@@ -32,5 +32,9 @@ typedef struct parentInfo{
 void encodeMessage(char* msg, messageType type, messageParameters parameters);
 int decodeMessage(char* msg);
 void decodeParentInfoResponse(char* msg, parentInfo *parents, int i);
+void decodeChildRegistrationRequest(char * msg);
+void decodeFullRoutingTableUpdate(char * msg);
+void decodePartialRoutingUpdate(char *msg);
+void updateChildrenTable(int APIP[4], int STAIP[4]);
 
 #endif //MESSAGES_H

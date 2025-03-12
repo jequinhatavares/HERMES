@@ -1,4 +1,5 @@
 #include "routing.h"
+#include <Arduino.h>
 
 bool iamRoot = true;
 int rootHopDistance = -1;
@@ -36,6 +37,14 @@ bool isIPEqual(void* a, void* b){
     return false;
 }
 
+void printNodeStruct(TableEntry* Table){
+    Serial.printf("K: Node IP %i.%i.%i.%i "
+           "V: hopDistance:%i "
+           "nextHop: %i.%i.%i.%i\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
+           ((NodeEntry *)Table->value)->hopDistance,
+           ((NodeEntry *)Table->value)->nextHopIP[0],((NodeEntry *)Table->value)->nextHopIP[1],((NodeEntry *)Table->value)->nextHopIP[2],((NodeEntry *)Table->value)->nextHopIP[3]);
+}
+
 void* findNode(TableInfo* Table, int nodeIP[4]){
     return tableRead(Table, nodeIP);
 }
@@ -64,6 +73,30 @@ int* findRouteToNode(int nodeIP[4]){
     }
     return entry->nextHopIP;
 
+}
+
+void updateRoutingTable(int nodeIP[4], int nextHopIP[4], int hopDistance){
+    static NodeEntry* node;
+    node->nextHopIP[0] = nextHopIP[0];
+    node->nextHopIP[1] = nextHopIP[1];
+    node->nextHopIP[2] = nextHopIP[2];
+    node->nextHopIP[3] = nextHopIP[3];
+    node->hopDistance = hopDistance + 1 ;
+    //The node is not yet in the table
+    if(findNode(routingTable, nodeIP) == nullptr){
+        tableAdd(routingTable, nodeIP, node);
+    }else{//The node is already present in the table
+        tableUpdate(routingTable, nodeIP, node);
+    }
+}
+
+void updateChildrenTable(int APIP[4], int STAIP[4]){
+    //The node is not yet in the table
+    if(findNode(routingTable, APIP) == nullptr){
+        tableAdd(routingTable, APIP, STAIP);
+    }else{//The node is already present in the table
+        tableUpdate(routingTable, APIP, STAIP);
+    }
 }
 
 

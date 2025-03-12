@@ -26,7 +26,9 @@ extern int numberOfChildren;
 extern bool hasParent;
 
 bool isIPEqual(void* a, void* b);
+void printNodeStruct(TableEntry* Table);
 void* findNode(TableInfo* Table, int nodeIP[4]);
 int* findRouteToNode(int nodeIP[4]);
+void updateRoutingTable(int nodeIP[4], int nextHopIP[4], int hopDistance);
 
 #endif //ROUTING_H

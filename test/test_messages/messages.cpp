@@ -6,7 +6,7 @@
 void test_pdr_correct(){
     char msg[20] = "";
     messageParameters params;
-    params.IP[0] = 1; params.IP[1] = 1; params.IP[2] = 1; params.IP[3] = 1;
+    params.IP1[0] = 1; params.IP1[1] = 1; params.IP1[2] = 1; params.IP1[3] = 1;
 
     encodeMessage(msg, parentDiscoveryRequest, params);
     printf(msg);
@@ -16,7 +16,7 @@ void test_pdr_correct(){
 void test_pir_incorrect(){
     char msg[20] = "";
     messageParameters params;
-    params.IP[0] = 1; params.IP[1] = 1; params.IP[2] = 1; params.IP[3] = 1;
+    params.IP1[0] = 1; params.IP1[1] = 1; params.IP1[2] = 1; params.IP1[3] = 1;
 
     encodeMessage(msg, parentInfoResponse, params);
     //printf(msg);

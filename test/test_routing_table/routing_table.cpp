@@ -240,8 +240,8 @@ void test_find_path_to_network(){
 
     tableClean(routingTable);
     tableClean(childrenTable);
-
 }
+
 void setUp(void){}
 
 void tearDown(void){}

@@ -89,7 +89,7 @@ State joinNetwork(Event event){
             delay(1000);
 
             //Send a Parent Discovery Request to the connected parent
-            params.IP[0] = mySTAIP[0]; params.IP[1] = mySTAIP[1]; params.IP[2] = mySTAIP[2]; params.IP[3] = mySTAIP[3];
+            params.IP1[0] = mySTAIP[0]; params.IP1[1] = mySTAIP[1]; params.IP1[2] = mySTAIP[2]; params.IP1[3] = mySTAIP[3];
             encodeMessage(msg, parentDiscoveryRequest, params);
             sendMessage(getGatewayIP(), msg);
 
@@ -115,10 +115,30 @@ State joinNetwork(Event event){
         //Connect to the preferred parent
         if(ssidList.len != 1)connectToAP(preferredParent.ssid, PASS);
         Serial.printf("Preferred Parent- IP: %i.%i.%i.%i nrChildren: %i rootHopDistance: %i\n",preferredParent.parentIP[0], preferredParent.parentIP[1], preferredParent.parentIP[2], preferredParent.parentIP[3], preferredParent.nrOfChildren, preferredParent.rootHopDistance);
+        //Update parent information on global variable
         parent[0] = preferredParent.parentIP[0]; parent[1] = preferredParent.parentIP[1];
         parent[2] = preferredParent.parentIP[2]; parent[3] = preferredParent.parentIP[3];
         rootHopDistance = preferredParent.rootHopDistance + 1;
         hasParent = true;
+
+        //Send a Child Registration Request to the parent
+        mySTAIP = getMySTAIP();
+        params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
+        params.IP2[0] = mySTAIP[0]; params.IP2[1] = mySTAIP[1]; params.IP2[2] = mySTAIP[2]; params.IP2[3] = mySTAIP[3];
+        encodeMessage(msg, childRegistrationRequest, params);
+        sendMessage(getGatewayIP(), msg);
+
+        //Wait for the parent to respond with his routing table information
+        while((packetSize =incomingMessage()) == 0);
+
+        if (packetSize > 0){
+            receiveMessage(buffer);
+            Serial.printf("Parent Response: %s\n", buffer);
+            decodeFullRoutingTableUpdate(buffer);
+            Serial.printf("Routing Table\n", buffer);
+            tablePrint(routingTable,printNodeStruct);
+        }
+
     }
     return sIdle;
 }
@@ -140,18 +160,37 @@ State handleMessages(Event event){
     IPAddress myIP;
     IPAddress childIP;
 
-    sscanf(messageBuffer, "%d %hhu.%hhu.%hhu.%hhu", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
-    if( messageType == 0){
+    sscanf(messageBuffer, "%d", &messageType);
+
+    if( messageType == parentDiscoveryRequest){
         Serial.printf("Message Type 0\n");
-        params.hopDistance = 0;
-        params.childrenNumber = 0;
-        myIP = getMyAPIP();
-        params.IP[0] = myIP[0]; params.IP[1] = myIP[1]; params.IP[2] = myIP[2]; params.IP[3] = myIP[3];
+        sscanf(messageBuffer, "%d %hhu.%hhu.%hhu.%hhu", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
+
+        params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
         params.childrenNumber = numberOfChildren;
         params.hopDistance = rootHopDistance;
 
         encodeMessage(msg,parentInfoResponse,params);
         sendMessage(childIP,msg);
+    }
+    if( messageType == childRegistrationRequest){
+        Serial.printf("Message Type Child Registration Request\n");
+        decodeChildRegistrationRequest(messageBuffer);
+
+        sscanf(messageBuffer, "%d %hhu.%hhu.%hhu.%hhu", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
+        params.routingTable = routingTable;
+        encodeMessage(msg,fullRoutingTableUpdate,params);
+        sendMessage(childIP,msg);
+        //TODO send message to all network about the new node
+    }
+    if( messageType == fullRoutingTableUpdate){
+        Serial.printf("Message Type Full Routing Update\n");
+        decodeFullRoutingTableUpdate(messageBuffer);
+    }
+    if( messageType == partialRoutingTableUpdate){
+        Serial.printf("Message Type Partial Routing Table Update\n");
+        decodePartialRoutingUpdate(messageBuffer);
+        //TODO Maybe send the update to other nodes??
     }
     return sIdle;
 }

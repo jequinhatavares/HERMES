@@ -1,9 +1,13 @@
 #include "messages.h"
 #include "routing.h"
+
 #include <cstdio>
+#include <cstring>
 
 
 void encodeMessage(char * msg, messageType type, messageParameters parameters){
+    char *tempMsg = nullptr;
+
     switch (type) {
         case parentDiscoveryRequest:
             //0 [mySTAIP]
@@ -20,16 +24,23 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
                     parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
         case fullRoutingTableUpdate:
-            char *tempMsg = nullptr;
+            //3 [node1 IP] [next hop IP] [hopDistance] |[node2 IP] [next hop IP] [hopDistance] |....
+            sprintf(msg, "3 |");
             for (int i = 0; i < parameters.routingTable->numberOfItems; i++) {
-                sprintf(tempMsg,"%i.%i.%i.%i %i.%i.%i.%i %i",((int*)parameters.routingTable->table->key)[0],
-                        ((int*)parameters.routingTable->table->key)[1],((int*)parameters.routingTable->table->key)[2],
-                        ((int*)parameters.routingTable->table->key)[3],((NodeEntry *)parameters.routingTable->table->value)->nextHopIP[0],
-                        ((NodeEntry *)parameters.routingTable->table->value)->nextHopIP[1],((NodeEntry *)parameters.routingTable->table->value)->nextHopIP[2],
-                        ((NodeEntry *)parameters.routingTable->table->value)->nextHopIP[3],((NodeEntry *)parameters.routingTable->table->value)->hopDistance);
-            }
+                sprintf(tempMsg,"%i.%i.%i.%i %i.%i.%i.%i %i |",((int*)parameters.routingTable->table->key)[0],
+                        ((int*)parameters.routingTable->table[i].key)[1],((int*)parameters.routingTable->table[i].key)[2],
+                        ((int*)parameters.routingTable->table[i].key)[3],((NodeEntry *)parameters.routingTable->table[i].value)->nextHopIP[0],
+                        ((NodeEntry *)parameters.routingTable->table[i].value)->nextHopIP[1],((NodeEntry *)parameters.routingTable->table[i].value)->nextHopIP[2],
+                        ((NodeEntry *)parameters.routingTable->table[i].value)->nextHopIP[3],((NodeEntry *)parameters.routingTable->table[i].value)->hopDistance);
 
+                strcat(msg, tempMsg);
+            }
+            break;
         case partialRoutingTableUpdate:
+            sprintf(msg,"4 %i.%i.%i.%i %i.%i.%i.%i %i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
+                    parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3],
+                    parameters.hopDistance);
+            break;
         default:
             break;
     }
@@ -65,20 +76,45 @@ void decodeChildRegistrationRequest(char * msg){
     if (type == childRegistrationRequest){
         sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],
                &childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3] );
-        //TODO put child in the Children Table
-        //TODO put child in the Routing Table -> nHopRoot == myHops + 1
+        //Add the new children to the children table
+        updateChildrenTable(childAPIP, childSTAIP);
 
+        //Add the child node to the routing table
+        updateRoutingTable(childAPIP, childAPIP,1);
     }
 }
 
 void decodeFullRoutingTableUpdate(char * msg){
     int type;
-    int APIP[4], STAIP[4];
+    int nodeIP[4], nextHopIP[4];
     int hopDistance;
     sscanf(msg, "%d ", &type);
 
-    if (type == fullRoutingTableUpdate){
+    char* token = strtok(msg, "| ");
 
+    if (type == fullRoutingTableUpdate){
+        while (token != NULL) {
+            printf("% s\n", token);
+            sscanf(token, "%d.%d.%d.%d %d.%d.%d.%d %d",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],
+                   &nextHopIP[0],&nextHopIP[1],&nextHopIP[2],&nextHopIP[3], &hopDistance);
+            token = strtok(NULL, "| ");
+            //Update the Routing Table
+            updateRoutingTable(nodeIP,nextHopIP,hopDistance);
+        }
+    }
+}
+
+void decodePartialRoutingUpdate(char *msg){
+    int type;
+    int nodeIP[4], nextHopIP[4];
+    int hopDistance;
+    sscanf(msg, "%d ", &type);
+
+    if (type == partialRoutingTableUpdate){
+        sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %d",&type, &nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],
+               &nextHopIP[0],&nextHopIP[1],&nextHopIP[2],&nextHopIP[3], &hopDistance);
+
+        updateRoutingTable(nodeIP,nextHopIP,hopDistance);
     }
 
 }
