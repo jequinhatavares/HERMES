@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include "table.h"
 
-//int NumberOfItems = 0;
-
-//bool (*isEqual)(void* a, void* b) = nullptr;
+//#define PREALLOCATE_TABLE
 
 /**
  * tableCreate
@@ -22,6 +20,14 @@ TableInfo* tableCreate(bool (*pFunction)(void* a, void* b)){
 
     //isEqual = pFunction;
     return &Table;
+}
+
+
+void tableInit(TableInfo * T, void** keys, void** values){
+    for (int i = 0; i < TableMaxSize; i++) {
+        T->table[i].key = keys[i];
+        T->table[i].value = values[i];
+    }
 }
 
 /**
@@ -70,8 +76,14 @@ void* tableRead(TableInfo* T, void* key){
  * @return void
  */
 void tableAdd(TableInfo* T, void* key, void* value){
+#ifndef PREALLOCATE_TABLE
     T->table[T->numberOfItems].key=key;
     T->table[T->numberOfItems].value=value;
+#endif
+#ifdef PREALLOCATE_TABLE
+    T->setKey(T->table[T->numberOfItems].key, key);
+    T->setValue(T->table[T->numberOfItems].value, value);
+#endif
     T->numberOfItems++;
 }
 
@@ -87,7 +99,13 @@ void tableAdd(TableInfo* T, void* key, void* value){
 void tableUpdate(TableInfo* T, void* key, void* value){
     int index = tableFind(T, key);
     if(index == -1) return;
-    T->table[index].value = value;
+
+#ifndef PREALLOCATE_TABLE
+    T->table[index].value=value;
+#endif
+#ifdef PREALLOCATE_TABLE
+    T->setValue(T->table[index].value, value);
+#endif
 }
 
 /**
@@ -103,8 +121,16 @@ void tableRemove(TableInfo* T, void* key){
     if(index == -1) return;
     T->table[index].value = nullptr;
     for (int i = index; i < T->numberOfItems-1; i++) {
+
+    #ifndef PREALLOCATE_TABLE
         T->table[i].key= T->table[i+1].key;
         T->table[i].value= T->table[i+1].value;
+    #endif
+    #ifdef PREALLOCATE_TABLE
+        T->setKey(T->table[i].key, T->table[i+1].key);
+        T->setValue(T->table[i].value, T->table[i+1].value);
+    #endif
+
     }
     T->numberOfItems --;
 }

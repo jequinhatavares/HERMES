@@ -161,6 +161,7 @@ void test_vector_key(){
     TEST_ASSERT((*result2).nextvector[0] == value2.nextvector[0]);
 
 }
+
 void setUp(void){}
 
 void tearDown(void){}

@@ -16,14 +16,20 @@ typedef struct TableEntry{
     void* value;
 } TableEntry;
 
+
 typedef struct TableInfo{
     int numberOfItems;
     bool (*isEqual)(void* a, void* b);
     TableEntry* table;
+//#ifdef PREALLOCATE_TABLE
+    void (*setKey)(void* , void*) = nullptr;
+    void (*setValue)(void* , void*) = nullptr;
+//#endif
 } TableInfo;
 //extern TableEntry Table[MaxSize];
 
-TableInfo* tableCreate(bool (*)(void*, void*));
+TableInfo* tableCreate(bool (*)(void*, void*));  // DEPRECATED
+void tableInit(TableInfo* T, void** keys, void** values);
 int tableFind(TableInfo* Table, void* key);
 void* tableRead(TableInfo*, void*);
 void tableAdd(TableInfo*, void* key, void* value);

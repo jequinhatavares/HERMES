@@ -9,14 +9,21 @@ int parent[4];
 
 //TableInfo* routingTable = tableCreate(isIPEqual);
 
+#undef TableMaxSize
+#define TableMaxSize 10
+
 //Initialize Routing Table
-TableEntry table[10];
+#define PREALLOCATE_TABLE
+TableEntry table[TableMaxSize];
 TableInfo RTable = {
     .numberOfItems = 0,
     .isEqual = isIPEqual,
     .table = table
 };
 TableInfo* routingTable = &RTable;
+
+NodeEntry routingTableEntries[TableMaxSize];
+int IPs[TableMaxSize][4];
 
 //Initialize the table that translates the AP-STA IP addresses of my children
 TableEntry Ttable[10];
