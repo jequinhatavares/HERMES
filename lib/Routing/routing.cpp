@@ -25,6 +25,7 @@ int parent[4];
  * * * .isEqual - A function pointer for comparing table keys (IP addresses).
  * * * .setKey - A function pointer for assigning preallocated memory for keys (IP addresses stored as int[4]).
  * * * .setValue - A function pointer for assigning preallocated memory for values (routing table entries of type routingTableEntry).
+ * * * .table - A pointer to the rTable.
  *
  * IP[TableMaxSize][4] - Preallocated memory for storing routing table keys (IP addresses).
  * routingTableEntries[TableMaxSize] - Preallocated memory for storing routing table values (routingTableEntry structs).
@@ -33,6 +34,8 @@ TableEntry rTable[TableMaxSize];
 TableInfo RTable = {
     .numberOfItems = 0,
     .isEqual = isIPEqual,
+    .setValue = setValue,
+    .setKey = setKey,
     .table = rTable
 };
 TableInfo* routingTable = &RTable;
@@ -49,7 +52,7 @@ routingTableEntry routingTableEntries[TableMaxSize];
  * TTable - A struct that holds metadata for the children table, including:
  * * * .numberOfItems - The current number of entries in the children table.
  * * * .isEqual - A function pointer for comparing table keys (IP addresses).
- * * * .table - A pointer to the array storing the table entries (cTable).
+* * * .table - A pointer to the rTable.
  *
  * childrenTable - A pointer to TTable, used for accessing the children table.
  *
@@ -83,6 +86,26 @@ bool isIPEqual(void* a, void* b){
         return true;
     }
     return false;
+}
+void setKey(void* av, void* bv){
+    int* a = (int*) av;
+    int* b = (int*) bv;
+
+    a[0] = b[0];
+    a[1] = b[1];
+    a[2] = b[2];
+    a[3] = b[3];
+}
+
+void setValue(void* av, void* bv){
+    routingTableEntry * a = (routingTableEntry *) av;
+    routingTableEntry * b = (routingTableEntry *) bv;
+
+    a->hopDistance = b->hopDistance;
+    a->nextHopIP[0] = b->nextHopIP[0];
+    a->nextHopIP[1] = b->nextHopIP[1];
+    a->nextHopIP[2] = b->nextHopIP[2];
+    a->nextHopIP[3] = b->nextHopIP[3];
 }
 
 /**
@@ -225,4 +248,3 @@ parentInfo chooseParent(parentInfo* possibleParents, int n){
     //TODO colocar esta função mais segura: este parentIndex pode não ser inicializado: Retornar um ponteiro
     return possibleParents[parentIndex];
 }
-

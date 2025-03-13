@@ -1,8 +1,8 @@
 #ifndef MESSAGES_H
 #define MESSAGES_H
 
-
 #include "table.h"
+#include "routing.h"
 
 typedef struct messageParameters{
     int IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};

@@ -1,5 +1,5 @@
 #include "messages.h"
-#include "routing.h"
+
 
 #include <cstdio>
 #include <cstring>
@@ -29,9 +29,9 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
             for (int i = 0; i < parameters.routingTable->numberOfItems; i++) {
                 sprintf(tempMsg,"%i.%i.%i.%i %i.%i.%i.%i %i |",((int*)parameters.routingTable->table->key)[0],
                         ((int*)parameters.routingTable->table[i].key)[1],((int*)parameters.routingTable->table[i].key)[2],
-                        ((int*)parameters.routingTable->table[i].key)[3],((NodeEntry *)parameters.routingTable->table[i].value)->nextHopIP[0],
-                        ((NodeEntry *)parameters.routingTable->table[i].value)->nextHopIP[1],((NodeEntry *)parameters.routingTable->table[i].value)->nextHopIP[2],
-                        ((NodeEntry *)parameters.routingTable->table[i].value)->nextHopIP[3],((NodeEntry *)parameters.routingTable->table[i].value)->hopDistance);
+                        ((int*)parameters.routingTable->table[i].key)[3],((routingTableEntry *)parameters.routingTable->table[i].value)->nextHopIP[0],
+                        ((routingTableEntry *)parameters.routingTable->table[i].value)->nextHopIP[1],((routingTableEntry *)parameters.routingTable->table[i].value)->nextHopIP[2],
+                        ((routingTableEntry *)parameters.routingTable->table[i].value)->nextHopIP[3],((routingTableEntry *)parameters.routingTable->table[i].value)->hopDistance);
 
                 strcat(msg, tempMsg);
             }

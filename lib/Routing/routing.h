@@ -26,6 +26,8 @@ extern int numberOfChildren;
 extern bool hasParent;
 
 bool isIPEqual(void* a, void* b);
+void setKey(void* av, void* bv);
+void setValue(void* av, void* bv);
 void printNodeStruct(TableEntry* Table);
 void* findNode(TableInfo* Table, int nodeIP[4]);
 void initTables();
