@@ -7,33 +7,74 @@ int numberOfChildren = 0;
 bool hasParent = false;
 int parent[4];
 
-//TableInfo* routingTable = tableCreate(isIPEqual);
 
 #undef TableMaxSize
 #define TableMaxSize 10
 
 //Initialize Routing Table
 #define PREALLOCATE_TABLE
-TableEntry table[TableMaxSize];
+
+/***
+ * Routing Table Variables
+ *
+ * rTable[TableMaxSize] - An array where each element is a struct containing two pointers:
+ *                        one to the key (used for indexing the routing table) and another to the value (the routing table entry).
+ *
+ * RTable - A struct that holds routing table metadata, including:
+ * * * .numberOfItems - The current number of entries in the routing table.
+ * * * .isEqual - A function pointer for comparing table keys (IP addresses).
+ * * * .setKey - A function pointer for assigning preallocated memory for keys (IP addresses stored as int[4]).
+ * * * .setValue - A function pointer for assigning preallocated memory for values (routing table entries of type routingTableEntry).
+ *
+ * IP[TableMaxSize][4] - Preallocated memory for storing routing table keys (IP addresses).
+ * routingTableEntries[TableMaxSize] - Preallocated memory for storing routing table values (routingTableEntry structs).
+ ***/
+TableEntry rTable[TableMaxSize];
 TableInfo RTable = {
     .numberOfItems = 0,
     .isEqual = isIPEqual,
-    .table = table
+    .table = rTable
 };
 TableInfo* routingTable = &RTable;
 
-NodeEntry routingTableEntries[TableMaxSize];
-int IPs[TableMaxSize][4];
+int IP[TableMaxSize][4];
+routingTableEntry routingTableEntries[TableMaxSize];
 
-//Initialize the table that translates the AP-STA IP addresses of my children
-TableEntry Ttable[10];
+/***
+ * Children Table Variables
+ *
+ * cTable[TableMaxSize] - An array where each element is a struct containing two pointers:
+ *                         one to the key (used for indexing the children table) and another to the value (the corresponding entry).
+ *
+ * TTable - A struct that holds metadata for the children table, including:
+ * * * .numberOfItems - The current number of entries in the children table.
+ * * * .isEqual - A function pointer for comparing table keys (IP addresses).
+ * * * .table - A pointer to the array storing the table entries (cTable).
+ *
+ * childrenTable - A pointer to TTable, used for accessing the children table.
+ *
+ * STA[TableMaxSize][4] - Preallocated memory for storing the STA IP addresses of child nodes.
+ * AP[TableMaxSize][4] - Preallocated memory for storing the AP IP addresses of child nodes.
+ ***/
+TableEntry cTable[TableMaxSize];
 TableInfo TTable = {
         .numberOfItems=0,
         .isEqual = isIPEqual,
-        .table = Ttable,
+        .table = cTable,
 };
 TableInfo* childrenTable = &TTable;
 
+int STA[TableMaxSize][4], AP[TableMaxSize][4];
+
+
+/**
+ * isIPEqual
+ * Compares two IP addresses to check if they are equal.
+ *
+ * @param a - A pointer to the first IP address.
+ * @param b - A pointer to the second IP address.
+ * @return (bool) - True if the IP addresses are equal, false otherwise.
+ */
 bool isIPEqual(void* a, void* b){
     int* aIP = (int*) a;
     int* bIP = (int*) b;
@@ -44,18 +85,40 @@ bool isIPEqual(void* a, void* b){
     return false;
 }
 
+/**
+ * printNodeStruct
+ * Prints details of a routing table entry, including the node IP, hop distance, and next-hop IP.
+ *
+ * @param Table - A pointer to the routing table entry to print.
+ * @return (void)
+ */
 void printNodeStruct(TableEntry* Table){
     Serial.printf("K: Node IP %i.%i.%i.%i "
            "V: hopDistance:%i "
            "nextHop: %i.%i.%i.%i\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
-           ((NodeEntry *)Table->value)->hopDistance,
-           ((NodeEntry *)Table->value)->nextHopIP[0],((NodeEntry *)Table->value)->nextHopIP[1],((NodeEntry *)Table->value)->nextHopIP[2],((NodeEntry *)Table->value)->nextHopIP[3]);
+           ((routingTableEntry *)Table->value)->hopDistance,
+           ((routingTableEntry *)Table->value)->nextHopIP[0],((routingTableEntry *)Table->value)->nextHopIP[1],((routingTableEntry *)Table->value)->nextHopIP[2],((routingTableEntry *)Table->value)->nextHopIP[3]);
 }
 
+/**
+ * findNode
+ * Searches for a node in the specified table using its IP address.
+ *
+ * @param Table - A pointer to the table where the search is performed.
+ * @param nodeIP - The IP address of the node to find.
+ * @return (void*) - A pointer to the found entry or nullptr if not found.
+ */
 void* findNode(TableInfo* Table, int nodeIP[4]){
     return tableRead(Table, nodeIP);
 }
 
+/**
+ * findRouteToNode
+ * Determines the next hop for routing a packet to a given node.
+ *
+ * @param nodeIP - The IP address of the destination node.
+ * @return (int*) - A pointer to the next-hop IP address.
+ */
 int* findRouteToNode(int nodeIP[4]){
     //Check if the node is my parent
     if(isIPEqual(nodeIP,parent)){
@@ -64,46 +127,66 @@ int* findRouteToNode(int nodeIP[4]){
     }
 
     //Check if node is my child
-    childEntry* childEntry1 = (childEntry*) findNode(childrenTable,nodeIP);
-    if(childEntry1 != nullptr)
-    {
-        return childEntry1->STAIP;
-        //Return the address of the child itself (translated to its STA addr)
+    int* childIP1 = (int*) findNode(childrenTable,nodeIP);
+    if(childIP1 != nullptr)
+    {//Return the address of the child itself (translated to its STA addr)
+        return childIP1;
     }
 
     //Check in the routing table the next hop to the destination
-    NodeEntry *entry = (NodeEntry*)findNode(routingTable, nodeIP);
+    routingTableEntry *entry = (routingTableEntry*)findNode(routingTable, nodeIP);
 
-    childEntry* childEntry2 = (childEntry*) findNode(childrenTable,entry->nextHopIP);
-    if(childEntry2 != nullptr){//If the next Hop is one of my children the IP needs to be translated to its STA IP to forward the message
-        return childEntry2->STAIP;
+    int* childIP2 = (int*) findNode(childrenTable,entry->nextHopIP);
+    if(childIP2 != nullptr){//If the next Hop is one of my children the IP needs to be translated to its STA IP to forward the message
+        return childIP2;
     }
     return entry->nextHopIP;
 
 }
 
-void updateRoutingTable(int nodeIP[4], int nextHopIP[4], int hopDistance){
-    NodeEntry n;
-    NodeEntry* node = &n;
+/**
+ * initTables
+ *Initializes the routing and children tables.
+ *
+ * @return (void)
+ */
+void initTables(){
+    tableInit(routingTable,(void**) IP, (void**) routingTableEntries);
+    tableInit(childrenTable,(void**) AP,(void**) STA);
+}
+
+/**
+ * updateRoutingTable
+ * Adds or updates an entry in the routing table for a given node.
+ *
+ * @param nodeIP - The IP address of the destination node.
+ * @param newNode - A struct containing the next-hop IP address and the hop distance to the node.
+ * @return (void)
+ */
+void updateRoutingTable(int nodeIP[4], routingTableEntry newNode){
     Serial.printf("1\n");
-    node->nextHopIP[0] = nextHopIP[0];
-    node->nextHopIP[1] = nextHopIP[1];
-    node->nextHopIP[2] = nextHopIP[2];
-    node->nextHopIP[3] = nextHopIP[3];
-    node->hopDistance = hopDistance + 1 ;
+    newNode.hopDistance  += 1;
     //The node is not yet in the table
     Serial.printf("2\n");
-    //NodeEntry *ptr = (NodeEntry*) findNode(routingTable, nodeIP);
+    //routingTableEntry *ptr = (routingTableEntry*) findNode(routingTable, nodeIP);
     tablePrint(routingTable, printNodeStruct);
     if( findNode(routingTable, nodeIP) == nullptr){
         Serial.printf("3\n");
-        tableAdd(routingTable, nodeIP, node);
+        tableAdd(routingTable, nodeIP, &newNode);
     }else{//The node is already present in the table
         Serial.printf("4\n");
-        tableUpdate(routingTable, nodeIP, node);
+        tableUpdate(routingTable, nodeIP, &newNode);
     }
 }
 
+/**
+ * updateChildrenTable
+ * Updates or adds an entry in the children table to map an AP IP to its STA IP.
+ *
+ * @param APIP - The IP address of the access point.
+ * @param STAIP - The IP address of the corresponding station.
+ * @return (void)
+ */
 void updateChildrenTable(int APIP[4], int STAIP[4]){
     //The node is not yet in the table
     if(findNode(childrenTable, APIP) == nullptr){
@@ -113,4 +196,33 @@ void updateChildrenTable(int APIP[4], int STAIP[4]){
     }
 }
 
+/**
+ * chooseParent
+ * Selects the best parent node from a list of possible parents based on root hop distance and number of children.
+ *
+ * @param possibleParents - An array of potential parent nodes.
+ * @param n - The number of potential parents in the array.
+ * @return (parentInfo) parent - The chosen parent node.
+ */
+parentInfo chooseParent(parentInfo* possibleParents, int n){
+    parentInfo preferredParent;
+    int minHop = 10000, parentIndex;
+    for (int i = 0; i < n; i++) {
+        if(possibleParents[i].rootHopDistance < minHop){
+            minHop = possibleParents[i].rootHopDistance;
+            parentIndex = i;
+        }
+        //Tie with another potential parent.
+        if(possibleParents[i].rootHopDistance == minHop){
+            //If the current parent has fewer children, it becomes the new preferred parent.
+            if(possibleParents[i].nrOfChildren < possibleParents[parentIndex].nrOfChildren){
+                minHop = possibleParents[i].rootHopDistance;
+                parentIndex = i;
+            }
+            //If the number of children is the same or greater, the preferred parent does not change
+        }
+    }
+    //TODO colocar esta função mais segura: este parentIndex pode não ser inicializado: Retornar um ponteiro
+    return possibleParents[parentIndex];
+}
 

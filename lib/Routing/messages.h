@@ -22,12 +22,6 @@ typedef enum messageType{
     partialRoutingTableUpdate, //4
 }messageType;
 
-typedef struct parentInfo{
-    char* ssid;
-    int parentIP[4];
-    int rootHopDistance;
-    int nrOfChildren;
-}parentInfo;
 
 void encodeMessage(char* msg, messageType type, messageParameters parameters);
 int decodeMessage(char* msg);

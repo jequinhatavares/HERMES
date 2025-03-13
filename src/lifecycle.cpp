@@ -51,6 +51,8 @@ State initNode(Event event){
         rootHopDistance = 0;
         return sIdle;
     }
+
+    initTables();
     myIP[0] = localIP[0]; myIP[1] = localIP[1]; myIP[2] = localIP[2]; myIP[3] = localIP[3];
     updateRoutingTable(myIP,myIP,0);
     insertFirst(stateMachineEngine, eSuccess);
@@ -199,27 +201,6 @@ State handleMessages(Event event){
 }
 
 
-parentInfo chooseParent(parentInfo* possibleParents, int n){
-    parentInfo preferredParent;
-    int minHop = 10000, parentIndex;
-    for (int i = 0; i < n; i++) {
-        if(possibleParents[i].rootHopDistance < minHop){
-           minHop = possibleParents[i].rootHopDistance;
-           parentIndex = i;
-        }
-        //Tie with another potential parent.
-        if(possibleParents[i].rootHopDistance == minHop){
-            //If the current parent has fewer children, it becomes the new preferred parent.
-            if(possibleParents[i].nrOfChildren < possibleParents[parentIndex].nrOfChildren){
-                minHop = possibleParents[i].rootHopDistance;
-                parentIndex = i;
-            }
-            //If the number of children is the same or greater, the preferred parent does not change
-        }
-    }
-    //TODO colocar esta função mais segura: este parentIndex pode não ser inicializado: Retornar um ponteiro
-    return possibleParents[parentIndex];
-}
 /**
  * parseMAC
  * Converts a MAC address from string format (e.g., "CC:50:E3:60:E6:87") into a 6-byte array.

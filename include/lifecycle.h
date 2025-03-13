@@ -18,7 +18,6 @@ State search(Event event);
 State joinNetwork(Event event);
 State idle(Event event);
 State handleMessages(Event event);
-parentInfo chooseParent(parentInfo* possibleParents, int n);
 
 //s before the name means state and e means event
 #define sInit ((State) 0)
