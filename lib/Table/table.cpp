@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include "table.h"
 
-//#define PREALLOCATE_TABLE
+//#include "Arduino.h"
+
+#define PREALLOCATE_TABLE
 
 /**
  * tableCreate
@@ -10,23 +12,23 @@
  * @param pFunction - A pointer to a function that compares two keys.
  * @return TableInfo* - A pointer to the created table.
  */
-TableInfo* tableCreate(bool (*pFunction)(void* a, void* b)){
-    static TableEntry table[TableMaxSize];
-    static TableInfo Table = {
-            .numberOfItems = 0,
-            .isEqual = pFunction,
-            .table = table
-    };
-
-    //isEqual = pFunction;
-    return &Table;
-}
+//TableInfo* tableCreate(bool (*pFunction)(void* a, void* b)){
+//    static TableEntry table[TableMaxSize];
+//    static TableInfo Table = {
+//            .numberOfItems = 0,
+//            .isEqual = pFunction,
+//            .table = table
+//    };
+//
+//    //isEqual = pFunction;
+//    return &Table;
+//}
 
 
 void tableInit(TableInfo * T, void** keys, void** values){
     for (int i = 0; i < TableMaxSize; i++) {
-        T->table[i].key = keys[i];
-        T->table[i].value = values[i];
+        T->table[i].key = &keys[i];
+        T->table[i].value = &values[i];
     }
 }
 
@@ -81,6 +83,7 @@ void tableAdd(TableInfo* T, void* key, void* value){
     T->table[T->numberOfItems].value=value;
 #endif
 #ifdef PREALLOCATE_TABLE
+    //Serial.printf("3.1\n");
     T->setKey(T->table[T->numberOfItems].key, key);
     T->setValue(T->table[T->numberOfItems].value, value);
 #endif

@@ -37,6 +37,7 @@ State initNode(Event event){
     strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
     strcat(ssid, getMyMAC().c_str());
     int myIP[4];
+    routingTableEntry me;
 
     Serial.print("Entered Init State\n");
     parseMAC(getMyMAC().c_str(), MAC);
@@ -46,17 +47,25 @@ State initNode(Event event){
 
     begin_transport();
 
-    if(iamRoot){
-        numberOfChildren = 0;
-        rootHopDistance = 0;
-        return sIdle;
-    }
+    if(iamRoot)rootHopDistance = 0;
+
+    numberOfChildren = 0;
 
     initTables();
-    myIP[0] = localIP[0]; myIP[1] = localIP[1]; myIP[2] = localIP[2]; myIP[3] = localIP[3];
-    updateRoutingTable(myIP,myIP,0);
-    insertFirst(stateMachineEngine, eSuccess);
-    return sSearch;
+
+    myIP[0] = localIP[0]; myIP[1] = localIP[1];myIP[2] = localIP[2]; myIP[3] = localIP[3];
+    me.nextHopIP[0] = localIP[0]; me.nextHopIP[1] = localIP[1];me.nextHopIP[2] = localIP[2]; me.nextHopIP[3] = localIP[3];
+    me.hopDistance = 0;
+    updateRoutingTable(myIP,me);
+    Serial.printf("Routing Table\n");
+    tablePrint(routingTable,printNodeStruct);
+
+    if (!iamRoot){
+        insertFirst(stateMachineEngine, eSuccess);
+        return sSearch;
+    }else{
+        return sIdle;
+    };
 }
 
 State search(Event event){
@@ -101,7 +110,7 @@ State joinNetwork(Event event){
             Serial.printf("Waiting for parent response\n");
 
             //Wait for the parent to respond
-            while((packetSize =incomingMessage()) == 0);
+            while((packetSize = incomingMessage()) == 0);
 
             if (packetSize > 0){
                 receiveMessage(buffer);
@@ -184,7 +193,9 @@ State handleMessages(Event event){
 
         sscanf(messageBuffer, "%d %hhu.%hhu.%hhu.%hhu", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
         params.routingTable = routingTable;
+        Serial.printf("Sending my routing Table to child:");
         encodeMessage(msg2,fullRoutingTableUpdate,params);
+        Serial.printf("%s",msg2);
         sendMessage(childIP,msg2);
         //TODO send message to all network about the new node
     }

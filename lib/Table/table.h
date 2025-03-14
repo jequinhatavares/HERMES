@@ -22,8 +22,8 @@ typedef struct TableInfo{
     bool (*isEqual)(void* a, void* b);
     TableEntry* table;
 //#ifdef PREALLOCATE_TABLE
-    void (*setKey)(void* , void*) = nullptr;
-    void (*setValue)(void* , void*) = nullptr;
+    void (*setKey)(void* , void*);
+    void (*setValue)(void* , void*);
 //#endif
 } TableInfo;
 //extern TableEntry Table[MaxSize];

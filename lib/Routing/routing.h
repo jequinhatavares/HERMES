@@ -32,7 +32,8 @@ void printNodeStruct(TableEntry* Table);
 void* findNode(TableInfo* Table, int nodeIP[4]);
 void initTables();
 int* findRouteToNode(int nodeIP[4]);
-void updateRoutingTable(int nodeIP[4], int nextHopIP[4], int hopDistance);
+void updateRoutingTable(int nodeIP[4], routingTableEntry newNode);
+void updateChildrenTable(int APIP[4], int STAIP[4]);
 parentInfo chooseParent(parentInfo* possibleParents, int n);
 
 #endif //ROUTING_H
