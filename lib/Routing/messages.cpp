@@ -33,15 +33,8 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
                         ((int*)routingTable->table[i].key)[3],((routingTableEntry *)parameters.routingTable->table[i].value)->nextHopIP[0],
                         ((routingTableEntry *)parameters.routingTable->table[i].value)->nextHopIP[1],((routingTableEntry *)parameters.routingTable->table[i].value)->nextHopIP[2],
                         ((routingTableEntry *)parameters.routingTable->table[i].value)->nextHopIP[3],((routingTableEntry *)parameters.routingTable->table[i].value)->hopDistance);
-                Serial.printf("Serial: %i.%i.%i.%i %i.%i.%i.%i %i |",((int*)routingTable->table[i].key)[0],
-                        ((int*)routingTable->table[i].key)[1],((int*)routingTable->table[i].key)[2],
-                        ((int*)routingTable->table[i].key)[3],((routingTableEntry *)parameters.routingTable->table[i].value)->nextHopIP[0],
-                        ((routingTableEntry *)parameters.routingTable->table[i].value)->nextHopIP[1],((routingTableEntry *)parameters.routingTable->table[i].value)->nextHopIP[2],
-                        ((routingTableEntry *)parameters.routingTable->table[i].value)->nextHopIP[3],((routingTableEntry *)parameters.routingTable->table[i].value)->hopDistance);
-                Serial.printf("tempMsg: %s\n", tempMsg);
+
                 strcat(msg, tempMsg);
-                Serial.printf("tempMsg after: %s\n", tempMsg);
-                Serial.printf("msg after: %s\n", msg);
                 strcpy(tempMsg , "");
             }
             //Serial.printf("Formated msg: %s", msg);

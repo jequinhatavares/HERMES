@@ -29,7 +29,7 @@ typedef struct TableInfo{
 //extern TableEntry Table[MaxSize];
 
 TableInfo* tableCreate(bool (*)(void*, void*));  // DEPRECATED
-void tableInit(TableInfo* T, void** keys, void** values);
+void tableInit(TableInfo * T, void** keys, void** values, int key_size, int value_size);
 int tableFind(TableInfo* Table, void* key);
 void* tableRead(TableInfo*, void*);
 void tableAdd(TableInfo*, void* key, void* value);

@@ -57,8 +57,6 @@ State initNode(Event event){
     me.nextHopIP[0] = localIP[0]; me.nextHopIP[1] = localIP[1];me.nextHopIP[2] = localIP[2]; me.nextHopIP[3] = localIP[3];
     me.hopDistance = 0;
     updateRoutingTable(myIP,me);
-    Serial.printf("Routing Table\n");
-    tablePrint(routingTable,printNodeStruct);
 
     if (!iamRoot){
         insertFirst(stateMachineEngine, eSuccess);
@@ -172,7 +170,7 @@ State handleMessages(Event event){
     int messageType;
     messageParameters params;
     IPAddress myIP;
-    IPAddress childIP;
+    IPAddress childIP, childAPIP, childSTAIP;
 
     sscanf(messageBuffer, "%d", &messageType);
 
@@ -191,12 +189,12 @@ State handleMessages(Event event){
         Serial.printf("Message Type Child Registration Request\n");
         decodeChildRegistrationRequest(messageBuffer);
 
-        sscanf(messageBuffer, "%d %hhu.%hhu.%hhu.%hhu", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
+        sscanf(messageBuffer, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", &messageType,&childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
         params.routingTable = routingTable;
         Serial.printf("Sending my routing Table to child:");
         encodeMessage(msg2,fullRoutingTableUpdate,params);
-        Serial.printf("%s",msg2);
-        sendMessage(childIP,msg2);
+        Serial.printf("Sending msg: %s to: %i.%i.%i.%i",msg2, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
+        sendMessage(childSTAIP,msg2);
         //TODO send message to all network about the new node
     }
     if( messageType == fullRoutingTableUpdate){

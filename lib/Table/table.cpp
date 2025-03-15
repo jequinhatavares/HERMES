@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "table.h"
+#include "routing.h"
 
+#include "Arduino.h"
 //#include "Arduino.h"
 
 #define PREALLOCATE_TABLE
@@ -25,10 +27,11 @@
 //}
 
 
-void tableInit(TableInfo * T, void** keys, void** values){
+void tableInit(TableInfo * T, void** keys, void** values, int key_size, int value_size){
     for (int i = 0; i < TableMaxSize; i++) {
-        T->table[i].key = &keys[i];
-        T->table[i].value = &values[i];
+        Serial.printf("i: %i value: %i len int4:%d len struct:%d\n", i,(int)keys[i * 4], sizeof(values));
+        T->table[i].key = &(keys[i * key_size]);
+        T->table[i].value = &(values[i * value_size]);
     }
 }
 
@@ -65,6 +68,7 @@ void* tableRead(TableInfo* T, void* key){
     int i = tableFind(T, key);
     if (i==-1) return nullptr;
     //printf("tableRead value: %i\n",((int*)T->table[i].value)[0]);
+
     return T->table[i].value;
 }
 
@@ -83,7 +87,9 @@ void tableAdd(TableInfo* T, void* key, void* value){
     T->table[T->numberOfItems].value=value;
 #endif
 #ifdef PREALLOCATE_TABLE
-    //Serial.printf("3.1\n");
+    //Serial.printf("number of items: %i\n", T->numberOfItems);
+    //Serial.printf("values of keys being initialized: %i.%i.%i.%i\n", ((int*)T->table[T->numberOfItems].key)[0],((int*)T->table[T->numberOfItems].key)[1],((int*)T->table[T->numberOfItems].key)[2],((int*)T->table[T->numberOfItems].key)[3]);
+    //Serial.printf("value of values being initialized: %i.%i.%i.%i %i\n", ((int*)T->table[T->numberOfItems].value)[0],((routingTableEntry*)T->table[T->numberOfItems].value)->nextHopIP[1],((routingTableEntry*)T->table[T->numberOfItems].value)->nextHopIP[2],((routingTableEntry*)T->table[T->numberOfItems].value)->nextHopIP[3],((routingTableEntry*)T->table[T->numberOfItems].value)->hopDistance);
     T->setKey(T->table[T->numberOfItems].key, key);
     T->setValue(T->table[T->numberOfItems].value, value);
 #endif

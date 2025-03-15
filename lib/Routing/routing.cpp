@@ -40,8 +40,12 @@ TableInfo RTable = {
 };
 TableInfo* routingTable = &RTable;
 
-int IP[TableMaxSize][4];
-routingTableEntry routingTableEntries[TableMaxSize];
+int IP[TableMaxSize][4]{{1,1,1,1},{2,2,2,2}, {3,3,3,3}};
+routingTableEntry routingTableEntries[TableMaxSize] = {
+        {.hopDistance=1,.nextHopIP ={1,1,1,1}},
+        {.hopDistance=2,.nextHopIP ={2,2,2,2}},
+        {.hopDistance=3,.nextHopIP ={3,3,3,3}},
+};
 
 /***
  * Children Table Variables
@@ -92,18 +96,7 @@ bool isIPEqual(void* a, void* b){
 void setKey(void* av, void* bv){
     int* a = (int*) av;
     int* b = (int*) bv;
-    Serial.printf("3.2\n");
-
-    Serial.printf("setKey->b[0]: %i", b[0]);
-    Serial.printf("setKey->b[1]: %i", b[1]);
-    Serial.printf("setKey->b[2]: %i", b[2]);
-    Serial.printf("setKey->b[3]: %i", b[3]);
-
-    Serial.printf("setKey->a[0]: %i", a[0]);
-    Serial.printf("setKey->a[1]: %i", a[1]);
-    Serial.printf("setKey->a[2]: %i", a[2]);
-    Serial.printf("setKey->a[3]: %i", a[3]);
-
+    Serial.printf("Key.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a[0],a[1],a[2],a[3], b[0],b[1],b[2],b[3]);
     a[0] = b[0];
     a[1] = b[1];
     a[2] = b[2];
@@ -114,12 +107,9 @@ void setValue(void* av, void* bv){
     routingTableEntry * a = (routingTableEntry *) av;
     routingTableEntry * b = (routingTableEntry *) bv;
 
-    Serial.printf("setValue->b->hopDistance: %i", b->hopDistance);
-    Serial.printf("setValue->a->hopDistance: %i", a->hopDistance);
+    Serial.printf("Values.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a->nextHopIP[0],a->nextHopIP[1],a->nextHopIP[2],a->nextHopIP[3], b->nextHopIP[0],b->nextHopIP[1],b->nextHopIP[2],b->nextHopIP[3]);
 
-    Serial.printf("3.3\n");
     a->hopDistance = b->hopDistance;
-    Serial.printf("3.4\n");
     a->nextHopIP[0] = b->nextHopIP[0];
     a->nextHopIP[1] = b->nextHopIP[1];
     a->nextHopIP[2] = b->nextHopIP[2];
@@ -191,8 +181,8 @@ int* findRouteToNode(int nodeIP[4]){
  * @return (void)
  */
 void initTables(){
-    tableInit(routingTable,(void**) IP, (void**) routingTableEntries);
-    tableInit(childrenTable,(void**) AP,(void**) STA);
+    tableInit(routingTable,(void**) IP, (void**) routingTableEntries,4,5);
+    tableInit(childrenTable,(void**) AP,(void**) STA,4,4);
 }
 
 /**
@@ -208,7 +198,8 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode){
     //The node is not yet in the table
     Serial.printf("2\n");
     //routingTableEntry *ptr = (routingTableEntry*) findNode(routingTable, nodeIP);
-    tablePrint(routingTable, printNodeStruct);
+    Serial.printf("Routing Table before inserting the new node\n");
+    tablePrint(routingTable,printNodeStruct);
     if( findNode(routingTable, nodeIP) == nullptr){
         Serial.printf("3\n");
         tableAdd(routingTable, nodeIP, &newNode);
