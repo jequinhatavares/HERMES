@@ -1,6 +1,6 @@
 #include "messages.h"
 
-#include <Arduino.h>
+//#include <Arduino.h>
 
 #include <cstdio>
 #include <cstring>
@@ -106,10 +106,10 @@ void decodeFullRoutingTableUpdate(char * msg){
         while (token != NULL) {
             sscanf(token, "%d.%d.%d.%d %d.%d.%d.%d %d",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],
                    &nextHopIP[0],&nextHopIP[1],&nextHopIP[2],&nextHopIP[3], &hopDistance);
-            Serial.printf("Token: %s\n", token);
+            //Serial.printf("Token: %s\n", token);
 
-            Serial.printf("Parsed IP values: nodeIP %d.%d.%d.%d nextHopIp %d.%d.%d.%d hopDistance %d\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],
-                          nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3], hopDistance);
+            //Serial.printf("Parsed IP values: nodeIP %d.%d.%d.%d nextHopIp %d.%d.%d.%d hopDistance %d\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],
+                         // nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3], hopDistance);
             newNode.nextHopIP[0] = nextHopIP[0];newNode.nextHopIP[1] = nextHopIP[1];
             newNode.nextHopIP[2] = nextHopIP[2];newNode.nextHopIP[3] = nextHopIP[3];
             newNode.hopDistance = hopDistance;

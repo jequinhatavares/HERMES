@@ -2,7 +2,6 @@
 #include "table.h"
 #include "routing.h"
 
-#include "Arduino.h"
 //#include "Arduino.h"
 
 #define PREALLOCATE_TABLE
