@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "table.h"
-#include "routing.h"
+
 
 //#include "Arduino.h"
 
@@ -25,12 +25,10 @@
 //    return &Table;
 //}
 
-
-void tableInit(TableInfo * T, void** keys, void** values, int key_size, int value_size){
+void tableInit(TableInfo * T, void* keys, void* values, size_t key_size, size_t value_size){
     for (int i = 0; i < TableMaxSize; i++) {
-        //Serial.printf("i: %i value: %i len int4:%d len struct:%d\n", i,(int)keys[i * 4], sizeof(values));
-        T->table[i].key = &(keys[i * key_size]);
-        T->table[i].value = &(values[i * value_size]);
+        T->table[i].key = (char*)keys + (i * key_size);
+        T->table[i].value = (char*)values + (i * value_size);
     }
 }
 
@@ -127,7 +125,7 @@ void tableUpdate(TableInfo* T, void* key, void* value){
 void tableRemove(TableInfo* T, void* key){
     int i, index = tableFind(T, key);
     if(index == -1) return;
-    T->table[index].value = nullptr;
+    //T->table[index].value = nullptr;
     for (int i = index; i < T->numberOfItems-1; i++) {
 
     #ifndef PREALLOCATE_TABLE

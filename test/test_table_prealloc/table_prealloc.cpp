@@ -1,8 +1,8 @@
+#define PREALLOCATE_TABLE
 #include <unity.h>
 #include "table.h"
 #include <cstdio>
 
-#define PREALLOCATE_TABLE
 
 
 bool vectorEqual(void* a, void* b){
@@ -23,9 +23,21 @@ typedef struct Entry {
     int hopDistance;
 } Entry;
 
+
+void printNodeStruct(TableEntry* Table){
+    printf("K: Node IP %i.%i.%i.%i "
+           "V: hopDistance:%i "
+           "nextHop: %i.%i.%i.%i\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
+           ((Entry *)Table->value)->hopDistance,
+           ((Entry *)Table->value)->IP[0],((Entry *)Table->value)->IP[1],
+           ((Entry *)Table->value)->IP[2],((Entry *)Table->value)->IP[3]);
+}
+
 void setKey(void* av, void* bv){
     int* a = (int*) av;
     int* b = (int*) bv;
+
+    printf("Key.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a[0],a[1],a[2],a[3], b[0],b[1],b[2],b[3]);
 
     a[0] = b[0];
     a[1] = b[1];
@@ -36,6 +48,8 @@ void setKey(void* av, void* bv){
 void setValue(void* av, void* bv){
     Entry* a = (Entry*) av;
     Entry* b = (Entry*) bv;
+
+    printf("Values.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a->IP[0],a->IP[1],a->IP[2],a->IP[3], b->IP[0],b->IP[1],b->IP[2],b->IP[3]);
 
     a->hopDistance = b->hopDistance;
     a->IP[0] = b->IP[0];
@@ -83,16 +97,18 @@ void test_add_remove(){
     TableInfo* T = &t;
 
     // Preallocate memory
-    int keys[10][4];
-    Entry values[10];
 
-    tableInit(T, (void**) keys, (void**) values);
+    int keys[10][4]={{1,1,1,1},{2,2,2,2}, {3,3,3,3}};
+    Entry values[10]= {
+            {.IP ={1,1,1,1}, .hopDistance=1},
+            {.IP ={2,2,2,2}, .hopDistance=2},
+            {.IP ={3,3,3,3}, .hopDistance=3},
+    };
+    tableInit(T, keys, &values, sizeof(int[4]), sizeof(Entry));
 
     tableAdd(T,key1,&value1);
     tableAdd(T,key2,&value2);
     TEST_ASSERT(T->numberOfItems == 2);
-
-    //tablePrint(T,printStruct);
 
     Entry* result1 = (Entry*) tableRead(T,key1);
     //printf("Result1: %i == %i\n", (*result1).vector[0], valueCopy1[0]);
@@ -107,10 +123,11 @@ void test_add_remove(){
     TEST_ASSERT((*result2).IP[0] == valueCopy2[0]);
     TEST_ASSERT((*result2).hopDistance == value2.hopDistance);
 
-
+    tablePrint(T,printNodeStruct);
     int index = tableFind(T, key1);
 
     tableRemove(T,key1);
+    TEST_ASSERT(T->numberOfItems == 1);
 
     int index1 = tableFind(T, key1);
     int index2 = tableFind(T, key2);
@@ -118,10 +135,11 @@ void test_add_remove(){
     TEST_ASSERT(index1 == -1);
     TEST_ASSERT(index2 == index);
 
+    tablePrint(T,printNodeStruct);
     Entry* result3 = (Entry*)tableRead(T, key2);
 
     TEST_ASSERT((*result3).IP[0] == valueCopy2[0]);
-    TEST_ASSERT((*result3).hopDistance == value2.hopDistance);
+    TEST_ASSERT((*result3).hopDistance == value2.hopDistance);/****/
 }
 
 void setUp(void){}
