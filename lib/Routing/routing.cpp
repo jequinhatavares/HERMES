@@ -1,7 +1,7 @@
 #include "routing.h"
 #include <Arduino.h>
 
-bool iamRoot = true;
+bool iamRoot = false;
 int rootHopDistance = -1;
 int numberOfChildren = 0;
 bool hasParent = false;
@@ -128,7 +128,8 @@ void printNodeStruct(TableEntry* Table){
            "V: hopDistance:%i "
            "nextHop: %i.%i.%i.%i\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
            ((routingTableEntry *)Table->value)->hopDistance,
-           ((routingTableEntry *)Table->value)->nextHopIP[0],((routingTableEntry *)Table->value)->nextHopIP[1],((routingTableEntry *)Table->value)->nextHopIP[2],((routingTableEntry *)Table->value)->nextHopIP[3]);
+           ((routingTableEntry *)Table->value)->nextHopIP[0],((routingTableEntry *)Table->value)->nextHopIP[1],
+           ((routingTableEntry *)Table->value)->nextHopIP[2],((routingTableEntry *)Table->value)->nextHopIP[3]);
 }
 
 /**
@@ -207,9 +208,10 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode){
         tablePrint(routingTable,printNodeStruct);
     }else{//The node is already present in the table
         Serial.printf("4\n");
-        tableUpdate(routingTable, nodeIP, &newNode);
+        //tableUpdate(routingTable, nodeIP, &newNode);
         Serial.printf("Routing Table\n");
         tablePrint(routingTable,printNodeStruct);
+        Serial.printf("5\n");
     }
 }
 

@@ -51,7 +51,7 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
 
 int decodeMessage(char* msg){
     messageType type;
-    sscanf(msg, "%d", type);
+    sscanf(msg, "%d", &type);
     return type;
 }
 
@@ -98,20 +98,24 @@ void decodeFullRoutingTableUpdate(char * msg){
     routingTableEntry newNode;
     sscanf(msg, "%d ", &type);
 
-    char* token = strtok(msg, "| ");
+    char* token = strtok(msg, "|");
+    //To discard the message type and ensure the token points to the first routing table update entry
+    token = strtok(NULL, "|");
 
     if (type == fullRoutingTableUpdate){
         while (token != NULL) {
-            //Serial.printf("% s\n", token);
             sscanf(token, "%d.%d.%d.%d %d.%d.%d.%d %d",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],
                    &nextHopIP[0],&nextHopIP[1],&nextHopIP[2],&nextHopIP[3], &hopDistance);
-            token = strtok(NULL, "| ");
+            Serial.printf("Token: %s\n", token);
 
+            Serial.printf("Parsed IP values: nodeIP %d.%d.%d.%d nextHopIp %d.%d.%d.%d hopDistance %d\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],
+                          nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3], hopDistance);
             newNode.nextHopIP[0] = nextHopIP[0];newNode.nextHopIP[1] = nextHopIP[1];
             newNode.nextHopIP[2] = nextHopIP[2];newNode.nextHopIP[3] = nextHopIP[3];
             newNode.hopDistance = hopDistance;
             //Update the Routing Table
             updateRoutingTable(nodeIP,newNode);
+            token = strtok(NULL, "|");
         }
     }
 }

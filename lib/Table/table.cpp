@@ -29,7 +29,7 @@
 
 void tableInit(TableInfo * T, void** keys, void** values, int key_size, int value_size){
     for (int i = 0; i < TableMaxSize; i++) {
-        Serial.printf("i: %i value: %i len int4:%d len struct:%d\n", i,(int)keys[i * 4], sizeof(values));
+        //Serial.printf("i: %i value: %i len int4:%d len struct:%d\n", i,(int)keys[i * 4], sizeof(values));
         T->table[i].key = &(keys[i * key_size]);
         T->table[i].value = &(values[i * value_size]);
     }

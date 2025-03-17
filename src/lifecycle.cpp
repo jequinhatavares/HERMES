@@ -141,17 +141,19 @@ State joinNetwork(Event event){
         sendMessage(getGatewayIP(), msg);
 
         //Wait for the parent to respond with his routing table information
-        while((packetSize =incomingMessage()) == 0);
+        while((packetSize = incomingMessage()) == 0);
 
+        //Process the routing table update
         if (packetSize > 0){
             receiveMessage(buffer);
             Serial.printf("Parent Response: %s\n", buffer);
             decodeFullRoutingTableUpdate(buffer);
-            Serial.printf("Routing Table\n");
+            Serial.printf("Routing Table Updated\n");
             tablePrint(routingTable,printNodeStruct);
         }
 
     }
+    Serial.print("----------------Node successfully added to the network---------------\n");
     return sIdle;
 }
 
