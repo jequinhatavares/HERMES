@@ -84,7 +84,7 @@ State search(Event event){
 
 State joinNetwork(Event event){
     Serial.print("Entered choose parent State\n");
-    int wait = 1000000, packetSize = 0;
+    int packetSize = 0;
     IPAddress mySTAIP;
     messageParameters params;
     char buffer[256] = "";

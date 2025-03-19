@@ -2,6 +2,7 @@
 #define TABLE_H
 
 #define TableMaxSize 10
+#include <cstddef>
 
 /*
 bool defaultEqual(void* a, void* b){
@@ -29,7 +30,6 @@ typedef struct TableInfo{
 //extern TableEntry Table[MaxSize];
 
 TableInfo* tableCreate(bool (*)(void*, void*));  // DEPRECATED
-//void tableInit(TableInfo * T, void** keys, void** values, int key_size, int value_size);
 void tableInit(TableInfo * T, void* keys, void* values, size_t key_size, size_t value_size);
 int tableFind(TableInfo* Table, void* key);
 void* tableRead(TableInfo*, void*);

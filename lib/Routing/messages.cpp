@@ -49,11 +49,6 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
     }
 }
 
-int decodeMessage(char* msg){
-    messageType type;
-    sscanf(msg, "%d", &type);
-    return type;
-}
 
 void decodeParentInfoResponse(char* msg, parentInfo *parents, int i){
     int type;

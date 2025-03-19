@@ -183,8 +183,8 @@ int* findRouteToNode(int nodeIP[4]){
  * @return (void)
  */
 void initTables(){
-    tableInit(routingTable,(void**) IP, (void**) routingTableEntries,4,5);
-    tableInit(childrenTable,(void**) AP,(void**) STA,4,4);
+    tableInit(routingTable,IP, &routingTableEntries, sizeof(int[4]),sizeof(routingTableEntry));
+    tableInit(childrenTable,AP,STA, sizeof(int[4]), sizeof(int[4]));
 }
 
 /**
