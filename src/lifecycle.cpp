@@ -153,7 +153,7 @@ State joinNetwork(Event event){
         }
 
     }
-    Serial.print("----------------Node successfully added to the network---------------\n");
+    Serial.print("---------------------Node successfully added to the network----------------------\n");
     return sIdle;
 }
 

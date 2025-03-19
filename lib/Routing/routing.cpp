@@ -1,6 +1,6 @@
 #include "routing.h"
 
-//#include <Arduino.h>
+#include <Arduino.h>
 
 bool iamRoot = false;
 int rootHopDistance = -1;
@@ -97,7 +97,7 @@ bool isIPEqual(void* a, void* b){
 void setKey(void* av, void* bv){
     int* a = (int*) av;
     int* b = (int*) bv;
-    //Serial.printf("Key.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a[0],a[1],a[2],a[3], b[0],b[1],b[2],b[3]);
+    Serial.printf("Key.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a[0],a[1],a[2],a[3], b[0],b[1],b[2],b[3]);
     a[0] = b[0];
     a[1] = b[1];
     a[2] = b[2];
@@ -108,13 +108,24 @@ void setValue(void* av, void* bv){
     routingTableEntry * a = (routingTableEntry *) av;
     routingTableEntry * b = (routingTableEntry *) bv;
 
-    //Serial.printf("Values.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a->nextHopIP[0],a->nextHopIP[1],a->nextHopIP[2],a->nextHopIP[3], b->nextHopIP[0],b->nextHopIP[1],b->nextHopIP[2],b->nextHopIP[3]);
+    Serial.printf("Values.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a->nextHopIP[0],a->nextHopIP[1],a->nextHopIP[2],a->nextHopIP[3], b->nextHopIP[0],b->nextHopIP[1],b->nextHopIP[2],b->nextHopIP[3]);
 
     a->hopDistance = b->hopDistance;
     a->nextHopIP[0] = b->nextHopIP[0];
     a->nextHopIP[1] = b->nextHopIP[1];
     a->nextHopIP[2] = b->nextHopIP[2];
     a->nextHopIP[3] = b->nextHopIP[3];
+}
+/**
+ * initTables
+ *Initializes the routing and children tables.
+ *
+ * @return (void)
+ */
+void initTables(){
+    Serial.printf("SizeOf int[4]: %i struct: %i", sizeof(int[4]), sizeof(routingTableEntry));
+    tableInit(routingTable,IP, &routingTableEntries, sizeof(int[4]),sizeof(routingTableEntry));
+    tableInit(childrenTable,AP,STA, sizeof(int[4]), sizeof(int[4]));
 }
 
 /**
@@ -125,12 +136,12 @@ void setValue(void* av, void* bv){
  * @return (void)
  */
 void printNodeStruct(TableEntry* Table){
-    //Serial.printf("K: Node IP %i.%i.%i.%i "
-           //"V: hopDistance:%i "
-           //"nextHop: %i.%i.%i.%i\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
-           //((routingTableEntry *)Table->value)->hopDistance,
-           //((routingTableEntry *)Table->value)->nextHopIP[0],((routingTableEntry *)Table->value)->nextHopIP[1],
-           //((routingTableEntry *)Table->value)->nextHopIP[2],((routingTableEntry *)Table->value)->nextHopIP[3]);
+    Serial.printf("K: Node IP %i.%i.%i.%i "
+           "V: hopDistance:%i "
+           "nextHop: %i.%i.%i.%i\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
+           ((routingTableEntry *)Table->value)->hopDistance,
+           ((routingTableEntry *)Table->value)->nextHopIP[0],((routingTableEntry *)Table->value)->nextHopIP[1],
+           ((routingTableEntry *)Table->value)->nextHopIP[2],((routingTableEntry *)Table->value)->nextHopIP[3]);
 }
 
 /**
@@ -176,17 +187,6 @@ int* findRouteToNode(int nodeIP[4]){
     return entry->nextHopIP;
 
 }
-/**
- * initTables
- *Initializes the routing and children tables.
- *
- * @return (void)
- */
-void initTables(){
-    tableInit(routingTable,IP, &routingTableEntries, sizeof(int[4]),sizeof(routingTableEntry));
-    tableInit(childrenTable,AP,STA, sizeof(int[4]), sizeof(int[4]));
-}
-
 /**
  * updateRoutingTable
  * Adds or updates an entry in the routing table for a given node.
