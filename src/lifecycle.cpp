@@ -39,7 +39,7 @@ State initNode(Event event){
     strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
     strcat(ssid, getMyMAC().c_str());
     routingTableEntry me;
-    int blankIP[4] = {0,0,0,0};
+    int invalidIP[4] = {-1,-1,-1,-1};
 
     Serial.print("Entered Init State\n");
     parseMAC(getMyMAC().c_str(), MAC);
@@ -49,7 +49,10 @@ State initNode(Event event){
 
     begin_transport();
 
-    if(iamRoot)rootHopDistance = 0;
+    if(iamRoot){
+        rootHopDistance = 0;
+        IPAssign(parent, invalidIP);
+    }
 
     numberOfChildren = 0;
 
@@ -58,7 +61,7 @@ State initNode(Event event){
     myIP[0] = localIP[0]; myIP[1] = localIP[1];myIP[2] = localIP[2]; myIP[3] = localIP[3];
     me.nextHopIP[0] = localIP[0]; me.nextHopIP[1] = localIP[1];me.nextHopIP[2] = localIP[2]; me.nextHopIP[3] = localIP[3];
     me.hopDistance = 0;
-    updateRoutingTable(myIP,me,blankIP);
+    updateRoutingTable(myIP,me,invalidIP);
 
     if (!iamRoot){
         insertFirst(stateMachineEngine, eSuccess);

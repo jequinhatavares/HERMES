@@ -165,9 +165,12 @@ void tablePrint(TableInfo* T, void (*print)(TableEntry*)){
  */
 void tableClean(TableInfo* T){
     int i;
+    #ifndef PREALLOCATE_TABLE
     for (int i = 0; i < T->numberOfItems; i++) {
         T->table[i].key = nullptr;
         T->table[i].value = nullptr;
     }
+    #endif
     T->numberOfItems = 0;
+
 }
