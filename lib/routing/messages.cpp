@@ -95,7 +95,7 @@ void decodeChildRegistrationRequest(char * msg){
     }
 }
 
-void decodeFullRoutingTableUpdate(char * msg, int senderIP[4]){
+void decodeFullRoutingTableUpdate(char * msg, int* senderIP){
     int type;
     int nodeIP[4], nextHopIP[4];
     int hopDistance;
@@ -124,7 +124,7 @@ void decodeFullRoutingTableUpdate(char * msg, int senderIP[4]){
     }
 }
 
-void decodePartialRoutingUpdate(char *msg, int senderIP[4]){
+void decodePartialRoutingUpdate(char *msg, int* senderIP){
     int type;
     int nodeIP[4], nextHopIP[4];
     int hopDistance;
@@ -144,6 +144,20 @@ void decodePartialRoutingUpdate(char *msg, int senderIP[4]){
 
 }
 
-void decodeDataMessage(){
+void decodeDataMessage(char *msg){
+    int senderIP[4], destinyIP[4], nextHopIP[4];
+    int hopDistance, type;
+    char payload[50];
+    routingTableEntry newNode;
+    sscanf(msg, "%d ", &type);
+
+    if (type == partialRoutingTableUpdate){
+        sscanf(msg, "%d %s %d.%d.%d.%d %d.%d.%d.%d",&type, payload, &senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
+            &destinyIP[0],&destinyIP[1],&destinyIP[2],&destinyIP[3]);
+        //Serial.printf("Message %s received from %d.%d.%d.%d to %d.%d.%d.%d", payload, senderIP[0],senderIP[1],senderIP[2],senderIP[3],
+            //destinyIP[0],destinyIP[1],destinyIP[2],destinyIP[3]);
+        IPAssign(nextHopIP, findRouteToNode(destinyIP));
+        //Serial.printf("Next Hop IP: %d.%d.%d.%d", nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3]);
+    }
 
 }

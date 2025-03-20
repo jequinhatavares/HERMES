@@ -28,8 +28,9 @@ typedef enum messageType{
 void encodeMessage(char* msg, messageType type, messageParameters parameters);
 void decodeParentInfoResponse(char* msg, parentInfo *parents, int i);
 void decodeChildRegistrationRequest(char * msg);
-void decodeFullRoutingTableUpdate(char *msg, int senderIP[4]);
-void decodePartialRoutingUpdate(char *msg, int senderIP[4]);
+void decodeFullRoutingTableUpdate(char *msg, int* senderIP);
+void decodePartialRoutingUpdate(char *msg, int* senderIP);
+void decodeDataMessage(char *msg);
 
 
 #endif //MESSAGES_H

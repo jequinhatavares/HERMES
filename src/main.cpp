@@ -61,7 +61,7 @@ void loop(){
     if (packet_size > 0){
         Serial.printf("PacketSize: %d\n", packet_size);
         Serial.print("Theres incoming messages\n");
-        receiveMessage(messageBuffer);
+        receiveMessage(messageBuffer, senderIP);
         Serial.printf("Received: %s\n", messageBuffer);
         insertLast(stateMachineEngine, eMessage);
 

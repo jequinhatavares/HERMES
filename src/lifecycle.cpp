@@ -39,6 +39,7 @@ State initNode(Event event){
     strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
     strcat(ssid, getMyMAC().c_str());
     routingTableEntry me;
+    int blankIP[4] = {0,0,0,0};
 
     Serial.print("Entered Init State\n");
     parseMAC(getMyMAC().c_str(), MAC);
@@ -57,7 +58,7 @@ State initNode(Event event){
     myIP[0] = localIP[0]; myIP[1] = localIP[1];myIP[2] = localIP[2]; myIP[3] = localIP[3];
     me.nextHopIP[0] = localIP[0]; me.nextHopIP[1] = localIP[1];me.nextHopIP[2] = localIP[2]; me.nextHopIP[3] = localIP[3];
     me.hopDistance = 0;
-    updateRoutingTable(myIP,me);
+    updateRoutingTable(myIP,me,blankIP);
 
     if (!iamRoot){
         insertFirst(stateMachineEngine, eSuccess);
@@ -112,7 +113,7 @@ State joinNetwork(Event event){
             while((packetSize = incomingMessage()) == 0);
 
             if (packetSize > 0){
-                receiveMessage(buffer);
+                receiveMessage(buffer, senderIP);
                 Serial.printf("Parent Response: %s\n", buffer);
                 decodeParentInfoResponse(buffer, possibleParents, i);
                 possibleParents[i].ssid = ssidList.item[i];
@@ -147,9 +148,9 @@ State joinNetwork(Event event){
 
         //Process the routing table update
         if (packetSize > 0){
-            receiveMessage(buffer);
+            receiveMessage(buffer, senderIP);
             Serial.printf("Parent Response: %s\n", buffer);
-            decodeFullRoutingTableUpdate(buffer);
+            decodeFullRoutingTableUpdate(buffer, senderIP);
             Serial.printf("Routing Table Updated\n");
             tablePrint(routingTable,printNodeStruct);
         }
@@ -203,12 +204,16 @@ State handleMessages(Event event){
     }
     if( messageType == fullRoutingTableUpdate){
         Serial.printf("Message Type Full Routing Update\n");
-        decodeFullRoutingTableUpdate(messageBuffer);
+        decodeFullRoutingTableUpdate(messageBuffer, senderIP);
     }
     if( messageType == partialRoutingTableUpdate){
         Serial.printf("Message Type Partial Routing Table Update\n");
-        decodePartialRoutingUpdate(messageBuffer);
+        decodePartialRoutingUpdate(messageBuffer, senderIP);
         //TODO Maybe send the update to other nodes??
+    }
+    if(messageType == dataMessage){
+        Serial.printf("Message Type Partial Routing Table Update\n");
+        decodeDataMessage(messageBuffer);
     }
     return sIdle;
 }
