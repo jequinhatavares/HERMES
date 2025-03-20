@@ -1,5 +1,6 @@
 #include <unity.h>
 #include <cstdio>
+
 #include "routing.h"
 
 void test_ip_equal_func(){
@@ -10,7 +11,7 @@ void test_ip_equal_func(){
     TEST_ASSERT_FALSE(isIPEqual(ipa, ipb));
 }
 
-void printNodeStruct(TableEntry* Table){
+void printNodeStruct2(TableEntry* Table){
     printf("K: Node IP %i.%i.%i.%i "
            "V: hopDistance:%i "
            "nextHop: %i.%i.%i.%i\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
@@ -63,10 +64,10 @@ void test_remove_node(){
     routingTableEntry* newNode = &node;
 
     tableAdd(routingTable, nodeIP,newNode);
-    tablePrint(routingTable,printNodeStruct);
+    tablePrint(routingTable,printNodeStruct2);
 
     tableRemove(routingTable,nodeIP);
-    tablePrint(routingTable,printNodeStruct);
+    tablePrint(routingTable,printNodeStruct2);
 
     TEST_ASSERT(routingTable->numberOfItems == 0);
 
@@ -118,7 +119,7 @@ void test_find_path_to_child(){
     tableAdd(childrenTable, child_APIP,child_STAIP);
 
     printf("Routing Table\n");
-    tablePrint(routingTable,printNodeStruct);
+    tablePrint(routingTable,printNodeStruct2);
     printf("Children Table\n");
     tablePrint(childrenTable,printChildStruct);
     nextHop = findRouteToNode(child_APIP);
@@ -159,7 +160,7 @@ void test_find_path_to_parent(){
     tableAdd(childrenTable, child_APIP,child_STAIP);
 
     printf("Routing Table\n");
-    tablePrint(routingTable,printNodeStruct);
+    tablePrint(routingTable,printNodeStruct2);
     printf("Children Table\n");
     tablePrint(childrenTable,printChildStruct);
     nextHop = findRouteToNode(parent);
@@ -210,7 +211,7 @@ void test_find_path_to_network(){
     TEST_ASSERT(childrenTable->numberOfItems == 1);
 
     printf("Routing Table\n");
-    tablePrint(routingTable,printNodeStruct);
+    tablePrint(routingTable,printNodeStruct2);
     printf("Children Table\n");
     tablePrint(childrenTable,printChildStruct);
     nextHop = findRouteToNode(node3IP);
