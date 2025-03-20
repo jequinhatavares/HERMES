@@ -9,6 +9,7 @@ typedef struct messageParameters{
     int hopDistance = -1;
     int childrenNumber = -1;
     TableInfo *routingTable;
+    char* payload;
 }messageParameters;
 
 //a = messageEncode(parentDiscoveryRequest, .ip=1.1.1.1, .hopDistance=2)
@@ -20,14 +21,15 @@ typedef enum messageType{
     childRegistrationRequest, //2
     fullRoutingTableUpdate, //3
     partialRoutingTableUpdate, //4
+    dataMessage, //5 por enquanto
 }messageType;
 
 
 void encodeMessage(char* msg, messageType type, messageParameters parameters);
 void decodeParentInfoResponse(char* msg, parentInfo *parents, int i);
 void decodeChildRegistrationRequest(char * msg);
-void decodeFullRoutingTableUpdate(char * msg);
-void decodePartialRoutingUpdate(char *msg);
+void decodeFullRoutingTableUpdate(char *msg, int senderIP[4]);
+void decodePartialRoutingUpdate(char *msg, int senderIP[4]);
 
 
 #endif //MESSAGES_H

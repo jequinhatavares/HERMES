@@ -44,6 +44,13 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
                     parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3],
                     parameters.hopDistance);
             break;
+
+        case dataMessage:
+            //5 [message payload] [source node IP] [destiny node IP]
+            sprintf(msg,"5 %s %i.%i.%i.%i %i.%i.%i.%i", parameters.payload,parameters.IP1[0],parameters.IP1[1],
+                    parameters.IP1[2],parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
+            break;
+
         default:
             break;
     }
@@ -82,11 +89,13 @@ void decodeChildRegistrationRequest(char * msg){
         newNode.nextHopIP[2] = childAPIP[2];newNode.nextHopIP[3] = childAPIP[3];
         newNode.hopDistance = 1;
         //Add the child node to the routing table
-        updateRoutingTable(childAPIP, newNode);
+        updateRoutingTable(childAPIP, newNode, childAPIP);
+        //Increase the number of children
+        numberOfChildren++;
     }
 }
 
-void decodeFullRoutingTableUpdate(char * msg){
+void decodeFullRoutingTableUpdate(char * msg, int senderIP[4]){
     int type;
     int nodeIP[4], nextHopIP[4];
     int hopDistance;
@@ -109,13 +118,13 @@ void decodeFullRoutingTableUpdate(char * msg){
             newNode.nextHopIP[2] = nextHopIP[2];newNode.nextHopIP[3] = nextHopIP[3];
             newNode.hopDistance = hopDistance;
             //Update the Routing Table
-            updateRoutingTable(nodeIP,newNode);
+            updateRoutingTable(nodeIP,newNode,senderIP);
             token = strtok(NULL, "|");
         }
     }
 }
 
-void decodePartialRoutingUpdate(char *msg){
+void decodePartialRoutingUpdate(char *msg, int senderIP[4]){
     int type;
     int nodeIP[4], nextHopIP[4];
     int hopDistance;
@@ -130,7 +139,11 @@ void decodePartialRoutingUpdate(char *msg){
         newNode.nextHopIP[2] = nextHopIP[2];newNode.nextHopIP[3] = nextHopIP[3];
         newNode.hopDistance = hopDistance;
 
-        updateRoutingTable(nodeIP,newNode);
+        updateRoutingTable(nodeIP,newNode, senderIP);
     }
+
+}
+
+void decodeDataMessage(){
 
 }

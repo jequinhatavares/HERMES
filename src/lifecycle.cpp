@@ -6,6 +6,8 @@ IPAddress subnet;
 IPAddress dns;
 
 char messageBuffer[256] = "";
+int senderIP[4];
+
 
 StateMachine SM_ = {
         .current_state = sInit,
@@ -36,7 +38,6 @@ State initNode(Event event){
     char ssid[256]; // Make sure this buffer is large enough to hold the entire SSID
     strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
     strcat(ssid, getMyMAC().c_str());
-    int myIP[4];
     routingTableEntry me;
 
     Serial.print("Entered Init State\n");
@@ -127,6 +128,7 @@ State joinNetwork(Event event){
         //Connect to the preferred parent
         if(ssidList.len != 1)connectToAP(preferredParent.ssid, PASS);
         Serial.printf("Preferred Parent- IP: %i.%i.%i.%i nrChildren: %i rootHopDistance: %i\n",preferredParent.parentIP[0], preferredParent.parentIP[1], preferredParent.parentIP[2], preferredParent.parentIP[3], preferredParent.nrOfChildren, preferredParent.rootHopDistance);
+
         //Update parent information on global variable
         parent[0] = preferredParent.parentIP[0]; parent[1] = preferredParent.parentIP[1];
         parent[2] = preferredParent.parentIP[2]; parent[3] = preferredParent.parentIP[3];

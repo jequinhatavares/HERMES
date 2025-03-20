@@ -25,14 +25,17 @@ extern int rootHopDistance;
 extern int numberOfChildren;
 extern bool hasParent;
 
+extern int myIP[4];
+
 bool isIPEqual(void* a, void* b);
+void IPAssign(int destIP[4], int sourceIP[4]);
 void setKey(void* av, void* bv);
 void setValue(void* av, void* bv);
 void printNodeStruct(TableEntry* Table);
 void* findNode(TableInfo* Table, int nodeIP[4]);
 void initTables();
 int* findRouteToNode(int nodeIP[4]);
-void updateRoutingTable(int nodeIP[4], routingTableEntry newNode);
+void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4]);
 void updateChildrenTable(int APIP[4], int STAIP[4]);
 parentInfo chooseParent(parentInfo* possibleParents, int n);
 

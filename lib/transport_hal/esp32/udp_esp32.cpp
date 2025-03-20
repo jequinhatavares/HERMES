@@ -40,8 +40,11 @@ int incomingMessage(){
  * @param buffer A character array to store the received message.
  * @return void
  */
-void receiveMessage(char* buffer){
+void receiveMessage(char* buffer, int senderIP[4]){
     int len = Udp.read(buffer, 255);
+    IPAddress sender = Udp.remoteIP();
+    senderIP[0] = sender[0];senderIP[1] = sender[1];
+    senderIP[2] = sender[2];senderIP[3] = sender[3];
     if(len>0){
         buffer[len] = '\0';
     }

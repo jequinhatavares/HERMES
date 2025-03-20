@@ -7,6 +7,7 @@ int rootHopDistance = -1;
 int numberOfChildren = 0;
 bool hasParent = false;
 int parent[4];
+int myIP[4];
 
 
 #undef TableMaxSize
@@ -94,6 +95,12 @@ bool isIPEqual(void* a, void* b){
     }
     return false;
 }
+
+void IPAssign(int destIP[4], int sourceIP[4]){
+    destIP[0] = sourceIP[0];destIP[1] = sourceIP[1];
+    destIP[2] = sourceIP[2];destIP[3] = sourceIP[3];
+}
+
 void setKey(void* av, void* bv){
     int* a = (int*) av;
     int* b = (int*) bv;
@@ -195,12 +202,40 @@ int* findRouteToNode(int nodeIP[4]){
  * @param newNode - A struct containing the next-hop IP address and the hop distance to the node.
  * @return (void)
  */
-void updateRoutingTable(int nodeIP[4], routingTableEntry newNode){
+void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4]){
     //Serial.printf("1\n");
     //The node is not yet in the table
     //Serial.printf("2\n");
     //routingTableEntry *ptr = (routingTableEntry*) findNode(routingTable, nodeIP);
     //Serial.printf("Routing Table before inserting the new node\n");
+
+     //If it is my IP, the hop distance is zero, and the next node is myself
+     if(isIPEqual(nodeIP, myIP)){
+         newNode.hopDistance = 0;
+         IPAssign(newNode.nextHopIP, myIP);
+     }
+     //If the node is my parent, its hop distance is 1
+     else if(isIPEqual(nodeIP, parent)){
+         newNode.hopDistance = 1;
+         IPAssign(newNode.nextHopIP, parent);
+     }
+     //If the node is my child, its hop distance is 1
+     else if(findNode(childrenTable,nodeIP) != nullptr){
+         newNode.hopDistance = 1;
+         IPAssign(newNode.nextHopIP, nodeIP);
+     }
+     //If the next hop is my parent or child, increase the hop distance by 1
+     else if(isIPEqual(newNode.nextHopIP, parent) || findNode(childrenTable,newNode.nextHopIP) != nullptr){
+         newNode.hopDistance = newNode.hopDistance + 1;
+     }
+     //If the IP or nextHopIP is neither my parent nor my child (i.e., it belongs to another node in the network
+     // that is not directly connected to me), update nextHopIP to the sender's IP
+     else if(findNode(childrenTable,newNode.nextHopIP) == nullptr ){
+        IPAssign(newNode.nextHopIP, senderIP);
+        newNode.hopDistance = newNode.hopDistance + 1;
+        //TODO aqui ter cuidado porque o senderIP atualizado no UDP pode estar relacionado com se a mensagem veio do pai ou do filho
+     }
+
     tablePrint(routingTable,printNodeStruct);
     if( findNode(routingTable, nodeIP) == nullptr){
         //Serial.printf("3\n");
