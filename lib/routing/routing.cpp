@@ -2,7 +2,7 @@
 
 //#include <Arduino.h>
 
-bool iamRoot = false;
+bool iamRoot = true;
 int rootHopDistance = -1;
 int numberOfChildren = 0;
 bool hasParent = false;
@@ -297,3 +297,4 @@ parentInfo chooseParent(parentInfo* possibleParents, int n){
     //TODO colocar esta função mais segura: este parentIndex pode não ser inicializado: Retornar um ponteiro
     return possibleParents[parentIndex];
 }
+

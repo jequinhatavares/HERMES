@@ -89,8 +89,8 @@ State search(Event event){
 
 State joinNetwork(Event event){
     Serial.print("Entered choose parent State\n");
-    int packetSize = 0;
-    IPAddress mySTAIP;
+    int packetSize = 0, connectedParentIP[4];
+    IPAddress mySTAIP, connectedGateway;
     messageParameters params;
     char buffer[256] = "";
     parentInfo possibleParents[10];
@@ -108,7 +108,11 @@ State joinNetwork(Event event){
             //Send a Parent Discovery Request to the connected parent
             params.IP1[0] = mySTAIP[0]; params.IP1[1] = mySTAIP[1]; params.IP1[2] = mySTAIP[2]; params.IP1[3] = mySTAIP[3];
             encodeMessage(msg, parentDiscoveryRequest, params);
-            sendMessage(getGatewayIP(), msg);
+
+            connectedGateway =  getGatewayIP();
+            connectedParentIP[0] = getGatewayIP()[0];connectedParentIP[1] = getGatewayIP()[1];
+            connectedParentIP[2] = getGatewayIP()[2];connectedParentIP[3] = getGatewayIP()[3];
+            sendMessage(connectedParentIP, msg);
 
             Serial.printf("Waiting for parent response\n");
 
@@ -144,7 +148,7 @@ State joinNetwork(Event event){
         params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
         params.IP2[0] = mySTAIP[0]; params.IP2[1] = mySTAIP[1]; params.IP2[2] = mySTAIP[2]; params.IP2[3] = mySTAIP[3];
         encodeMessage(msg, childRegistrationRequest, params);
-        sendMessage(getGatewayIP(), msg);
+        sendMessage(parent, msg);
 
         //Wait for the parent to respond with his routing table information
         while((packetSize = incomingMessage()) == 0);
@@ -178,7 +182,7 @@ State handleMessages(Event event){
     int messageType;
     messageParameters params;
     IPAddress myIP;
-    IPAddress childIP, childAPIP, childSTAIP;
+    int childIP[4], childAPIP[4], childSTAIP[4];
 
     sscanf(messageBuffer, "%d", &messageType);
 
@@ -196,14 +200,32 @@ State handleMessages(Event event){
     if( messageType == childRegistrationRequest){
         Serial.printf("Message Type Child Registration Request\n");
         decodeChildRegistrationRequest(messageBuffer);
-
         sscanf(messageBuffer, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", &messageType,&childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
+
+        //Send my routing table to my child
         params.routingTable = routingTable;
         Serial.printf("Sending my routing Table to child:");
         encodeMessage(msg2,fullRoutingTableUpdate,params);
-        Serial.printf("Sending msg: %s to: %i.%i.%i.%i",msg2, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
+        Serial.printf("Sending msg: %s to: %i.%i.%i.%i\n",msg2, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
         sendMessage(childSTAIP,msg2);
         //TODO send message to all network about the new node
+        int IP[4];
+
+        //Propagate the new node information trough the network
+        IPAssign(params.IP1,childAPIP);
+        IPAssign(params.IP2,childAPIP);
+        params.hopDistance = 1;
+        encodeMessage(msg2, partialRoutingTableUpdate, params);
+        // If the message didn't come from the parent, forward it to the parent
+        if(!isIPEqual(senderIP, parent)){
+            sendMessage(parent, msg2);
+        }
+        //Forward the message to all children except the one that sent it to me
+        for(int i = 0; i< childrenTable->numberOfItems; i++){
+            if(!isIPEqual((int*)childrenTable->table[i].key, senderIP)){
+                sendMessage((int*)childrenTable->table[i].key, msg2);
+            }
+        }
     }
     if( messageType == fullRoutingTableUpdate){
         Serial.printf("Message Type Full Routing Update\n");
@@ -213,6 +235,22 @@ State handleMessages(Event event){
         Serial.printf("Message Type Partial Routing Table Update\n");
         decodePartialRoutingUpdate(messageBuffer, senderIP);
         //TODO Maybe send the update to other nodes??
+
+        //Propagate the new node information trough the network
+        IPAssign(params.IP1,childAPIP);
+        IPAssign(params.IP2,childAPIP);
+        params.hopDistance = 1;
+        encodeMessage(msg2, partialRoutingTableUpdate, params);
+        // If the message didn't come from the parent, forward it to the parent
+        if(!isIPEqual(senderIP, parent)){
+            sendMessage(parent, msg2);
+        }
+        //Forward the message to all children except the one that sent it to me
+        for(int i = 0; i< childrenTable->numberOfItems; i++){
+            if(!isIPEqual((int*)childrenTable->table[i].key, senderIP)){
+                sendMessage((int*)childrenTable->table[i].key, msg2);
+            }
+        }
     }
     if(messageType == dataMessage){
         Serial.printf("Message Type Partial Routing Table Update\n");

@@ -29,6 +29,8 @@ bool isFirstMessage = true;
 void setup(){
     Serial.begin(115200);
 
+    Serial.setTimeout(10000);
+
     #ifdef ESP32
         Serial.print("ESP32\n");
         //esp_log_level_set("wifi", ESP_LOG_VERBOSE);
@@ -54,10 +56,15 @@ void setup(){
 //bool client_defined = false;
 
 IPAddress ip, childIP;
+char serialBuffer[200];
 
 void loop(){
     //Wait for incoming requests
     int packet_size = incomingMessage();
+    int type, fromIP[4], destinyIP[4]={135, 230,96,1},index = 0;
+    int childSTAIP[4] = {135, 230,96,100};
+    messageParameters params;
+    char playload[50];
     if (packet_size > 0){
         Serial.printf("PacketSize: %d\n", packet_size);
         Serial.print("Theres incoming messages\n");
@@ -69,6 +76,27 @@ void loop(){
     if(stateMachineEngine->size != 0){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
     }
+    if(numberOfChildren == 1){
+        strcpy(params.payload, "HELLO");
+        IPAssign(params.IP1,myIP);
+        IPAssign(params.IP2,destinyIP);
+        encodeMessage(serialBuffer,dataMessage,params);
+        sendMessage( childSTAIP, serialBuffer);
+    }
+    //if (Serial.available() > 0){
+    //    // read the incoming bytes:
+    //    //int rlen = Serial.readBytesUntil('\n', serialBuffer, 200);
+    //    //for(int i = 0; i < rlen; i++)
+    //    //    Serial.print(serialBuffer[i]);
+    //    Serial.print("Receiving:\n");
+//
+    //    String input = Serial.readStringUntil('\n');
+    //    delay(2);
+//
+    //    Serial.printf("I received: %s", input.c_str());
+    //    strcpy(serialBuffer, input.c_str());
+    //    decodeDataMessage(serialBuffer);
+    //}
 
 }
 #endif
