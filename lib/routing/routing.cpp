@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-bool iamRoot = true;
+bool iamRoot = false;
 int rootHopDistance = -1;
 int numberOfChildren = 0;
 bool hasParent = false;
@@ -238,12 +238,10 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4
         //Serial.printf("3\n");
         tableAdd(routingTable, nodeIP, &newNode);
         //Serial.printf("Routing Table\n");
-        tablePrint(routingTable,printNodeStruct);
     }else{//The node is already present in the table
         //Serial.printf("4\n");
-        //tableUpdate(routingTable, nodeIP, &newNode);
+        tableUpdate(routingTable, nodeIP, &newNode);
         //Serial.printf("Routing Table\n");
-        tablePrint(routingTable,printNodeStruct);
         //Serial.printf("5\n");
     }
 }
