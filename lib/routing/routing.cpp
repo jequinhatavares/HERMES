@@ -1,6 +1,6 @@
 #include "routing.h"
 
-//#include <Arduino.h>
+#include <Arduino.h>
 
 bool iamRoot = true;
 int rootHopDistance = -1;
@@ -143,12 +143,10 @@ void initTables(){
  * @return (void)
  */
 void printNodeStruct(TableEntry* Table){
-    //Serial.printf("K: Node IP %i.%i.%i.%i "
-           //"V: hopDistance:%i "
-           //"nextHop: %i.%i.%i.%i\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
-           //((routingTableEntry *)Table->value)->hopDistance,
-           //((routingTableEntry *)Table->value)->nextHopIP[0],((routingTableEntry *)Table->value)->nextHopIP[1],
-           //((routingTableEntry *)Table->value)->nextHopIP[2],((routingTableEntry *)Table->value)->nextHopIP[3]);
+    Serial.printf("Node[%d.%d.%d.%d] → NextHop[%d.%d.%d.%d] | (Distance: %d)\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
+           ((routingTableEntry *)Table->value)->nextHopIP[0],((routingTableEntry *)Table->value)->nextHopIP[1],
+           ((routingTableEntry *)Table->value)->nextHopIP[2],((routingTableEntry *)Table->value)->nextHopIP[3],
+           ((routingTableEntry *)Table->value)->hopDistance);
 }
 
 /**
@@ -236,7 +234,6 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4
         //TODO aqui ter cuidado porque o senderIP atualizado no UDP pode estar relacionado com se a mensagem veio do pai ou do filho
      }
 
-    tablePrint(routingTable,printNodeStruct);
     if( findNode(routingTable, nodeIP) == nullptr){
         //Serial.printf("3\n");
         tableAdd(routingTable, nodeIP, &newNode);

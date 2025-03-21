@@ -57,12 +57,14 @@ void setup(){
 
 IPAddress ip, childIP;
 char serialBuffer[200];
+bool oneTimeMessage = true;
 
 void loop(){
     //Wait for incoming requests
     int packet_size = incomingMessage();
     int type, fromIP[4], destinyIP[4]={135, 230,96,1},index = 0;
     int childSTAIP[4] = {135, 230,96,100};
+    char payload[10] = "Hello!";
     messageParameters params;
     char playload[50];
     if (packet_size > 0){
@@ -76,12 +78,16 @@ void loop(){
     if(stateMachineEngine->size != 0){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
     }
-    if(numberOfChildren == 1){
-        strcpy(params.payload, "HELLO");
+    if(numberOfChildren == 1 && oneTimeMessage){
+        Serial.printf("Sending the data message to child\n");
+        params.payload =  payload;
         IPAssign(params.IP1,myIP);
         IPAssign(params.IP2,destinyIP);
+        params.hopDistance = 1;
         encodeMessage(serialBuffer,dataMessage,params);
         sendMessage( childSTAIP, serialBuffer);
+        Serial.printf("Message sent: %s to: %d.%d.%d.%d\n", messageBuffer, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
+        oneTimeMessage = false;
     }
     //if (Serial.available() > 0){
     //    // read the incoming bytes:

@@ -8,7 +8,6 @@
 
 void encodeMessage(char * msg, messageType type, messageParameters parameters){
     char tempMsg[37] = "";//35
-
     switch (type) {
         case parentDiscoveryRequest:
             //0 [mySTAIP]
@@ -152,7 +151,6 @@ void decodeDataMessage(char *msg){
     Serial.printf("Entered decode Data Message\n");
     sscanf(msg, "%d ", &type);
 
-    Serial.printf("After sscanf\n");
     if (type == dataMessage){
         sscanf(msg, "%d %s %d.%d.%d.%d %d.%d.%d.%d",&type, payload, &senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
             &destinyIP[0],&destinyIP[1],&destinyIP[2],&destinyIP[3]);

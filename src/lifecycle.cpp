@@ -158,7 +158,7 @@ State joinNetwork(Event event){
             receiveMessage(buffer, senderIP);
             Serial.printf("Parent Response: %s\n", buffer);
             decodeFullRoutingTableUpdate(buffer, senderIP);
-            Serial.printf("Routing Table Updated\n");
+            Serial.printf("Routing Table Updated:\n");
             tablePrint(routingTable,printNodeStruct);
         }
 
@@ -206,7 +206,7 @@ State handleMessages(Event event){
         params.routingTable = routingTable;
         Serial.printf("Sending my routing Table to child:");
         encodeMessage(msg2,fullRoutingTableUpdate,params);
-        Serial.printf("Sending msg: %s to: %i.%i.%i.%i\n",msg2, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
+        Serial.printf("%s to: %d.%d.%d.%d\n",msg2, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
         sendMessage(childSTAIP,msg2);
         //TODO send message to all network about the new node
         int IP[4];
