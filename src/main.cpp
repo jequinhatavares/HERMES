@@ -78,17 +78,17 @@ void loop(){
     if(stateMachineEngine->size != 0){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
     }
-    if(numberOfChildren == 1 && oneTimeMessage){
-        Serial.printf("Sending the data message to child\n");
-        params.payload =  payload;
-        IPAssign(params.IP1,myIP);
-        IPAssign(params.IP2,destinyIP);
-        params.hopDistance = 1;
-        encodeMessage(serialBuffer,dataMessage,params);
-        sendMessage( childSTAIP, serialBuffer);
-        Serial.printf("Message sent: %s to: %d.%d.%d.%d\n", serialBuffer, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
-        oneTimeMessage = false;
-    }
+    //if(numberOfChildren == 1 && oneTimeMessage){
+    //    Serial.printf("Sending the data message to child\n");
+    //    params.payload =  payload;
+    //    IPAssign(params.IP1,myIP);
+    //    IPAssign(params.IP2,destinyIP);
+    //    params.hopDistance = 1;
+    //    encodeMessage(serialBuffer,dataMessage,params);
+    //    sendMessage( childSTAIP, serialBuffer);
+    //    Serial.printf("Message sent: %s to: %d.%d.%d.%d\n", serialBuffer, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
+    //    oneTimeMessage = false;
+    //}
     //if (Serial.available() > 0){
     //    // read the incoming bytes:
     //    //int rlen = Serial.readBytesUntil('\n', serialBuffer, 200);

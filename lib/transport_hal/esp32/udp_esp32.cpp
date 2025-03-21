@@ -14,12 +14,12 @@ WiFiUDP Udp;
  * @param msg - The message to be sent.
  * @return void
  */
-void sendMessage(IPAddress const address, const char * msg){
+void sendMessage(int address[4], const char * msg){
     IPAddress address_;
     address_[0] = address[0];address_[1] = address[1];
     address_[2] = address[2];address_[3] = address[3];
 
-    Udp.beginPacket(address, UDP_PORT);
+    Udp.beginPacket(address_, UDP_PORT);
     char reply[] = "Packet received!\n";
 
     Udp.write((const uint8_t*) msg, 255);

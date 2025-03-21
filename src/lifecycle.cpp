@@ -187,7 +187,6 @@ State handleMessages(Event event){
     sscanf(messageBuffer, "%d", &messageType);
 
     if( messageType == parentDiscoveryRequest){
-        Serial.printf("Message Type 0\n");
         sscanf(messageBuffer, "%d %hhu.%hhu.%hhu.%hhu", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
 
         params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
