@@ -86,7 +86,7 @@ void loop(){
         params.hopDistance = 1;
         encodeMessage(serialBuffer,dataMessage,params);
         sendMessage( childSTAIP, serialBuffer);
-        Serial.printf("Message sent: %s to: %d.%d.%d.%d\n", messageBuffer, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
+        Serial.printf("Message sent: %s to: %d.%d.%d.%d\n", serialBuffer, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
         oneTimeMessage = false;
     }
     //if (Serial.available() > 0){

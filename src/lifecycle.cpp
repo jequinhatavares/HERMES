@@ -200,7 +200,7 @@ State handleMessages(Event event){
     if( messageType == childRegistrationRequest){
         Serial.printf("Message Type Child Registration Request\n");
         decodeChildRegistrationRequest(messageBuffer);
-        sscanf(messageBuffer, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", &messageType,&childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
+        sscanf(messageBuffer, "%d %d.%d.%d.%d %d.%d.%d.%d", &messageType,&childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
 
         //Send my routing table to my child
         params.routingTable = routingTable;
