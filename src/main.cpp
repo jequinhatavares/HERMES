@@ -62,11 +62,9 @@ bool oneTimeMessage = true;
 
 void loop(){
     //Wait for incoming requests
-    int packet_size = incomingMessage();
-    int type, fromIP[4], destinyIP[4]={135, 230,96,1},index = 0;
-    int childSTAIP[4] = {135, 230,96,100};
-
     messageParameters params;
+
+    int packet_size = incomingMessage();
     if (packet_size > 0){
         Serial.printf("PacketSize: %d\n", packet_size);
         Serial.print("Theres incoming messages\n");

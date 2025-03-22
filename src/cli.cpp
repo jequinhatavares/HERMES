@@ -1,12 +1,28 @@
 #include <Arduino.h>
 #include "cli.h"
 
+/**
+ * showMenu
+ * Displays the command menu for user interaction via Serial.
+ *
+ * @return void
+ */
 void showMenu() {
     Serial.println("\n=== Command Menu ===");
     Serial.println("1. Create and send a data message");
     Serial.println("2. Exit");
     Serial.print("Enter choice: ");
 }
+
+/**
+ * readIPAddress
+ * Reads an IP address from the Serial input and stores it in the provided integer array.
+ *
+ * @param ip Pointer to an integer array where the parsed IP address will be stored.
+ * @param prompt A string message displayed to prompt the user for input.
+ *
+ * @return void
+ */
 void readIPAddress(int *ip, const char *prompt) {
     Serial.printf("%s (format: X.X.X.X): ", prompt);
     while (Serial.available() == 0) {} // Wait for input
@@ -14,6 +30,13 @@ void readIPAddress(int *ip, const char *prompt) {
     sscanf(input.c_str(), "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
 }
 
+/**
+ * getDataMessage
+ * Collects user input for a data message, including payload, source IP, and destination IP.
+ * Formats the message, finds the next hop in the routing table, and sends the message.
+ *
+ * @return void
+ */
 void getDataMessage() {
     messageParameters parameters;
     int nextHopIP[4];
@@ -45,6 +68,13 @@ void getDataMessage() {
 
 }
 
+/**
+ * cliInteraction
+ * Manages user interaction through a command-line interface via Serial.
+ * Displays a menu and processes user choices.
+ *
+ * @return void
+ */
 void cliInteraction(){
     int choice = 0;
     if (Serial.available() > 0){

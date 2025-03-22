@@ -288,6 +288,7 @@ IPAddress getMyAPIP(){
  *             1 for Station (STA),
  *             2 for Access Point (AP),
  *             3 for both AP and STA.
+ *
  * @return void
  */
 void changeWifiMode(int mode){
