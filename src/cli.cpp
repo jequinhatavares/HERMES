@@ -8,10 +8,13 @@
  * @return void
  */
 void showMenu() {
-    Serial.println("\n=== Command Menu ===");
-    Serial.println("1. Create and send a data message");
-    Serial.println("2. Exit");
-    Serial.print("Enter choice: ");
+    Serial.println("\n======================================================================");
+    Serial.println("                       💻 Command Line Menu 💻                       ");
+    Serial.println("======================================================================");
+    Serial.println("[1] Send a new message");
+    Serial.println("[2] Exit program");
+    Serial.println("======================================================================");
+    Serial.print("> ");
 }
 
 /**
@@ -27,7 +30,10 @@ void readIPAddress(int *ip, const char *prompt) {
     Serial.printf("%s (format: X.X.X.X): ", prompt);
     while (Serial.available() == 0) {} // Wait for input
     String input = Serial.readStringUntil('\n');
-    sscanf(input.c_str(), "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
+    if (sscanf(input.c_str(), "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]) != 4) {
+        Serial.println("❌ Invalid IP format. Please try again.");
+        readIPAddress(ip, prompt);
+    }
 }
 
 /**
@@ -63,7 +69,9 @@ void getDataMessage() {
     if(ptrIP != nullptr){
         IPAssign(nextHopIP, ptrIP);
         sendMessage(nextHopIP, msg);
-        Serial.printf("Message sent: %s to %d.%d.%d.%d\n", msg,nextHopIP[0], nextHopIP[1], nextHopIP[2], nextHopIP[3]);
+        Serial.printf("✅ Message sent successfully: %s to %d.%d.%d.%d\n", msg,nextHopIP[0], nextHopIP[1], nextHopIP[2], nextHopIP[3]);
+    }else {
+        Serial.println("❌ No route found. Message not sent.");
     }
 
 }
