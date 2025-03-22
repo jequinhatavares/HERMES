@@ -252,7 +252,7 @@ State handleMessages(Event event){
         }
     }
     if(messageType == dataMessage){
-        Serial.printf("Message Type Partial Routing Table Update\n");
+        Serial.printf("Data Message\n");
         decodeDataMessage(messageBuffer, nextHopIP);
         if(!isIPEqual(nextHopIP, myIP)){
             sendMessage(nextHopIP,messageBuffer);

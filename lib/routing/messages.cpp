@@ -147,6 +147,7 @@ void decodePartialRoutingUpdate(char *msg, int* senderIP){
 void decodeDataMessage(char *msg, int* nextHopIP){
     int senderIP[4], destinyIP[4];
     int hopDistance, type;
+    int *nextHopPtr = nullptr;
     char payload[50];
     routingTableEntry newNode;
     //Serial.printf("Entered decode Data Message\n");
@@ -157,7 +158,13 @@ void decodeDataMessage(char *msg, int* nextHopIP){
             &destinyIP[0],&destinyIP[1],&destinyIP[2],&destinyIP[3]);
         //Serial.printf("Message %s received from %d.%d.%d.%d to %d.%d.%d.%d", payload, senderIP[0],senderIP[1],senderIP[2],senderIP[3],
             //destinyIP[0],destinyIP[1],destinyIP[2],destinyIP[3]);
-        IPAssign(nextHopIP, findRouteToNode(destinyIP));
+        nextHopPtr = findRouteToNode(destinyIP);
+        if (nextHopPtr != nullptr){
+            IPAssign(nextHopIP, nextHopPtr);
+        }else{
+            //TODO error print
+        }
+
         //Serial.printf("Next Hop IP: %d.%d.%d.%d", nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3]);
     }
 

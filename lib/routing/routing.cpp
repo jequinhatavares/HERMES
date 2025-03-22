@@ -1,6 +1,6 @@
 #include "routing.h"
 
-//#include <Arduino.h>
+#include <Arduino.h>
 #include <cstdio>
 
 
@@ -175,7 +175,7 @@ int* findRouteToNode(int nodeIP[4]){
     //Check if the node is my parent
     if(isIPEqual(nodeIP,parent)){
         //Return the address of the parent itself
-        printf("Parent\n");
+        //Serial.printf("Parent\n");
         return parent;
     }
 
