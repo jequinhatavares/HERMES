@@ -5,13 +5,13 @@
 #include <cstdio>
 #include <cstring>
 #include "lifecycle.h"
+#include "cli.h"
+
 //#include "../lib/wifi_hal/wifi_hal.h"
 //#include "../lib/transport_hal/esp32/udp_esp32.h"
 
 #define MAX_CLIENTS 4
 bool isFirstMessage = true;
-
-
 
 
 //void setIPs(int n){
@@ -58,77 +58,15 @@ void setup(){
 IPAddress ip, childIP;
 char serialBuffer[200];
 bool oneTimeMessage = true;
-void showMenu() {
-    Serial.println("\n=== Command Menu ===");
-    Serial.println("1. Create and send a data message");
-    Serial.println("2. Exit");
-    Serial.print("Enter choice: ");
-}
-void readIPAddress(int *ip, const char *prompt) {
-    Serial.printf("%s (format: X.X.X.X): ", prompt);
-    while (Serial.available() == 0) {} // Wait for input
-    String input = Serial.readStringUntil('\n');
-    sscanf(input.c_str(), "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]);
-}
 
-void getUserInputAndSendMessage() {
-    messageParameters parameters;
-    int nextHopIP[4];
-    char msg[255]="";
-    int * ptrIP;
-
-    delay(100); // Give Serial buffer time to clear
-
-    Serial.println("\n=== Message Formatting ===");
-    Serial.print("Enter message payload: ");
-    while (Serial.available() == 0) {}// Wait for input
-    Serial.readStringUntil('\n');
-    String payload = Serial.readStringUntil('\n');
-
-    sscanf(payload.c_str(), "%s", parameters.payload);
-    //strcpy(parameters.payload, payload.c_str());
-
-
-    readIPAddress(parameters.IP1, "Enter source node IP");
-    readIPAddress(parameters.IP2, "Enter destination node IP");
-
-    Serial.printf("Source IP: %i.%i.%i.%i Destination: %i.%i.%i.%i\n", parameters.IP1[0], parameters.IP1[1], parameters.IP1[2], parameters.IP1[3],parameters.IP2[0] ,parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
-
-    Serial.printf("Payload: %s\n", parameters.payload);
-
-    Serial.print("Message Parameters configured\n");
-
-    encodeMessage(msg, dataMessage, parameters);
-
-    Serial.printf("Encoded Message: %s\n", msg);
-
-    Serial.print("1\n");
-
-    ptrIP = findRouteToNode(parameters.IP2);
-    Serial.print("2\n");
-
-    if(ptrIP != nullptr){
-        Serial.print("3\n");
-        IPAssign(nextHopIP, ptrIP);
-        Serial.print("4\n");
-        sendMessage(nextHopIP, msg);
-    }
-
-    Serial.print("5\n");
-
-    Serial.printf("last\n");
-
-}
 
 void loop(){
     //Wait for incoming requests
     int packet_size = incomingMessage();
     int type, fromIP[4], destinyIP[4]={135, 230,96,1},index = 0;
     int childSTAIP[4] = {135, 230,96,100};
-    char payload[10] = "Hello!";
-    int choice = 0;
+
     messageParameters params;
-    char playload[50];
     if (packet_size > 0){
         Serial.printf("PacketSize: %d\n", packet_size);
         Serial.print("Theres incoming messages\n");
@@ -139,46 +77,9 @@ void loop(){
     if(stateMachineEngine->size != 0){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
     }
-    //if(numberOfChildren == 1 && oneTimeMessage){
-    //    Serial.printf("Sending the data message to child\n");
-    //    params.payload =  payload;
-    //    IPAssign(params.IP1,myIP);
-    //    IPAssign(params.IP2,destinyIP);
-    //    params.hopDistance = 1;
-    //    encodeMessage(serialBuffer,dataMessage,params);
-    //    sendMessage( childSTAIP, serialBuffer);
-    //    Serial.printf("Message sent: %s to: %d.%d.%d.%d\n", serialBuffer, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
-    //    oneTimeMessage = false;
-    //}
-    if (Serial.available() > 0){
-         //read the incoming bytes:
-         //For enabling platformIO echo press Ctrl+T then Ctrl+E
-        Serial.printf("Receiving message: ");
-        String input = Serial.readStringUntil('\n'); // Reads until newline
 
-        //Serial.printf("I received: %s", input.c_str());
-        //strcpy(serialBuffer, input.c_str());
-        //decodeDataMessage(serialBuffer);
-        showMenu();
-        while (choice != 2) {
+    cliInteraction();
 
-            while (Serial.available() == 0) {} // Wait for user input
-            choice  = Serial.parseInt();
-            Serial.read(); // Clear newline
-
-            switch (choice) {
-                case 1:
-                    getUserInputAndSendMessage();
-                    break;
-                case 2:
-                    Serial.println("Exiting...");
-                    break;
-                default:
-                    Serial.println("Invalid option. Try again.");
-                    break;
-            }
-        }
-    }
 
 }
 #endif
