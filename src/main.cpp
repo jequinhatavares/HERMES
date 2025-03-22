@@ -74,7 +74,8 @@ void readIPAddress(int *ip, const char *prompt) {
 void getUserInputAndSendMessage() {
     messageParameters parameters;
     int nextHopIP[4];
-    char msg[256];
+    char msg[255]="";
+    int * ptrIP;
 
     delay(100); // Give Serial buffer time to clear
 
@@ -84,24 +85,36 @@ void getUserInputAndSendMessage() {
     Serial.readStringUntil('\n');
     String payload = Serial.readStringUntil('\n');
 
-    strcpy(parameters.payload, payload.c_str());
+    sscanf(payload.c_str(), "%s", parameters.payload);
+    //strcpy(parameters.payload, payload.c_str());
 
-    Serial.printf("Payload: %s\n", parameters.payload);
 
     readIPAddress(parameters.IP1, "Enter source node IP");
     readIPAddress(parameters.IP2, "Enter destination node IP");
 
     Serial.printf("Source IP: %i.%i.%i.%i Destination: %i.%i.%i.%i\n", parameters.IP1[0], parameters.IP1[1], parameters.IP1[2], parameters.IP1[3],parameters.IP2[0] ,parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
 
+    Serial.printf("Payload: %s\n", parameters.payload);
+
     Serial.print("Message Parameters configured\n");
 
     encodeMessage(msg, dataMessage, parameters);
 
-    IPAssign(nextHopIP, findRouteToNode(parameters.IP2));
+    Serial.printf("Encoded Message: %s\n", msg);
 
-    sendMessage(nextHopIP, msg);
+    Serial.print("1\n");
 
-    Serial.printf("%s\n", msg);
+    ptrIP = findRouteToNode(parameters.IP2);
+    Serial.print("2\n");
+
+    if(ptrIP != nullptr){
+        Serial.print("3\n");
+        IPAssign(nextHopIP, ptrIP);
+        Serial.print("4\n");
+        sendMessage(nextHopIP, msg);
+    }
+
+    Serial.print("5\n");
 
     Serial.printf("last\n");
 
@@ -122,7 +135,6 @@ void loop(){
         receiveMessage(messageBuffer, senderIP);
         Serial.printf("Received: %s\n", messageBuffer);
         insertLast(stateMachineEngine, eMessage);
-
     }
     if(stateMachineEngine->size != 0){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));

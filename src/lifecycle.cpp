@@ -181,7 +181,7 @@ State handleMessages(Event event){
     char msg[50] = "", msg2[300] = "";
     int messageType, nextHopIP[4];
     messageParameters params;
-    IPAddress myIP;
+    //IPAddress myIP;
     int childIP[4], childAPIP[4], childSTAIP[4];
 
     sscanf(messageBuffer, "%d", &messageType);

@@ -1,6 +1,6 @@
 #include "messages.h"
 
-#include <Arduino.h>
+//#include <Arduino.h>
 
 #include <cstdio>
 #include <cstring>
@@ -149,7 +149,7 @@ void decodeDataMessage(char *msg, int* nextHopIP){
     int hopDistance, type;
     char payload[50];
     routingTableEntry newNode;
-    Serial.printf("Entered decode Data Message\n");
+    //Serial.printf("Entered decode Data Message\n");
     sscanf(msg, "%d ", &type);
 
     if (type == dataMessage){
@@ -158,7 +158,7 @@ void decodeDataMessage(char *msg, int* nextHopIP){
         //Serial.printf("Message %s received from %d.%d.%d.%d to %d.%d.%d.%d", payload, senderIP[0],senderIP[1],senderIP[2],senderIP[3],
             //destinyIP[0],destinyIP[1],destinyIP[2],destinyIP[3]);
         IPAssign(nextHopIP, findRouteToNode(destinyIP));
-        Serial.printf("Next Hop IP: %d.%d.%d.%d", nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3]);
+        //Serial.printf("Next Hop IP: %d.%d.%d.%d", nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3]);
     }
 
 }
