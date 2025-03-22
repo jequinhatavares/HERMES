@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-bool iamRoot = false;
+bool iamRoot = true;
 int rootHopDistance = -1;
 int numberOfChildren = 0;
 bool hasParent = false;
@@ -169,6 +169,7 @@ void* findNode(TableInfo* Table, int nodeIP[4]){
  * @return (int*) - A pointer to the next-hop IP address.
  */
 int* findRouteToNode(int nodeIP[4]){
+
     //Check if the node is my parent
     if(isIPEqual(nodeIP,parent)){
         //Return the address of the parent itself

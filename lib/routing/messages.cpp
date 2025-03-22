@@ -48,6 +48,7 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
             //5 [message payload] [source node IP] [destiny node IP]
             sprintf(msg,"5 %s %i.%i.%i.%i %i.%i.%i.%i", parameters.payload,parameters.IP1[0],parameters.IP1[1],
                     parameters.IP1[2],parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
+            //Serial.printf("Inside Message Encode msg: %s\n", msg);
             break;
 
         default:
@@ -143,8 +144,8 @@ void decodePartialRoutingUpdate(char *msg, int* senderIP){
 
 }
 
-void decodeDataMessage(char *msg){
-    int senderIP[4], destinyIP[4], nextHopIP[4];
+void decodeDataMessage(char *msg, int* nextHopIP){
+    int senderIP[4], destinyIP[4];
     int hopDistance, type;
     char payload[50];
     routingTableEntry newNode;

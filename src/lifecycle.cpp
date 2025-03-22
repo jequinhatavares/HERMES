@@ -179,7 +179,7 @@ State idle(Event event){
 State handleMessages(Event event){
     Serial.print("Entered handle Messages State\n");
     char msg[50] = "", msg2[300] = "";
-    int messageType;
+    int messageType, nextHopIP[4];
     messageParameters params;
     IPAddress myIP;
     int childIP[4], childAPIP[4], childSTAIP[4];
@@ -187,7 +187,7 @@ State handleMessages(Event event){
     sscanf(messageBuffer, "%d", &messageType);
 
     if( messageType == parentDiscoveryRequest){
-        sscanf(messageBuffer, "%d %hhu.%hhu.%hhu.%hhu", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
+        sscanf(messageBuffer, "%d %i.%i.%i.%i", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
 
         params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
         params.childrenNumber = numberOfChildren;
@@ -253,7 +253,12 @@ State handleMessages(Event event){
     }
     if(messageType == dataMessage){
         Serial.printf("Message Type Partial Routing Table Update\n");
-        decodeDataMessage(messageBuffer);
+        decodeDataMessage(messageBuffer, nextHopIP);
+        if(!isIPEqual(nextHopIP, myIP)){
+            sendMessage(nextHopIP,messageBuffer);
+        }else{
+            //TODO process the message
+        }
     }
     return sIdle;
 }

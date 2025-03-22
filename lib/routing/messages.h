@@ -9,7 +9,7 @@ typedef struct messageParameters{
     int hopDistance = -1;
     int childrenNumber = -1;
     TableInfo *routingTable;
-    char* payload;
+    char payload[200];
 }messageParameters;
 
 //a = messageEncode(parentDiscoveryRequest, .ip=1.1.1.1, .hopDistance=2)
@@ -30,7 +30,7 @@ void decodeParentInfoResponse(char* msg, parentInfo *parents, int i);
 void decodeChildRegistrationRequest(char * msg);
 void decodeFullRoutingTableUpdate(char *msg, int* senderIP);
 void decodePartialRoutingUpdate(char *msg, int* senderIP);
-void decodeDataMessage(char *msg);
+void decodeDataMessage(char *msg, int *nextHopIP);
 
 
 #endif //MESSAGES_H
