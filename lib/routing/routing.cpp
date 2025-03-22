@@ -143,10 +143,10 @@ void initTables(){
  * @return (void)
  */
 void printNodeStruct(TableEntry* Table){
-    Serial.printf("Node[%d.%d.%d.%d] → NextHop[%d.%d.%d.%d] | (Distance: %d)\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
-           ((routingTableEntry *)Table->value)->nextHopIP[0],((routingTableEntry *)Table->value)->nextHopIP[1],
-           ((routingTableEntry *)Table->value)->nextHopIP[2],((routingTableEntry *)Table->value)->nextHopIP[3],
-           ((routingTableEntry *)Table->value)->hopDistance);
+    //Serial.printf("Node[%d.%d.%d.%d] → NextHop[%d.%d.%d.%d] | (Distance: %d)\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
+           //((routingTableEntry *)Table->value)->nextHopIP[0],((routingTableEntry *)Table->value)->nextHopIP[1],
+           //((routingTableEntry *)Table->value)->nextHopIP[2],((routingTableEntry *)Table->value)->nextHopIP[3],
+           //((routingTableEntry *)Table->value)->hopDistance);
 }
 
 /**
@@ -173,6 +173,7 @@ int* findRouteToNode(int nodeIP[4]){
     //Check if the node is my parent
     if(isIPEqual(nodeIP,parent)){
         //Return the address of the parent itself
+        Serial.printf("Parent\n");
         return parent;
     }
 
@@ -180,6 +181,7 @@ int* findRouteToNode(int nodeIP[4]){
     int* childIP1 = (int*) findNode(childrenTable,nodeIP);
     if(childIP1 != nullptr)
     {//Return the address of the child itself (translated to its STA addr)
+        Serial.printf("Child\n");
         return childIP1;
     }
 
@@ -188,9 +190,17 @@ int* findRouteToNode(int nodeIP[4]){
 
     int* childIP2 = (int*) findNode(childrenTable,entry->nextHopIP);
     if(childIP2 != nullptr){//If the next Hop is one of my children the IP needs to be translated to its STA IP to forward the message
+        Serial.printf("Child2\n");
         return childIP2;
     }
-    return entry->nextHopIP;
+
+    if(entry != nullptr){
+        Serial.printf("other option\n");
+        return entry->nextHopIP;
+    }else{
+        Serial.printf("null\n");
+        return nullptr;
+    };
 
 }
 /**
