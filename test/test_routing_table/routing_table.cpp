@@ -122,17 +122,29 @@ void test_find_path_to_child(){
 
     int child_APIP[4]= {1,1,1,1}, child_STAIP[4] = {2,2,2,1};
 
+    //MyIP IP initialization
+    myIP[0] = 2;
+    myIP[1] = 2;
+    myIP[2] = 2;
+    myIP[3] = 2;
+    //Parent IP initialization
+    parent[0] = -1;
+    parent[1] = -1;
+    parent[2] = -1;
+    parent[3] = -1;
+
     initTables();
 
     tableAdd(routingTable, child_APIP,routingNode);
     tableAdd(childrenTable, child_APIP,child_STAIP);
 
     //printf("Routing Table\n");
-    tablePrint(routingTable,printNodeStruct2);
+    //tablePrint(routingTable,printNodeStruct2);
     //printf("Children Table\n");
     //tablePrint(childrenTable,printChildStruct);
     nextHop = findRouteToNode(child_APIP);
 
+    if (nextHop == nullptr)printf("nullptr\n");
     TEST_ASSERT(isIPEqual(nextHop,child_STAIP));
 
     tableClean(routingTable);
@@ -160,6 +172,11 @@ void test_find_path_to_parent(){
 
     initTables();
 
+    //MyIP IP initialization
+    myIP[0] = 2;
+    myIP[1] = 2;
+    myIP[2] = 2;
+    myIP[3] = 2;
     //Parent IP initialization
     parent[0] = 3;
     parent[1] = 3;
@@ -207,7 +224,11 @@ void test_find_path_to_network(){
 
     int child_APIP[4]= {1,1,1,1}, child_STAIP[4] = {2,2,2,1};
 
-
+    //MyIP IP initialization
+    myIP[0] = 2;
+    myIP[1] = 2;
+    myIP[2] = 2;
+    myIP[3] = 2;
     //Parent IP initialization
     parent[0] = 3;
     parent[1] = 3;
@@ -231,6 +252,65 @@ void test_find_path_to_network(){
     nextHop = findRouteToNode(node3IP);
 
     TEST_ASSERT(isIPEqual(nextHop,child_STAIP));
+
+    tableClean(routingTable);
+    tableClean(childrenTable);
+}
+
+void test_find_path_to_invalid_node(){
+    int node1IP[4] = {1,1,1,1};
+    int invalidIP[4] = {5,5,5,5};
+    int* nextHop;
+    routingTableEntry node1 ={ //Child
+            .hopDistance = 1,
+            .nextHopIP = {1,1,1,1},
+    };
+    routingTableEntry* routingNode1 = &node1;
+
+    int node2IP[4] = {3,3,3,3};
+    routingTableEntry node2 ={ //Parent
+            .hopDistance = 1,
+            .nextHopIP = {3,3,3,3},
+    };
+    routingTableEntry* routingNode2 = &node2;
+
+    int node3IP[4] = {4,4,4,4};
+    routingTableEntry node3 ={ //other node in the network connected to one of my children
+            .hopDistance = 1,
+            .nextHopIP = {1,1,1,1},
+    };
+    routingTableEntry* routingNode3 = &node3;
+
+    int child_APIP[4]= {1,1,1,1}, child_STAIP[4] = {2,2,2,1};
+
+    //MyIP IP initialization
+    myIP[0] = 1;
+    myIP[1] = 1;
+    myIP[2] = 1;
+    myIP[3] = 1;
+    //Parent IP initialization
+    parent[0] = 3;
+    parent[1] = 3;
+    parent[2] = 3;
+    parent[3] = 3;
+
+    initTables();
+
+    tableAdd(routingTable, node1IP,routingNode1);
+    tableAdd(routingTable, node2IP,routingNode2);
+    tableAdd(routingTable, node3IP,routingNode3);
+    tableAdd(childrenTable, child_APIP,child_STAIP);
+
+    TEST_ASSERT(routingTable->numberOfItems == 3);
+    TEST_ASSERT(childrenTable->numberOfItems == 1);
+
+    //printf("Routing Table\n");
+    //tablePrint(routingTable,printNodeStruct2);
+    //printf("Children Table\n");
+    //tablePrint(childrenTable,printChildStruct);
+    nextHop = findRouteToNode(invalidIP);
+
+    TEST_ASSERT(nextHop== nullptr);
 
     tableClean(routingTable);
     tableClean(childrenTable);
@@ -390,9 +470,11 @@ void test_routing_table_partial_update_new_node_from_parent(){
     routingTableEntry* tableOtherNode = (routingTableEntry *) findNode(routingTable, otherNodeIP);
     TEST_ASSERT(tableOtherNode != nullptr);
     TEST_ASSERT(tableOtherNode->hopDistance == 2);
-    printf("Next Hop IP: %i.%i.%i.%i\n", tableOtherNode->nextHopIP[0], tableOtherNode->nextHopIP[1],tableOtherNode->nextHopIP[2],tableOtherNode->nextHopIP[3]);
+    //printf("Next Hop IP: %i.%i.%i.%i\n", tableOtherNode->nextHopIP[0], tableOtherNode->nextHopIP[1],tableOtherNode->nextHopIP[2],tableOtherNode->nextHopIP[3]);
     TEST_ASSERT(isIPEqual(tableOtherNode->nextHopIP, parent));
     TEST_ASSERT(routingTable->numberOfItems == 4);
+
+    tableClean(routingTable);
 
 }
 void setUp(void){}
@@ -408,6 +490,7 @@ int main(int argc, char** argv){
     RUN_TEST(test_find_path_to_child);
     RUN_TEST(test_find_path_to_parent);
     RUN_TEST(test_find_path_to_network);
+    RUN_TEST(test_find_path_to_invalid_node);
     RUN_TEST(test_add_node);
     RUN_TEST(test_new_node_routing_table_initialization);
     RUN_TEST(test_routing_table_partial_update_new_node_from_child);

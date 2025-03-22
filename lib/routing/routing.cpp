@@ -1,6 +1,8 @@
 #include "routing.h"
 
 //#include <Arduino.h>
+#include <cstdio>
+
 
 bool iamRoot = false;
 int rootHopDistance = -1;
@@ -173,7 +175,7 @@ int* findRouteToNode(int nodeIP[4]){
     //Check if the node is my parent
     if(isIPEqual(nodeIP,parent)){
         //Return the address of the parent itself
-        //Serial.printf("Parent\n");
+        printf("Parent\n");
         return parent;
     }
 
@@ -188,20 +190,17 @@ int* findRouteToNode(int nodeIP[4]){
     //Check in the routing table the next hop to the destination
     routingTableEntry *entry = (routingTableEntry*)findNode(routingTable, nodeIP);
 
+    if(entry == nullptr) return nullptr;//If we cant find the node in the table return nullptr to avoid segmentation fault
+
     int* childIP2 = (int*) findNode(childrenTable,entry->nextHopIP);
-    if(childIP2 != nullptr){//If the next Hop is one of my children the IP needs to be translated to its STA IP to forward the message
+    //If the next Hop is one of my children the IP needs to be translated to its STA IP to forward the message
+    if(childIP2 != nullptr){
         //Serial.printf("Child2\n");
         return childIP2;
     }
 
-    if(entry != nullptr){
-        //Serial.printf("other option\n");
-        return entry->nextHopIP;
-    }else{
-        //Serial.printf("null\n");
-        return nullptr;
-    };
-
+    //Serial.printf("other option\n");
+    return entry->nextHopIP;
 }
 /**
  * updateRoutingTable
