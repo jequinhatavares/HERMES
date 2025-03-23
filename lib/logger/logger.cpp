@@ -84,7 +84,14 @@ void logHeaders(LogModules module){
             break;
     }
 }
-
+void logSimplePrint(const char* msg){
+    #if defined(ESP32) || defined(ESP8266)
+        Serial.printf("%s",msg);
+    #endif
+    #ifdef native
+        printf("%s",msg);
+    #endif
+}
 /**
  * LOG
  * Logs a formatted message if the specified module is enabled and the log level
@@ -115,10 +122,14 @@ void LOG(LogModules module, LogLevels level, const char* format, ...) {
         return;
     }
 
+    if(module == STATE_MACHINE) logSimplePrint("[SM] ");
+    else if(module == MESSAGES)logSimplePrint("[M] ");
+    else if(module == NETWORK)logSimplePrint("[N] ");
+
     va_list args;
     va_start(args,format); //Initialize argument list
 
-    logHeaders(module);
+    //logHeaders(module);
 
     #if defined(ESP32) || defined(ESP8266)
         char buffer[500];
