@@ -50,6 +50,11 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
                     parameters.IP1[2],parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
 
+        case ackMessage:
+            //6 [source node IP] [destiny node IP]
+            sprintf(msg,"6 %i.%i.%i.%i %i.%i.%i.%i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],
+                    parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
+            break;
         default:
             break;
     }
@@ -143,9 +148,8 @@ void decodePartialRoutingUpdate(char *msg, int* senderIP){
 
 }
 
-void decodeDataMessage(char *msg, int* nextHopIP){
-    int senderIP[4], destinyIP[4];
-    int hopDistance, type;
+void decodeDataMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP){
+    int type;
     int *nextHopPtr = nullptr;
     char payload[50];
     routingTableEntry newNode;
@@ -161,7 +165,31 @@ void decodeDataMessage(char *msg, int* nextHopIP){
         if (nextHopPtr != nullptr){
             IPAssign(nextHopIP, nextHopPtr);
         }else{
-            //TODO error print
+            LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
+                                "Unable to forward message.\n", destinyIP[0], destinyIP[1],destinyIP[2], destinyIP[3]);
+        }
+        //Serial.printf("Next Hop IP: %d.%d.%d.%d", nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3]);
+    }
+
+}
+void decodeAckMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP){
+    int type;
+    int *nextHopPtr = nullptr;
+    routingTableEntry newNode;
+    //Serial.printf("Entered decode Data Message\n");
+    sscanf(msg, "%d ", &type);
+
+    if (type == ackMessage){
+        sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d",&type, &senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
+               &destinyIP[0],&destinyIP[1],&destinyIP[2],&destinyIP[3]);
+        //Serial.printf("Message %s received from %d.%d.%d.%d to %d.%d.%d.%d", payload, senderIP[0],senderIP[1],senderIP[2],senderIP[3],
+        //destinyIP[0],destinyIP[1],destinyIP[2],destinyIP[3]);
+        nextHopPtr = findRouteToNode(destinyIP);
+        if (nextHopPtr != nullptr){
+            IPAssign(nextHopIP, nextHopPtr);
+        }else{
+            LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
+                                "Unable to forward message.\n", destinyIP[0], destinyIP[1],destinyIP[2], destinyIP[3]);
         }
 
         //Serial.printf("Next Hop IP: %d.%d.%d.%d", nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3]);

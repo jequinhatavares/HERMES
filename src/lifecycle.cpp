@@ -179,87 +179,114 @@ State idle(Event event){
 State handleMessages(Event event){
     LOG(STATE_MACHINE,INFO,"Entered handle Messages State\n");
     char msg[50] = "", msg2[300] = "";
-    int messageType, nextHopIP[4];
+    int messageType, nextHopIP[4], sourceIP[4], destinyIP[4];
     messageParameters params;
     //IPAddress myIP;
     int childIP[4], childAPIP[4], childSTAIP[4];
 
     sscanf(messageBuffer, "%d", &messageType);
 
-    if( messageType == parentDiscoveryRequest){
-        sscanf(messageBuffer, "%d %i.%i.%i.%i", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
+    switch (messageType) {
+        case parentDiscoveryRequest:
+            sscanf(messageBuffer, "%d %i.%i.%i.%i", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
 
-        params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
-        params.childrenNumber = numberOfChildren;
-        params.hopDistance = rootHopDistance;
+            params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
+            params.childrenNumber = numberOfChildren;
+            params.hopDistance = rootHopDistance;
 
-        encodeMessage(msg,parentInfoResponse,params);
-        sendMessage(childIP,msg);
-    }
-    if( messageType == childRegistrationRequest){
-        LOG(MESSAGES,INFO,"Message Type Child Registration Request\n");
-        decodeChildRegistrationRequest(messageBuffer);
-        sscanf(messageBuffer, "%d %d.%d.%d.%d %d.%d.%d.%d", &messageType,&childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
+            encodeMessage(msg,parentInfoResponse,params);
+            sendMessage(childIP,msg);
+            break;
 
-        //Send my routing table to my child
-        params.routingTable = routingTable;
-        LOG(MESSAGES,INFO,"Sending my routing Table to child:");
-        encodeMessage(msg2,fullRoutingTableUpdate,params);
-        LOG(MESSAGES,INFO,"%s to: %d.%d.%d.%d\n",msg2, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
-        sendMessage(childSTAIP,msg2);
-        //TODO send message to all network about the new node
-        int IP[4];
+        case childRegistrationRequest:
+            LOG(MESSAGES,INFO,"Message Type Child Registration Request\n");
+            decodeChildRegistrationRequest(messageBuffer);
+            sscanf(messageBuffer, "%d %d.%d.%d.%d %d.%d.%d.%d", &messageType,&childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
 
-        //Propagate the new node information trough the network
-        IPAssign(params.IP1,childAPIP);
-        IPAssign(params.IP2,childAPIP);
-        params.hopDistance = 1;
-        encodeMessage(msg2, partialRoutingTableUpdate, params);
-        // If the message didn't come from the parent, forward it to the parent
-        if(!isIPEqual(senderIP, parent)){
-            sendMessage(parent, msg2);
-        }
-        //Forward the message to all children except the one that sent it to me
-        for(int i = 0; i< childrenTable->numberOfItems; i++){
-            if(!isIPEqual((int*)childrenTable->table[i].key, senderIP)){
-                sendMessage((int*)childrenTable->table[i].key, msg2);
+            //Send my routing table to my child
+            params.routingTable = routingTable;
+            LOG(MESSAGES,INFO,"Sending my routing Table to child:");
+            encodeMessage(msg2,fullRoutingTableUpdate,params);
+            LOG(MESSAGES,INFO,"%s to: %d.%d.%d.%d\n",msg2, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
+            sendMessage(childSTAIP,msg2);
+            //TODO send message to all network about the new node
+            int IP[4];
+
+            //Propagate the new node information trough the network
+            IPAssign(params.IP1,childAPIP);
+            IPAssign(params.IP2,childAPIP);
+            params.hopDistance = 1;
+            encodeMessage(msg2, partialRoutingTableUpdate, params);
+            // If the message didn't come from the parent, forward it to the parent
+            if(!isIPEqual(senderIP, parent)){
+                sendMessage(parent, msg2);
             }
-        }
-    }
-    if( messageType == fullRoutingTableUpdate){
-        LOG(MESSAGES,INFO,"Message Type Full Routing Update\n");
-        decodeFullRoutingTableUpdate(messageBuffer, senderIP);
-    }
-    if( messageType == partialRoutingTableUpdate){
-        LOG(MESSAGES,INFO,"Message Type Partial Routing Table Update\n");
-        decodePartialRoutingUpdate(messageBuffer, senderIP);
-
-
-        //Propagate the new node information trough the network
-        IPAssign(params.IP1,childAPIP);
-        IPAssign(params.IP2,childAPIP);
-        params.hopDistance = 1;
-        encodeMessage(msg2, partialRoutingTableUpdate, params);
-        // If the message didn't come from the parent, forward it to the parent
-        if(!isIPEqual(senderIP, parent)){
-            sendMessage(parent, msg2);
-        }
-        //Forward the message to all children except the one that sent it to me
-        for(int i = 0; i< childrenTable->numberOfItems; i++){
-            if(!isIPEqual((int*)childrenTable->table[i].key, senderIP)){
-                sendMessage((int*)childrenTable->table[i].key, msg2);
+            //Forward the message to all children except the one that sent it to me
+            for(int i = 0; i< childrenTable->numberOfItems; i++){
+                if(!isIPEqual((int*)childrenTable->table[i].key, senderIP)){
+                    sendMessage((int*)childrenTable->table[i].key, msg2);
+                }
             }
-        }
+
+        case fullRoutingTableUpdate:
+            LOG(MESSAGES,INFO,"Message Type Full Routing Update\n");
+            decodeFullRoutingTableUpdate(messageBuffer, senderIP);
+
+        case partialRoutingTableUpdate:
+            LOG(MESSAGES,INFO,"Message Type Partial Routing Table Update\n");
+            decodePartialRoutingUpdate(messageBuffer, senderIP);
+
+            //Propagate the new node information trough the network
+            IPAssign(params.IP1,childAPIP);
+            IPAssign(params.IP2,childAPIP);
+            params.hopDistance = 1;
+            encodeMessage(msg2, partialRoutingTableUpdate, params);
+            // If the message didn't come from the parent, forward it to the parent
+            if(!isIPEqual(senderIP, parent)){
+                sendMessage(parent, msg2);
+            }
+            //Forward the message to all children except the one that sent it to me
+            for(int i = 0; i< childrenTable->numberOfItems; i++){
+                if(!isIPEqual((int*)childrenTable->table[i].key, senderIP)){
+                    sendMessage((int*)childrenTable->table[i].key, msg2);
+                }
+            }
+
+        case dataMessage:
+            LOG(MESSAGES,INFO,"Data Message\n");
+            decodeDataMessage(messageBuffer, nextHopIP, sourceIP, destinyIP);
+
+            // If this message is not intended for this node, forward it to the next hop leading to its destination.
+            if(!isIPEqual(nextHopIP, myIP)){
+                sendMessage(nextHopIP,messageBuffer);
+            }else{// If the message is for this node, process it and send an ACK back to the source
+
+                //TODO process the message
+
+                //Send ACK Message back to the source of the message
+                IPAssign(params.IP1,sourceIP);
+                IPAssign(params.IP2,destinyIP);
+                encodeMessage(msg, ackMessage, params);
+
+                int* nextHopPtr = findRouteToNode(sourceIP);
+                if (nextHopPtr != nullptr){
+                    sendMessage(nextHopPtr,msg);
+                }else{
+                    LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
+                                        "Unable to forward message.\n", sourceIP[0], sourceIP[1],sourceIP[2], sourceIP[3]);
+                }
+            }
+
+        case ackMessage:
+            LOG(MESSAGES,INFO,"ACK Message\n");
+            decodeAckMessage(messageBuffer, nextHopIP, sourceIP, destinyIP);
+            if(!isIPEqual(nextHopIP, myIP)){
+                sendMessage(nextHopIP,messageBuffer);
+            }else{
+                //TODO process the ACK
+            }
     }
-    if(messageType == dataMessage){
-        LOG(MESSAGES,INFO,"Data Message\n");
-        decodeDataMessage(messageBuffer, nextHopIP);
-        if(!isIPEqual(nextHopIP, myIP)){
-            sendMessage(nextHopIP,messageBuffer);
-        }else{
-            //TODO process the message
-        }
-    }
+
     return sIdle;
 }
 

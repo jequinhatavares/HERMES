@@ -3,6 +3,7 @@
 
 #include "table.h"
 #include "routing.h"
+#include "logger.h"
 
 typedef struct messageParameters{
     int IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};
@@ -21,7 +22,8 @@ typedef enum messageType{
     childRegistrationRequest, //2
     fullRoutingTableUpdate, //3
     partialRoutingTableUpdate, //4
-    dataMessage, //5 por enquanto
+    dataMessage,//5 por enquanto
+    ackMessage,//6
 }messageType;
 
 
@@ -30,7 +32,8 @@ void decodeParentInfoResponse(char* msg, parentInfo *parents, int i);
 void decodeChildRegistrationRequest(char * msg);
 void decodeFullRoutingTableUpdate(char *msg, int* senderIP);
 void decodePartialRoutingUpdate(char *msg, int* senderIP);
-void decodeDataMessage(char *msg, int *nextHopIP);
+void decodeDataMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP);
+void decodeAckMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP);
 
 
 #endif //MESSAGES_H
