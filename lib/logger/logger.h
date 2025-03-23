@@ -30,10 +30,13 @@ extern bool activeLogModules[MAX_MODULES];
 
 extern LogLevels currentLogLevel;
 
+extern LogModules lastModule;
+
 
 void enableModule(LogModules module);
 void disableModule(LogModules module);
 bool isModuleEnabled(LogModules module);
+void logHeaders(LogModules module);
 void LOG(LogModules module, LogLevels level, const char* format, ...);
 
 #endif //LOGGER_H

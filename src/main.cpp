@@ -36,6 +36,7 @@ void setup(){
     enableModule(MESSAGES);
     enableModule(NETWORK);
 
+    lastModule = MESSAGES;
     currentLogLevel = DEBUG;
 
     #ifdef ESP32

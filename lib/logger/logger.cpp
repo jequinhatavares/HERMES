@@ -5,21 +5,104 @@ bool activeLogModules[MAX_MODULES]  = {false};
 
 LogLevels currentLogLevel = ERROR;
 
+LogModules lastModule;
+
+/**
+ * enableModule
+ * Enables logging for a specific module.
+ *
+ * @param module- The module to enable logging for.
+ *
+ * @return void
+ */
 void enableModule(LogModules module) {
     activeLogModules[module] = true;
 }
 
+/**
+ * disableModule
+ * Disables logging for a specific module.
+ *
+ * @param module - The module whose logging should be disabled
+ *
+ * @return void
+ */
 void disableModule(LogModules module) {
     activeLogModules[module] = false;
 }
 
+/**
+ * isModuleEnabled
+ * Checks if logging is enabled for a specific module.
+ *
+ * @param module - The module to check.
+ *
+ * @return bool - True if logging is enabled for the module, false otherwise.
+ */
 bool isModuleEnabled(LogModules module) {
     return activeLogModules[module];
 }
 
+/**
+ * logHeaders
+ * Prints a unique header for the given module to visually separate log sections.
+ * Ensures that a header is printed only when the module changes to avoid redundancy.
+ *
+ * @param module - The module for which to print a header.
+ *
+ * @return void
+ */
 void logHeaders(LogModules module){
 
+    if(lastModule == module)return;
+    lastModule = module;
+
+    switch (module) {
+        case NETWORK:
+        #if defined(ESP32) || defined(ESP8266)
+            Serial.printf("\n--------------------- NETWORK ----------------------\n");
+        #endif
+        #ifdef native
+            printf("\n---------------------NETWORK----------------------\n");
+        #endif
+            break;
+        case MESSAGES:
+        #if defined(ESP32) || defined(ESP8266)
+                    Serial.printf("\n««««««««««««««««««««« MESSAGES »»»»»»»»»»»»»»»»»»»»\n");
+        #endif
+        #ifdef native
+                    printf("\n««««««««««««««««««««« MESSAGES »»»»»»»»»»»»»»»»»»»»\n");
+        #endif
+            break;
+        case STATE_MACHINE:
+        #if defined(ESP32) || defined(ESP8266)
+                    Serial.printf("\n:::::::::::::::::::::: STATE MACHINE ::::::::::::::::::::::\n");
+        #endif
+        #ifdef native
+                    printf("\n:::::::::::::::::::::: STATE MACHINE ::::::::::::::::::::::\n");
+        #endif
+            break;
+    }
 }
+
+/**
+ * LOG
+ * Logs a formatted message if the specified module is enabled and the log level
+ * is within the current logging threshold. Supports variable arguments
+ * for dynamic message formatting.
+ *
+ * @param module - The module associated with the log message.
+ * @param level - The logging level of the message (e.g., DEBUG, INFO, ERROR).
+ * @param format - The format string, similar to printf.
+ * @param ... - Arguments corresponding to the format specifiers.
+ *
+ * @return void
+ *
+ * @example
+ * // Example usage:
+ * LOG(NETWORK, INFO, "Connected to node with IP: %d.%d.%d.%d\n", 192, 168, 1, 1);
+ * LOG(MESSAGES, ERROR, "Failed to send message: %s\n", errorMessage);
+ */
 void LOG(LogModules module, LogLevels level, const char* format, ...) {
 
     //The module is printed only if it is included in the modules to print
@@ -35,6 +118,7 @@ void LOG(LogModules module, LogLevels level, const char* format, ...) {
     va_list args;
     va_start(args,format); //Initialize argument list
 
+    logHeaders(module);
 
     #if defined(ESP32) || defined(ESP8266)
         char buffer[500];
@@ -48,6 +132,5 @@ void LOG(LogModules module, LogLevels level, const char* format, ...) {
 
     //time_t now = time(NULL); //for time prints
     //Serial.printf("[%s][%s] %s\n", ctime(&now), module, text);
-
     va_end(args);
 }
