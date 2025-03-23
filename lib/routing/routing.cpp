@@ -4,7 +4,7 @@
 #include <cstdio>
 
 
-bool iamRoot = true;
+bool iamRoot = false;
 int rootHopDistance = -1;
 int numberOfChildren = 0;
 bool hasParent = false;

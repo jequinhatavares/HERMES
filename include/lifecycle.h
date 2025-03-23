@@ -8,6 +8,7 @@
 #include <routing.h>
 #include <state_machine.h>
 #include <snake_queue.h>
+#include <logger.h>
 #include <cstring>
 
 #define SSID_PREFIX      		"JessicaNode"

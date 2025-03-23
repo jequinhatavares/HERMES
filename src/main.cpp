@@ -32,16 +32,22 @@ void setup(){
 
     Serial.setTimeout(10000);
 
+    enableModule(STATE_MACHINE);
+    enableModule(MESSAGES);
+    enableModule(NETWORK);
+
+    currentLogLevel = DEBUG;
+
     #ifdef ESP32
-        Serial.print("ESP32\n");
+        LOG(NETWORK,INFO,"ESP32\n");
         //esp_log_level_set("wifi", ESP_LOG_VERBOSE);
     #endif
 
     #ifdef ESP8266
-        Serial.print("ESP8266\n");
+        LOG(NETWORK,INFO,"ESP8266\n");
     #endif
 
-    Serial.printf("My MAC addr: %s\n",getMyMAC().c_str());
+    LOG(NETWORK,INFO,"My MAC addr: %s\n",getMyMAC().c_str());
 
     Advance(SM, eSuccess);//Init
     if(!iamRoot){
@@ -50,7 +56,7 @@ void setup(){
     }
 
     changeWifiMode(3);
-    Serial.printf("My SoftAP IP: %s\nMy STA IP %s\nGateway IP: %s\n", getMyAPIP().toString().c_str(), getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
+    LOG(NETWORK,INFO,"My SoftAP IP: %s\nMy STA IP %s\nGateway IP: %s\n", getMyAPIP().toString().c_str(), getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
 }
 
 //WiFiClient client;
@@ -67,10 +73,10 @@ void loop(){
 
     int packet_size = incomingMessage();
     if (packet_size > 0){
-        Serial.printf("PacketSize: %d\n", packet_size);
-        Serial.print("Theres incoming messages\n");
+        LOG(MESSAGES,INFO,"PacketSize: %d\n", packet_size);
+        LOG(MESSAGES,INFO,"Theres incoming messages\n");
         receiveMessage(messageBuffer, senderIP);
-        Serial.printf("Received: %s\n", messageBuffer);
+        LOG(MESSAGES,INFO,"Received: %s\n", messageBuffer);
         insertLast(stateMachineEngine, eMessage);
     }
     if(stateMachineEngine->size != 0){

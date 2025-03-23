@@ -41,7 +41,7 @@ State initNode(Event event){
     routingTableEntry me;
     int invalidIP[4] = {-1,-1,-1,-1};
 
-    Serial.print("Entered Init State\n");
+    LOG(STATE_MACHINE,INFO,"Entered Init State\n");
     parseMAC(getMyMAC().c_str(), MAC);
     setIPs(MAC);
 
@@ -72,7 +72,7 @@ State initNode(Event event){
 }
 
 State search(Event event){
-    Serial.print("Entered Search State\n");
+    LOG(STATE_MACHINE,INFO,"Entered Search State\n");
     //Find nodes in the network
     do{
         searchAP(SSID_PREFIX);
@@ -80,7 +80,7 @@ State search(Event event){
 
     //Print the found networks
     for (int i=0; i<ssidList.len; i++){
-        Serial.printf("Found SSID: %s\n", ssidList.item[i]);
+        LOG(NETWORK,INFO,"Found SSID: %s\n", ssidList.item[i]);
     }
     delay(1000);
     insertFirst(stateMachineEngine, eSuccess);
@@ -88,7 +88,7 @@ State search(Event event){
 }
 
 State joinNetwork(Event event){
-    Serial.print("Entered choose parent State\n");
+    LOG(STATE_MACHINE,INFO,"Entered choose parent State\n");
     int packetSize = 0, connectedParentIP[4];
     IPAddress mySTAIP, connectedGateway;
     messageParameters params;
@@ -99,9 +99,9 @@ State joinNetwork(Event event){
         char msg[50] = "";
         //Connect to each parent to request their information in order to select the preferred parent.
         for (int i = 0; i < ssidList.len; i++) {
-            Serial.print("Before connecting to AP\n");
+            LOG(NETWORK,DEBUG,"Before connecting to AP\n");
             connectToAP(ssidList.item[i], PASS);
-            Serial.printf("Connected to potential parent. My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
+            LOG(NETWORK,INFO,"Connected to potential parent. My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
             mySTAIP = getMySTAIP();
             delay(1000);
 
@@ -114,20 +114,20 @@ State joinNetwork(Event event){
             connectedParentIP[2] = getGatewayIP()[2];connectedParentIP[3] = getGatewayIP()[3];
             sendMessage(connectedParentIP, msg);
 
-            Serial.printf("Waiting for parent response\n");
+            LOG(NETWORK,INFO,"Waiting for parent response\n");
 
             //Wait for the parent to respond
             while((packetSize = incomingMessage()) == 0);
 
             if (packetSize > 0){
                 receiveMessage(buffer, senderIP);
-                Serial.printf("Parent Response: %s\n", buffer);
+                LOG(MESSAGES,INFO,"Parent Response: %s\n", buffer);
                 decodeParentInfoResponse(buffer, possibleParents, i);
                 possibleParents[i].ssid = ssidList.item[i];
-                Serial.printf("possibleParents Info- nrChildren: %i rootHopDistance: %i IP: %i.%i.%i.%i\n", possibleParents[i].nrOfChildren, possibleParents[i].rootHopDistance,possibleParents[i].parentIP[0], possibleParents[i].parentIP[1], possibleParents[i].parentIP[2], possibleParents[i].parentIP[3]);
+                LOG(NETWORK,INFO,"possibleParents Info- nrChildren: %i rootHopDistance: %i IP: %i.%i.%i.%i\n", possibleParents[i].nrOfChildren, possibleParents[i].rootHopDistance,possibleParents[i].parentIP[0], possibleParents[i].parentIP[1], possibleParents[i].parentIP[2], possibleParents[i].parentIP[3]);
             }
             if(ssidList.len != 1){
-                Serial.print("Disconnecting from AP\n");
+                LOG(NETWORK,DEBUG,"Disconnecting from AP\n");
                 disconnectFromAP();
             }
         }
@@ -135,7 +135,7 @@ State joinNetwork(Event event){
         parentInfo preferredParent = chooseParent(possibleParents,ssidList.len);
         //Connect to the preferred parent
         if(ssidList.len != 1)connectToAP(preferredParent.ssid, PASS);
-        Serial.printf("Preferred Parent- IP: %i.%i.%i.%i nrChildren: %i rootHopDistance: %i\n",preferredParent.parentIP[0], preferredParent.parentIP[1], preferredParent.parentIP[2], preferredParent.parentIP[3], preferredParent.nrOfChildren, preferredParent.rootHopDistance);
+        LOG(NETWORK,INFO,"Preferred Parent- IP: %i.%i.%i.%i nrChildren: %i rootHopDistance: %i\n",preferredParent.parentIP[0], preferredParent.parentIP[1], preferredParent.parentIP[2], preferredParent.parentIP[3], preferredParent.nrOfChildren, preferredParent.rootHopDistance);
 
         //Update parent information on global variable
         parent[0] = preferredParent.parentIP[0]; parent[1] = preferredParent.parentIP[1];
@@ -156,19 +156,19 @@ State joinNetwork(Event event){
         //Process the routing table update
         if (packetSize > 0){
             receiveMessage(buffer, senderIP);
-            Serial.printf("Parent Response: %s\n", buffer);
+            LOG(MESSAGES,INFO,"Parent Response: %s\n", buffer);
             decodeFullRoutingTableUpdate(buffer, senderIP);
-            Serial.printf("Routing Table Updated:\n");
+            LOG(NETWORK,INFO,"Routing Table Updated:\n");
             tablePrint(routingTable,printNodeStruct);
         }
 
     }
-    Serial.print("---------------------Node successfully added to the network----------------------\n");
+    LOG(NETWORK,INFO,"---------------------Node successfully added to the network----------------------\n");
     return sIdle;
 }
 
 State idle(Event event){
-    Serial.print("Entered Idle State\n");
+    LOG(STATE_MACHINE,INFO,"Entered Idle State\n");
     if (event == eMessage){
         insertFirst(stateMachineEngine, eMessage);
         return sHandleMessages;
@@ -177,7 +177,7 @@ State idle(Event event){
 }
 
 State handleMessages(Event event){
-    Serial.print("Entered handle Messages State\n");
+    LOG(STATE_MACHINE,INFO,"Entered handle Messages State\n");
     char msg[50] = "", msg2[300] = "";
     int messageType, nextHopIP[4];
     messageParameters params;
@@ -197,15 +197,15 @@ State handleMessages(Event event){
         sendMessage(childIP,msg);
     }
     if( messageType == childRegistrationRequest){
-        Serial.printf("Message Type Child Registration Request\n");
+        LOG(MESSAGES,INFO,"Message Type Child Registration Request\n");
         decodeChildRegistrationRequest(messageBuffer);
         sscanf(messageBuffer, "%d %d.%d.%d.%d %d.%d.%d.%d", &messageType,&childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
 
         //Send my routing table to my child
         params.routingTable = routingTable;
-        Serial.printf("Sending my routing Table to child:");
+        LOG(MESSAGES,INFO,"Sending my routing Table to child:");
         encodeMessage(msg2,fullRoutingTableUpdate,params);
-        Serial.printf("%s to: %d.%d.%d.%d\n",msg2, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
+        LOG(MESSAGES,INFO,"%s to: %d.%d.%d.%d\n",msg2, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
         sendMessage(childSTAIP,msg2);
         //TODO send message to all network about the new node
         int IP[4];
@@ -227,11 +227,11 @@ State handleMessages(Event event){
         }
     }
     if( messageType == fullRoutingTableUpdate){
-        Serial.printf("Message Type Full Routing Update\n");
+        LOG(MESSAGES,INFO,"Message Type Full Routing Update\n");
         decodeFullRoutingTableUpdate(messageBuffer, senderIP);
     }
     if( messageType == partialRoutingTableUpdate){
-        Serial.printf("Message Type Partial Routing Table Update\n");
+        LOG(MESSAGES,INFO,"Message Type Partial Routing Table Update\n");
         decodePartialRoutingUpdate(messageBuffer, senderIP);
 
 
@@ -252,7 +252,7 @@ State handleMessages(Event event){
         }
     }
     if(messageType == dataMessage){
-        Serial.printf("Data Message\n");
+        LOG(MESSAGES,INFO,"Data Message\n");
         decodeDataMessage(messageBuffer, nextHopIP);
         if(!isIPEqual(nextHopIP, myIP)){
             sendMessage(nextHopIP,messageBuffer);
