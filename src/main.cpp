@@ -6,6 +6,7 @@
 #include <cstring>
 #include "lifecycle.h"
 #include "cli.h"
+#include "logger.h"
 
 //#include "../lib/wifi_hal/wifi_hal.h"
 //#include "../lib/transport_hal/esp32/udp_esp32.h"

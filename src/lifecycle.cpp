@@ -233,7 +233,7 @@ State handleMessages(Event event){
     if( messageType == partialRoutingTableUpdate){
         Serial.printf("Message Type Partial Routing Table Update\n");
         decodePartialRoutingUpdate(messageBuffer, senderIP);
-        //TODO Maybe send the update to other nodes??
+
 
         //Propagate the new node information trough the network
         IPAssign(params.IP1,childAPIP);

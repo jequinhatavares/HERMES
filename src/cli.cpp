@@ -15,6 +15,7 @@ void showMenu() {
     Serial.println("[2] Exit program");
     Serial.println("======================================================================");
     Serial.print("> ");
+
 }
 
 /**
