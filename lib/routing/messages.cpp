@@ -39,6 +39,7 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
             //Serial.printf("Formated msg: %s", msg);
             break;
         case partialRoutingTableUpdate:
+            //4 [node1 IP] [next hop IP] [hopDistance]
             sprintf(msg,"4 %i.%i.%i.%i %i.%i.%i.%i %i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
                     parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3],
                     parameters.hopDistance);
