@@ -9,21 +9,21 @@
 void encodeMessage(char * msg, messageType type, messageParameters parameters){
     char tempMsg[37] = "";//35
     switch (type) {
-        case parentDiscoveryRequest:
+        case PARENT_DISCOVERY_REQUEST:
             //0 [mySTAIP]
             sprintf(msg,"0 %i.%i.%i.%i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
             break;
-        case parentInfoResponse:
+        case PARENT_INFO_RESPONSE:
             //1 [my AP IP] [my hop distance to the root] [my number of children]
             sprintf(msg,"1 %i.%i.%i.%i %i %i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
                     parameters.hopDistance, parameters.childrenNumber);
             break;
-        case childRegistrationRequest:
+        case CHILD_REGISTRATION_REQUEST:
             //2 [my AP IP] [my STA IP]
             sprintf(msg,"2 %i.%i.%i.%i %i.%i.%i.%i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
                     parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
-        case fullRoutingTableUpdate:
+        case FULL_ROUTING_TABLE_UPDATE:
             //3 [rootIP] |[node1 IP] [next hop IP] [hopDistance] |[node2 IP] [next hop IP] [hopDistance] |....
             sprintf(msg, "3 %i.%i.%i.%i |", rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
 
@@ -39,26 +39,26 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
             }
             //Serial.printf("Formated msg: %s", msg);
             break;
-        case partialRoutingTableUpdate:
+        case PARTIAL_ROUTING_TABLE_UPDATE:
             //4 [node1 IP] [next hop IP] [hopDistance]
             sprintf(msg,"4 %i.%i.%i.%i %i.%i.%i.%i %i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
                     parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3],
                     parameters.hopDistance);
             break;
 
-        case dataMessage:
+        case DATA_MESSAGE:
             //5 [message payload] [source node IP] [destiny node IP]
             sprintf(msg,"5 %s %i.%i.%i.%i %i.%i.%i.%i", parameters.payload,parameters.IP1[0],parameters.IP1[1],
                     parameters.IP1[2],parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
 
-        case ackMessage:
+        case ACK_MESSAGE:
             //6 [source node IP] [destiny node IP]
             sprintf(msg,"6 %i.%i.%i.%i %i.%i.%i.%i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],
                     parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
 
-        case parentListAdvertisement:
+        case PARENT_LIST_ADVERTISEMENT:
             //7 [myIP] [parent1IP] [parent2IP] [parent3IP] ...
             sprintf(msg, "7 ");
             for (int i = 0; i < parameters.nrOfPossibleParents; i++) {
@@ -69,7 +69,7 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
                 strcpy(tempMsg , "");
             }
             break;
-        case parentReassignmentCommand:
+        case PARENT_REASSIGNMENT_COMMAND:
             //8 [parentIP]
             sprintf(msg,"8 %i.%i.%i.%i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
             break;
@@ -85,7 +85,7 @@ void decodeParentInfoResponse(char* msg, parentInfo *parents, int i){
     int parentIP[4];
     sscanf(msg, "%d %d.%d.%d.%d %d %d", &type, &parentIP[0],&parentIP[1],&parentIP[2],&parentIP[3],&rootDistance,&nrChildren);
 
-    if (type == parentInfoResponse){
+    if (type == PARENT_INFO_RESPONSE){
         parents[i].rootHopDistance = rootDistance;
         parents[i].nrOfChildren = nrChildren;
         parents[i].parentIP[0]=parentIP[0];
@@ -101,7 +101,7 @@ void decodeChildRegistrationRequest(char * msg){
     routingTableEntry newNode;
     sscanf(msg, "%d ", &type);
 
-    if (type == childRegistrationRequest){
+    if (type == CHILD_REGISTRATION_REQUEST){
         sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],
                &childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3] );
         //Add the new children to the children table
@@ -130,7 +130,7 @@ void decodeFullRoutingTableUpdate(char * msg, int* senderIP){
     //To discard the message type and ensure the token points to the first routing table update entry
     token = strtok(NULL, "|");
 
-    if (type == fullRoutingTableUpdate){
+    if (type == FULL_ROUTING_TABLE_UPDATE){
         while (token != NULL) {
             sscanf(token, "%d.%d.%d.%d %d.%d.%d.%d %d",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],
                    &nextHopIP[0],&nextHopIP[1],&nextHopIP[2],&nextHopIP[3], &hopDistance);
@@ -156,7 +156,7 @@ void decodePartialRoutingUpdate(char *msg, int* senderIP){
 
     sscanf(msg, "%d ", &type);
 
-    if (type == partialRoutingTableUpdate){
+    if (type == PARTIAL_ROUTING_TABLE_UPDATE){
         sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %d",&type, &nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],
                &nextHopIP[0],&nextHopIP[1],&nextHopIP[2],&nextHopIP[3], &hopDistance);
 
@@ -177,7 +177,7 @@ void decodeDataMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP)
     //Serial.printf("Entered decode Data Message\n");
     sscanf(msg, "%d ", &type);
 
-    if (type == dataMessage){
+    if (type == DATA_MESSAGE){
         sscanf(msg, "%d %s %d.%d.%d.%d %d.%d.%d.%d",&type, payload, &senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
             &destinyIP[0],&destinyIP[1],&destinyIP[2],&destinyIP[3]);
         //Serial.printf("Message %s received from %d.%d.%d.%d to %d.%d.%d.%d", payload, senderIP[0],senderIP[1],senderIP[2],senderIP[3],
@@ -196,11 +196,11 @@ void decodeDataMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP)
 void decodeAckMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP){
     int type;
     int *nextHopPtr = nullptr;
-    routingTableEntry newNode;
+
     //Serial.printf("Entered decode Data Message\n");
     sscanf(msg, "%d ", &type);
 
-    if (type == ackMessage){
+    if (type == ACK_MESSAGE){
         sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d",&type, &senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
                &destinyIP[0],&destinyIP[1],&destinyIP[2],&destinyIP[3]);
         //Serial.printf("Message %s received from %d.%d.%d.%d to %d.%d.%d.%d", payload, senderIP[0],senderIP[1],senderIP[2],senderIP[3],
@@ -216,4 +216,25 @@ void decodeAckMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP){
         //Serial.printf("Next Hop IP: %d.%d.%d.%d", nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3]);
     }
 
+}
+
+void decodeParentReassignmentCommand(char *msg, int *newParentIP){
+    int type;
+
+    sscanf(msg, "%d ", &type);
+
+    if (type == PARENT_REASSIGNMENT_COMMAND){
+        //ToDo put event on the queue to change parent
+    }
+}
+
+
+void decodeParentListAdvertisement(char *msg){
+    int type;
+
+    sscanf(msg, "%d ", &type);
+
+    if (type == PARENT_LIST_ADVERTISEMENT){
+        //ToDo Callback to choose the node new parent
+    }
 }

@@ -8,7 +8,7 @@ void test_pdr_correct(){
     messageParameters params;
     params.IP1[0] = 1; params.IP1[1] = 1; params.IP1[2] = 1; params.IP1[3] = 1;
 
-    encodeMessage(msg, parentDiscoveryRequest, params);
+    encodeMessage(msg, PARENT_DISCOVERY_REQUEST, params);
     //printf(msg);
     TEST_ASSERT(strcmp(msg, "0 1.1.1.1") == 0);
 }
@@ -18,7 +18,7 @@ void test_pir_incorrect(){
     messageParameters params;
     params.IP1[0] = 1; params.IP1[1] = 1; params.IP1[2] = 1; params.IP1[3] = 1;
 
-    encodeMessage(msg, parentInfoResponse, params);
+    encodeMessage(msg, PARENT_INFO_RESPONSE, params);
     //printf(msg);
     TEST_ASSERT(strcmp(msg, "") == 0);
 }
@@ -32,7 +32,7 @@ void test_data_messages_encoding(){
 
     strcpy(params.payload, msg);
 
-    encodeMessage(messageBuffer,dataMessage,params);
+    encodeMessage(messageBuffer,DATA_MESSAGE,params);
 
 
     printf("Encoded Message: %s\n", messageBuffer);
@@ -48,7 +48,7 @@ void test_data_messages_encoding_with_string(){
 
     strcpy(params.payload, msg);
 
-    encodeMessage(messageBuffer,dataMessage,params);
+    encodeMessage(messageBuffer,DATA_MESSAGE,params);
 
 
     printf("Encoded Message: %s\n", messageBuffer);

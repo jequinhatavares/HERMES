@@ -15,19 +15,19 @@ typedef struct messageParameters{
     char payload[200] = "";
 }messageParameters;
 
-//a = messageEncode(parentDiscoveryRequest, .ip=1.1.1.1, .hopDistance=2)
+//a = messageEncode(PARENT_DISCOVERY_REQUEST, .ip=1.1.1.1, .hopDistance=2)
 //#define encodeMessage(msg, message_type, ...) messageEncode(msg, message_type, (messageParameters){__VA_ARGS__})
 
 typedef enum messageType{
-    parentDiscoveryRequest, //0
-    parentInfoResponse, //1
-    childRegistrationRequest, //2
-    fullRoutingTableUpdate, //3
-    partialRoutingTableUpdate, //4
-    dataMessage,//5 por enquanto
-    ackMessage,//6
-    parentListAdvertisement,//7
-    parentReassignmentCommand, //8
+    PARENT_DISCOVERY_REQUEST, //0
+    PARENT_INFO_RESPONSE, //1
+    CHILD_REGISTRATION_REQUEST, //2
+    FULL_ROUTING_TABLE_UPDATE, //3
+    PARTIAL_ROUTING_TABLE_UPDATE, //4
+    DATA_MESSAGE,//5 por enquanto
+    ACK_MESSAGE,//6
+    PARENT_LIST_ADVERTISEMENT,//7
+    PARENT_REASSIGNMENT_COMMAND, //8
 }messageType;
 
 

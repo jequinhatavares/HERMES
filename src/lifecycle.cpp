@@ -106,7 +106,7 @@ State joinNetwork(Event event){
 
             //Send a Parent Discovery Request to the connected parent
             params.IP1[0] = mySTAIP[0]; params.IP1[1] = mySTAIP[1]; params.IP1[2] = mySTAIP[2]; params.IP1[3] = mySTAIP[3];
-            encodeMessage(msg, parentDiscoveryRequest, params);
+            encodeMessage(msg, PARENT_DISCOVERY_REQUEST, params);
 
             connectedGateway =  getGatewayIP();
             connectedParentIP[0] = getGatewayIP()[0];connectedParentIP[1] = getGatewayIP()[1];
@@ -146,7 +146,7 @@ State joinNetwork(Event event){
         mySTAIP = getMySTAIP();
         params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
         params.IP2[0] = mySTAIP[0]; params.IP2[1] = mySTAIP[1]; params.IP2[2] = mySTAIP[2]; params.IP2[3] = mySTAIP[3];
-        encodeMessage(msg, childRegistrationRequest, params);
+        encodeMessage(msg, CHILD_REGISTRATION_REQUEST, params);
         sendMessage(parent, msg);
 
         //Wait for the parent to respond with his routing table information
@@ -187,18 +187,18 @@ State handleMessages(Event event){
     sscanf(messageBuffer, "%d", &messageType);
 
     switch (messageType) {
-        case parentDiscoveryRequest:
+        case PARENT_DISCOVERY_REQUEST:
             sscanf(messageBuffer, "%d %i.%i.%i.%i", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
 
             params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
             params.childrenNumber = numberOfChildren;
             params.hopDistance = rootHopDistance;
 
-            encodeMessage(msg,parentInfoResponse,params);
+            encodeMessage(msg,PARENT_INFO_RESPONSE,params);
             sendMessage(childIP,msg);
             break;
 
-        case childRegistrationRequest:
+        case CHILD_REGISTRATION_REQUEST:
             LOG(MESSAGES,INFO,"Message Type Child Registration Request\n");
             decodeChildRegistrationRequest(messageBuffer);
             sscanf(messageBuffer, "%d %d.%d.%d.%d %d.%d.%d.%d", &messageType,&childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
@@ -206,7 +206,7 @@ State handleMessages(Event event){
             //Send my routing table to my child
             params.routingTable = routingTable;
             LOG(MESSAGES,INFO,"Sending my routing Table to child:");
-            encodeMessage(msg2,fullRoutingTableUpdate,params);
+            encodeMessage(msg2,FULL_ROUTING_TABLE_UPDATE,params);
             LOG(MESSAGES,INFO,"%s to: %d.%d.%d.%d\n",msg2, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
             sendMessage(childSTAIP,msg2);
             int IP[4];
@@ -215,7 +215,7 @@ State handleMessages(Event event){
             assignIP(params.IP1,childAPIP);
             assignIP(params.IP2,childAPIP);
             params.hopDistance = 1;
-            encodeMessage(msg2, partialRoutingTableUpdate, params);
+            encodeMessage(msg2, PARTIAL_ROUTING_TABLE_UPDATE, params);
             // If the message didn't come from the parent, forward it to the parent
             if(!isIPEqual(senderIP, parent)){
                 sendMessage(parent, msg2);
@@ -233,11 +233,11 @@ State handleMessages(Event event){
             encodeVizMessage(msg,NEW_NODE,vizParameters);
             sendMessage(rootIP,msg);
 
-        case fullRoutingTableUpdate:
+        case FULL_ROUTING_TABLE_UPDATE:
             LOG(MESSAGES,INFO,"Message Type Full Routing Update\n");
             decodeFullRoutingTableUpdate(messageBuffer, senderIP);
 
-        case partialRoutingTableUpdate:
+        case PARTIAL_ROUTING_TABLE_UPDATE:
             LOG(MESSAGES,INFO,"Message Type Partial Routing Table Update\n");
             decodePartialRoutingUpdate(messageBuffer, senderIP);
 
@@ -245,7 +245,7 @@ State handleMessages(Event event){
             assignIP(params.IP1,childAPIP);
             assignIP(params.IP2,childAPIP);
             params.hopDistance = 1;
-            encodeMessage(msg2, partialRoutingTableUpdate, params);
+            encodeMessage(msg2, PARTIAL_ROUTING_TABLE_UPDATE, params);
             // If the message didn't come from the parent, forward it to the parent
             if(!isIPEqual(senderIP, parent)){
                 sendMessage(parent, msg2);
@@ -257,7 +257,7 @@ State handleMessages(Event event){
                 }
             }
 
-        case dataMessage:
+        case DATA_MESSAGE:
             LOG(MESSAGES,INFO,"Data Message\n");
             decodeDataMessage(messageBuffer, nextHopIP, sourceIP, destinyIP);
 
@@ -271,7 +271,7 @@ State handleMessages(Event event){
                 //Send ACK Message back to the source of the message
                 assignIP(params.IP1,sourceIP);
                 assignIP(params.IP2,destinyIP);
-                encodeMessage(msg, ackMessage, params);
+                encodeMessage(msg, ACK_MESSAGE, params);
 
                 int* nextHopPtr = findRouteToNode(sourceIP);
                 if (nextHopPtr != nullptr){
@@ -282,7 +282,7 @@ State handleMessages(Event event){
                 }
             }
 
-        case ackMessage:
+        case ACK_MESSAGE:
             LOG(MESSAGES,INFO,"ACK Message\n");
             decodeAckMessage(messageBuffer, nextHopIP, sourceIP, destinyIP);
             if(!isIPEqual(nextHopIP, myIP)){
