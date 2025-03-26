@@ -10,13 +10,14 @@ int numberOfChildren = 0;
 bool hasParent = false;
 int parent[4];
 int myIP[4];
-
+int rootIP[4];
 
 #undef TableMaxSize
 #define TableMaxSize 10
 
 //Initialize Routing Table
 #define PREALLOCATE_TABLE
+
 
 /***
  * Routing Table Variables
@@ -98,7 +99,7 @@ bool isIPEqual(void* a, void* b){
     return false;
 }
 
-void IPAssign(int destIP[4], int sourceIP[4]){
+void assignIP(int destIP[4], int sourceIP[4]){
     destIP[0] = sourceIP[0];destIP[1] = sourceIP[1];
     destIP[2] = sourceIP[2];destIP[3] = sourceIP[3];
 }
@@ -220,17 +221,17 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4
      //If it is my IP, the hop distance is zero, and the next node is myself
      if(isIPEqual(nodeIP, myIP)){
          newNode.hopDistance = 0;
-         IPAssign(newNode.nextHopIP, myIP);
+         assignIP(newNode.nextHopIP, myIP);
      }
      //If the node is my parent, its hop distance is 1
      else if(isIPEqual(nodeIP, parent)){
          newNode.hopDistance = 1;
-         IPAssign(newNode.nextHopIP, parent);
+         assignIP(newNode.nextHopIP, parent);
      }
      //If the node is my child, its hop distance is 1
      else if(findNode(childrenTable,nodeIP) != nullptr){
          newNode.hopDistance = 1;
-         IPAssign(newNode.nextHopIP, nodeIP);
+         assignIP(newNode.nextHopIP, nodeIP);
      }
      //If the next hop is my parent or child, increase the hop distance by 1
      else if(isIPEqual(newNode.nextHopIP, parent) || findNode(childrenTable,newNode.nextHopIP) != nullptr){
@@ -239,7 +240,7 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4
      //If the IP or nextHopIP is neither my parent nor my child (i.e., it belongs to another node in the network
      // that is not directly connected to me), update nextHopIP to the sender's IP
      else if(findNode(childrenTable,newNode.nextHopIP) == nullptr ){
-        IPAssign(newNode.nextHopIP, senderIP);
+        assignIP(newNode.nextHopIP, senderIP);
         newNode.hopDistance = newNode.hopDistance + 1;
         //TODO aqui ter cuidado porque o senderIP atualizado no UDP pode estar relacionado com se a mensagem veio do pai ou do filho
      }

@@ -7,6 +7,8 @@
 
 typedef struct messageParameters{
     int IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};
+    int nrOfPossibleParents = 0;
+    int** possibleParents;
     int hopDistance = -1;
     int childrenNumber = -1;
     TableInfo *routingTable;
@@ -24,6 +26,8 @@ typedef enum messageType{
     partialRoutingTableUpdate, //4
     dataMessage,//5 por enquanto
     ackMessage,//6
+    parentListAdvertisement,//7
+    parentReassignmentCommand, //8
 }messageType;
 
 

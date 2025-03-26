@@ -68,7 +68,7 @@ void getDataMessage() {
     ptrIP = findRouteToNode(parameters.IP2);
 
     if(ptrIP != nullptr){
-        IPAssign(nextHopIP, ptrIP);
+        assignIP(nextHopIP, ptrIP);
         sendMessage(nextHopIP, msg);
         Serial.printf("✅ Message sent successfully: %s to %d.%d.%d.%d\n", msg,nextHopIP[0], nextHopIP[1], nextHopIP[2], nextHopIP[3]);
     }else {

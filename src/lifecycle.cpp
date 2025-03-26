@@ -49,15 +49,11 @@ State initNode(Event event){
 
     begin_transport();
 
-    if(iamRoot){
-        rootHopDistance = 0;
-        IPAssign(parent, invalidIP);
-    }
-
     numberOfChildren = 0;
 
     initTables();
 
+    //Add myself to my routing table
     myIP[0] = localIP[0]; myIP[1] = localIP[1];myIP[2] = localIP[2]; myIP[3] = localIP[3];
     me.nextHopIP[0] = localIP[0]; me.nextHopIP[1] = localIP[1];me.nextHopIP[2] = localIP[2]; me.nextHopIP[3] = localIP[3];
     me.hopDistance = 0;
@@ -67,6 +63,9 @@ State initNode(Event event){
         insertFirst(stateMachineEngine, eSuccess);
         return sSearch;
     }else{
+        rootHopDistance = 0;
+        assignIP(parent, invalidIP);
+        assignIP(rootIP,myIP);
         return sIdle;
     };
 }
@@ -181,6 +180,7 @@ State handleMessages(Event event){
     char msg[50] = "", msg2[300] = "";
     int messageType, nextHopIP[4], sourceIP[4], destinyIP[4];
     messageParameters params;
+    messageVizParameters vizParameters;
     //IPAddress myIP;
     int childIP[4], childAPIP[4], childSTAIP[4];
 
@@ -212,8 +212,8 @@ State handleMessages(Event event){
             int IP[4];
 
             //Propagate the new node information trough the network
-            IPAssign(params.IP1,childAPIP);
-            IPAssign(params.IP2,childAPIP);
+            assignIP(params.IP1,childAPIP);
+            assignIP(params.IP2,childAPIP);
             params.hopDistance = 1;
             encodeMessage(msg2, partialRoutingTableUpdate, params);
             // If the message didn't come from the parent, forward it to the parent
@@ -227,6 +227,12 @@ State handleMessages(Event event){
                 }
             }
 
+            //If the visualization program is active, pass the new node information to it
+            assignIP(vizParameters.IP1, childAPIP);
+            assignIP(vizParameters.IP2, myIP);
+            encodeVizMessage(msg,NEW_NODE,vizParameters);
+            sendMessage(rootIP,msg);
+
         case fullRoutingTableUpdate:
             LOG(MESSAGES,INFO,"Message Type Full Routing Update\n");
             decodeFullRoutingTableUpdate(messageBuffer, senderIP);
@@ -236,8 +242,8 @@ State handleMessages(Event event){
             decodePartialRoutingUpdate(messageBuffer, senderIP);
 
             //Propagate the new node information trough the network
-            IPAssign(params.IP1,childAPIP);
-            IPAssign(params.IP2,childAPIP);
+            assignIP(params.IP1,childAPIP);
+            assignIP(params.IP2,childAPIP);
             params.hopDistance = 1;
             encodeMessage(msg2, partialRoutingTableUpdate, params);
             // If the message didn't come from the parent, forward it to the parent
@@ -263,8 +269,8 @@ State handleMessages(Event event){
                 //TODO process the message
 
                 //Send ACK Message back to the source of the message
-                IPAssign(params.IP1,sourceIP);
-                IPAssign(params.IP2,destinyIP);
+                assignIP(params.IP1,sourceIP);
+                assignIP(params.IP2,destinyIP);
                 encodeMessage(msg, ackMessage, params);
 
                 int* nextHopPtr = findRouteToNode(sourceIP);

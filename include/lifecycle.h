@@ -7,6 +7,7 @@
 #include <messages.h>
 #include <routing.h>
 #include <state_machine.h>
+#include <net_viz.h>
 #include <snake_queue.h>
 #include <logger.h>
 #include <cstring>

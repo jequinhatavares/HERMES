@@ -24,8 +24,9 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
                     parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
         case fullRoutingTableUpdate:
-            //3 [node1 IP] [next hop IP] [hopDistance] |[node2 IP] [next hop IP] [hopDistance] |....
-            sprintf(msg, "3 |");
+            //3 [rootIP] |[node1 IP] [next hop IP] [hopDistance] |[node2 IP] [next hop IP] [hopDistance] |....
+            sprintf(msg, "3 %i.%i.%i.%i |", rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
+
             for (int i = 0; i < parameters.routingTable->numberOfItems; i++) {
                 sprintf(tempMsg,"%i.%i.%i.%i %i.%i.%i.%i %i |",((int*)routingTable->table[i].key)[0],
                         ((int*)routingTable->table[i].key)[1],((int*)routingTable->table[i].key)[2],
@@ -55,6 +56,22 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
             //6 [source node IP] [destiny node IP]
             sprintf(msg,"6 %i.%i.%i.%i %i.%i.%i.%i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],
                     parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
+            break;
+
+        case parentListAdvertisement:
+            //7 [myIP] [parent1IP] [parent2IP] [parent3IP] ...
+            sprintf(msg, "7 ");
+            for (int i = 0; i < parameters.nrOfPossibleParents; i++) {
+                sprintf(tempMsg,"%i.%i.%i.%i",parameters.possibleParents[i][0], parameters.possibleParents[i][1],
+                        parameters.possibleParents[i][2], parameters.possibleParents[i][3]);
+
+                strcat(msg, tempMsg);
+                strcpy(tempMsg , "");
+            }
+            break;
+        case parentReassignmentCommand:
+            //8 [parentIP]
+            sprintf(msg,"8 %i.%i.%i.%i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
             break;
         default:
             break;
@@ -105,9 +122,11 @@ void decodeFullRoutingTableUpdate(char * msg, int* senderIP){
     int nodeIP[4], nextHopIP[4];
     int hopDistance;
     routingTableEntry newNode;
-    sscanf(msg, "%d ", &type);
 
+    //Parse Message Type and root node IP
+    sscanf(msg, "%d %d.%d.%d.%d", &type, &rootIP[0], &rootIP[1], &rootIP[2], &rootIP[3]);
     char* token = strtok(msg, "|");
+
     //To discard the message type and ensure the token points to the first routing table update entry
     token = strtok(NULL, "|");
 
@@ -134,6 +153,7 @@ void decodePartialRoutingUpdate(char *msg, int* senderIP){
     int nodeIP[4], nextHopIP[4];
     int hopDistance;
     routingTableEntry newNode;
+
     sscanf(msg, "%d ", &type);
 
     if (type == partialRoutingTableUpdate){
@@ -164,7 +184,7 @@ void decodeDataMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP)
             //destinyIP[0],destinyIP[1],destinyIP[2],destinyIP[3]);
         nextHopPtr = findRouteToNode(destinyIP);
         if (nextHopPtr != nullptr){
-            IPAssign(nextHopIP, nextHopPtr);
+            assignIP(nextHopIP, nextHopPtr);
         }else{
             LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
                                 "Unable to forward message.\n", destinyIP[0], destinyIP[1],destinyIP[2], destinyIP[3]);
@@ -187,7 +207,7 @@ void decodeAckMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP){
         //destinyIP[0],destinyIP[1],destinyIP[2],destinyIP[3]);
         nextHopPtr = findRouteToNode(destinyIP);
         if (nextHopPtr != nullptr){
-            IPAssign(nextHopIP, nextHopPtr);
+            assignIP(nextHopIP, nextHopPtr);
         }else{
             LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
                                 "Unable to forward message.\n", destinyIP[0], destinyIP[1],destinyIP[2], destinyIP[3]);

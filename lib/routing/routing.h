@@ -26,9 +26,10 @@ extern int numberOfChildren;
 extern bool hasParent;
 
 extern int myIP[4];
+extern int rootIP[4];
 
 bool isIPEqual(void* a, void* b);
-void IPAssign(int destIP[4], int sourceIP[4]);
+void assignIP(int destIP[4], int sourceIP[4]);
 void setKey(void* av, void* bv);
 void setValue(void* av, void* bv);
 void initTables();
