@@ -209,7 +209,6 @@ State handleMessages(Event event){
             encodeMessage(msg2,fullRoutingTableUpdate,params);
             LOG(MESSAGES,INFO,"%s to: %d.%d.%d.%d\n",msg2, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
             sendMessage(childSTAIP,msg2);
-            //TODO send message to all network about the new node
             int IP[4];
 
             //Propagate the new node information trough the network
