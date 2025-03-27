@@ -4,7 +4,7 @@
 #include <cstdio>
 
 
-bool iamRoot = true;
+bool iamRoot = false;
 int rootHopDistance = -1;
 int numberOfChildren = 0;
 bool hasParent = false;
@@ -145,13 +145,18 @@ void initTables(){
  * @param Table - A pointer to the routing table entry to print.
  * @return (void)
  */
-void printNodeStruct(TableEntry* Table){
-    //Serial.printf("Node[%d.%d.%d.%d] → NextHop[%d.%d.%d.%d] | (Distance: %d)\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
-           //((routingTableEntry *)Table->value)->nextHopIP[0],((routingTableEntry *)Table->value)->nextHopIP[1],
-           //((routingTableEntry *)Table->value)->nextHopIP[2],((routingTableEntry *)Table->value)->nextHopIP[3],
-           //((routingTableEntry *)Table->value)->hopDistance);
+void printRoutingStruct(TableEntry* Table){
+    LOG(NETWORK,INFO,"Node[%d.%d.%d.%d] → NextHop[%d.%d.%d.%d] | (Distance: %d)\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
+           ((routingTableEntry *)Table->value)->nextHopIP[0],((routingTableEntry *)Table->value)->nextHopIP[1],
+           ((routingTableEntry *)Table->value)->nextHopIP[2],((routingTableEntry *)Table->value)->nextHopIP[3],
+           ((routingTableEntry *)Table->value)->hopDistance);
 }
 
+void printChildStruct(TableEntry* Table){
+    LOG(NETWORK,INFO,"K: AP IP %i.%i.%i.%i "
+           "V: STA IP: %i.%i.%i.%i\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
+           ((int *)Table->value)[0],((int *)Table->value)[1],((int *)Table->value)[2],((int *)Table->value)[3]);
+}
 /**
  * findNode
  * Searches for a node in the specified table using its IP address.

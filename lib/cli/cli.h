@@ -1,5 +1,6 @@
 #include "messages.h"
 #include "transport_hal.h"
+#include "routing.h"
 
 void showMenu();
 void readIPAddress(int *ip, const char *prompt);

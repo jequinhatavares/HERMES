@@ -12,7 +12,10 @@ void showMenu() {
     Serial.println("                       💻 Command Line Menu 💻                       ");
     Serial.println("======================================================================");
     Serial.println("[1] Send a new message");
-    Serial.println("[2] Exit program");
+    Serial.println("[2] Print Routing Table");
+    Serial.println("[3] Print Children Table");
+    Serial.println("[4] Print Root Node");
+    Serial.println("[5] Exit program");
     Serial.println("======================================================================");
     Serial.print("> ");
 
@@ -89,7 +92,7 @@ void cliInteraction(){
     if (Serial.available() > 0){
 
         showMenu();
-        while (choice != 2) {
+        while (choice != 5) {
 
             while (Serial.available() == 0) {} // Wait for user input
             choice  = Serial.parseInt();
@@ -99,9 +102,25 @@ void cliInteraction(){
                 case 1:
                     getDataMessage();
                     break;
+
                 case 2:
+                    Serial.println("---------------------------- Routing Table ----------------------------\n");
+                    tablePrint(routingTable, printRoutingStruct);
+                    break;
+
+                case 3:
+                    Serial.println("---------------------------- Children Table ----------------------------\n");
+                    tablePrint(childrenTable, printChildStruct);
+                    break;
+
+                case 4:
+                    Serial.printf("Root Node IP: %i.%i.%i.%i\n", rootIP[0], rootIP[1],rootIP[2],rootIP[3]);
+                    break;
+
+                case 5:
                     Serial.println("Exiting...");
                     break;
+
                 default:
                     Serial.println("Invalid option. Try again.");
                     break;

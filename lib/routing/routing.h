@@ -3,6 +3,7 @@
 
 //#include "table.h"
 #include "../Table/table.h"
+#include "logger.h"
 
 typedef struct routingTableEntry {
     int hopDistance;
@@ -33,7 +34,8 @@ void assignIP(int destIP[4], int sourceIP[4]);
 void setKey(void* av, void* bv);
 void setValue(void* av, void* bv);
 void initTables();
-void printNodeStruct(TableEntry* Table);
+void printRoutingStruct(TableEntry* Table);
+void printChildStruct(TableEntry* Table);
 void* findNode(TableInfo* Table, int nodeIP[4]);
 int* findRouteToNode(int nodeIP[4]);
 void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4]);

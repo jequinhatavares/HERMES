@@ -158,7 +158,7 @@ State joinNetwork(Event event){
             LOG(MESSAGES,INFO,"Parent Response: %s\n", buffer);
             decodeFullRoutingTableUpdate(buffer, senderIP);
             LOG(NETWORK,INFO,"Routing Table Updated:\n");
-            tablePrint(routingTable,printNodeStruct);
+            tablePrint(routingTable,printRoutingStruct);
         }
 
     }
