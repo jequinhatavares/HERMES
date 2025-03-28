@@ -5,62 +5,68 @@
 #include <cstdio>
 #include <cstring>
 
-
+/**
+ * encodeMessage
+ * Encodes a message according to the specified message type and parameters.
+ *
+ * @param msg - The buffer to store the encoded message.
+ * @param type - The type of message to encode.
+ * @param parameters - The message parameters containing data to encode.
+ *                   PARENT_DISCOVERY_REQUEST - .IP1 contains my STA IP
+ *                   PARENT_INFO_RESPONSE - .IP1 contains the my AP IP, .hopDistance my root hop distance and .childrenNumber my number of children
+ *                   CHILD_REGISTRATION_REQUEST - .IP1 contains the my AP IP and .IP2 contains the my STA IP
+ *                   FULL_ROUTING_TABLE_UPDATE - nothing
+ *                   PARTIAL_ROUTING_TABLE_UPDATE - .IP1 contains the my node IP, .IP2 contains the next hop IP and .hopDistance contains my hop distance to that node
+ *                   DATA_MESSAGE - .IP1 contains the source node IP, .IP2 contains the destiny hop IP and the .payload the message to be sent
+ *                   ACK_MESSAGE - .IP1 contains the source node IP, .IP2 contains the destiny hop IP
+ *                   PARENT_LIST_ADVERTISEMENT -
+ *                   PARENT_REASSIGNMENT_COMMAND -
+ * @return void
+ */
 void encodeMessage(char * msg, messageType type, messageParameters parameters){
     char tempMsg[37] = "";//35
     switch (type) {
         case PARENT_DISCOVERY_REQUEST:
             //0 [mySTAIP]
-            sprintf(msg,"0 %i.%i.%i.%i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
+            sprintf(msg,"%i %i.%i.%i.%i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
             break;
         case PARENT_INFO_RESPONSE:
             //1 [my AP IP] [my hop distance to the root] [my number of children]
-            sprintf(msg,"1 %i.%i.%i.%i %i %i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
+            sprintf(msg,"%i %i.%i.%i.%i %i %i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
                     parameters.hopDistance, parameters.childrenNumber);
             break;
         case CHILD_REGISTRATION_REQUEST:
             //2 [my AP IP] [my STA IP]
-            sprintf(msg,"2 %i.%i.%i.%i %i.%i.%i.%i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
+            sprintf(msg,"%i %i.%i.%i.%i %i.%i.%i.%i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
                     parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
         case FULL_ROUTING_TABLE_UPDATE:
             //3 [rootIP] |[node1 IP] [next hop IP] [hopDistance] |[node2 IP] [next hop IP] [hopDistance] |....
-            sprintf(msg, "3 %i.%i.%i.%i |", rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
+            sprintf(msg, "%i %i.%i.%i.%i |",type, rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
 
             for (int i = 0; i < parameters.routingTable->numberOfItems; i++) {
                 sprintf(tempMsg,"%i.%i.%i.%i %i.%i.%i.%i %i |",((int*)routingTable->table[i].key)[0],
                         ((int*)routingTable->table[i].key)[1],((int*)routingTable->table[i].key)[2],
-                        ((int*)routingTable->table[i].key)[3],((routingTableEntry *)parameters.routingTable->table[i].value)->nextHopIP[0],
-                        ((routingTableEntry *)parameters.routingTable->table[i].value)->nextHopIP[1],((routingTableEntry *)parameters.routingTable->table[i].value)->nextHopIP[2],
-                        ((routingTableEntry *)parameters.routingTable->table[i].value)->nextHopIP[3],((routingTableEntry *)parameters.routingTable->table[i].value)->hopDistance);
+                        ((int*)routingTable->table[i].key)[3],((routingTableEntry *)routingTable->table[i].value)->nextHopIP[0],
+                        ((routingTableEntry *)routingTable->table[i].value)->nextHopIP[1],((routingTableEntry *)routingTable->table[i].value)->nextHopIP[2],
+                        ((routingTableEntry *)routingTable->table[i].value)->nextHopIP[3],((routingTableEntry *)routingTable->table[i].value)->hopDistance);
 
                 strcat(msg, tempMsg);
                 strcpy(tempMsg , "");
             }
             //Serial.printf("Formated msg: %s", msg);
             break;
+
         case PARTIAL_ROUTING_TABLE_UPDATE:
             //4 [node1 IP] [next hop IP] [hopDistance]
-            sprintf(msg,"4 %i.%i.%i.%i %i.%i.%i.%i %i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
+            sprintf(msg,"%i %i.%i.%i.%i %i.%i.%i.%i %i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
                     parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3],
                     parameters.hopDistance);
             break;
 
-        case DATA_MESSAGE:
-            //5 [message payload] [source node IP] [destiny node IP]
-            sprintf(msg,"5 %s %i.%i.%i.%i %i.%i.%i.%i", parameters.payload,parameters.IP1[0],parameters.IP1[1],
-                    parameters.IP1[2],parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
-            break;
-
-        case ACK_MESSAGE:
-            //6 [source node IP] [destiny node IP]
-            sprintf(msg,"6 %i.%i.%i.%i %i.%i.%i.%i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],
-                    parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
-            break;
-
         case PARENT_LIST_ADVERTISEMENT:
-            //7 [myIP] [parent1IP] [parent2IP] [parent3IP] ...
-            sprintf(msg, "7 ");
+            //5 [myIP] [rootIP] [parent1IP] [parent2IP] [parent3IP] ...
+            sprintf(msg, "%i %i.%i.%i.%i %i.%i.%i.%i",type,myIP[0],myIP[1],myIP[2],myIP[3],rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
             for (int i = 0; i < parameters.nrOfPossibleParents; i++) {
                 sprintf(tempMsg,"%i.%i.%i.%i",parameters.possibleParents[i][0], parameters.possibleParents[i][1],
                         parameters.possibleParents[i][2], parameters.possibleParents[i][3]);
@@ -69,16 +75,42 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
                 strcpy(tempMsg , "");
             }
             break;
+
         case PARENT_REASSIGNMENT_COMMAND:
-            //8 [parentIP]
-            sprintf(msg,"8 %i.%i.%i.%i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
+            //6 [parentIP]
+            sprintf(msg,"%i %i.%i.%i.%i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
+            break;
+
+        case DEBUG_MESSAGE:
+            //7 [sourceIP] [Destination IP] [DEBUG message payload]
+            sprintf(msg,"%i %i.%i.%i.%i %i.%i.%i.%i %s",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
+                    parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3],parameters.payload);
+
+        case DATA_MESSAGE:
+            //8 [message payload] [source node IP] [destiny node IP]
+            sprintf(msg,"%i %s %i.%i.%i.%i %i.%i.%i.%i",type,parameters.payload,parameters.IP1[0],parameters.IP1[1],
+                    parameters.IP1[2],parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
+            break;
+
+        case ACK_MESSAGE:
+            //9 [source node IP] [destiny node IP]
+            sprintf(msg,"%i %i.%i.%i.%i %i.%i.%i.%i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],
+                    parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
         default:
             break;
     }
 }
 
-
+/**
+ * decodeParentInfoResponse
+ * Decodes a PARENT_INFO_RESPONSE message and stores the parent information.
+ *
+ * @param msg - The message to decode.
+ * @param parents - The array to store parent information.
+ * @param i - The index in the parents array to store the decoded information.
+ * @return void
+ */
 void decodeParentInfoResponse(char* msg, parentInfo *parents, int i){
     int type;
     int rootDistance, nrChildren;
@@ -95,6 +127,13 @@ void decodeParentInfoResponse(char* msg, parentInfo *parents, int i){
     }
 }
 
+/**
+ * decodeChildRegistrationRequest
+ * Decodes a CHILD_REGISTRATION_REQUEST message and updates children and routing tables.
+ *
+ * @param msg - The message to decode.
+ * @return void
+ */
 void decodeChildRegistrationRequest(char * msg){
     int type;
     int childAPIP[4], childSTAIP[4];
@@ -117,6 +156,14 @@ void decodeChildRegistrationRequest(char * msg){
     }
 }
 
+/**
+ * decodeFullRoutingTableUpdate
+ * Decodes a FULL_ROUTING_TABLE_UPDATE message and updates the routing table.
+ *
+ * @param msg - The message to decode.
+ * @param senderIP - The IP address of the message sender.
+ * @return void
+ */
 void decodeFullRoutingTableUpdate(char * msg, int* senderIP){
     int type;
     int nodeIP[4], nextHopIP[4];
@@ -148,6 +195,14 @@ void decodeFullRoutingTableUpdate(char * msg, int* senderIP){
     }
 }
 
+/**
+ * decodePartialRoutingUpdate
+ * Decodes a PARTIAL_ROUTING_TABLE_UPDATE message and updates the routing table.
+ *
+ * @param msg - The message to decode.
+ * @param senderIP - The IP address of the message sender.
+ * @return void
+ */
 void decodePartialRoutingUpdate(char *msg, int* senderIP){
     int type;
     int nodeIP[4], nextHopIP[4];
@@ -169,6 +224,16 @@ void decodePartialRoutingUpdate(char *msg, int* senderIP){
 
 }
 
+/**
+ * decodeDataMessage
+ * Decodes a DATA_MESSAGE and determines the next hop for message forwarding.
+ *
+ * @param msg - The message to decode.
+ * @param nextHopIP - Output parameter for the next hop IP address.
+ * @param senderIP - Output parameter for the sender's IP address.
+ * @param destinyIP - Output parameter for the destination IP address.
+ * @return void
+ */
 void decodeDataMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP){
     int type;
     int *nextHopPtr = nullptr;
@@ -193,6 +258,17 @@ void decodeDataMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP)
     }
 
 }
+
+/**
+ * decodeAckMessage
+ * Decodes an ACK_MESSAGE and determines the next hop for message forwarding.
+ *
+ * @param msg - The message to decode.
+ * @param nextHopIP - Output parameter for the next hop IP address.
+ * @param senderIP - Output parameter for the sender's IP address.
+ * @param destinyIP - Output parameter for the destination IP address.
+ * @return void
+ */
 void decodeAckMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP){
     int type;
     int *nextHopPtr = nullptr;
@@ -218,6 +294,14 @@ void decodeAckMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP){
 
 }
 
+/**
+ * decodeParentReassignmentCommand
+ * Decodes a PARENT_REASSIGNMENT_COMMAND message.
+ *
+ * @param msg - The message to decode.
+ * @param newParentIP - Output parameter for the new parent IP address.
+ * @return void
+ */
 void decodeParentReassignmentCommand(char *msg, int *newParentIP){
     int type;
 
@@ -228,7 +312,13 @@ void decodeParentReassignmentCommand(char *msg, int *newParentIP){
     }
 }
 
-
+/**
+ * decodeParentListAdvertisement
+ * Decodes a PARENT_LIST_ADVERTISEMENT message.
+ *
+ * @param msg - The message to decode.
+ * @return void
+ */
 void decodeParentListAdvertisement(char *msg){
     int type;
 
@@ -236,5 +326,26 @@ void decodeParentListAdvertisement(char *msg){
 
     if (type == PARENT_LIST_ADVERTISEMENT){
         //ToDo Callback to choose the node new parent
+    }
+}
+
+void decodeDebugMessage(char* msg, int* nextHopIP){
+    int type;
+    int senderIP[4], destinyIP[4];
+    int *nextHopPtr = nullptr;
+
+    sscanf(msg, "%d ", &type);
+
+    if (type == DEBUG_MESSAGE){
+        sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d",&type, &senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
+               &destinyIP[0],&destinyIP[1],&destinyIP[2],&destinyIP[3]);
+
+        nextHopPtr = findRouteToNode(destinyIP);
+        if (nextHopPtr != nullptr){
+            assignIP(nextHopIP, nextHopPtr);
+        }else{
+            LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
+                                "Unable to forward message.\n", destinyIP[0], destinyIP[1],destinyIP[2], destinyIP[3]);
+        }
     }
 }

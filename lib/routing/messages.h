@@ -24,10 +24,11 @@ typedef enum messageType{
     CHILD_REGISTRATION_REQUEST, //2
     FULL_ROUTING_TABLE_UPDATE, //3
     PARTIAL_ROUTING_TABLE_UPDATE, //4
-    DATA_MESSAGE,//5 por enquanto
-    ACK_MESSAGE,//6
-    PARENT_LIST_ADVERTISEMENT,//7
-    PARENT_REASSIGNMENT_COMMAND, //8
+    PARENT_LIST_ADVERTISEMENT,//5
+    PARENT_REASSIGNMENT_COMMAND, //6
+    DEBUG_MESSAGE,//7
+    DATA_MESSAGE,//8
+    ACK_MESSAGE,//9
 }messageType;
 
 
@@ -38,6 +39,6 @@ void decodeFullRoutingTableUpdate(char *msg, int* senderIP);
 void decodePartialRoutingUpdate(char *msg, int* senderIP);
 void decodeDataMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP);
 void decodeAckMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP);
-
+void decodeDebugMessage(char* msg, int* nextHopIP);
 
 #endif //MESSAGES_H

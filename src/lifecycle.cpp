@@ -209,7 +209,7 @@ State handleMessages(Event event){
             encodeMessage(msg2,FULL_ROUTING_TABLE_UPDATE,params);
             LOG(MESSAGES,INFO,"%s to: %d.%d.%d.%d\n",msg2, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
             sendMessage(childSTAIP,msg2);
-            int IP[4];
+
 
             //Propagate the new node information trough the network
             assignIP(params.IP1,childAPIP);
@@ -231,6 +231,12 @@ State handleMessages(Event event){
             assignIP(vizParameters.IP1, childAPIP);
             assignIP(vizParameters.IP2, myIP);
             encodeVizMessage(msg,NEW_NODE,vizParameters);
+
+            sscanf(params.payload, "%s", msg);
+            assignIP(params.IP1, myIP);
+            assignIP(params.IP2, rootIP);
+
+            encodeMessage(msg, DEBUG_MESSAGE, params);
             sendMessage(rootIP,msg);
 
         case FULL_ROUTING_TABLE_UPDATE:
@@ -255,6 +261,14 @@ State handleMessages(Event event){
                 if(!isIPEqual((int*)childrenTable->table[i].key, senderIP)){
                     sendMessage((int*)childrenTable->table[i].key, msg2);
                 }
+            }
+
+        case DEBUG_MESSAGE:
+            decodeDebugMessage(messageBuffer,nextHopIP);
+
+            // If this message is not intended for this node, forward it to the next hop leading to its destination.
+            if(!isIPEqual(nextHopIP, myIP)){
+                sendMessage(nextHopIP,messageBuffer);
             }
 
         case DATA_MESSAGE:
