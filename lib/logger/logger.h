@@ -18,6 +18,7 @@ typedef enum LogModules {
     NETWORK, //0
     MESSAGES, //1
     STATE_MACHINE, //2
+    DEBUG_SERVER, //3
 }LogModules;
 
 typedef enum LogLevels{

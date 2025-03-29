@@ -108,7 +108,6 @@ State joinNetwork(Event event){
             params.IP1[0] = mySTAIP[0]; params.IP1[1] = mySTAIP[1]; params.IP1[2] = mySTAIP[2]; params.IP1[3] = mySTAIP[3];
             encodeMessage(msg, PARENT_DISCOVERY_REQUEST, params);
 
-            connectedGateway =  getGatewayIP();
             connectedParentIP[0] = getGatewayIP()[0];connectedParentIP[1] = getGatewayIP()[1];
             connectedParentIP[2] = getGatewayIP()[2];connectedParentIP[3] = getGatewayIP()[3];
             sendMessage(connectedParentIP, msg);
@@ -177,7 +176,7 @@ State idle(Event event){
 
 State handleMessages(Event event){
     LOG(STATE_MACHINE,INFO,"Entered handle Messages State\n");
-    char msg[50] = "", msg2[300] = "";
+    char msg[50] = "", msg2[300] = "", msg3[50] = "";
     int messageType, nextHopIP[4], sourceIP[4], destinyIP[4];
     messageParameters params;
     messageVizParameters vizParameters;
@@ -210,7 +209,6 @@ State handleMessages(Event event){
             LOG(MESSAGES,INFO,"%s to: %d.%d.%d.%d\n",msg2, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
             sendMessage(childSTAIP,msg2);
 
-
             //Propagate the new node information trough the network
             assignIP(params.IP1,childAPIP);
             assignIP(params.IP2,childAPIP);
@@ -232,12 +230,15 @@ State handleMessages(Event event){
             assignIP(vizParameters.IP2, myIP);
             encodeVizMessage(msg,NEW_NODE,vizParameters);
 
-            sscanf(params.payload, "%s", msg);
-            assignIP(params.IP1, myIP);
-            assignIP(params.IP2, rootIP);
+            sprintf(params.payload, "%s", msg);
+            strcpy(msg , "");
+            LOG(MESSAGES, DEBUG,"Payload: %s\n",params.payload);
 
             encodeMessage(msg, DEBUG_MESSAGE, params);
-            sendMessage(rootIP,msg);
+            LOG(MESSAGES, DEBUG,"Encode msg out: %s\n",msg);
+            //sprintf(msg, "8 %s", params.payload);
+            if(!iamRoot)sendMessage(rootIP,msg);
+            else LOG(DEBUG_SERVER,DEBUG,msg);
 
         case FULL_ROUTING_TABLE_UPDATE:
             LOG(MESSAGES,INFO,"Message Type Full Routing Update\n");
@@ -263,12 +264,23 @@ State handleMessages(Event event){
                 }
             }
 
-        case DEBUG_MESSAGE:
-            decodeDebugMessage(messageBuffer,nextHopIP);
+        case DEBUG_REGISTRATION_REQUEST:
+            if(iamRoot)decodeDebugRegistrationRequest(messageBuffer);
 
+        case DEBUG_MESSAGE:
+            //decodeDebugMessage(messageBuffer,nextHopIP);
             // If this message is not intended for this node, forward it to the next hop leading to its destination.
-            if(!isIPEqual(nextHopIP, myIP)){
+            if(!iamRoot){
+                int* nextHopPtr = findRouteToNode(rootIP);
+                if (nextHopPtr != nullptr){
+                    assignIP(nextHopIP, nextHopPtr);
+                }else{
+                    LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
+                                        "Unable to forward message.\n", destinyIP[0], destinyIP[1],destinyIP[2], destinyIP[3]);
+                }
                 sendMessage(nextHopIP,messageBuffer);
+            }else{//send message to debug server
+                sendMessage(debugServerIP, messageBuffer);
             }
 
         case DATA_MESSAGE:

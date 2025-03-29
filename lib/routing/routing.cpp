@@ -4,13 +4,14 @@
 #include <cstdio>
 
 
-bool iamRoot = false;
+bool iamRoot = true;
 int rootHopDistance = -1;
 int numberOfChildren = 0;
 bool hasParent = false;
 int parent[4];
 int myIP[4];
 int rootIP[4];
+int debugServerIP[4]={0,0,0,0};
 
 #undef TableMaxSize
 #define TableMaxSize 10

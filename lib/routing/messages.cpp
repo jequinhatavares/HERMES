@@ -82,18 +82,18 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
             break;
 
         case DEBUG_MESSAGE:
-            //7 [sourceIP] [Destination IP] [DEBUG message payload]
-            sprintf(msg,"%i %i.%i.%i.%i %i.%i.%i.%i %s",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
-                    parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3],parameters.payload);
+            //8 [DEBUG message payload]
+            sprintf(msg,"%i %s\n",type,parameters.payload);
+            break;
 
         case DATA_MESSAGE:
-            //8 [message payload] [source node IP] [destiny node IP]
+            //9 [message payload] [source node IP] [destiny node IP]
             sprintf(msg,"%i %s %i.%i.%i.%i %i.%i.%i.%i",type,parameters.payload,parameters.IP1[0],parameters.IP1[1],
                     parameters.IP1[2],parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
 
         case ACK_MESSAGE:
-            //9 [source node IP] [destiny node IP]
+            //10 [source node IP] [destiny node IP]
             sprintf(msg,"%i %i.%i.%i.%i %i.%i.%i.%i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],
                     parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
@@ -329,16 +329,22 @@ void decodeParentListAdvertisement(char *msg){
     }
 }
 
+void decodeDebugRegistrationRequest(char* msg){
+    int type;
+    sscanf(msg, "%d %d.%d.%d.%d",&type, &debugServerIP[0],&debugServerIP[1],&debugServerIP[2],&debugServerIP[3]);
+}
+
 void decodeDebugMessage(char* msg, int* nextHopIP){
     int type;
     int senderIP[4], destinyIP[4];
     int *nextHopPtr = nullptr;
+    char payload[50];
 
     sscanf(msg, "%d ", &type);
 
     if (type == DEBUG_MESSAGE){
-        sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d",&type, &senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
-               &destinyIP[0],&destinyIP[1],&destinyIP[2],&destinyIP[3]);
+        sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %s",&type, &senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
+               &destinyIP[0],&destinyIP[1],&destinyIP[2],&destinyIP[3], payload);
 
         nextHopPtr = findRouteToNode(destinyIP);
         if (nextHopPtr != nullptr){

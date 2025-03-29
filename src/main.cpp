@@ -35,6 +35,7 @@ void setup(){
     enableModule(STATE_MACHINE);
     enableModule(MESSAGES);
     enableModule(NETWORK);
+    enableModule(DEBUG_SERVER);
 
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
