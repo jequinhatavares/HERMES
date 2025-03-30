@@ -35,11 +35,13 @@ CircularBuffer* stateMachineEngine = &cb_;
 
 State initNode(Event event){
     uint8_t MAC[6];
-    char ssid[256]; // Make sure this buffer is large enough to hold the entire SSID
+    char ssid[256], msg[40]; // Make sure this buffer is large enough to hold the entire SSID
     strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
     strcat(ssid, getMyMAC().c_str());
     routingTableEntry me;
     int invalidIP[4] = {-1,-1,-1,-1};
+    messageVizParameters vizParameters;
+    messageParameters params;
 
     LOG(STATE_MACHINE,INFO,"Entered Init State\n");
     parseMAC(getMyMAC().c_str(), MAC);
@@ -59,6 +61,7 @@ State initNode(Event event){
     me.hopDistance = 0;
     updateRoutingTable(myIP,me,invalidIP);
 
+
     if (!iamRoot){
         insertFirst(stateMachineEngine, eSuccess);
         return sSearch;
@@ -66,6 +69,20 @@ State initNode(Event event){
         rootHopDistance = 0;
         assignIP(parent, invalidIP);
         assignIP(rootIP,myIP);
+
+        //If the visualization program is active, pass the new node information to it
+        //assignIP(vizParameters.IP1, myIP);
+        //assignIP(vizParameters.IP2, invalidIP);
+        //encodeVizMessage(msg,NEW_NODE,vizParameters);
+//
+        //sprintf(params.payload, "%s", msg);
+        //strcpy(msg , "");
+//
+        //encodeMessage(msg, DEBUG_MESSAGE, params);
+        ////sprintf(msg, "8 %s", params.payload);
+        //LOG(DEBUG_SERVER,DEBUG,msg);
+        //"8 0 %i.%i.%i.%i -1.-1.-1.-1", myIP[0], myIP[1], myIP[2], myIP[3]
+
         return sIdle;
     };
 }
