@@ -4,6 +4,9 @@
 #include "table.h"
 #include "routing.h"
 #include "logger.h"
+#include "transport_hal.h"
+#include "../include/lifecycle.h"
+#include "net_viz.h"
 
 typedef struct messageParameters{
     int IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};
@@ -34,13 +37,15 @@ typedef enum messageType{
 
 
 void encodeMessage(char* msg, messageType type, messageParameters parameters);
+void handleParentDiscoveryRequest(char* msg);
 void handleParentInfoResponse(char* msg, parentInfo *parents, int i);
 void handleChildRegistrationRequest(char * msg);
-void handleFullRoutingTableUpdate(char *msg, int* senderIP);
-void handlePartialRoutingUpdate(char *msg, int* senderIP);
-void handleDataMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP);
-void handleAckMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP);
+void handleFullRoutingTableUpdate(char *msg);
+void handlePartialRoutingUpdate(char *msg);
+void handleDebugMessage(char* msg);
+void handleDataMessage(char *msg);
+void handleAckMessage(char *msg);
 void handleDebugRegistrationRequest(char* msg);
-void handleDebugMessage(char* msg, int* nextHopIP);
+void handleDebugMessage2(char* msg, int* nextHopIP);
 
 #endif //MESSAGES_H

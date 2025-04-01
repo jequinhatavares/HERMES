@@ -204,58 +204,13 @@ State handleMessages(Event event){
 
     switch (messageType) {
         case PARENT_DISCOVERY_REQUEST:
-            sscanf(messageBuffer, "%d %i.%i.%i.%i", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
-
-            params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
-            params.childrenNumber = numberOfChildren;
-            params.hopDistance = rootHopDistance;
-
-            encodeMessage(msg,PARENT_INFO_RESPONSE,params);
-            sendMessage(childIP,msg);
+            handleParentDiscoveryRequest(messageBuffer);
             break;
 
         case CHILD_REGISTRATION_REQUEST:
             LOG(MESSAGES,INFO,"Message Type Child Registration Request\n");
             handleChildRegistrationRequest(messageBuffer);
-            sscanf(messageBuffer, "%d %d.%d.%d.%d %d.%d.%d.%d", &messageType,&childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
 
-            //Send my routing table to my child
-            params.routingTable = routingTable;
-            LOG(MESSAGES,INFO,"Sending my routing Table to child:");
-            encodeMessage(msg2,FULL_ROUTING_TABLE_UPDATE,params);
-            LOG(MESSAGES,INFO,"%s to: %d.%d.%d.%d\n",msg2, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
-            sendMessage(childSTAIP,msg2);
-
-            //Propagate the new node information trough the network
-            assignIP(params.IP1,childAPIP);
-            assignIP(params.IP2,childAPIP);
-            params.hopDistance = 1;
-            encodeMessage(msg2, PARTIAL_ROUTING_TABLE_UPDATE, params);
-            // If the message didn't come from the parent, forward it to the parent
-            if(!isIPEqual(senderIP, parent)){
-                sendMessage(parent, msg2);
-            }
-            //Forward the message to all children except the one that sent it to me
-            for(int i = 0; i< childrenTable->numberOfItems; i++){
-                if(!isIPEqual((int*)childrenTable->table[i].key, senderIP)){
-                    sendMessage((int*)childrenTable->table[i].key, msg2);
-                }
-            }
-
-            //If the visualization program is active, pass the new node information to it
-            assignIP(vizParameters.IP1, childAPIP);
-            assignIP(vizParameters.IP2, myIP);
-            encodeVizMessage(msg,NEW_NODE,vizParameters);
-
-            sprintf(params.payload, "%s", msg);
-            strcpy(msg , "");
-            LOG(MESSAGES, DEBUG,"Payload: %s\n",params.payload);
-
-            encodeMessage(msg, DEBUG_MESSAGE, params);
-            LOG(MESSAGES, DEBUG,"Encode msg out: %s\n",msg);
-            //sprintf(msg, "8 %s", params.payload);
-            if(!iamRoot)sendMessage(rootIP,msg);
-            else LOG(DEBUG_SERVER,DEBUG,msg);
 
         case FULL_ROUTING_TABLE_UPDATE:
             LOG(MESSAGES,INFO,"Message Type Full Routing Update\n");
@@ -264,75 +219,22 @@ State handleMessages(Event event){
         case PARTIAL_ROUTING_TABLE_UPDATE:
             LOG(MESSAGES,INFO,"Message Type Partial Routing Table Update\n");
             handlePartialRoutingUpdate(messageBuffer, senderIP);
-
-            //Propagate the new node information trough the network
-            assignIP(params.IP1,childAPIP);
-            assignIP(params.IP2,childAPIP);
-            params.hopDistance = 1;
-            encodeMessage(msg2, PARTIAL_ROUTING_TABLE_UPDATE, params);
-            // If the message didn't come from the parent, forward it to the parent
-            if(!isIPEqual(senderIP, parent)){
-                sendMessage(parent, msg2);
-            }
-            //Forward the message to all children except the one that sent it to me
-            for(int i = 0; i< childrenTable->numberOfItems; i++){
-                if(!isIPEqual((int*)childrenTable->table[i].key, senderIP)){
-                    sendMessage((int*)childrenTable->table[i].key, msg2);
-                }
-            }
+            break;
 
         case DEBUG_REGISTRATION_REQUEST:
             if(iamRoot)handleDebugRegistrationRequest(messageBuffer);
 
         case DEBUG_MESSAGE:
-            //handleDebugMessage(messageBuffer,nextHopIP);
-            // If this message is not intended for this node, forward it to the next hop leading to its destination.
-            if(!iamRoot){
-                int* nextHopPtr = findRouteToNode(rootIP);
-                if (nextHopPtr != nullptr){
-                    assignIP(nextHopIP, nextHopPtr);
-                }else{
-                    LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
-                                        "Unable to forward message.\n", destinyIP[0], destinyIP[1],destinyIP[2], destinyIP[3]);
-                }
-                sendMessage(nextHopIP,messageBuffer);
-            }else{//send message to debug server
-                sendMessage(debugServerIP, messageBuffer);
-            }
+            handleDebugMessage(messageBuffer);
+
 
         case DATA_MESSAGE:
             LOG(MESSAGES,INFO,"Data Message\n");
             handleDataMessage(messageBuffer, nextHopIP, sourceIP, destinyIP);
 
-            // If this message is not intended for this node, forward it to the next hop leading to its destination.
-            if(!isIPEqual(nextHopIP, myIP)){
-                sendMessage(nextHopIP,messageBuffer);
-            }else{// If the message is for this node, process it and send an ACK back to the source
-
-                //TODO process the message
-
-                //Send ACK Message back to the source of the message
-                assignIP(params.IP1,sourceIP);
-                assignIP(params.IP2,destinyIP);
-                encodeMessage(msg, ACK_MESSAGE, params);
-
-                int* nextHopPtr = findRouteToNode(sourceIP);
-                if (nextHopPtr != nullptr){
-                    sendMessage(nextHopPtr,msg);
-                }else{
-                    LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
-                                        "Unable to forward message.\n", sourceIP[0], sourceIP[1],sourceIP[2], sourceIP[3]);
-                }
-            }
-
         case ACK_MESSAGE:
             LOG(MESSAGES,INFO,"ACK Message\n");
             handleAckMessage(messageBuffer, nextHopIP, sourceIP, destinyIP);
-            if(!isIPEqual(nextHopIP, myIP)){
-                sendMessage(nextHopIP,messageBuffer);
-            }else{
-                //TODO process the ACK
-            }
     }
 
     return sIdle;
