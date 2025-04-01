@@ -5,7 +5,7 @@
 #include "routing.h"
 #include "logger.h"
 #include "transport_hal.h"
-#include "../include/lifecycle.h"
+#include "lifecycle.h"
 #include "net_viz.h"
 
 typedef struct messageParameters{

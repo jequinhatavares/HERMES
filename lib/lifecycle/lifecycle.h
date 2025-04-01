@@ -1,7 +1,6 @@
 #ifndef LIFECYCLE_H
 #define LIFECYCLE_H
 
-#include "globals.h"
 #include <transport_hal.h>
 #include <wifi_hal.h>
 #include <messages.h>
