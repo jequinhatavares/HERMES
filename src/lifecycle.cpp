@@ -137,7 +137,7 @@ State joinNetwork(Event event){
             if (packetSize > 0){
                 receiveMessage(buffer, senderIP);
                 LOG(MESSAGES,INFO,"Parent Response: %s\n", buffer);
-                decodeParentInfoResponse(buffer, possibleParents, i);
+                handleParentInfoResponse(buffer, possibleParents, i);
                 possibleParents[i].ssid = ssidList.item[i];
                 LOG(NETWORK,INFO,"possibleParents Info- nrChildren: %i rootHopDistance: %i IP: %i.%i.%i.%i\n", possibleParents[i].nrOfChildren, possibleParents[i].rootHopDistance,possibleParents[i].parentIP[0], possibleParents[i].parentIP[1], possibleParents[i].parentIP[2], possibleParents[i].parentIP[3]);
             }
@@ -172,7 +172,7 @@ State joinNetwork(Event event){
         if (packetSize > 0){
             receiveMessage(buffer, senderIP);
             LOG(MESSAGES,INFO,"Parent Response: %s\n", buffer);
-            decodeFullRoutingTableUpdate(buffer, senderIP);
+            handleFullRoutingTableUpdate(buffer, senderIP);
             LOG(NETWORK,INFO,"Routing Table Updated:\n");
             tablePrint(routingTable,printRoutingStruct);
         }
@@ -216,7 +216,7 @@ State handleMessages(Event event){
 
         case CHILD_REGISTRATION_REQUEST:
             LOG(MESSAGES,INFO,"Message Type Child Registration Request\n");
-            decodeChildRegistrationRequest(messageBuffer);
+            handleChildRegistrationRequest(messageBuffer);
             sscanf(messageBuffer, "%d %d.%d.%d.%d %d.%d.%d.%d", &messageType,&childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
 
             //Send my routing table to my child
@@ -259,11 +259,11 @@ State handleMessages(Event event){
 
         case FULL_ROUTING_TABLE_UPDATE:
             LOG(MESSAGES,INFO,"Message Type Full Routing Update\n");
-            decodeFullRoutingTableUpdate(messageBuffer, senderIP);
+            handleFullRoutingTableUpdate(messageBuffer, senderIP);
 
         case PARTIAL_ROUTING_TABLE_UPDATE:
             LOG(MESSAGES,INFO,"Message Type Partial Routing Table Update\n");
-            decodePartialRoutingUpdate(messageBuffer, senderIP);
+            handlePartialRoutingUpdate(messageBuffer, senderIP);
 
             //Propagate the new node information trough the network
             assignIP(params.IP1,childAPIP);
@@ -282,10 +282,10 @@ State handleMessages(Event event){
             }
 
         case DEBUG_REGISTRATION_REQUEST:
-            if(iamRoot)decodeDebugRegistrationRequest(messageBuffer);
+            if(iamRoot)handleDebugRegistrationRequest(messageBuffer);
 
         case DEBUG_MESSAGE:
-            //decodeDebugMessage(messageBuffer,nextHopIP);
+            //handleDebugMessage(messageBuffer,nextHopIP);
             // If this message is not intended for this node, forward it to the next hop leading to its destination.
             if(!iamRoot){
                 int* nextHopPtr = findRouteToNode(rootIP);
@@ -302,7 +302,7 @@ State handleMessages(Event event){
 
         case DATA_MESSAGE:
             LOG(MESSAGES,INFO,"Data Message\n");
-            decodeDataMessage(messageBuffer, nextHopIP, sourceIP, destinyIP);
+            handleDataMessage(messageBuffer, nextHopIP, sourceIP, destinyIP);
 
             // If this message is not intended for this node, forward it to the next hop leading to its destination.
             if(!isIPEqual(nextHopIP, myIP)){
@@ -327,7 +327,7 @@ State handleMessages(Event event){
 
         case ACK_MESSAGE:
             LOG(MESSAGES,INFO,"ACK Message\n");
-            decodeAckMessage(messageBuffer, nextHopIP, sourceIP, destinyIP);
+            handleAckMessage(messageBuffer, nextHopIP, sourceIP, destinyIP);
             if(!isIPEqual(nextHopIP, myIP)){
                 sendMessage(nextHopIP,messageBuffer);
             }else{

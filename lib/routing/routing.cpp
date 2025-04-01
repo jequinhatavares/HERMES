@@ -11,7 +11,7 @@ bool hasParent = false;
 int parent[4];
 int myIP[4];
 int rootIP[4];
-int debugServerIP[4]={0,0,0,0};
+//int debugServerIP[4]={0,0,0,0};
 
 #undef TableMaxSize
 #define TableMaxSize 10

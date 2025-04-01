@@ -34,13 +34,13 @@ typedef enum messageType{
 
 
 void encodeMessage(char* msg, messageType type, messageParameters parameters);
-void decodeParentInfoResponse(char* msg, parentInfo *parents, int i);
-void decodeChildRegistrationRequest(char * msg);
-void decodeFullRoutingTableUpdate(char *msg, int* senderIP);
-void decodePartialRoutingUpdate(char *msg, int* senderIP);
-void decodeDataMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP);
-void decodeAckMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP);
-void decodeDebugRegistrationRequest(char* msg);
-void decodeDebugMessage(char* msg, int* nextHopIP);
+void handleParentInfoResponse(char* msg, parentInfo *parents, int i);
+void handleChildRegistrationRequest(char * msg);
+void handleFullRoutingTableUpdate(char *msg, int* senderIP);
+void handlePartialRoutingUpdate(char *msg, int* senderIP);
+void handleDataMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP);
+void handleAckMessage(char *msg, int* nextHopIP, int* senderIP, int* destinyIP);
+void handleDebugRegistrationRequest(char* msg);
+void handleDebugMessage(char* msg, int* nextHopIP);
 
 #endif //MESSAGES_H
