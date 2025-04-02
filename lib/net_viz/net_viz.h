@@ -2,7 +2,9 @@
 #define NET_VIZ_H
 
 #include <cstdio>
+#include <messages.h>
 
+#define VISUALIZATION_ON
 
 typedef enum messageVizType{
     NEW_NODE, //0
@@ -15,5 +17,8 @@ typedef struct messageVizParameters{
 }messageVizParameters;
 
 void encodeVizMessage(char* msg, messageVizType type, messageVizParameters parameters);
+
+void reportNewNodeToViz(int* nodeIP, int* parentIP);
+
 
 #endif //NET_VIZ_H

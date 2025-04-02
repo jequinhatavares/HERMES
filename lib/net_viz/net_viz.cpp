@@ -14,3 +14,22 @@ void encodeVizMessage(char* msg, messageVizType type, messageVizParameters param
             break;
     }
 }
+
+void reportNewNodeToViz(int* nodeIP, int* parentIP){
+#ifdef VISUALIZATION_ON
+    char msg[50];
+    messageParameters parameters;
+    messageVizParameters vizParameters;
+    //If the visualization program is active, pass the new node information to it
+    assignIP(vizParameters.IP1, nodeIP);
+    assignIP(vizParameters.IP2, parentIP);
+    encodeVizMessage(msg,NEW_NODE,vizParameters);
+
+    sprintf(parameters.payload, "%s", msg);
+    strcpy(msg , "");
+    encodeMessage(msg, DEBUG_MESSAGE, parameters);
+
+    if(!iamRoot)sendMessage(rootIP,msg);
+    else LOG(DEBUG_SERVER,DEBUG,msg);
+#endif
+}

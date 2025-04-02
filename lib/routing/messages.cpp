@@ -156,11 +156,9 @@ void handleParentInfoResponse(char* msg, parentInfo *parents, int i){
 void handleChildRegistrationRequest(char * msg){
     int type;
     int childAPIP[4], childSTAIP[4];
-    char messageBuffer1[50] = "", messageBufferLarge[300] = "", messageBuffer2[50] = "";
+    char messageBuffer1[50] = "", messageBufferLarge[300] = "";
     routingTableEntry newNode;
     messageParameters parameters;
-    messageVizParameters vizParameters;
-
 
     sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],
            &childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3] );
@@ -177,8 +175,6 @@ void handleChildRegistrationRequest(char * msg){
     newNode.hopDistance = 1;
     updateRoutingTable(childAPIP, newNode, childAPIP);
 
-    //sscanf(messageBuffer, "%d %d.%d.%d.%d %d.%d.%d.%d", &messageType,&childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
-
     //Send my routing table to my child
     parameters.routingTable = routingTable;
     LOG(MESSAGES,INFO,"Sending my routing Table to child:");
@@ -191,30 +187,11 @@ void handleChildRegistrationRequest(char * msg){
     assignIP(parameters.IP2,childAPIP);
     parameters.hopDistance = 1;
     encodeMessage(messageBuffer1, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
+    propagateMessage(messageBuffer1, senderIP);
 
-    //TODO put in separate function
-    // If the message didn't come from the parent, forward it to the parent
-    if(!isIPEqual(senderIP, parent)){
-        sendMessage(parent, messageBuffer1);
-    }
-    //Forward the message to all children except the one that sent it to me
-    for(int i = 0; i< childrenTable->numberOfItems; i++){
-        if(!isIPEqual((int*)childrenTable->table[i].key, senderIP)){
-            sendMessage((int*)childrenTable->table[i].key, messageBuffer1);
-        }
-    }
+    //Sending new node information to the DEBUG visualization program, if enabled
+    reportNewNodeToViz(childAPIP, myIP);
 
-    //If the visualization program is active, pass the new node information to it
-    assignIP(vizParameters.IP1, childAPIP);
-    assignIP(vizParameters.IP2, myIP);
-    encodeVizMessage(msg,NEW_NODE,vizParameters);
-
-    sprintf(parameters.payload, "%s", msg);
-    strcpy(msg , "");
-    encodeMessage(msg, DEBUG_MESSAGE, parameters);
-
-    if(!iamRoot)sendMessage(rootIP,msg);
-    else LOG(DEBUG_SERVER,DEBUG,msg);
 }
 
 /**
@@ -457,6 +434,20 @@ void handleDebugMessage2(char* msg, int* nextHopIP){
     }else{
         LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
                             "Unable to forward message.\n", destinyIP[0], destinyIP[1],destinyIP[2], destinyIP[3]);
+    }
+
+}
+
+void propagateMessage(char* message, int* sourceIP){
+    // If the message didn't come from the parent, forward it to the parent
+    if(!isIPEqual(sourceIP, parent)){
+        sendMessage(parent, message);
+    }
+    //Forward the message to all children except the one that sent it to me
+    for(int i = 0; i< childrenTable->numberOfItems; i++){
+        if(!isIPEqual((int*)childrenTable->table[i].key, sourceIP)){
+            sendMessage((int*)childrenTable->table[i].key, message);
+        }
     }
 
 }

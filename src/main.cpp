@@ -30,7 +30,7 @@ bool isFirstMessage = true;
 void setup(){
     Serial.begin(115200);
 
-    Serial.setTimeout(10000);
+    //Serial.setTimeout(10000);
 
     enableModule(STATE_MACHINE);
     enableModule(MESSAGES);

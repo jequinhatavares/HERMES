@@ -39,6 +39,7 @@ extern char messageBuffer[256];
 extern int senderIP[4];
 
 void encodeMessage(char* msg, messageType type, messageParameters parameters);
+
 void handleParentDiscoveryRequest(char* msg);
 void handleParentInfoResponse(char* msg, parentInfo *parents, int i);
 void handleChildRegistrationRequest(char * msg);
@@ -49,5 +50,7 @@ void handleDataMessage(char *msg);
 void handleAckMessage(char *msg);
 void handleDebugRegistrationRequest(char* msg);
 void handleDebugMessage2(char* msg, int* nextHopIP);
+
+void propagateMessage(char* message, int* sourceIP);
 
 #endif //MESSAGES_H
