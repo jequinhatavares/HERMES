@@ -258,22 +258,20 @@ void handlePartialRoutingUpdate(char *msg){
 
     updateRoutingTable(nodeIP,newNode, senderIP);
 
-    //TODO propagate the routing table update correctly in the network
-    //Propagate the new node information trough the network
-    //assignIP(parameters.IP1,childAPIP);
-    //assignIP(parameters.IP2,childAPIP);
-    //parameters.hopDistance = 1;
-    //encodeMessage(messageBuffer1, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
-    //// If the message didn't come from the parent, forward it to the parent
-    //if(!isIPEqual(senderIP, parent)){
-    //    sendMessage(parent, messageBuffer1);
-    //}
-    ////Forward the message to all children except the one that sent it to me
-    //for(int i = 0; i< childrenTable->numberOfItems; i++){
-    //    if(!isIPEqual((int*)childrenTable->table[i].key, senderIP)){
-    //        sendMessage((int*)childrenTable->table[i].key, messageBuffer1);
-    //    }
-    //}
+    // Propagate the routing table update to the network
+    routingTableEntry*nodeEntry = (routingTableEntry*) findNode(routingTable,nodeIP);
+    if(nodeEntry != nullptr){
+        //Propagate the routing table update information trough the network
+        assignIP(parameters.IP1,nodeIP);
+        assignIP(parameters.IP2,nodeEntry->nextHopIP);
+        parameters.hopDistance = nodeEntry->hopDistance;
+        encodeMessage(messageBuffer1, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
+        propagateMessage(messageBuffer1, senderIP);
+    }else{
+        LOG(NETWORK,ERROR, "❌ Routing Table Update Failed: The node in the routing update was not"
+                           " properly added to the routing table. The table lookup returned a null pointer.");
+    }
+
 }
 void handleDebugMessage(char* msg){
     int nextHopIP[4], destinyIP[4];
