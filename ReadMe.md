@@ -40,10 +40,14 @@ For debugging, development, and monitoring purposes, a Command Line Interface (C
 To enter the CLI, simply press "Enter" in the serial monitor of the node you wish to monitor. 
 Upon entering, a menu will be displayed with various options, such as visualizing the node’s routing and children tables or sending messages to other nodes within the network.
 
-<span style="color: blue;">Note</span>: When in CLI mode, the node becomes "locked" in this mode and will not respond to or receive any network messages.
+**Note**: When in CLI mode, the node becomes "locked" in this mode and will not respond to or receive any network messages.
 
 **Tip**: In PlatformIO, to view the words you type in the serial monitor, press `[CTRL] + [T]` followed by `[CTRL] + [E]`.
 
 
 ## Visualization Program
-Explain the purpose of the visualization program, how it connects to the root node, and how it displays network connections and metrics.
+A network visualization program was implemented in Python to provide real-time monitoring of the network topology. 
+The program communicates with the root node via the serial monitor, reading and writing data to exchange information.
+
+When the visualization program is active, nodes report all network changes to the root, including new nodes joining, nodes leaving, and parent changes. 
+The root then relays this information to the visualization program, allowing for a dynamic, real-time representation of the network structure.
