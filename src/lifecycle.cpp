@@ -172,7 +172,7 @@ State joinNetwork(Event event){
         if (packetSize > 0){
             receiveMessage(buffer, senderIP);
             LOG(MESSAGES,INFO,"Parent Response: %s\n", buffer);
-            handleFullRoutingTableUpdate(buffer, senderIP);
+            handleFullRoutingTableUpdate(buffer);
             LOG(NETWORK,INFO,"Routing Table Updated:\n");
             tablePrint(routingTable,printRoutingStruct);
         }
@@ -214,11 +214,11 @@ State handleMessages(Event event){
 
         case FULL_ROUTING_TABLE_UPDATE:
             LOG(MESSAGES,INFO,"Message Type Full Routing Update\n");
-            handleFullRoutingTableUpdate(messageBuffer, senderIP);
+            handleFullRoutingTableUpdate(messageBuffer);
 
         case PARTIAL_ROUTING_TABLE_UPDATE:
             LOG(MESSAGES,INFO,"Message Type Partial Routing Table Update\n");
-            handlePartialRoutingUpdate(messageBuffer, senderIP);
+            handlePartialRoutingUpdate(messageBuffer);
             break;
 
         case DEBUG_REGISTRATION_REQUEST:
@@ -230,11 +230,11 @@ State handleMessages(Event event){
 
         case DATA_MESSAGE:
             LOG(MESSAGES,INFO,"Data Message\n");
-            handleDataMessage(messageBuffer, nextHopIP, sourceIP, destinyIP);
+            handleDataMessage(messageBuffer);
 
         case ACK_MESSAGE:
             LOG(MESSAGES,INFO,"ACK Message\n");
-            handleAckMessage(messageBuffer, nextHopIP, sourceIP, destinyIP);
+            handleAckMessage(messageBuffer);
     }
 
     return sIdle;
