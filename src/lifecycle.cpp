@@ -5,9 +5,6 @@ IPAddress gateway;
 IPAddress subnet;
 IPAddress dns;
 
-char messageBuffer[256] = "";
-int senderIP[4];
-
 
 StateMachine SM_ = {
         .current_state = sInit,

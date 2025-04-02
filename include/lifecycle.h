@@ -42,8 +42,7 @@ extern IPAddress gateway;
 extern IPAddress subnet;
 extern IPAddress dns;
 
-extern char messageBuffer[256];
-extern int senderIP[4];
+
 
 void parseMAC(const char* macStr, uint8_t* macArray);
 void setIPs(const uint8_t* MAC);

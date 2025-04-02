@@ -1,11 +1,11 @@
 #ifndef MESSAGES_H
 #define MESSAGES_H
 
-#include "../table/table.h"
+#include "table.h"
 #include "routing.h"
 #include "logger.h"
 #include "transport_hal.h"
-#include "lifecycle.h"
+//#include "lifecycle.h"
 #include "net_viz.h"
 
 typedef struct messageParameters{
@@ -35,6 +35,8 @@ typedef enum messageType{
     ACK_MESSAGE,//10
 }messageType;
 
+extern char messageBuffer[256];
+extern int senderIP[4];
 
 void encodeMessage(char* msg, messageType type, messageParameters parameters);
 void handleParentDiscoveryRequest(char* msg);

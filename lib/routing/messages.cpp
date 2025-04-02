@@ -5,6 +5,11 @@
 #include <cstdio>
 #include <cstring>
 
+
+char messageBuffer[256] = "";
+int senderIP[4];
+
+
 /**
  * encodeMessage
  * Encodes a message according to the specified message type and parameters.
@@ -307,7 +312,7 @@ void handleDebugMessage(char* msg){
         }
         sendMessage(nextHopIP,messageBuffer);
     }else{//send message to debug server
-        sendMessage(debugServerIP, messageBuffer);
+        //sendMessage(debugServerIP, messageBuffer);
     }
 
 }
@@ -434,7 +439,7 @@ void handleParentListAdvertisement(char *msg){
 
 void handleDebugRegistrationRequest(char* msg){
     int type;
-    sscanf(msg, "%d %d.%d.%d.%d",&type, &debugServerIP[0],&debugServerIP[1],&debugServerIP[2],&debugServerIP[3]);
+    //sscanf(msg, "%d %d.%d.%d.%d",&type, &debugServerIP[0],&debugServerIP[1],&debugServerIP[2],&debugServerIP[3]);
 }
 
 void handleDebugMessage2(char* msg, int* nextHopIP){

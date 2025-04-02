@@ -2,7 +2,7 @@
 #define ROUTING_H
 
 //#include "table.h"
-#include "../Table/table.h"
+#include "table.h"
 #include "logger.h"
 
 typedef struct routingTableEntry {
@@ -28,7 +28,7 @@ extern bool hasParent;
 
 extern int myIP[4];
 extern int rootIP[4];
-extern int debugServerIP[4];
+//extern int debugServerIP[4];
 
 bool isIPEqual(void* a, void* b);
 void assignIP(int destIP[4], int sourceIP[4]);

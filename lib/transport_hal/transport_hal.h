@@ -2,7 +2,7 @@
 #ifndef TRANSPORT_HAL_H
 #define TRANSPORT_HAL_H
 
-#define UDP_PORT 5000
+//#define UDP_PORT 5000
 
 #if defined(ESP32)
     #include "esp32/udp_esp32.h"
