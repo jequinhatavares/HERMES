@@ -3,6 +3,9 @@
 
 #include <cstdio>
 #include <messages.h>
+#include <transport_hal.h>
+#include <logger.h>
+
 
 #define VISUALIZATION_ON
 

@@ -2,8 +2,8 @@
 #define ROUTING_H
 
 //#include "table.h"
-#include "table.h"
-#include "logger.h"
+#include <../table/table.h>
+#include <logger.h>
 
 typedef struct routingTableEntry {
     int hopDistance;
