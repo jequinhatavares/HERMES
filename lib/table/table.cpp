@@ -25,6 +25,17 @@
 //    return &Table;
 //}
 
+/**
+ * tableInit
+ * This function initializes the table by assigning the keys and values pointers to the address of the global allocated
+ * entries of the table.
+ *
+ * @param T Pointer to the table structure to be initialized.
+ * @param keys Pointer to the array of keys.
+ * @param values Pointer to the array of values.
+ * @param key_size Size of each key in bytes.
+ * @param value_size Size of each value in bytes.
+ */
 void tableInit(TableInfo * T, void* keys, void* values, size_t key_size, size_t value_size){
     for (int i = 0; i < TableMaxSize; i++) {
         T->table[i].key = (char*)keys + (i * key_size);
