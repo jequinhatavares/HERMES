@@ -107,6 +107,13 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
     }
 }
 
+/**
+ * handleParentDiscoveryRequest
+ * Handles a PARENT_DISCOVERY_REQUEST message by decoding it and sending parent information.
+ *
+ * @param msg - The message containing the PDR.
+ * @return void
+ */
 void handleParentDiscoveryRequest(char* msg){
     int messageType;
     int childIP[4];
@@ -122,7 +129,7 @@ void handleParentDiscoveryRequest(char* msg){
     sendMessage(childIP,msg);
 }
 /**
- * decodeParentInfoResponse
+ * handleParentInfoResponse
  * Decodes a PARENT_INFO_RESPONSE message and stores the parent information.
  *
  * @param msg - The message to decode.
@@ -147,12 +154,14 @@ void handleParentInfoResponse(char* msg, parentInfo *parents, int i){
 }
 
 /**
- * decodeChildRegistrationRequest
- * Decodes a CHILD_REGISTRATION_REQUEST message and updates children and routing tables.
- *
- * @param msg - The message to decode.
- * @return void
- */
+* handleChildRegistrationRequest
+* Handles a CHILD_REGISTRATION_REQUEST message: decodes the message, updates the children and routing tables,
+ * sends the current routing information to the child, propagates the new node details throughout the network,
+ * and reports the newly registered node to the visualization server.
+*
+* @param msg - The message to decode.
+* @return void
+*/
 void handleChildRegistrationRequest(char * msg){
     int type;
     int childAPIP[4], childSTAIP[4];
@@ -194,14 +203,14 @@ void handleChildRegistrationRequest(char * msg){
 
 }
 
+
 /**
- * decodeFullRoutingTableUpdate
- * Decodes a FULL_ROUTING_TABLE_UPDATE message and updates the routing table.
- *
- * @param msg - The message to decode.
- * @param senderIP - The IP address of the message sender.
- * @return void
- */
+* handleFullRoutingTableUpdate
+* Handles a FULL_ROUTING_TABLE_UPDATE: decodes the message and updates the routing table.
+*
+* @param msg - The message to decode.
+* @return void
+*/
 void handleFullRoutingTableUpdate(char * msg){
     int type;
     int nodeIP[4], nextHopIP[4];
@@ -234,13 +243,13 @@ void handleFullRoutingTableUpdate(char * msg){
 }
 
 /**
- * decodePartialRoutingUpdate
- * Decodes a PARTIAL_ROUTING_TABLE_UPDATE message and updates the routing table.
- *
- * @param msg - The message to decode.
- * @param senderIP - The IP address of the message sender.
- * @return void
- */
+* handlePartialRoutingUpdate
+* Handles a PARTIAL_ROUTING_TABLE_UPDATE: decodes the message, updates the routing table and propagates the routing update
+* to other network nodes .
+*
+* @param msg - The message to decode.
+* @return void
+*/
 void handlePartialRoutingUpdate(char *msg){
     int type;
     int nodeIP[4], nextHopIP[4];
@@ -273,6 +282,14 @@ void handlePartialRoutingUpdate(char *msg){
     }
 
 }
+
+/**
+ * handleDebugMessage
+ * Handles a DEBUG_MESSAGE: decodes the message, forwards it to the appropriate next hop or debug server.
+ *
+ * @param msg - The message to decode.
+ * @return void
+ */
 void handleDebugMessage(char* msg){
     int nextHopIP[4], destinyIP[4];
 
@@ -291,16 +308,14 @@ void handleDebugMessage(char* msg){
     }
 
 }
+
 /**
- * decodeDataMessage
- * Decodes a DATA_MESSAGE and determines the next hop for message forwarding.
- *
- * @param msg - The message to decode.
- * @param nextHopIP - Output parameter for the next hop IP address.
- * @param senderIP - Output parameter for the sender's IP address.
- * @param destinyIP - Output parameter for the destination IP address.
- * @return void
- */
+* handleDataMessage
+* Handles a DATA_MESSAGE: decodes the message, determines the next hop for forwarding, or if it is the final node, processes the message and sends an ACK back to the source node.
+*
+* @param msg - The message to decode
+* @return void
+*/
 void handleDataMessage(char *msg){
     int type;
     int sourceIP[4], destinyIP[4], nextHopIP[4];
@@ -308,7 +323,6 @@ void handleDataMessage(char *msg){
     char payload[50];
     routingTableEntry newNode;
     messageParameters parameters;
-
 
     sscanf(msg, "%d %s %d.%d.%d.%d %d.%d.%d.%d",&type, payload, &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
         &destinyIP[0],&destinyIP[1],&destinyIP[2],&destinyIP[3]);
@@ -349,13 +363,11 @@ void handleDataMessage(char *msg){
 }
 
 /**
- * decodeAckMessage
- * Decodes an ACK_MESSAGE and determines the next hop for message forwarding.
+ * handleAckMessage
+ * Handles an ACK_MESSAGE: decodes the message, determines the next hop for message forwarding, or if it is the final
+ * node, processes the ACK.
  *
  * @param msg - The message to decode.
- * @param nextHopIP - Output parameter for the next hop IP address.
- * @param senderIP - Output parameter for the sender's IP address.
- * @param destinyIP - Output parameter for the destination IP address.
  * @return void
  */
 void handleAckMessage(char *msg){
@@ -385,12 +397,10 @@ void handleAckMessage(char *msg){
 }
 
 /**
- * decodeParentReassignmentCommand
- * Decodes a PARENT_REASSIGNMENT_COMMAND message.
+ * handleParentReassignmentCommand
+ * Handles a PARENT_REASSIGNMENT_COMMAND message: decodes the message, ....
  *
  * @param msg - The message to decode.
- * @param newParentIP - Output parameter for the new parent IP address.
- * @return void
  */
 void handleParentReassignmentCommand(char *msg, int *newParentIP){
 
@@ -399,8 +409,8 @@ void handleParentReassignmentCommand(char *msg, int *newParentIP){
 }
 
 /**
- * decodeParentListAdvertisement
- * Decodes a PARENT_LIST_ADVERTISEMENT message.
+ * handleParentListAdvertisement
+ * Handles a PARENT_LIST_ADVERTISEMENT: decodes the message, ...
  *
  * @param msg - The message to decode.
  * @return void
@@ -412,30 +422,27 @@ void handleParentListAdvertisement(char *msg){
 
 }
 
+/**
+ * handleDebugRegistrationRequest
+ * Handles a DEBUG_REGISTRATION_REQUEST: decodes the message, ...
+ *
+ * @param msg - The message to decode.
+ * @return void
+ */
 void handleDebugRegistrationRequest(char* msg){
     int type;
     //sscanf(msg, "%d %d.%d.%d.%d",&type, &debugServerIP[0],&debugServerIP[1],&debugServerIP[2],&debugServerIP[3]);
 }
 
-void handleDebugMessage2(char* msg, int* nextHopIP){
-    int type;
-    int senderIP[4], destinyIP[4];
-    int *nextHopPtr = nullptr;
-    char payload[50];
-
-    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %s",&type, &senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
-           &destinyIP[0],&destinyIP[1],&destinyIP[2],&destinyIP[3], payload);
-
-    nextHopPtr = findRouteToNode(destinyIP);
-    if (nextHopPtr != nullptr){
-        assignIP(nextHopIP, nextHopPtr);
-    }else{
-        LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
-                            "Unable to forward message.\n", destinyIP[0], destinyIP[1],destinyIP[2], destinyIP[3]);
-    }
-
-}
-
+/**
+ * propagateMessage
+ * Propagates the message to other nodes in the network, sending it to all connected nodes except the one that
+ * sent the message for propagation
+ *
+ * @param msg - The message to propagate.
+ * @param sourceIP - The IP address of the node that sent me the message.
+ * @return void
+ */
 void propagateMessage(char* message, int* sourceIP){
     // If the message didn't come from the parent, forward it to the parent
     if(!isIPEqual(sourceIP, parent)){
