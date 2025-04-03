@@ -67,9 +67,6 @@ For debugging, development, and monitoring purposes, a Command Line Interface (C
 To enter the CLI, simply press "Enter" in the serial monitor of the node you wish to monitor. 
 Upon entering, a menu will be displayed with various options, such as visualizing the node’s routing and children tables or sending messages to other nodes within the network.
 
-![Network Topology Example](cli.png)
-
-
 <p align="center">
     <img src="cli.png">
 
