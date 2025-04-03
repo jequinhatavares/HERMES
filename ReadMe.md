@@ -52,4 +52,6 @@ The program communicates with the root node via the serial monitor, reading and 
 When the visualization program is active, nodes report all network changes to the root, including new nodes joining, nodes leaving, and parent changes. 
 The root then relays this information to the visualization program, allowing for a dynamic, real-time representation of the network structure.
 
+![Network Topology Example](visualization_server_example.png)
+
 You can find the visualization program on GitHub: [Network Visualization Program](https://github.com/jequinhatavares/NetViz)
