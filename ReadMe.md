@@ -69,6 +69,11 @@ Upon entering, a menu will be displayed with various options, such as visualizin
 
 ![Network Topology Example](cli.png)
 
+
+<p align="center">
+    <img src="cli.png">
+
+
 **Note**: When in CLI mode, the node becomes "locked" in this mode and will not respond to or receive any network messages.
 
 **Tip**: In PlatformIO, to view the words you type in the serial monitor, press `[CTRL] + [T]` followed by `[CTRL] + [E]`.
