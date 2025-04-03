@@ -81,7 +81,7 @@ The root then relays this information to the visualization program, allowing for
 
 ![Network Topology Example](visualization_server_example.png)
 
-You can find the visualization program on GitHub: [Network Visualization Program](https://github.com/jequinhatavares/NetViz
+Visualization program GitHub: [Network Visualization Program](https://github.com/jequinhatavares/NetViz)
 
 ## Unit Testing
 
@@ -89,11 +89,11 @@ Several unit tests were developed to validate the libraries before testing the c
 
 - **`test_circular_buffer`** – Verifies the correct functionality of the circular buffer, including inserting, deleting, and handling priority elements in the queue.
 - **`test_lifecycle`** – Tests the parent selection function under various scenarios.
-- **`test_logger`** – Ensures the logger module operates correctly on the computer, testing the variable argument handling (similar to `printf`).
+- **`test_logger`** – Ensures the logger module operates correctly on the computer, testing the variable argument handling (similar to printf).
 - **`test_messages`** – Validates the encoding and decoding of different types of messages.
 - **`test_routing_table`** – Evaluates multiple functionalities of the routing table. It verifies IP comparison logic, ensures correct printing of the routing and children tables, and tests adding, removing, and updating node entries. The test also checks table cleanup, correct pathfinding to different nodes (child, parent, or other network nodes), and handling invalid nodes. Additionally, it validates the initialization of the routing table on a new node through full routing updates and ensures partial updates modify the table correctly.
 - **`test_state_machine`** – Ensures the state machine transitions correctly between states, considering the event queue.
-- **`test_table`** – Tests the table implementation with different structure types used as keys and values (e.g., `int[4]`, structs).
+- **`test_table`** – Tests the table implementation with different structure types used as keys and values (e.g., an IP address, structs).
 - **`test_table_prealloc`** – Tests the table implementation using preallocated variables (e.g., global variables), which is useful for embedded systems.
 
 These unit tests also serve as examples of how to use each implemented library.
