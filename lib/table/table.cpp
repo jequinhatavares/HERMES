@@ -1,7 +1,6 @@
 #include <cstdio>
 #include "table.h"
 
-
 //#include "Arduino.h"
 
 #define PREALLOCATE_TABLE
