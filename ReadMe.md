@@ -22,11 +22,26 @@ The communication technology used is Wi-Fi.
 
 ## Routing Protocol Documentation
 ### Routing Table
+Each node maintains a routing table that includes all nodes in the network (including itself), the next hop IP address to reach each node, 
+and the hop distance to that node. When a packet arrives at a node, it is forwarded to the next hop IP specified in the corresponding routing table entry.
+
+**Note**: All IPs in the routing tables are AP IPs
+
 ### Children Table
+Each node also maintains a table that maps the AP IP address of each of its child nodes to their corresponding STA IP address. 
+This is necessary because when the next hop for message forwarding is one of the node’s children, the STA IP must be used. 
+Since the child is connected as a station within the parent’s network, it receives messages through its STA interface.
+
 ### Messages
 ### Managing a Network
 #### Parent Node Selection Process
+When a new node joins the network, it selects its parent based on two main criteria. 
+First, it chooses the parent with the lowest hop count to the root node. 
+If multiple potential parents share the same hop count, the node then selects the one with the fewest children, promoting a more balanced and evenly distributed network structure. 
+
 #### Root Node
+The root node is chosen manually by the user.
+
 #### Parent Node Failure Handling Procedure 
 #### Child Node Disconnection Handling Procedure
 
@@ -73,7 +88,7 @@ To enter the CLI, simply press "Enter" in the serial monitor of the node you wis
 Upon entering, a menu will be displayed with various options, such as visualizing the node’s routing and children tables or sending messages to other nodes within the network.
 
 <p align="center">
-    <img src="cli.png">
+    <img src="cli.png" alt="">
 
 **Note**: When in CLI mode, the node becomes "locked" in this mode and will not respond to or receive any network messages.
 
