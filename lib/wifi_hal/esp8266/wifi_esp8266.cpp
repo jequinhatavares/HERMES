@@ -30,10 +30,9 @@ void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnect
  */
 void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisconnected& info) {
     Serial.println("[WIFI_EVENTS] Got station disconnected\n");
-
 }
 
-/**
+/**DDS
  * onStationModeGotIPHandler
  * Event handler called when the device running in Station (STA) mode successfully obtains an IP address.
  *

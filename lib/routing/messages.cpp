@@ -82,7 +82,7 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
             break;
 
         case PARENT_REASSIGNMENT_COMMAND:
-            //6 [parentIP]
+            //6 [nodeIP] [parentIP]
             sprintf(msg,"%i %i.%i.%i.%i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
             break;
 

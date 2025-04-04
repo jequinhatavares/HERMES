@@ -17,21 +17,21 @@ The communication technology used is Wi-Fi.
 8. [Unit Testing](#unit-testing)
 
 ## How to Run the Project
-Provide instructions on how to set up the environment, dependencies, and the steps to run the project.
 
 ## Code Structure
-Explain the general structure of the code, detailing the main modules and their roles in the project.
 
 ## Routing Protocol Documentation
-### Overview
-Provide an overview of the routing protocol, including how it operates within the network.
-### Key Components
-Detail the important components of the routing protocol and how they interact.
-### Workflow
-Describe the step-by-step workflow of the protocol, from initialization to route management.
+### Routing Table
+### Children Table
+### Messages
+### Managing a Network
+#### Parent Node Selection Process
+#### Root Node
+#### Parent Node Failure Handling Procedure 
+#### Child Node Disconnection Handling Procedure
 
 ## Node Lifecycle (State Machine)
-Explain the node lifecycle, detailing the states each node can be in and the transitions between them.
+
 
 ## Logging
 To facilitate debugging across different architectures (ESP devices, native environments, etc.), a unified logging module was developed. Since printing functions vary between architectures (e.g., `Serial.printf` for ESPs vs. `printf` for native platforms), this module abstracts logging to ensure consistency.
@@ -55,6 +55,11 @@ In addition to categories, logs are classified by severity levels:
 - **DEBUG** – Detailed logs for development and debugging (e.g., variable values).
 - **INFO** – General informative logs (e.g., network state, IP addresses, number of children).
 - **ERROR** – Critical errors that should not occur (e.g., invalid memory accesses).
+
+To set the current log level to debug, use the following line:
+```cpp
+currentLogLevel = DEBUG;
+```
 
 #### Example Usage
 To log an informational network event, use the `LOG`:
