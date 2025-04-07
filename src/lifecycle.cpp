@@ -31,6 +31,10 @@ static CircularBuffer cb_ = {
 
 CircularBuffer* stateMachineEngine = &cb_;
 
+void onParentDisconnect(){
+    LOG(NETWORK, DEBUG,"onParentDisconnect callback!\n");
+    insertLast(stateMachineEngine, eLostParentConnection);
+}
 
 State initNode(Event event){
     uint8_t MAC[6];
@@ -41,6 +45,9 @@ State initNode(Event event){
     int invalidIP[4] = {-1,-1,-1,-1};
     messageVizParameters vizParameters;
     messageParameters params;
+
+    // initialize callback
+    parentDisconnectCallback = onParentDisconnect;
 
     LOG(STATE_MACHINE,INFO,"Entered Init State\n");
     parseMAC(getMyMAC().c_str(), MAC);
@@ -236,6 +243,26 @@ State handleMessages(Event event){
 }
 
 State parentRecovery(Event event){
+    int* STAIP= nullptr;
+    char message[50];
+
+    //TODO tell my children that i lost connection to my parent
+    for (int i = 0; i < childrenTable->numberOfItems; ++i) {
+        STAIP = (int*) findNode(childrenTable, (int*) childrenTable->table[i].key);
+        if(STAIP != nullptr){
+            sendMessage(STAIP,message);
+        }
+        else{
+            LOG(NETWORK, ERROR, "❌ Valid entry in children table contains a pointer to null instead of the STA IP.\n");
+        }
+    }
+    //TODO try to contact with my parent
+
+    //TODO wait for my parent response
+
+    //
+
+
     return sIdle;
 }
 

@@ -85,7 +85,10 @@ void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& in
 
         // When repeated disconnections surpass the defined threshold queue an event to initiate parent recovery procedures
         if(parentDisconnectionCount >= disconnectionThreshold) {
-            //TODO Put lost parent event in queue
+            // Callback code, global func pointer defined in wifi_hal.h:22 and initialized in lifecycle.cpp:48
+            if (parentDisconnectCallback != nullptr){
+                parentDisconnectCallback();
+            }
         }
     }
     WiFi.reconnect();
@@ -158,7 +161,7 @@ void startWifiSTA(const IPAddress& localIP, const IPAddress& gateway, const IPAd
  *
  * @return void
  */
-void startWifiAP(const char* SSID, const char* PASS, const IPAddress& localIP, const IPAddress& gateway, const IPAddress& subnet){
+void startWifiAP(const char* SSID, const char* Pass, const IPAddress& localIP, const IPAddress& gateway, const IPAddress& subnet){
 
     // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
     //WiFi.config(localIP, gateway, subnet, gateway);

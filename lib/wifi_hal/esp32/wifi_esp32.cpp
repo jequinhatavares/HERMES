@@ -135,14 +135,14 @@ void startWifiSTA(const IPAddress& localIP, const IPAddress& gateway, const IPAd
  *
  * @return void
  */
-void startWifiAP(const char* SSID, const char* PASS, const IPAddress& localIP, const IPAddress& gateway, const IPAddress& subnet){
+void startWifiAP(const char* SSID, const char* Pass, const IPAddress& localIP, const IPAddress& gateway, const IPAddress& subnet){
 
     // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
     //WiFi.config(localIP, gateway, subnet, gateway);
     WiFi.mode(WIFI_AP);
     // Start the Access Point with the SSID defined in SSID_PREFIX
     WiFi.softAPConfig(localIP, gateway, subnet);
-    WiFi.softAP(SSID, PASS);
+    WiFi.softAP(SSID, Pass);
     Serial.print("My SoftAP IP:");
     Serial.print(WiFi.softAPIP());
 

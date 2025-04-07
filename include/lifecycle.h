@@ -12,7 +12,7 @@
 #include <cstring>
 
 #define SSID_PREFIX      		"JessicaNode"
-#define PASS      		        "123456789"
+#define PASS     		        "123456789"
 
 State initNode(Event event);
 State search(Event event);
@@ -30,7 +30,7 @@ State childRecovery(Event event);
 #define sHandleMessages ((State) 4)
 #define sParentRecovery ((State) 5)
 #define sChildRecovery ((State) 6)
-#define sError ((State) 10)
+#define sError ((State) 7)
 
 #define eSuccess ((Event) 0)
 #define eSearch ((Event) 1)

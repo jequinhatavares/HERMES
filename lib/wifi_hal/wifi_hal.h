@@ -3,6 +3,7 @@
 #define WIFI_H
 
 #include "logger.h"
+//#include "lifecycle.h"
 
 #define disconnectionThreshold 3
 
@@ -17,6 +18,8 @@ extern List ssidList;
 
 extern unsigned long lastDisconnectionTime;
 extern int parentDisconnectionCount;
+
+extern void (*parentDisconnectCallback)();
 
 extern int childDisconnectionCount;
 

@@ -27,6 +27,7 @@ typedef struct TableInfo{
     void (*setValue)(void* , void*);
 //#endif
 } TableInfo;
+
 //extern TableEntry Table[MaxSize];
 
 TableInfo* tableCreate(bool (*)(void*, void*));  // DEPRECATED
