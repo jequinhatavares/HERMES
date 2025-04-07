@@ -14,6 +14,8 @@ StateMachine SM_ = {
                 [sChooseParent] = joinNetwork,
                 [sIdle] = idle,
                 [sHandleMessages] = handleMessages,
+                [sParentRecovery] = parentRecovery,
+                [sChildRecovery] = childRecovery,
         },
 };
 
@@ -233,6 +235,13 @@ State handleMessages(Event event){
     return sIdle;
 }
 
+State parentRecovery(Event event){
+    return sIdle;
+}
+
+State childRecovery(Event event){
+    return sIdle;
+}
 
 /**
  * parseMAC

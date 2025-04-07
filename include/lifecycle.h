@@ -19,6 +19,8 @@ State search(Event event);
 State joinNetwork(Event event);
 State idle(Event event);
 State handleMessages(Event event);
+State parentRecovery(Event event);
+State childRecovery(Event event);
 
 //s before the name means state and e means event
 #define sInit ((State) 0)
@@ -26,13 +28,16 @@ State handleMessages(Event event);
 #define sChooseParent ((State) 2)
 #define sIdle ((State) 3)
 #define sHandleMessages ((State) 4)
-#define sOrphan ((State) 5)
-#define sError ((State) 6)
+#define sParentRecovery ((State) 5)
+#define sChildRecovery ((State) 6)
+#define sError ((State) 10)
 
 #define eSuccess ((Event) 0)
 #define eSearch ((Event) 1)
 #define eMessage ((Event) 2)
 #define eError ((Event) 3)
+#define eLostParentConnection ((Event) 4)
+#define eParentUnreachable ((Event) 5)
 
 extern StateMachine* SM;
 extern CircularBuffer* stateMachineEngine;

@@ -38,7 +38,7 @@ typedef unsigned char State;  /**< A given state of the State Machine */
 typedef unsigned char Event;  /**< A given event to be handled by the state machine */
 
 
-#define MAX_NUMBER_OF_STATES 5
+#define MAX_NUMBER_OF_STATES 10
 //#define NUMBER_OF_EVENTS 5
 
 // "The" State Machine
