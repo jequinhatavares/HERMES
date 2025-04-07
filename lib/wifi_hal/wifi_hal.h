@@ -2,6 +2,9 @@
 #ifndef WIFI_H
 #define WIFI_H
 
+#include "logger.h"
+
+#define disconnectionThreshold 3
 
 extern bool initializeAP;
 
@@ -11,6 +14,11 @@ typedef struct List {
 } List;
 
 extern List ssidList;
+
+extern unsigned long lastDisconnectionTime;
+extern int parentDisconnectionCount;
+
+extern int childDisconnectionCount;
 
 #if defined(ESP8266)
     #include "esp8266/wifi_esp8266.h"

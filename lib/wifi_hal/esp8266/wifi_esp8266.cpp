@@ -8,6 +8,9 @@ WiFiEventHandler wifiAPGotSta;
 
 List ssidList;
 
+unsigned long lastDisconnectionTime = 0 ;
+int parentDisconnectionCount = 0;
+
 /**
  * onSoftAPModeStationConnectedHandler
  * Event handler called when a station (client) successfully connects to the device running in Soft AP mode.
@@ -53,6 +56,7 @@ void onStationModeGotIPHandler(const WiFiEventStationModeGotIP& info) {
  */
 void onStationModeConnectedHandler(const WiFiEventStationModeConnected& info) {
     Serial.println("[WIFI_EVENTS] Connected to AP\n");
+    parentDisconnectionCount = 0; // Reset the parent disconnection Counter
 }
 
 /**
@@ -66,7 +70,26 @@ void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& in
     Serial.println("[WIFI_EVENTS] Disconnected From AP\n");
     Serial.print("[WIFI_EVENTS] WiFi lost connection. Reason: ");
     Serial.println(info.reason);
+
+    unsigned long currentTime = millis();
+
+    // On first disconnection, initialize the timer to the current time.
+    // This prevents missing future disconnections after a long inactive period.
+    if (parentDisconnectionCount == 0) lastDisconnectionTime = currentTime;
+
+    // Check if the interval since the last disconnection is short enough
+    // to avoid incrementing the counter for isolated or sporadic events.
+    if(currentTime - lastDisconnectionTime <=3000){
+        parentDisconnectionCount++;
+        LOG(NETWORK,DEBUG,"Incremented the parentDisconnectionCount\n");
+
+        // When repeated disconnections surpass the defined threshold queue an event to initiate parent recovery procedures
+        if(parentDisconnectionCount >= disconnectionThreshold) {
+            //TODO Put lost parent event in queue
+        }
+    }
     WiFi.reconnect();
+
     // Attempt Re-Connection
     //WiFi.begin(SSID_PREFIX,PASS);
 }

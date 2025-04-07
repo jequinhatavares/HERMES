@@ -190,12 +190,8 @@ State idle(Event event){
 
 State handleMessages(Event event){
     LOG(STATE_MACHINE,INFO,"Entered handle Messages State\n");
-    char msg[50] = "", msg2[300] = "", msg3[50] = "";
-    int messageType, nextHopIP[4], sourceIP[4], destinyIP[4];
-    messageParameters params;
-    messageVizParameters vizParameters;
-    //IPAddress myIP;
-    int childIP[4], childAPIP[4], childSTAIP[4];
+    int messageType;
+
 
     sscanf(messageBuffer, "%d", &messageType);
 
