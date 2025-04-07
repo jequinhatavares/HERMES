@@ -35,6 +35,10 @@ void onParentDisconnect(){
     LOG(NETWORK, DEBUG,"onParentDisconnect callback!\n");
     insertLast(stateMachineEngine, eLostParentConnection);
 }
+void onChildDisconnect(){
+    LOG(NETWORK, DEBUG,"onChildDisconnect callback!\n");
+    insertLast(stateMachineEngine, eLostChildConnection);
+}
 
 State initNode(Event event){
     uint8_t MAC[6];
@@ -46,8 +50,9 @@ State initNode(Event event){
     messageVizParameters vizParameters;
     messageParameters params;
 
-    // initialize callback
+    // Set up WiFi event callbacks (parent/child loss) to trigger state machine transitions
     parentDisconnectCallback = onParentDisconnect;
+    childDisconnectCallback = onChildDisconnect;
 
     LOG(STATE_MACHINE,INFO,"Entered Init State\n");
     parseMAC(getMyMAC().c_str(), MAC);
@@ -193,6 +198,9 @@ State idle(Event event){
     if (event == eMessage){
         insertFirst(stateMachineEngine, eMessage);
         return sHandleMessages;
+    }else if(event == eLostParentConnection){
+        insertFirst(stateMachineEngine, eMessage);
+        return sParentRecovery;
     }
     return sIdle;
 }
@@ -213,7 +221,6 @@ State handleMessages(Event event){
             LOG(MESSAGES,INFO,"Message Type Child Registration Request\n");
             handleChildRegistrationRequest(messageBuffer);
 
-
         case FULL_ROUTING_TABLE_UPDATE:
             LOG(MESSAGES,INFO,"Message Type Full Routing Update\n");
             handleFullRoutingTableUpdate(messageBuffer);
@@ -223,20 +230,28 @@ State handleMessages(Event event){
             handlePartialRoutingUpdate(messageBuffer);
             break;
 
+        case TOPOLOGY_BREAK_ALERT:
+            LOG(MESSAGES,INFO,"Message Type Partial Routing Table Update\n");
+            handleTopologyBreakAlert(messageBuffer);
+            break;
+
         case DEBUG_REGISTRATION_REQUEST:
             if(iamRoot)handleDebugRegistrationRequest(messageBuffer);
+            break;
 
         case DEBUG_MESSAGE:
             handleDebugMessage(messageBuffer);
-
+            break;
 
         case DATA_MESSAGE:
             LOG(MESSAGES,INFO,"Data Message\n");
             handleDataMessage(messageBuffer);
+            break;
 
         case ACK_MESSAGE:
             LOG(MESSAGES,INFO,"ACK Message\n");
             handleAckMessage(messageBuffer);
+            break;
     }
 
     return sIdle;
@@ -256,17 +271,56 @@ State parentRecovery(Event event){
             LOG(NETWORK, ERROR, "❌ Valid entry in children table contains a pointer to null instead of the STA IP.\n");
         }
     }
-    //TODO try to contact with my parent
 
+    //TODO try to contact with my parent
     //TODO wait for my parent response
 
-    //
+    // Disconnect permanently from the current parent to stop disconnection events and enable connection to a new one.
+    disconnectFromAP();
 
-
-    return sIdle;
+    return sSearch;
 }
 
+
 State childRecovery(Event event){
+    int i, j;
+    int lostChildIP[4], subNetSize = 0, lostNodeSubnetwork[routingTable->numberOfItems][4];
+    int* nodeIP;
+    char message[100];
+
+    //Transform the lost child MAC into a IP
+    getIPFromMAC(lostChildMAC,lostChildIP);
+
+    // Identify all nodes that were part of the lost child’s subnetwork.
+    for (i = 0; i < routingTable->numberOfItems; i++) {
+        nodeIP = (int*) tableKey(routingTable, i);
+        routingTableEntry* routingValue = (routingTableEntry*) findNode(routingTable,nodeIP);
+        if(routingValue != nullptr){
+            // If the next Hop IP is the IP of the lost child, it means this node is part of the
+            // lostChild subnetwork (including itself)
+            if(isIPEqual(routingValue->nextHopIP, lostChildIP)){
+                assignIP(lostNodeSubnetwork[subNetSize],nodeIP);
+                subNetSize ++;
+            }
+        }else{
+            LOG(NETWORK, ERROR, "❌ Valid entry in routing table contains a pointer to null instead of the routing entry.\n");
+        }
+    }
+
+    // Remove the lost child from my children table
+    tableRemove(childrenTable, lostChildIP);
+    // Remove unreachable nodes from the routing table.
+    for (i = 0; i < subNetSize; ++i) {
+        tableRemove(routingTable, lostNodeSubnetwork[i]);
+    }
+
+    // Notify the rest of the network about nodes that are no longer reachable.
+    for (i = 0; i < subNetSize; i++) {
+        for (j = 0; j < routingTable->numberOfItems; ++j) {
+            //TODO send message
+        }
+    }
+
     return sIdle;
 }
 
@@ -293,10 +347,17 @@ void parseMAC(const char* macStr, uint8_t* macArray) {
  *
  * Example:
  * Given the MAC address: CC:50:E3:60:E6:87
- * The generated IP address will be: 227.96.230.135
+ * The generated IP address will be: 227.96.230.135 //TODO correct this docs
  */
 void setIPs(const uint8_t* MAC){
     localIP = IPAddress(MAC[5],MAC[4],MAC[3],1) ;
     gateway = IPAddress(MAC[5],MAC[4],MAC[3],1) ;
     subnet = IPAddress(255,255,255,0) ;
+}
+
+void getIPFromMAC(int* MAC, int* IP){
+    IP[0] = MAC[5];
+    IP[1] = MAC[4];
+    IP[2] = MAC[3];
+    IP[3] = 1;
 }

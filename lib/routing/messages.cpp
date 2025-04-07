@@ -86,6 +86,11 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
             sprintf(msg,"%i %i.%i.%i.%i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
             break;
 
+        case TOPOLOGY_BREAK_ALERT:
+            //7
+            sprintf(msg,"%i",type);
+            break;
+
         case DEBUG_MESSAGE:
             //8 [DEBUG message payload]
             sprintf(msg,"%i %s\n",type,parameters.payload);
@@ -283,6 +288,12 @@ void handlePartialRoutingUpdate(char *msg){
 
 }
 
+void handleTopologyBreakAlert(char *msg){
+    //TODO set a variable as to my tree broken
+
+    // Propagate the message to my children
+    propagateMessage(msg, senderIP);
+}
 /**
  * handleDebugMessage
  * Handles a DEBUG_MESSAGE: decodes the message, forwards it to the appropriate next hop or debug server.

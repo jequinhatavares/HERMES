@@ -30,10 +30,11 @@ typedef enum messageType{
     PARTIAL_ROUTING_TABLE_UPDATE, //4
     PARENT_LIST_ADVERTISEMENT,//5
     PARENT_REASSIGNMENT_COMMAND, //6
-    DEBUG_REGISTRATION_REQUEST, //7
-    DEBUG_MESSAGE,//8
-    DATA_MESSAGE,//9
-    ACK_MESSAGE,//10
+    TOPOLOGY_BREAK_ALERT, //7
+    DEBUG_REGISTRATION_REQUEST, //8
+    DEBUG_MESSAGE,//9
+    DATA_MESSAGE,//10
+    ACK_MESSAGE,//11
 }messageType;
 
 extern char messageBuffer[256];
@@ -46,6 +47,7 @@ void handleParentInfoResponse(char* msg, parentInfo *parents, int i);
 void handleChildRegistrationRequest(char * msg);
 void handleFullRoutingTableUpdate(char *msg);
 void handlePartialRoutingUpdate(char *msg);
+void handleTopologyBreakAlert(char *msg);
 void handleDebugMessage(char* msg);
 void handleDataMessage(char *msg);
 void handleAckMessage(char *msg);

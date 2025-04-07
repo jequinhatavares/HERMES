@@ -38,6 +38,7 @@ State childRecovery(Event event);
 #define eError ((Event) 3)
 #define eLostParentConnection ((Event) 4)
 #define eParentUnreachable ((Event) 5)
+#define eLostChildConnection ((Event) 6)
 
 extern StateMachine* SM;
 extern CircularBuffer* stateMachineEngine;
@@ -48,9 +49,9 @@ extern IPAddress subnet;
 extern IPAddress dns;
 
 
-
 void parseMAC(const char* macStr, uint8_t* macArray);
 void setIPs(const uint8_t* MAC);
+void getIPFromMAC(int* MAC, int* IP);
 
 //#define eMessage ((Event) 4)
 

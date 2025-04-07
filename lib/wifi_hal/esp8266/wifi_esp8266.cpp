@@ -8,8 +8,13 @@ WiFiEventHandler wifiAPGotSta;
 
 List ssidList;
 
-unsigned long lastDisconnectionTime = 0 ;
+unsigned long lastParentDisconnectionTime = 0 ;
 int parentDisconnectionCount = 0;
+
+unsigned long lastChildDisconnectionTime = 0 ;
+int childDisconnectionCount = 0;
+
+int lostChildMAC[6];
 
 /**
  * onSoftAPModeStationConnectedHandler
@@ -33,6 +38,26 @@ void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnect
  */
 void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisconnected& info) {
     Serial.println("[WIFI_EVENTS] Got station disconnected\n");
+    unsigned long currentTime = millis();
+    // On first disconnection, initialize the timer to the current time.
+    // This prevents missing future disconnections after a long inactive period.
+    if (childDisconnectionCount == 0) lastParentDisconnectionTime = currentTime;
+
+    // Check if the interval since the last disconnection is short enough
+    // to avoid incrementing the counter for isolated or sporadic events.
+    if(currentTime - lastParentDisconnectionTime <=3000){
+        childDisconnectionCount++;
+        LOG(NETWORK,DEBUG,"Incremented the childDisconnectionCount\n");
+
+        // When repeated disconnections surpass the defined threshold queue an event to initiate child recovery procedures
+        if(childDisconnectionCount >= disconnectionThreshold) {
+            // Callback code, global func pointer defined in wifi_hal.h:22 and initialized in lifecycle.cpp:48
+            if (childDisconnectCallback != nullptr){
+                childDisconnectCallback();
+            }
+        }
+    }
+
 }
 
 /**DDS
@@ -75,11 +100,11 @@ void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& in
 
     // On first disconnection, initialize the timer to the current time.
     // This prevents missing future disconnections after a long inactive period.
-    if (parentDisconnectionCount == 0) lastDisconnectionTime = currentTime;
+    if (parentDisconnectionCount == 0) lastParentDisconnectionTime = currentTime;
 
     // Check if the interval since the last disconnection is short enough
     // to avoid incrementing the counter for isolated or sporadic events.
-    if(currentTime - lastDisconnectionTime <=3000){
+    if(currentTime - lastParentDisconnectionTime <=3000){
         parentDisconnectionCount++;
         LOG(NETWORK,DEBUG,"Incremented the parentDisconnectionCount\n");
 
@@ -168,7 +193,7 @@ void startWifiAP(const char* SSID, const char* Pass, const IPAddress& localIP, c
     WiFi.mode(WIFI_AP);
     // Start the Access Point with the SSID defined in SSID_PREFIX
     WiFi.softAPConfig(localIP, gateway, subnet);
-    WiFi.softAP(SSID, PASS);
+    WiFi.softAP(SSID, Pass);
     //Serial.print("My SoftAP IP:");
     //Serial.print(WiFi.softAPIP());
 
