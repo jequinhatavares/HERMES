@@ -283,10 +283,11 @@ State parentRecovery(Event event){
 
 
 State childRecovery(Event event){
-    int i, j;
-    int lostChildIP[4], subNetSize = 0, lostNodeSubnetwork[routingTable->numberOfItems][4];
-    int* nodeIP;
-    char message[100];
+    int i, j, invalidHopDistance = -1;
+    int lostChildIP[4], subNetSize = 0, lostNodeSubnetwork[routingTable->numberOfItems][4], invalidIP[4]={-1,-1,-1,-1};
+    int *nodeIP, *destinationIP;
+    char message[50];
+    messageParameters parameters;
 
     //Transform the lost child MAC into a IP
     getIPFromMAC(lostChildMAC,lostChildIP);
@@ -317,10 +318,14 @@ State childRecovery(Event event){
     // Notify the rest of the network about nodes that are no longer reachable.
     for (i = 0; i < subNetSize; i++) {
         for (j = 0; j < routingTable->numberOfItems; ++j) {
-            //TODO send message
+            destinationIP = (int*) tableKey(routingTable,j);
+
+            assignIP(parameters.IP1,lostNodeSubnetwork[i]);
+            assignIP(parameters.IP2,lostNodeSubnetwork[i]);
+            encodeMessage(message, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
+            sendMessage(destinationIP, message);
         }
     }
-
     return sIdle;
 }
 

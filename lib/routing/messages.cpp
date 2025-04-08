@@ -221,7 +221,8 @@ void handleFullRoutingTableUpdate(char * msg){
     int nodeIP[4], nextHopIP[4];
     int hopDistance;
     routingTableEntry newNode;
-
+    messageParameters parameters;
+    char messageBuffer1[100];
 
     //Parse Message Type and root node IP
     sscanf(msg, "%d %d.%d.%d.%d", &type, &rootIP[0], &rootIP[1], &rootIP[2], &rootIP[3]);
@@ -244,6 +245,10 @@ void handleFullRoutingTableUpdate(char * msg){
         updateRoutingTable(nodeIP,newNode,senderIP);
         token = strtok(NULL, "|");
     }
+
+    //Propagate the routing table update information trough the network
+    encodeMessage(messageBuffer1, FULL_ROUTING_TABLE_UPDATE, parameters);
+    propagateMessage(messageBuffer1, senderIP);
 
 }
 
