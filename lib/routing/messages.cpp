@@ -177,8 +177,12 @@ void handleChildRegistrationRequest(char * msg){
     sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],
            &childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3] );
 
-    //Increase my number of children
-    numberOfChildren++;
+
+    // If the node is already registered as my child, do not increment the number of children.
+    if(findNode(childrenTable,childAPIP) == nullptr){
+        //Increase my number of children
+        numberOfChildren++;
+    }
 
     //Add the new children to the children table
     updateChildrenTable(childAPIP, childSTAIP);
@@ -460,18 +464,13 @@ void handleDebugRegistrationRequest(char* msg){
  * @return void
  */
 void propagateMessage(char* message, int* sourceIP){
-    LOG(NETWORK,DEBUG,"2\n");
     // If the message didn't come from the parent and i have a parent, forward it to the parent
     if(!isIPEqual(sourceIP, parent) && hasParent){
-        LOG(NETWORK,DEBUG,"3\n");
         sendMessage(parent, message);
     }
     //Forward the message to all children except the one that sent it to me
-    LOG(NETWORK,DEBUG,"4\n");
     for(int i = 0; i< childrenTable->numberOfItems; i++){
         if(!isIPEqual((int*)childrenTable->table[i].key, sourceIP)){
-            LOG(NETWORK,DEBUG,"Propagating the message: %s to: %i.%i.%i.%i", message,((int*)childrenTable->table[i].key)[0]
-                ,((int*)childrenTable->table[i].key)[1] ,((int*)childrenTable->table[i].key)[2] ,((int*)childrenTable->table[i].key)[3]);
             sendMessage((int*)childrenTable->table[i].value, message);
         }
     }
