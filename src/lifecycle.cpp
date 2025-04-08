@@ -117,6 +117,7 @@ State search(Event event){
         getIPFromMAC((int*)(MAC_int), nodeIP);
 
         if(inMySubnet(nodeIP)){
+            LOG(NETWORK,DEBUG,"Removing: %i.%i.%i.%i from the ssid list\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
             //Remove of the ssidList
             for (k = i; k < ssidList.len-1; ++k) {
                 strcpy( ssidList.item[k] , ssidList.item[k+1]);
@@ -223,7 +224,8 @@ State idle(Event event){
 
 State handleMessages(Event event){
     LOG(STATE_MACHINE,INFO,"Entered handle Messages State\n");
-    int messageType;
+    int messageType, flag = 0;
+
 
 
     sscanf(messageBuffer, "%d", &messageType);
@@ -236,10 +238,13 @@ State handleMessages(Event event){
         case CHILD_REGISTRATION_REQUEST:
             LOG(MESSAGES,INFO,"Message Type Child Registration Request\n");
             handleChildRegistrationRequest(messageBuffer);
+            flag = 1;
+            break;
 
         case FULL_ROUTING_TABLE_UPDATE:
-            LOG(MESSAGES,INFO,"Message Type Full Routing Update\n");
+            LOG(MESSAGES,INFO,"Message Type Full Routing Update %i\n",flag);
             handleFullRoutingTableUpdate(messageBuffer);
+            break;
 
         case PARTIAL_ROUTING_TABLE_UPDATE:
             LOG(MESSAGES,INFO,"Message Type Partial Routing Table Update\n");
@@ -277,7 +282,10 @@ State parentRecovery(Event event){
     int* STAIP= nullptr;
     char message[50];
 
+    LOG(STATE_MACHINE,INFO,"Entered Parent Recovery State\n");
+
     //TODO tell my children that i lost connection to my parent
+    LOG(MESSAGES,INFO,"Informing my children about the lost connection\n");
     for (int i = 0; i < childrenTable->numberOfItems; ++i) {
         STAIP = (int*) findNode(childrenTable, (int*) childrenTable->table[i].key);
         if(STAIP != nullptr){
@@ -291,14 +299,18 @@ State parentRecovery(Event event){
     //TODO try to contact with my parent
     //TODO wait for my parent response
 
-    // Disconnect permanently from the current parent to stop disconnection events and enable connection to a new one.
+    // Disconnect permanently from the current parent to stop disconnection events and enable connection to a new one
+    LOG(NETWORK,INFO,"Disconnecting permanently from my parent\n");
     disconnectFromAP();
 
+    insertLast(stateMachineEngine, eSearch);
     return sSearch;
 }
 
 
 State childRecovery(Event event){
+    LOG(STATE_MACHINE,INFO,"Entered Child Recovery State\n");
+
     int i, j, invalidHopDistance = -1;
     int lostChildIP[4], subNetSize = 0, lostNodeSubnetwork[routingTable->numberOfItems][4], invalidIP[4]={-1,-1,-1,-1};
     int *nodeIP, *destinationIP;
@@ -307,6 +319,8 @@ State childRecovery(Event event){
 
     //Transform the lost child MAC into a IP
     getIPFromMAC(lostChildMAC,lostChildIP);
+    LOG(NETWORK,DEBUG,"Lost Child: %i.%i.%i.%i \n", lostChildIP[0], lostChildIP[1], lostChildIP[2], lostChildIP[3]);
+
 
     // Identify all nodes that were part of the lost child’s subnetwork.
     for (i = 0; i < routingTable->numberOfItems; i++) {
@@ -316,6 +330,7 @@ State childRecovery(Event event){
             // If the next Hop IP is the IP of the lost child, it means this node is part of the
             // lostChild subnetwork (including itself)
             if(isIPEqual(routingValue->nextHopIP, lostChildIP)){
+                LOG(NETWORK,DEBUG,"Node: %i.%i.%i.%i belongs to lost child subnetwork\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
                 assignIP(lostNodeSubnetwork[subNetSize],nodeIP);
                 subNetSize ++;
             }
@@ -339,9 +354,11 @@ State childRecovery(Event event){
             assignIP(parameters.IP1,lostNodeSubnetwork[i]);
             assignIP(parameters.IP2,lostNodeSubnetwork[i]);
             encodeMessage(message, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
+            LOG(MESSAGES,DEBUG,"Sending message: %s to: %i.%i.%i.%i\n", message, destinationIP[0], destinationIP[1], destinationIP[2], destinationIP[3]);
             sendMessage(destinationIP, message);
         }
     }
+    //insertLast(stateMachineEngine, eSearch);
     return sIdle;
 }
 

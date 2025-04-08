@@ -5,8 +5,6 @@
 
 #include "../wifi_hal.h"
 
-// Callback
-void (*parentDisconnectCallback)() = nullptr;
 
 void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnected& info);
 

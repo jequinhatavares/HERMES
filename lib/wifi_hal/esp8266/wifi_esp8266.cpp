@@ -16,6 +16,10 @@ int childDisconnectionCount = 0;
 
 int lostChildMAC[6];
 
+void (*parentDisconnectCallback)() = nullptr;
+void (*childDisconnectCallback)() = nullptr;
+
+
 /**
  * onSoftAPModeStationConnectedHandler
  * Event handler called when a station (client) successfully connects to the device running in Soft AP mode.

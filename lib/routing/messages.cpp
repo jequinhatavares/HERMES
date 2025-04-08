@@ -49,7 +49,7 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
             //3 [rootIP] |[node1 IP] [next hop IP] [hopDistance] |[node2 IP] [next hop IP] [hopDistance] |....
             sprintf(msg, "%i %i.%i.%i.%i |",type, rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
 
-            for (int i = 0; i < parameters.routingTable->numberOfItems; i++) {
+            for (int i = 0; i < routingTable->numberOfItems; i++) {
                 sprintf(tempMsg,"%i.%i.%i.%i %i.%i.%i.%i %i |",((int*)routingTable->table[i].key)[0],
                         ((int*)routingTable->table[i].key)[1],((int*)routingTable->table[i].key)[2],
                         ((int*)routingTable->table[i].key)[3],((routingTableEntry *)routingTable->table[i].value)->nextHopIP[0],
@@ -92,7 +92,7 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
             break;
 
         case DEBUG_MESSAGE:
-            //8 [DEBUG message payload]
+            //9 [DEBUG message payload]
             sprintf(msg,"%i %s\n",type,parameters.payload);
             break;
 
@@ -190,7 +190,6 @@ void handleChildRegistrationRequest(char * msg){
     updateRoutingTable(childAPIP, newNode, childAPIP);
 
     //Send my routing table to my child
-    parameters.routingTable = routingTable;
     LOG(MESSAGES,INFO,"Sending my routing Table to child:");
     encodeMessage(messageBufferLarge,FULL_ROUTING_TABLE_UPDATE,parameters);
     LOG(MESSAGES,INFO,"%s to -> %d.%d.%d.%d\n",messageBufferLarge, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
@@ -247,6 +246,7 @@ void handleFullRoutingTableUpdate(char * msg){
     }
 
     //Propagate the routing table update information trough the network
+    LOG(NETWORK,DEBUG,"1\n");
     encodeMessage(messageBuffer1, FULL_ROUTING_TABLE_UPDATE, parameters);
     propagateMessage(messageBuffer1, senderIP);
 
@@ -307,7 +307,7 @@ void handleTopologyBreakAlert(char *msg){
  * @return void
  */
 void handleDebugMessage(char* msg){
-    int nextHopIP[4], destinyIP[4];
+    int nextHopIP[4];
 
     //If this message is not intended for this node, forward it to the next hop leading to its destination.
     if(!iamRoot){
@@ -316,7 +316,7 @@ void handleDebugMessage(char* msg){
             assignIP(nextHopIP, nextHopPtr);
         }else{
             LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
-                                "Unable to forward message.\n", destinyIP[0], destinyIP[1],destinyIP[2], destinyIP[3]);
+                                "Unable to forward message.\n", rootIP[0], rootIP[1],rootIP[2], rootIP[3]);
         }
         sendMessage(nextHopIP,messageBuffer);
     }else{//send message to debug server
@@ -460,11 +460,14 @@ void handleDebugRegistrationRequest(char* msg){
  * @return void
  */
 void propagateMessage(char* message, int* sourceIP){
+    LOG(NETWORK,DEBUG,"2\n");
     // If the message didn't come from the parent, forward it to the parent
     if(!isIPEqual(sourceIP, parent)){
+        LOG(NETWORK,DEBUG,"3\n");
         sendMessage(parent, message);
     }
     //Forward the message to all children except the one that sent it to me
+    LOG(NETWORK,DEBUG,"4\n");
     for(int i = 0; i< childrenTable->numberOfItems; i++){
         if(!isIPEqual((int*)childrenTable->table[i].key, sourceIP)){
             sendMessage((int*)childrenTable->table[i].key, message);
