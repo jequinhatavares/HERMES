@@ -200,7 +200,7 @@ void handleChildRegistrationRequest(char * msg){
     assignIP(parameters.IP2,childAPIP);
     parameters.hopDistance = 1;
     encodeMessage(messageBuffer1, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
-    propagateMessage(messageBuffer1, senderIP);
+    propagateMessage(messageBuffer1, childAPIP);
 
     //Sending new node information to the DEBUG visualization program, if enabled
     reportNewNodeToViz(childAPIP, myIP);
