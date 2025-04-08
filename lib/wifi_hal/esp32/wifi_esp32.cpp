@@ -3,6 +3,17 @@
 
 List ssidList;
 
+unsigned long lastParentDisconnectionTime = 0 ;
+int parentDisconnectionCount = 0;
+
+unsigned long lastChildDisconnectionTime = 0 ;
+int childDisconnectionCount = 0;
+
+int lostChildMAC[6];
+
+void (*parentDisconnectCallback)() = nullptr;
+void (*childDisconnectCallback)() = nullptr;
+
 /**
  * onSoftAPModeStationConnectedHandler
  * Event handler called when a station (client) successfully connects to the device running in Soft AP mode.
@@ -26,6 +37,25 @@ void onSoftAPModeStationConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info
  */
 void onSoftAPModeStationDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info) {
     Serial.println("[WIFI_EVENTS] Got station disconnected\n");
+    unsigned long currentTime = millis();
+    // On first disconnection, initialize the timer to the current time.
+    // This prevents missing future disconnections after a long inactive period.
+    if (childDisconnectionCount == 0) lastParentDisconnectionTime = currentTime;
+
+    // Check if the interval since the last disconnection is short enough
+    // to avoid incrementing the counter for isolated or sporadic events.
+    if(currentTime - lastParentDisconnectionTime <=3000){
+        childDisconnectionCount++;
+        LOG(NETWORK,DEBUG,"Incremented the childDisconnectionCount\n");
+
+        // When repeated disconnections surpass the defined threshold queue an event to initiate child recovery procedures
+        if(childDisconnectionCount >= disconnectionThreshold) {
+            // Callback code, global func pointer defined in wifi_hal.h:22 and initialized in lifecycle.cpp:48
+            if (childDisconnectCallback != nullptr){
+                childDisconnectCallback();
+            }
+        }
+    }
 }
 
 /**
@@ -52,6 +82,8 @@ void onStationModeGotIPHandler(WiFiEvent_t event, WiFiEventInfo_t info){
 void onStationModeConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info) {
     Serial.println("[WIFI_EVENTS] Connected to AP\n");
     //WiFi.begin(SSID_PREFIX,PASS);
+    parentDisconnectionCount = 0; // Reset the parent disconnection Counter
+    LOG(NETWORK,DEBUG,"Reset the parentDisconnectionCount: %i\n", parentDisconnectionCount);
 }
 
 /**
