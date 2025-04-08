@@ -310,3 +310,15 @@ parentInfo chooseParent(parentInfo* possibleParents, int n){
     return possibleParents[parentIndex];
 }
 
+bool inMySubnet(int* nodeIP){
+    routingTableEntry *routingEntry;
+    routingEntry = (routingTableEntry*) findNode(routingTable,nodeIP);
+    int *childIP;
+
+    for (int i = 0; i < childrenTable->numberOfItems; i++) {
+        childIP = (int*)tableKey(childrenTable, i );
+        // The node belongs to my subnetwork if the next hop to reach it is one of my children
+        if(isIPEqual(routingEntry->nextHopIP,childIP)) return true;
+    }
+    return false;
+}

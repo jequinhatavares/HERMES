@@ -99,17 +99,33 @@ State initNode(Event event){
 }
 
 State search(Event event){
+    int i, k, nodeIP[4];
     LOG(STATE_MACHINE,INFO,"Entered Search State\n");
+    char MAC[20];
+    uint8_t MAC_int[6];
+
     //Find nodes in the network
     do{
         searchAP(SSID_PREFIX);
     }while ( ssidList.len == 0 );
 
     //Print the found networks
-    for (int i=0; i<ssidList.len; i++){
+    for (i=0; i<ssidList.len; i++){
         LOG(NETWORK,INFO,"Found SSID: %s\n", ssidList.item[i]);
+        sscanf(ssidList.item[i], "JessicaNode%s", MAC);
+        parseMAC(MAC,MAC_int);
+        getIPFromMAC((int*)(MAC_int), nodeIP);
+
+        if(inMySubnet(nodeIP)){
+            //Remove of the ssidList
+            for (k = i; k < ssidList.len-1; ++k) {
+                strcpy( ssidList.item[k] , ssidList.item[k+1]);
+            }
+            ssidList.len --;
+        }
     }
-    delay(1000);
+    //delay(1000);
+
     insertFirst(stateMachineEngine, eSuccess);
     return sChooseParent;
 }

@@ -42,5 +42,6 @@ int* findRouteToNode(int nodeIP[4]);
 void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4]);
 void updateChildrenTable(int APIP[4], int STAIP[4]);
 parentInfo chooseParent(parentInfo* possibleParents, int n);
+bool inMySubnet(int* nodeIP);
 
 #endif //ROUTING_H
