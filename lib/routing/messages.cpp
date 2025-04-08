@@ -461,8 +461,8 @@ void handleDebugRegistrationRequest(char* msg){
  */
 void propagateMessage(char* message, int* sourceIP){
     LOG(NETWORK,DEBUG,"2\n");
-    // If the message didn't come from the parent, forward it to the parent
-    if(!isIPEqual(sourceIP, parent)){
+    // If the message didn't come from the parent and i have a parent, forward it to the parent
+    if(!isIPEqual(sourceIP, parent) && hasParent){
         LOG(NETWORK,DEBUG,"3\n");
         sendMessage(parent, message);
     }
@@ -470,7 +470,9 @@ void propagateMessage(char* message, int* sourceIP){
     LOG(NETWORK,DEBUG,"4\n");
     for(int i = 0; i< childrenTable->numberOfItems; i++){
         if(!isIPEqual((int*)childrenTable->table[i].key, sourceIP)){
-            sendMessage((int*)childrenTable->table[i].key, message);
+            LOG(NETWORK,DEBUG,"Propagating the message: %s to: %i.%i.%i.%i", message,((int*)childrenTable->table[i].key)[0]
+                ,((int*)childrenTable->table[i].key)[1] ,((int*)childrenTable->table[i].key)[2] ,((int*)childrenTable->table[i].key)[3]);
+            sendMessage((int*)childrenTable->table[i].value, message);
         }
     }
 

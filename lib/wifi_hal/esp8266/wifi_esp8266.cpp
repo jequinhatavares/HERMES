@@ -86,6 +86,7 @@ void onStationModeGotIPHandler(const WiFiEventStationModeGotIP& info) {
 void onStationModeConnectedHandler(const WiFiEventStationModeConnected& info) {
     Serial.println("[WIFI_EVENTS] Connected to AP\n");
     parentDisconnectionCount = 0; // Reset the parent disconnection Counter
+    LOG(NETWORK,DEBUG,"Reset the parentDisconnectionCount: %i\n", parentDisconnectionCount);
 }
 
 /**
@@ -96,7 +97,7 @@ void onStationModeConnectedHandler(const WiFiEventStationModeConnected& info) {
  * @return void
  */
 void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& info) {
-    Serial.println("[WIFI_EVENTS] Disconnected From AP\n");
+    Serial.print("[WIFI_EVENTS] Disconnected From AP\n");
     Serial.print("[WIFI_EVENTS] WiFi lost connection. Reason: ");
     Serial.println(info.reason);
 
@@ -110,10 +111,11 @@ void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& in
     // to avoid incrementing the counter for isolated or sporadic events.
     if(currentTime - lastParentDisconnectionTime <=3000){
         parentDisconnectionCount++;
-        LOG(NETWORK,DEBUG,"Incremented the parentDisconnectionCount\n");
+        LOG(NETWORK,DEBUG,"Incremented the parentDisconnectionCount: %i\n", parentDisconnectionCount);
 
         // When repeated disconnections surpass the defined threshold queue an event to initiate parent recovery procedures
         if(parentDisconnectionCount >= disconnectionThreshold) {
+            LOG(NETWORK,DEBUG,"parentDisconnectionCount above the threshold\n");
             // Callback code, global func pointer defined in wifi_hal.h:22 and initialized in lifecycle.cpp:48
             if (parentDisconnectCallback != nullptr){
                 parentDisconnectCallback();

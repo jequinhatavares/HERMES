@@ -80,6 +80,7 @@ State initNode(Event event){
         rootHopDistance = 0;
         assignIP(parent, invalidIP);
         assignIP(rootIP,myIP);
+        hasParent = false;
 
         //If the visualization program is active, pass the new node information to it
         //assignIP(vizParameters.IP1, myIP);
