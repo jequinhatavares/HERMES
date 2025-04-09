@@ -341,7 +341,8 @@ void test_new_node_routing_table_initialization(){
 
     tableAdd(routingTable, nodeIP, routingNode1);
 
-    decodeFullRoutingTableUpdate(msg, parent);
+    assignIP(senderIP, parent);
+    handleFullRoutingTableUpdate(msg);
 
     routingTableEntry* tableParentNode = (routingTableEntry *) findNode(routingTable, parent);
     TEST_ASSERT(tableParentNode != nullptr);
@@ -408,7 +409,8 @@ void test_routing_table_partial_update_new_node_from_child(){
     tableAdd(routingTable, node2IP,routingNode2);
     tableAdd(routingTable, node3IP,routingNode3);
 
-    decodePartialRoutingUpdate(msg, childNodeIP);
+    assignIP(senderIP, childNodeIP);
+    handlePartialRoutingUpdate(msg);
 
     routingTableEntry* tableOtherNode = (routingTableEntry *) findNode(routingTable, otherNodeIP);
     TEST_ASSERT(tableOtherNode != nullptr);
@@ -465,7 +467,8 @@ void test_routing_table_partial_update_new_node_from_parent(){
     tableAdd(routingTable, node2IP,routingNode2);// my child
     tableAdd(routingTable, node3IP,routingNode3); //root
 
-    decodePartialRoutingUpdate(msg, parent);
+    assignIP(senderIP, parent);
+    handlePartialRoutingUpdate(msg);
 
     routingTableEntry* tableOtherNode = (routingTableEntry *) findNode(routingTable, otherNodeIP);
     TEST_ASSERT(tableOtherNode != nullptr);

@@ -36,8 +36,13 @@ void onParentDisconnect(){
     insertLast(stateMachineEngine, eLostParentConnection);
 }
 void onChildDisconnect(){
-    LOG(NETWORK, DEBUG,"onChildDisconnect callback!\n");
-    insertLast(stateMachineEngine, eLostChildConnection);
+    int lostChildIP[4];
+    //Transform the lost child MAC into a IP
+    getIPFromMAC(lostChildMAC,lostChildIP);
+    LOG(NETWORK, DEBUG,"onChildDisconnect callback! Lost Child IP: %i.%i.%i.%i\n", lostChildIP[0], lostChildIP[1], lostChildIP[2], lostChildIP[3]);
+
+    //Only initiate the lost Child Procedure if the node is my child
+    if(findNode(childrenTable,lostChildIP) != nullptr)insertLast(stateMachineEngine, eLostChildConnection);
 }
 
 State initNode(Event event){
