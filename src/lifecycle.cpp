@@ -169,7 +169,7 @@ State joinNetwork(Event event){
             while((packetSize = incomingMessage()) == 0);
 
             if (packetSize > 0){
-                receiveMessage(buffer, senderIP);
+                receiveMessage(buffer);
                 LOG(MESSAGES,INFO,"Parent Response: %s\n", buffer);
                 handleParentInfoResponse(buffer, possibleParents, i);
                 possibleParents[i].ssid = ssidList.item[i];
@@ -204,7 +204,7 @@ State joinNetwork(Event event){
 
         //Process the routing table update
         if (packetSize > 0){
-            receiveMessage(buffer, senderIP);
+            receiveMessage(buffer);
             LOG(MESSAGES,INFO,"Parent Response: %s\n", buffer);
             handleFullRoutingTableUpdate(buffer);
             LOG(NETWORK,INFO,"Routing Table Updated:\n");

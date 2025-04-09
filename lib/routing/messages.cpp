@@ -7,7 +7,6 @@
 
 
 char messageBuffer[256] = "";
-int senderIP[4];
 
 
 /**
@@ -46,8 +45,9 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
                     parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
         case FULL_ROUTING_TABLE_UPDATE:
-            //3 [rootIP] |[node1 IP] [next hop IP] [hopDistance] |[node2 IP] [next hop IP] [hopDistance] |....
-            sprintf(msg, "%i %i.%i.%i.%i |",type, rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
+            //3 [senderIP] [rootIP] |[node1 IP] [next hop IP] [hopDistance] |[node2 IP] [next hop IP] [hopDistance] |....
+            sprintf(msg, "%i %i.%i.%i.%i %i.%i.%i.%i |",type,parameters.senderIP[0],parameters.senderIP[1],parameters.senderIP[2],
+                    parameters.senderIP[3],rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
 
             for (int i = 0; i < routingTable->numberOfItems; i++) {
                 sprintf(tempMsg,"%i.%i.%i.%i %i.%i.%i.%i %i |",((int*)routingTable->table[i].key)[0],
@@ -63,8 +63,9 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
             break;
 
         case PARTIAL_ROUTING_TABLE_UPDATE:
-            //4 [node1 IP] [next hop IP] [hopDistance]
-            sprintf(msg,"%i %i.%i.%i.%i %i.%i.%i.%i %i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
+            //4 [senderIP] [node1 IP] [next hop IP] [hopDistance]
+            sprintf(msg,"%i %i.%i.%i.%i %i.%i.%i.%i %i.%i.%i.%i %i",type,parameters.senderIP[0],parameters.senderIP[1],parameters.senderIP[2],
+                    parameters.senderIP[3],parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
                     parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3],
                     parameters.hopDistance);
             break;
@@ -87,8 +88,9 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
             break;
 
         case TOPOLOGY_BREAK_ALERT:
-            //7
-            sprintf(msg,"%i",type);
+            //7 [senderIP]
+            sprintf(msg,"%i %i.%i.%i.%i",type,parameters.senderIP[0],parameters.senderIP[1],parameters.senderIP[2],
+                    parameters.senderIP[3]);
             break;
 
         case DEBUG_MESSAGE:
@@ -97,7 +99,7 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
             break;
 
         case DATA_MESSAGE:
-            //9 [message payload] [source node IP] [destiny node IP]
+            //9 [message payload] [source node IP] [destination node IP]
             sprintf(msg,"%i %s %i.%i.%i.%i %i.%i.%i.%i",type,parameters.payload,parameters.IP1[0],parameters.IP1[1],
                     parameters.IP1[2],parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
@@ -195,6 +197,7 @@ void handleChildRegistrationRequest(char * msg){
 
     //Send my routing table to my child
     LOG(MESSAGES,INFO,"Sending my routing Table to child:");
+    assignIP(parameters.senderIP,myIP);
     encodeMessage(messageBufferLarge,FULL_ROUTING_TABLE_UPDATE,parameters);
     LOG(MESSAGES,INFO,"%s to -> %d.%d.%d.%d\n",messageBufferLarge, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
     sendMessage(childSTAIP,messageBufferLarge);
@@ -203,6 +206,7 @@ void handleChildRegistrationRequest(char * msg){
     assignIP(parameters.IP1,childAPIP);
     assignIP(parameters.IP2,childAPIP);
     parameters.hopDistance = 1;
+    assignIP(parameters.senderIP,myIP);
     encodeMessage(messageBuffer1, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
     propagateMessage(messageBuffer1, childAPIP);
 
@@ -210,7 +214,6 @@ void handleChildRegistrationRequest(char * msg){
     reportNewNodeToViz(childAPIP, myIP);
 
 }
-
 
 /**
 * handleFullRoutingTableUpdate
@@ -221,14 +224,14 @@ void handleChildRegistrationRequest(char * msg){
 */
 void handleFullRoutingTableUpdate(char * msg){
     int type;
-    int nodeIP[4], nextHopIP[4];
+    int nodeIP[4], nextHopIP[4], senderIP[4];
     int hopDistance;
     routingTableEntry newNode;
     messageParameters parameters;
     char messageBuffer1[100];
 
     //Parse Message Type and root node IP
-    sscanf(msg, "%d %d.%d.%d.%d", &type, &rootIP[0], &rootIP[1], &rootIP[2], &rootIP[3]);
+    sscanf(msg, "%d %d.%d.%d.%d ", &type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
     char* token = strtok(msg, "|");
 
     //To discard the message type and ensure the token points to the first routing table update entry
@@ -251,6 +254,7 @@ void handleFullRoutingTableUpdate(char * msg){
 
     //Propagate the routing table update information trough the network
     LOG(NETWORK,DEBUG,"1\n");
+    assignIP(parameters.senderIP,myIP);
     encodeMessage(messageBuffer1, FULL_ROUTING_TABLE_UPDATE, parameters);
     propagateMessage(messageBuffer1, senderIP);
 
@@ -266,13 +270,13 @@ void handleFullRoutingTableUpdate(char * msg){
 */
 void handlePartialRoutingUpdate(char *msg){
     int type;
-    int nodeIP[4], nextHopIP[4];
+    int nodeIP[4], nextHopIP[4], senderIP[4];
     int hopDistance;
     char messageBuffer1[50] = "";
     routingTableEntry newNode;
     messageParameters parameters;
 
-    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %d",&type, &nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],
+    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %d.%d.%d.%d %d",&type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3], &nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],
            &nextHopIP[0],&nextHopIP[1],&nextHopIP[2],&nextHopIP[3], &hopDistance);
 
     newNode.nextHopIP[0] = nextHopIP[0];newNode.nextHopIP[1] = nextHopIP[1];
@@ -288,6 +292,7 @@ void handlePartialRoutingUpdate(char *msg){
         assignIP(parameters.IP1,nodeIP);
         assignIP(parameters.IP2,nodeEntry->nextHopIP);
         parameters.hopDistance = nodeEntry->hopDistance;
+        assignIP(parameters.senderIP,myIP);
         encodeMessage(messageBuffer1, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
         propagateMessage(messageBuffer1, senderIP);
     }else{
@@ -299,7 +304,8 @@ void handlePartialRoutingUpdate(char *msg){
 
 void handleTopologyBreakAlert(char *msg){
     //TODO set a variable as to my tree broken
-
+    int type, senderIP[4];
+    sscanf(msg, "%d %d.%d.%d.%d",&type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
     // Propagate the message to my children
     propagateMessage(msg, senderIP);
 }

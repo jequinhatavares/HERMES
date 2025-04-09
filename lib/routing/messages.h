@@ -10,6 +10,7 @@
 #include "net_viz.h"
 
 typedef struct messageParameters{
+    int senderIP[4] = {0,0,0,0};
     int IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};
     int nrOfPossibleParents = 0;
     int** possibleParents;
@@ -36,7 +37,7 @@ typedef enum messageType{
 }messageType;
 
 extern char messageBuffer[256];
-extern int senderIP[4];
+
 
 void encodeMessage(char* msg, messageType type, messageParameters parameters);
 

@@ -79,7 +79,7 @@ void loop(){
     if (packet_size > 0){
         LOG(MESSAGES,INFO,"PacketSize: %d\n", packet_size);
         LOG(MESSAGES,INFO,"Theres incoming messages\n");
-        receiveMessage(messageBuffer, senderIP);
+        receiveMessage(messageBuffer);
         LOG(MESSAGES,INFO,"Received: %s\n", messageBuffer);
         insertLast(stateMachineEngine, eMessage);
     }
