@@ -288,6 +288,7 @@ void updateChildrenTable(int APIP[4], int STAIP[4]){
  * @param n - The number of potential parents in the array.
  * @return (parentInfo) parent - The chosen parent node.
  */
+#ifndef LIMIT_PARENT_VISIBILITY
 parentInfo chooseParent(parentInfo* possibleParents, int n){
     parentInfo preferredParent;
     int minHop = 10000, parentIndex;
@@ -309,6 +310,54 @@ parentInfo chooseParent(parentInfo* possibleParents, int n){
     //TODO colocar esta função mais segura: este parentIndex pode não ser inicializado: Retornar um ponteiro
     return possibleParents[parentIndex];
 }
+#endif
+//#define LIMIT_PARENT_VISIBILITY
+#ifdef LIMIT_PARENT_VISIBILITY
+parentInfo chooseParent(parentInfo* possibleParents, int n){
+    parentInfo preferredParent;
+    bool found = false;
+    int maxHop = 0; minChildren = 10000; minHop = 10000;
+
+    // First try to connect to the root
+    for (int i = 0; i < n; i++) {
+        //if the node is the root and have less then 2 children choose it has parent
+        if (possibleParents[i].rootHopDistance == 0 && possibleParents[i].nrChildren < 2) {
+            preferredParent = possibleParents[i];
+            found = true;
+            return preferredParent;
+        }
+        //Define the max Tree deph
+        if (possibleParents[i].rootHopDistance > maxHop) {
+            maxHop = possibleParents[i].rootHopDistance;
+        }
+    }
+
+    // Then try layer by layer: 1, 2, ..., maxHop
+    for (int hop = 1; hop <= maxHop; hop++) {
+        for (int i = 0; i < n; i++) {
+            if (possibleParents[i].rootHopDistance == hop && possibleParents[i].nrChildren < 2) {
+                preferredParent = possibleParents[i];
+                found = true;
+                return preferredParent;
+            }
+        }
+    }
+
+    // If all else fails, pick the one with the fewest children and smallest hop
+    for (int i = 0; i < n; i++) {
+        if (possibleParents[i].nrChildren < minChildren ||
+           (possibleParents[i].nrChildren == minChildren && possibleParents[i].rootHopDistance < minHop)) {
+            preferredParent = possibleParents[i];
+            minChildren = possibleParents[i].nrChildren;
+            minHop = possibleParents[i].rootHopDistance;
+            found = true;
+        }
+    }
+
+    return preferredParent;
+}
+
+#endif
 
 bool inMySubnet(int* nodeIP){
     routingTableEntry *routingEntry;
