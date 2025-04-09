@@ -98,6 +98,28 @@ void onStationModeDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info){
     Serial.println("[WIFI_EVENTS] Disconnected From AP\n");
     Serial.print("[WIFI_EVENTS] WiFi lost connection. Reason: ");
     Serial.println(info.wifi_sta_disconnected.reason);
+    unsigned long currentTime = millis();
+
+    // On first disconnection, initialize the timer to the current time.
+    // This prevents missing future disconnections after a long inactive period.
+    if (parentDisconnectionCount == 0) lastParentDisconnectionTime = currentTime;
+
+    // Check if the interval since the last disconnection is short enough
+    // to avoid incrementing the counter for isolated or sporadic events.
+    if(currentTime - lastParentDisconnectionTime <=3000){
+        parentDisconnectionCount++;
+        LOG(NETWORK,DEBUG,"Incremented the parentDisconnectionCount: %i\n", parentDisconnectionCount);
+
+        // When repeated disconnections surpass the defined threshold queue an event to initiate parent recovery procedures
+        if(parentDisconnectionCount >= disconnectionThreshold) {
+            LOG(NETWORK,DEBUG,"parentDisconnectionCount above the threshold\n");
+            // Callback code, global func pointer defined in wifi_hal.h:22 and initialized in lifecycle.cpp:48
+            if (parentDisconnectCallback != nullptr){
+                parentDisconnectCallback();
+            }
+        }
+    }
+
     //WiFi.reconnect();
     //Serial.println("Trying to Reconnect");
     //WiFi.begin(ssid, password);

@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <cstdio>
 
+#define LIMIT_PARENT_VISIBILITY
 
 bool iamRoot = false;
 int rootHopDistance = -1;
@@ -326,7 +327,7 @@ parentInfo chooseParent(parentInfo* possibleParents, int n){
             found = true;
             return preferredParent;
         }
-        //Define the max Tree deph
+        //Define the max Tree depth
         if (possibleParents[i].rootHopDistance > maxHop) {
             maxHop = possibleParents[i].rootHopDistance;
         }
