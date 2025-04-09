@@ -316,12 +316,12 @@ parentInfo chooseParent(parentInfo* possibleParents, int n){
 parentInfo chooseParent(parentInfo* possibleParents, int n){
     parentInfo preferredParent;
     bool found = false;
-    int maxHop = 0; minChildren = 10000; minHop = 10000;
+    int maxHop = 0, minChildren = 10000, minHop = 10000;
 
     // First try to connect to the root
     for (int i = 0; i < n; i++) {
         //if the node is the root and have less then 2 children choose it has parent
-        if (possibleParents[i].rootHopDistance == 0 && possibleParents[i].nrChildren < 2) {
+        if (possibleParents[i].rootHopDistance == 0 && possibleParents[i].nrOfChildren < 2) {
             preferredParent = possibleParents[i];
             found = true;
             return preferredParent;
@@ -335,7 +335,7 @@ parentInfo chooseParent(parentInfo* possibleParents, int n){
     // Then try layer by layer: 1, 2, ..., maxHop
     for (int hop = 1; hop <= maxHop; hop++) {
         for (int i = 0; i < n; i++) {
-            if (possibleParents[i].rootHopDistance == hop && possibleParents[i].nrChildren < 2) {
+            if (possibleParents[i].rootHopDistance == hop && possibleParents[i].nrOfChildren < 2) {
                 preferredParent = possibleParents[i];
                 found = true;
                 return preferredParent;
@@ -345,10 +345,10 @@ parentInfo chooseParent(parentInfo* possibleParents, int n){
 
     // If all else fails, pick the one with the fewest children and smallest hop
     for (int i = 0; i < n; i++) {
-        if (possibleParents[i].nrChildren < minChildren ||
-           (possibleParents[i].nrChildren == minChildren && possibleParents[i].rootHopDistance < minHop)) {
+        if (possibleParents[i].nrOfChildren < minChildren ||
+           (possibleParents[i].nrOfChildren == minChildren && possibleParents[i].rootHopDistance < minHop)) {
             preferredParent = possibleParents[i];
-            minChildren = possibleParents[i].nrChildren;
+            minChildren = possibleParents[i].nrOfChildren;
             minHop = possibleParents[i].rootHopDistance;
             found = true;
         }

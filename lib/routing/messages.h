@@ -19,8 +19,6 @@ typedef struct messageParameters{
     char payload[200] = "";
 }messageParameters;
 
-//a = messageEncode(PARENT_DISCOVERY_REQUEST, .ip=1.1.1.1, .hopDistance=2)
-//#define encodeMessage(msg, message_type, ...) messageEncode(msg, message_type, (messageParameters){__VA_ARGS__})
 
 typedef enum messageType{
     PARENT_DISCOVERY_REQUEST, //0
