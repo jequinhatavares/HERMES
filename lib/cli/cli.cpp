@@ -15,7 +15,8 @@ void showMenu() {
     Serial.println("[2] Print Routing Table");
     Serial.println("[3] Print Children Table");
     Serial.println("[4] Print Root Node");
-    Serial.println("[5] Exit program");
+    Serial.println("[5] Force the node to disconnect from its current parent");
+    Serial.println("[6] Exit program");
     Serial.println("======================================================================");
     Serial.print("> ");
 
@@ -118,7 +119,12 @@ void cliInteraction(){
                     break;
 
                 case 5:
-                    Serial.println("Exiting...");
+                    Serial.println("Disconnecting from parent...\n");
+                    disconnectFromAP();
+                    break;
+
+                case 6:
+                    Serial.println("Exiting...\n");
                     break;
 
                 default:

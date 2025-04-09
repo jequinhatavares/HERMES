@@ -1,5 +1,6 @@
 #include "messages.h"
 #include "transport_hal.h"
+#include "wifi_hal.h"
 #include "routing.h"
 
 void showMenu();
