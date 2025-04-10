@@ -330,6 +330,7 @@ void handleDebugMessage(char* msg){
         }
         sendMessage(nextHopIP,messageBuffer);
     }else{//send message to debug server
+        LOG(DEBUG_SERVER,DEBUG,msg);
         //sendMessage(debugServerIP, messageBuffer);
     }
 

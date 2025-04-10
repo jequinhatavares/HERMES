@@ -218,7 +218,7 @@ void startWifiAP(const char* SSID, const char* Pass, const IPAddress& localIP, c
  * @return A List structure containing the SSIDs of Wi-Fi networks
  */
 void searchAP(String SSID){
-    WiFi.mode(WIFI_STA);
+    WiFi.mode(WIFI_AP_STA); //
     int n = WiFi.scanNetworks();//Number of scanned wifi networks
     int index;
     String message;
@@ -254,7 +254,7 @@ void searchAP(String SSID){
  */
 void connectToAP(const char * SSID, const char * PASS) {
 
-    WiFi.mode(WIFI_STA);
+    WiFi.mode(WIFI_AP_STA);// changed were the wifi mode to WIFI_(AP)_STA
     WiFi.begin(SSID, PASS);
 
     // Wait for the Wi-Fi connection to establish or until timeout is reached

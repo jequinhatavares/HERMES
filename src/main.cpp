@@ -52,7 +52,6 @@ void setup(){
     LOG(NETWORK,INFO,"My MAC addr: %s\n",getMyMAC().c_str());
 
     Advance(SM, eSuccess);//Init
-    LOG(DEBUG_SERVER, DEBUG, "After Advance\n");
 
     if(!iamRoot){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Search APs

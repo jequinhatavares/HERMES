@@ -86,6 +86,7 @@ State initNode(Event event){
         assignIP(parent, invalidIP);
         assignIP(rootIP,myIP);
         hasParent = false;
+        reportNewNodeToViz(myIP,invalidIP);
 
         //If the visualization program is active, pass the new node information to it
         //assignIP(vizParameters.IP1, myIP);
@@ -116,27 +117,27 @@ State search(Event event){
     }while ( ssidList.len == 0 );
 
     //Print the found networks
+    LOG(NETWORK,DEBUG, "Found %i SSIDs\n", ssidList.len);
     for (i=0; i<ssidList.len; i++){
         LOG(NETWORK,INFO,"Found SSID: %s\n", ssidList.item[i]);
-        LOG(NETWORK, DEBUG, "1\n");
-
         sscanf(ssidList.item[i], "JessicaNode%s", MAC);
-
         parseMAC(MAC,MAC_int);
         getIPFromMAC(MAC_int, nodeIP);
-
-
         if(inMySubnet(nodeIP)){
             LOG(NETWORK,DEBUG,"Removing: %i.%i.%i.%i from the ssid list\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
             //Remove of the ssidList
-            for (k = i; k < ssidList.len-1; ++k) {
+            for (k = i; k < ssidList.len-1; k++) {
                 strcpy( ssidList.item[k] , ssidList.item[k+1]);
             }
+            i = i-1;
             ssidList.len --;
         }
     }
-    LOG(NETWORK,DEBUG, "Found %i possible new parents\n", ssidList.len);
-    //delay(1000);
+    LOG(NETWORK,DEBUG, "Found %i possible new parents.\n Final List\n", ssidList.len);
+    for (i=0; i<ssidList.len; i++) {
+        LOG(NETWORK, INFO, "%s\n", ssidList.item[i]);
+        //delay(1000);
+    }
 
     insertFirst(stateMachineEngine, eSuccess);
     return sChooseParent;
@@ -147,11 +148,10 @@ State joinNetwork(Event event){
     int packetSize = 0, connectedParentIP[4];
     IPAddress mySTAIP, connectedGateway;
     messageParameters params;
-    char buffer[256] = "";
+    char buffer[256] = "", msg[50] = "",largeMessage[100] = "";
     parentInfo possibleParents[10];
 
     if(ssidList.len != 0){
-        char msg[50] = "";
         //Connect to each parent to request their information in order to select the preferred parent.
         for (int i = 0; i < ssidList.len; i++) {
             LOG(NETWORK,DEBUG,"Before connecting to AP\n");
@@ -215,9 +215,17 @@ State joinNetwork(Event event){
             LOG(NETWORK,INFO,"Routing Table Updated:\n");
             tablePrint(routingTable,printRoutingStruct);
         }
+        // If the joining node has children (i.e., his subnetwork has nodes), it must also send its routing table to its new parent.
+        // This ensures that the rest of the network becomes aware of the entire subtree associated with the new node
+        if(childrenTable->numberOfItems > 0){
+            assignIP(params.senderIP, myIP);
+            encodeMessage(largeMessage, FULL_ROUTING_TABLE_UPDATE, params);
+            sendMessage(parent, largeMessage);
+        }
 
     }
     LOG(NETWORK,INFO,"---------------------Node successfully added to the network----------------------\n");
+    changeWifiMode(3);
     return sIdle;
 }
 
@@ -254,7 +262,7 @@ State handleMessages(Event event){
             break;
 
         case FULL_ROUTING_TABLE_UPDATE:
-            LOG(MESSAGES,INFO,"Message Type Full Routing Update %i\n",flag);
+            LOG(MESSAGES,INFO,"Message Type Full Routing Update\n");
             handleFullRoutingTableUpdate(messageBuffer);
             break;
 
@@ -293,14 +301,19 @@ State handleMessages(Event event){
 State parentRecovery(Event event){
     int* STAIP= nullptr;
     char message[50];
+    messageParameters parameters;
 
     LOG(STATE_MACHINE,INFO,"Entered Parent Recovery State\n");
+
+    assignIP(parameters.senderIP, myIP);
+    encodeMessage(message,TOPOLOGY_BREAK_ALERT,parameters);
 
     //TODO tell my children that i lost connection to my parent
     LOG(MESSAGES,INFO,"Informing my children about the lost connection\n");
     for (int i = 0; i < childrenTable->numberOfItems; ++i) {
         STAIP = (int*) findNode(childrenTable, (int*) childrenTable->table[i].key);
         if(STAIP != nullptr){
+
             sendMessage(STAIP,message);
         }
         else{
