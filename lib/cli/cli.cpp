@@ -93,7 +93,7 @@ void cliInteraction(){
     if (Serial.available() > 0){
 
         showMenu();
-        while (choice != 5) {
+        while (choice != 6) {
 
             while (Serial.available() == 0) {} // Wait for user input
             choice  = Serial.parseInt();
