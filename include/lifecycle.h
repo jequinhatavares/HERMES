@@ -49,10 +49,10 @@ extern IPAddress subnet;
 extern IPAddress dns;
 
 
-void parseMAC(const char* macStr, uint8_t* macArray);
-void setIPs(const uint8_t* MAC);
-void getIPFromMAC(int* MAC, int* IP);
-
+void parseMAC(const char* macStr, int* macArray);
+void setIPs(const int* MAC);
 //#define eMessage ((Event) 4)
 
+void getIPFromMAC(int * MAC, int* IP);
 #endif //LIFECYCLE_H
+

@@ -231,7 +231,7 @@ void handleFullRoutingTableUpdate(char * msg){
     char messageBuffer1[100];
 
     //Parse Message Type and root node IP
-    sscanf(msg, "%d %d.%d.%d.%d ", &type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
+    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
     char* token = strtok(msg, "|");
 
     //To discard the message type and ensure the token points to the first routing table update entry

@@ -366,9 +366,16 @@ bool inMySubnet(int* nodeIP){
     int *childIP;
 
     for (int i = 0; i < childrenTable->numberOfItems; i++) {
+        LOG(NETWORK, DEBUG, "i:%i\n",i);
+
         childIP = (int*)tableKey(childrenTable, i );
         // The node belongs to my subnetwork if the next hop to reach it is one of my children
-        if(isIPEqual(routingEntry->nextHopIP,childIP)) return true;
+        if (childIP != nullptr && routingEntry != nullptr){
+            if(isIPEqual(routingEntry->nextHopIP,childIP)) return true;
+        } else{
+            LOG(NETWORK, ERROR, "key on children table that should have a value returned nullptr\n");
+        }
+
     }
     return false;
 }

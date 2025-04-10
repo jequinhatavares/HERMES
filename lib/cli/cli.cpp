@@ -120,7 +120,7 @@ void cliInteraction(){
 
                 case 5:
                     Serial.println("Disconnecting from parent...\n");
-                    disconnectFromAP();
+                    parentDisconnectCallback();
                     break;
 
                 case 6:

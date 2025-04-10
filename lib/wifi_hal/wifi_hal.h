@@ -5,7 +5,7 @@
 #include "logger.h"
 //#include "lifecycle.h"
 
-#define disconnectionThreshold 1
+#define disconnectionThreshold 3
 
 extern bool initializeAP;
 

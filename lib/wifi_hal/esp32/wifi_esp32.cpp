@@ -221,11 +221,11 @@ void searchAP(String SSID){
     int WiFiStatus;
     List listAPs;
 
-    Serial.printf("Number of scanned Networks: %i\n",n);
+    //Serial.printf("Number of scanned Networks: %i\n",n);
     for (int i = 0; i < n; ++i) {
         String current_ssid = WiFi.SSID(i);
-        String string = "ola";
-        Serial.printf("SSID: %s\n", current_ssid.c_str());
+        //String string = "ola";
+        //Serial.printf("SSID: %s\n", current_ssid.c_str());
         index = current_ssid.indexOf(SSID);
         //Check if the AP corresponds to a node of the mesh network
         if(index == -1){

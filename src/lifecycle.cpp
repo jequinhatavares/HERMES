@@ -38,7 +38,7 @@ void onParentDisconnect(){
 void onChildDisconnect(){
     int lostChildIP[4];
     //Transform the lost child MAC into a IP
-    getIPFromMAC(lostChildMAC,lostChildIP);
+     getIPFromMAC(lostChildMAC,lostChildIP);
     LOG(NETWORK, DEBUG,"onChildDisconnect callback! Lost Child IP: %i.%i.%i.%i\n", lostChildIP[0], lostChildIP[1], lostChildIP[2], lostChildIP[3]);
 
     //Only initiate the lost Child Procedure if the node is my child
@@ -46,7 +46,7 @@ void onChildDisconnect(){
 }
 
 State initNode(Event event){
-    uint8_t MAC[6];
+    int MAC[6];
     char ssid[256], msg[40]; // Make sure this buffer is large enough to hold the entire SSID
     strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
     strcat(ssid, getMyMAC().c_str());
@@ -108,7 +108,7 @@ State search(Event event){
     int i, k, nodeIP[4];
     LOG(STATE_MACHINE,INFO,"Entered Search State\n");
     char MAC[20];
-    uint8_t MAC_int[6];
+    int MAC_int[6];
 
     //Find nodes in the network
     do{
@@ -118,9 +118,13 @@ State search(Event event){
     //Print the found networks
     for (i=0; i<ssidList.len; i++){
         LOG(NETWORK,INFO,"Found SSID: %s\n", ssidList.item[i]);
+        LOG(NETWORK, DEBUG, "1\n");
+
         sscanf(ssidList.item[i], "JessicaNode%s", MAC);
+
         parseMAC(MAC,MAC_int);
-        getIPFromMAC((int*)(MAC_int), nodeIP);
+        getIPFromMAC(MAC_int, nodeIP);
+
 
         if(inMySubnet(nodeIP)){
             LOG(NETWORK,DEBUG,"Removing: %i.%i.%i.%i from the ssid list\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
@@ -131,6 +135,7 @@ State search(Event event){
             ssidList.len --;
         }
     }
+    LOG(NETWORK,DEBUG, "Found %i possible new parents\n", ssidList.len);
     //delay(1000);
 
     insertFirst(stateMachineEngine, eSuccess);
@@ -224,6 +229,9 @@ State idle(Event event){
     }else if(event == eLostParentConnection){
         insertFirst(stateMachineEngine, eMessage);
         return sParentRecovery;
+    }else if(event == eLostChildConnection){
+        insertFirst(stateMachineEngine, eMessage);
+        return sChildRecovery;
     }
     return sIdle;
 }
@@ -231,8 +239,6 @@ State idle(Event event){
 State handleMessages(Event event){
     LOG(STATE_MACHINE,INFO,"Entered handle Messages State\n");
     int messageType, flag = 0;
-
-
 
     sscanf(messageBuffer, "%d", &messageType);
 
@@ -376,11 +382,17 @@ State childRecovery(Event event){
  * @param macArray Pointer to a 6-byte array where the parsed MAC address will be stored.
  * @return void
  */
-void parseMAC(const char* macStr, uint8_t* macArray) {
-    sscanf(macStr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
-           &macArray[0], &macArray[1], &macArray[2],
-           &macArray[3], &macArray[4], &macArray[5]);
+void parseMAC(const char* macStr, int* macArray) {
+    //sscanf(macStr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+    //       &macArray[0], &macArray[1], &macArray[2],
+    //       &macArray[3], &macArray[4], &macArray[5]);
     //Serial.printf("Parsed MAC Bytes: %d:%d:%d:%d:%d:%d\n",macArray[0],macArray[1], macArray[2], macArray[3], macArray[4], macArray[5]);
+    unsigned int bytes[6];
+    sscanf(macStr, "%x:%x:%x:%x:%x:%x",&bytes[0], &bytes[1], &bytes[2],&bytes[3], &bytes[4], &bytes[5]);
+
+    for (int i = 0; i < 6; i++) {
+        macArray[i] = (int)bytes[i];
+    }
 }
 
 /**
@@ -393,13 +405,13 @@ void parseMAC(const char* macStr, uint8_t* macArray) {
  * Given the MAC address: CC:50:E3:60:E6:87
  * The generated IP address will be: 227.96.230.135 //TODO correct this docs
  */
-void setIPs(const uint8_t* MAC){
+void setIPs(const int* MAC){
     localIP = IPAddress(MAC[5],MAC[4],MAC[3],1) ;
     gateway = IPAddress(MAC[5],MAC[4],MAC[3],1) ;
     subnet = IPAddress(255,255,255,0) ;
 }
 
-void getIPFromMAC(int* MAC, int* IP){
+void getIPFromMAC(int * MAC, int* IP){
     IP[0] = MAC[5];
     IP[1] = MAC[4];
     IP[2] = MAC[3];

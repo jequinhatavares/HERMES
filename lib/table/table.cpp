@@ -43,7 +43,7 @@ void tableInit(TableInfo * T, void* keys, void* values, size_t key_size, size_t 
 }
 
 void* tableKey(TableInfo * T, int index){
-    if (index>=T->numberOfItems || index < 0) return nullptr;
+    if (index>=T->numberOfItems || index < 0){return nullptr;}
     return T->table[index].key;
 }
 /**
