@@ -148,7 +148,7 @@ State joinNetwork(Event event){
     int packetSize = 0, connectedParentIP[4];
     IPAddress mySTAIP, connectedGateway;
     messageParameters params;
-    char buffer[256] = "", msg[50] = "",largeMessage[100] = "";
+    char buffer[256] = "", msg[50] = "",largeMessage[200] = "";
     parentInfo possibleParents[10];
 
     if(ssidList.len != 0){
@@ -215,6 +215,7 @@ State joinNetwork(Event event){
             LOG(NETWORK,INFO,"Routing Table Updated:\n");
             tablePrint(routingTable,printRoutingStruct);
         }
+
         // If the joining node has children (i.e., his subnetwork has nodes), it must also send its routing table to its new parent.
         // This ensures that the rest of the network becomes aware of the entire subtree associated with the new node
         if(childrenTable->numberOfItems > 0){
@@ -224,6 +225,8 @@ State joinNetwork(Event event){
         }
 
     }
+
+    ssidList.len = 0 ;
     LOG(NETWORK,INFO,"---------------------Node successfully added to the network----------------------\n");
     changeWifiMode(3);
     return sIdle;

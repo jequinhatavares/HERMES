@@ -253,7 +253,7 @@ void handleFullRoutingTableUpdate(char * msg){
     }
 
     //Propagate the routing table update information trough the network
-    LOG(NETWORK,DEBUG,"1\n");
+    LOG(NETWORK,DEBUG,"Sender IP: i.%i.%i.%i\n",senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
     assignIP(parameters.senderIP,myIP);
     encodeMessage(messageBuffer1, FULL_ROUTING_TABLE_UPDATE, parameters);
     propagateMessage(messageBuffer1, senderIP);
@@ -473,11 +473,13 @@ void handleDebugRegistrationRequest(char* msg){
 void propagateMessage(char* message, int* sourceIP){
     // If the message didn't come from the parent and i have a parent, forward it to the parent
     if(!isIPEqual(sourceIP, parent) && hasParent){
+        LOG(MESSAGES, DEBUG, "Propagating Message to parent: %i.%i.%i.%i\n", parent[0],parent[1],parent[2],parent[3]);
         sendMessage(parent, message);
     }
     //Forward the message to all children except the one that sent it to me
     for(int i = 0; i< childrenTable->numberOfItems; i++){
         if(!isIPEqual((int*)childrenTable->table[i].key, sourceIP)){
+            LOG(MESSAGES, DEBUG, "Propagating Message to: %i.%i.%i.%i\n", ((int*)childrenTable->table[i].key)[0],((int*)childrenTable->table[i].key)[1],((int*)childrenTable->table[i].key)[2],((int*)childrenTable->table[i].key)[3]);
             sendMessage((int*)childrenTable->table[i].value, message);
         }
     }
