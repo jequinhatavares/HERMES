@@ -28,7 +28,7 @@ char messageBuffer[256] = "";
  * @return void
  */
 void encodeMessage(char * msg, messageType type, messageParameters parameters){
-    char tempMsg[37] = "";//35
+    char tempMsg[40] = "";//35
     switch (type) {
         case PARENT_DISCOVERY_REQUEST:
             //0 [mySTAIP]
@@ -224,14 +224,21 @@ void handleChildRegistrationRequest(char * msg){
 */
 void handleFullRoutingTableUpdate(char * msg){
     int type;
-    int nodeIP[4], nextHopIP[4], senderIP[4];
+    int nodeIP[4], nextHopIP[4], sourceIP[4], sourceIPcopy[4];
     int hopDistance;
     routingTableEntry newNode;
     messageParameters parameters;
-    char messageBuffer1[100];
-
+    char messageBuffer1[300];
+    int sourceIPcopy_two[4];
     //Parse Message Type and root node IP
-    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
+    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type,&sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
+
+    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type,&sourceIPcopy[0],&sourceIPcopy[1],&sourceIPcopy[2],&sourceIPcopy[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
+    LOG(NETWORK,DEBUG,"Sender IP Copy: %i.%i.%i.%i\n",sourceIPcopy[0],sourceIPcopy[1],sourceIPcopy[2],sourceIPcopy[3]);
+    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type,&sourceIPcopy_two[0],&sourceIPcopy_two[1],&sourceIPcopy_two[2],&sourceIPcopy_two[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
+    LOG(NETWORK,DEBUG,"Sender IP Copy2: %i.%i.%i.%i\n",sourceIPcopy_two[0],sourceIPcopy_two[1],sourceIPcopy_two[2],sourceIPcopy_two[3]);
+
+
     char* token = strtok(msg, "|");
 
     //To discard the message type and ensure the token points to the first routing table update entry
@@ -248,15 +255,19 @@ void handleFullRoutingTableUpdate(char * msg){
         newNode.nextHopIP[2] = nextHopIP[2];newNode.nextHopIP[3] = nextHopIP[3];
         newNode.hopDistance = hopDistance;
         //Update the Routing Table
-        updateRoutingTable(nodeIP,newNode,senderIP);
+        updateRoutingTable(nodeIP,newNode,sourceIP);
         token = strtok(NULL, "|");
     }
 
     //Propagate the routing table update information trough the network
-    LOG(NETWORK,DEBUG,"Sender IP: i.%i.%i.%i\n",senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
+    LOG(NETWORK,DEBUG,"Sender IP: %i.%i.%i.%i\n",sourceIP[0],sourceIP[1],sourceIP[2],sourceIP[3]);
     assignIP(parameters.senderIP,myIP);
+    LOG(NETWORK,DEBUG,"Sender IP: %i.%i.%i.%i\n",sourceIP[0],sourceIP[1],sourceIP[2],sourceIP[3]);
     encodeMessage(messageBuffer1, FULL_ROUTING_TABLE_UPDATE, parameters);
-    propagateMessage(messageBuffer1, senderIP);
+    LOG(NETWORK,DEBUG,"Sender IP: %i.%i.%i.%i\n",sourceIP[0],sourceIP[1],sourceIP[2],sourceIP[3]);
+    LOG(NETWORK,DEBUG,"Sender IP COPY: %i.%i.%i.%i\n",sourceIPcopy[0],sourceIPcopy[1],sourceIPcopy[2],sourceIPcopy[3]);
+    LOG(NETWORK,DEBUG,"Sender IP COPY2: %i.%i.%i.%i\n",sourceIPcopy_two[0],sourceIPcopy_two[1],sourceIPcopy_two[2],sourceIPcopy_two[3]);
+    propagateMessage(messageBuffer1, sourceIP);
 
 }
 
@@ -472,14 +483,18 @@ void handleDebugRegistrationRequest(char* msg){
  */
 void propagateMessage(char* message, int* sourceIP){
     // If the message didn't come from the parent and i have a parent, forward it to the parent
+    //LOG(MESSAGES, DEBUG, "SourceIP: %i.%i.%i.%i\nParentIP: %i.%i.%i.%i hasParent: %i\n",sourceIP[0], sourceIP[1],sourceIP[2],sourceIP[3],
+    //   parent[0],parent[1],parent[2],parent[3],hasParent);
     if(!isIPEqual(sourceIP, parent) && hasParent){
-        LOG(MESSAGES, DEBUG, "Propagating Message to parent: %i.%i.%i.%i\n", parent[0],parent[1],parent[2],parent[3]);
+        //LOG(MESSAGES, DEBUG, "Propagating Message to parent: %i.%i.%i.%i\n", parent[0],parent[1],parent[2],parent[3]);
         sendMessage(parent, message);
     }
     //Forward the message to all children except the one that sent it to me
     for(int i = 0; i< childrenTable->numberOfItems; i++){
+        //LOG(MESSAGES, DEBUG, "SourceIP: %i.%i.%i.%i ChildIP: %i.%i.%i.%i\n",sourceIP[0], sourceIP[1],sourceIP[2],sourceIP[3],
+        //        ((int*)childrenTable->table[i].key)[0],((int*)childrenTable->table[i].key)[1],((int*)childrenTable->table[i].key)[2],((int*)childrenTable->table[i].key)[3]);
         if(!isIPEqual((int*)childrenTable->table[i].key, sourceIP)){
-            LOG(MESSAGES, DEBUG, "Propagating Message to: %i.%i.%i.%i\n", ((int*)childrenTable->table[i].key)[0],((int*)childrenTable->table[i].key)[1],((int*)childrenTable->table[i].key)[2],((int*)childrenTable->table[i].key)[3]);
+            //LOG(MESSAGES, DEBUG, "Propagating Message to: %i.%i.%i.%i\n", ((int*)childrenTable->table[i].key)[0],((int*)childrenTable->table[i].key)[1],((int*)childrenTable->table[i].key)[2],((int*)childrenTable->table[i].key)[3]);
             sendMessage((int*)childrenTable->table[i].value, message);
         }
     }

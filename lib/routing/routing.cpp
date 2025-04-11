@@ -249,7 +249,6 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4
      else if(findNode(childrenTable,newNode.nextHopIP) == nullptr ){
         assignIP(newNode.nextHopIP, senderIP);
         newNode.hopDistance = newNode.hopDistance + 1;
-        //TODO aqui ter cuidado porque o senderIP atualizado no UDP pode estar relacionado com se a mensagem veio do pai ou do filho
      }
 
     if( findNode(routingTable, nodeIP) == nullptr){

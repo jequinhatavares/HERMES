@@ -16,7 +16,6 @@ typedef struct messageParameters{
     int** possibleParents;
     int hopDistance = -1;
     int childrenNumber = -1;
-    TableInfo *routingTable;
     char payload[200] = "";
 }messageParameters;
 
