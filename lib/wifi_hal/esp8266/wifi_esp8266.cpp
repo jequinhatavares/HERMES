@@ -197,9 +197,12 @@ void startWifiAP(const char* SSID, const char* Pass, const IPAddress& localIP, c
     // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
     //WiFi.config(localIP, gateway, subnet, gateway);
     WiFi.mode(WIFI_AP);
+    //WiFi.persistent(true);
     // Start the Access Point with the SSID defined in SSID_PREFIX
     WiFi.softAPConfig(localIP, gateway, subnet);
     WiFi.softAP(SSID, Pass);
+
+    //WiFi.setSleepMode(WIFI_NONE_SLEEP);
     //Serial.print("My SoftAP IP:");
     //Serial.print(WiFi.softAPIP());
 
@@ -256,6 +259,7 @@ void connectToAP(const char * SSID, const char * PASS) {
 
     WiFi.mode(WIFI_AP_STA);// changed were the wifi mode to WIFI_(AP)_STA
     WiFi.begin(SSID, PASS);
+    WiFi.setOutputPower(8.5);
 
     // Wait for the Wi-Fi connection to establish or until timeout is reached
     while(WiFi.status() != WL_CONNECTED){

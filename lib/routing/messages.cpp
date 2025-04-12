@@ -224,20 +224,13 @@ void handleChildRegistrationRequest(char * msg){
 */
 void handleFullRoutingTableUpdate(char * msg){
     int type;
-    int nodeIP[4], nextHopIP[4], sourceIP[4], sourceIPcopy[4];
+    int nodeIP[4], nextHopIP[4], sourceIP[4];
     int hopDistance;
     routingTableEntry newNode;
     messageParameters parameters;
     char messageBuffer1[300];
-    int sourceIPcopy_two[4];
     //Parse Message Type and root node IP
     sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type,&sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
-
-    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type,&sourceIPcopy[0],&sourceIPcopy[1],&sourceIPcopy[2],&sourceIPcopy[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
-    LOG(NETWORK,DEBUG,"Sender IP Copy: %i.%i.%i.%i\n",sourceIPcopy[0],sourceIPcopy[1],sourceIPcopy[2],sourceIPcopy[3]);
-    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type,&sourceIPcopy_two[0],&sourceIPcopy_two[1],&sourceIPcopy_two[2],&sourceIPcopy_two[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
-    LOG(NETWORK,DEBUG,"Sender IP Copy2: %i.%i.%i.%i\n",sourceIPcopy_two[0],sourceIPcopy_two[1],sourceIPcopy_two[2],sourceIPcopy_two[3]);
-
 
     char* token = strtok(msg, "|");
 
@@ -260,13 +253,8 @@ void handleFullRoutingTableUpdate(char * msg){
     }
 
     //Propagate the routing table update information trough the network
-    LOG(NETWORK,DEBUG,"Sender IP: %i.%i.%i.%i\n",sourceIP[0],sourceIP[1],sourceIP[2],sourceIP[3]);
     assignIP(parameters.senderIP,myIP);
-    LOG(NETWORK,DEBUG,"Sender IP: %i.%i.%i.%i\n",sourceIP[0],sourceIP[1],sourceIP[2],sourceIP[3]);
     encodeMessage(messageBuffer1, FULL_ROUTING_TABLE_UPDATE, parameters);
-    LOG(NETWORK,DEBUG,"Sender IP: %i.%i.%i.%i\n",sourceIP[0],sourceIP[1],sourceIP[2],sourceIP[3]);
-    LOG(NETWORK,DEBUG,"Sender IP COPY: %i.%i.%i.%i\n",sourceIPcopy[0],sourceIPcopy[1],sourceIPcopy[2],sourceIPcopy[3]);
-    LOG(NETWORK,DEBUG,"Sender IP COPY2: %i.%i.%i.%i\n",sourceIPcopy_two[0],sourceIPcopy_two[1],sourceIPcopy_two[2],sourceIPcopy_two[3]);
     propagateMessage(messageBuffer1, sourceIP);
 
 }
