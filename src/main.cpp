@@ -48,7 +48,7 @@ void setup(){
     #ifdef ESP8266
         LOG(NETWORK,INFO,"ESP8266\n");
     #endif
-
+    Serial.printf("Code uploaded through multi_upload_tool.py V1\n");
     LOG(NETWORK,INFO,"My MAC addr: %s\n",getMyMAC().c_str());
 
     Advance(SM, eSuccess);//Init
