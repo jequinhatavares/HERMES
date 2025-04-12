@@ -28,6 +28,8 @@ bool isFirstMessage = true;
 
 
 void setup(){
+    int MAC[6];
+
     Serial.begin(115200);
 
     //Serial.setTimeout(10000);
@@ -39,6 +41,13 @@ void setup(){
 
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
+
+    parseMAC(getMyMAC().c_str(), MAC);
+    if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96)
+    {
+        iamRoot = true;
+    }
+
 
     #ifdef ESP32
         LOG(NETWORK,INFO,"ESP32\n");
