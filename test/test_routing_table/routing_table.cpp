@@ -684,8 +684,6 @@ void test_routing_table_partial_update_delete_node_from_parent(){
 void test_routing_table_update_node_changing_parent(){
     //1->3->4--->6, 1->2 ,3->5
     //Encoding the full routing update coming from my parent
-    int senderIP[4];
-    int newNodeIP[4] = {2,2,2,2}; // parent's child
     char partialRoutingTableUpdate[100] = "4 5.5.5.5 6.6.6.6 6.6.6.6 1";
     char partialRoutingTableUpdate2[100] = "4 1.1.1.1 6.6.6.6 2.2.2.2 2";
 
@@ -766,6 +764,113 @@ void test_routing_table_update_node_changing_parent(){
     tableClean(routingTable);
 }
 
+void test_routing_table_update_node_with_subnetwork_changing_parent(){
+    //1->3->4--->6, 1->2 ,3->5
+    //Encoding the full routing update coming from my parent
+    char fullRoutingTableUpdate[200] = "3 1.1.1.1 1.1.1.1 |1.1.1.1 1.1.1.1 0 |2.2.2.2 2.2.2.2 1 |3.3.3.3 3.3.3.3 1 |4.4.4.4 3.3.3.3 2 |5.5.5.5 3.3.3.3 2 |6.6.6.6 2.2.2.2 3 |7.7.7.7 2.2.2.2 3";
+
+    //MyIP IP initialization
+    myIP[0] = 3;myIP[1] = 3;
+    myIP[2] = 3;myIP[3] = 3;
+    routingTableEntry i ={
+            .hopDistance = 0,
+            .nextHopIP = {3,3,3,3},
+    };
+    routingTableEntry* myNode = &i;
+
+
+    int childNodeIP[4] = {4,4,4,4};
+    routingTableEntry node2 ={ //Child node
+            .hopDistance = 1,
+            .nextHopIP = {4,4,4,4},
+    };
+    routingTableEntry* childNode1 = &node2;
+
+    int childNode2IP[4] = {5,5,5,5};
+    routingTableEntry node3 ={ // Other Child Node
+            .hopDistance = 1,
+            .nextHopIP = {5,5,5,5},
+    };
+    routingTableEntry* childNode2 = &node3;
+
+    int childFromRootIP[4] = {2,2,2,2};
+    routingTableEntry node5 ={ //Child node
+            .hopDistance = 2,
+            .nextHopIP = {1,1,1,1},
+    };
+    routingTableEntry* childFromRootEntry = &node5;
+
+    //Parent IP initialization
+    parent[0] = 1;parent[1] = 1;
+    parent[2] = 1;parent[3] = 1;
+    routingTableEntry node4 ={ //Parent
+            .hopDistance = 1,
+            .nextHopIP = {1,1,1,1},
+    };
+    routingTableEntry* parentNode = &node4;
+
+    int grandSonNodeIP[4] = {6,6,6,6};
+    routingTableEntry node6 ={ //GrandSon Node From child 4.4.4.4
+            .hopDistance = 2,
+            .nextHopIP = {4,4,4,4},
+    };
+    routingTableEntry* grandSonNode = &node6;
+
+    int grandSonNode2IP[4] = {7,7,7,7};
+    routingTableEntry node7 ={ //GrandSon Node From child 4.4.4.4
+            .hopDistance = 2,
+            .nextHopIP = {4,4,4,4},
+    };
+    routingTableEntry* grandSonNode2 = &node7;
+
+    initTables();
+
+    //Initializing my routing table with initial correct values
+    tableAdd(routingTable, myIP,myNode);
+    tableAdd(routingTable, parent,parentNode);
+    tableAdd(routingTable, childNodeIP,childNode1);
+    tableAdd(routingTable, childNode2IP,childNode2);
+    tableAdd(routingTable, grandSonNodeIP,grandSonNode);
+    tableAdd(routingTable, grandSonNode2IP,grandSonNode2);
+
+    handleFullRoutingTableUpdate(fullRoutingTableUpdate);
+
+    routingTableEntry* myNodeUpdated = (routingTableEntry *) findNode(routingTable, myIP);
+    TEST_ASSERT(myNodeUpdated != nullptr);
+    TEST_ASSERT(myNodeUpdated->hopDistance == 0);
+    TEST_ASSERT(isIPEqual(myNodeUpdated->nextHopIP, myIP));
+    TEST_ASSERT(routingTable->numberOfItems == 6);
+
+    routingTableEntry* parentUpdated = (routingTableEntry *) findNode(routingTable, parent);
+    TEST_ASSERT(parentUpdated != nullptr);
+    TEST_ASSERT(parentUpdated->hopDistance == 1);
+    TEST_ASSERT(isIPEqual(parentUpdated->nextHopIP, parent));
+
+    routingTableEntry* childNodeUpdated = (routingTableEntry *) findNode(routingTable, childNodeIP);
+    TEST_ASSERT(childNodeUpdated != nullptr);
+    TEST_ASSERT(childNodeUpdated->hopDistance == 3);
+    TEST_ASSERT(isIPEqual(childNodeUpdated->nextHopIP, parent));
+
+    routingTableEntry* childNode2Updated = (routingTableEntry *) findNode(routingTable, childNode2IP);
+    TEST_ASSERT(childNode2Updated != nullptr);
+    TEST_ASSERT(childNode2Updated->hopDistance == 1);
+    TEST_ASSERT(isIPEqual(childNode2Updated->nextHopIP, childNode2IP));
+
+    routingTableEntry* grandSonNodeUpdated = (routingTableEntry *) findNode(routingTable, grandSonNodeIP);
+    TEST_ASSERT(grandSonNodeUpdated != nullptr);
+    TEST_ASSERT(grandSonNodeUpdated->hopDistance == 4);
+    //printf("NextHop: %i.%i.%i.%i\n",grandSonNodeUpdated->nextHopIP[0],grandSonNodeUpdated->nextHopIP[1],grandSonNodeUpdated->nextHopIP[2],grandSonNodeUpdated->nextHopIP[3]);
+    TEST_ASSERT(isIPEqual(grandSonNodeUpdated->nextHopIP, parent));
+
+    routingTableEntry* grandSonNode2Updated = (routingTableEntry *) findNode(routingTable, grandSonNode2IP);
+    TEST_ASSERT(grandSonNode2Updated != nullptr);
+    TEST_ASSERT(grandSonNode2Updated->hopDistance == 4);
+    //printf("NextHop: %i.%i.%i.%i\n",grandSonNodeUpdated->nextHopIP[0],grandSonNodeUpdated->nextHopIP[1],grandSonNodeUpdated->nextHopIP[2],grandSonNodeUpdated->nextHopIP[3]);
+    TEST_ASSERT(isIPEqual(grandSonNode2Updated->nextHopIP, parent));
+
+    tableClean(routingTable);
+}
+
 void setUp(void){}
 
 void tearDown(void){}
@@ -780,12 +885,12 @@ int main(int argc, char** argv){
     RUN_TEST(test_find_path_to_parent);
     RUN_TEST(test_find_path_to_network);
     RUN_TEST(test_find_path_to_invalid_node);
-    RUN_TEST(test_add_node);
     RUN_TEST(test_new_node_routing_table_initialization);
     RUN_TEST(test_routing_table_partial_update_new_node_from_child);
     RUN_TEST(test_routing_table_partial_update_new_node_from_parent);
     RUN_TEST(test_routing_table_update_with_node_from_child_subnetwork);
     RUN_TEST(test_routing_table_update_node_changing_parent);
+    RUN_TEST(test_routing_table_update_node_with_subnetwork_changing_parent);
     UNITY_END();
 }
 
