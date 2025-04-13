@@ -62,7 +62,7 @@ void logHeaders(LogModules module){
         #if defined(ESP32) || defined(ESP8266)
             Serial.printf("\n--------------------- NETWORK ----------------------\n");
         #endif
-        #ifdef native
+        #ifdef NATIVE
             printf("\n---------------------NETWORK----------------------\n");
         #endif
             break;
@@ -70,7 +70,7 @@ void logHeaders(LogModules module){
         #if defined(ESP32) || defined(ESP8266)
                     Serial.printf("\n««««««««««««««««««««« MESSAGES »»»»»»»»»»»»»»»»»»»»\n");
         #endif
-        #ifdef native
+        #ifdef NATIVE
                     printf("\n««««««««««««««««««««« MESSAGES »»»»»»»»»»»»»»»»»»»»\n");
         #endif
             break;
@@ -78,7 +78,7 @@ void logHeaders(LogModules module){
         #if defined(ESP32) || defined(ESP8266)
                     Serial.printf("\n:::::::::::::::::::::: STATE MACHINE ::::::::::::::::::::::\n");
         #endif
-        #ifdef native
+        #ifdef NATIVE
                     printf("\n:::::::::::::::::::::: STATE MACHINE ::::::::::::::::::::::\n");
         #endif
             break;
@@ -88,7 +88,7 @@ void logSimplePrint(const char* msg){
     #if defined(ESP32) || defined(ESP8266)
         Serial.printf("%s",msg);
     #endif
-    #ifdef native
+    #ifdef NATIVE
         printf("%s",msg);
     #endif
 }
@@ -111,7 +111,6 @@ void logSimplePrint(const char* msg){
  * LOG(MESSAGES, ERROR, "Failed to send message: %s\n", errorMessage);
  */
 void LOG(LogModules module, LogLevels level, const char* format, ...) {
-
     //The module is printed only if it is included in the modules to print
     if (!isModuleEnabled(module)) {
         return;
@@ -131,14 +130,14 @@ void LOG(LogModules module, LogLevels level, const char* format, ...) {
     va_start(args,format); //Initialize argument list
 
     //logHeaders(module);
-
+    printf("Logs ");
     #if defined(ESP32) || defined(ESP8266)
         char buffer[500];
         vsnprintf(buffer, sizeof(buffer),format,args);
         Serial.printf("%s", buffer);
     #endif
 
-    #ifdef native
+    #if defined(NATIVE)
         vprintf(format, args);
     #endif
 

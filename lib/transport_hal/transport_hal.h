@@ -10,7 +10,7 @@
 #if defined(ESP8266)
     #include "esp8266/udp_esp8266.h"
 #endif
-#if defined(native)
+#if defined(NATIVE)
     #include "PC/udp_pc.h"
 #endif
 

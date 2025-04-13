@@ -258,11 +258,12 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4
      }
 
     if( findNode(routingTable, nodeIP) == nullptr){
-        //Serial.printf("3\n");
+        //LOG(NETWORK,DEBUG,"Adding new node\n");
         tableAdd(routingTable, nodeIP, &newNode);
         //Serial.printf("Routing Table\n");
     }else{//The node is already present in the table
         //Serial.printf("4\n");
+        //LOG(NETWORK,DEBUG,"Updating node\n");
         tableUpdate(routingTable, nodeIP, &newNode);
         //Serial.printf("Routing Table\n");
         //Serial.printf("5\n");

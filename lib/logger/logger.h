@@ -5,7 +5,7 @@
 #include <Arduino.h>
 #endif
 
-#ifdef native
+#ifdef NATIVE
 #include <cstdio>
 #endif
 

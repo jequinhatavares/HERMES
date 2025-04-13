@@ -3,6 +3,7 @@
 #include "logger.h"
 
 void test_logger(){
+    currentLogLevel = DEBUG;
     char msg[6] = "Hello";
     int IP[4] = {1,2,3,4};
     printf("should start printing after this:\n");
