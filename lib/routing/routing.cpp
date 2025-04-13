@@ -1,6 +1,6 @@
 #include "routing.h"
 
-#include <Arduino.h>
+
 #include <cstdio>
 
 #define LIMIT_PARENT_VISIBILITY
@@ -241,12 +241,18 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4
          assignIP(newNode.nextHopIP, nodeIP);
      }
      //If the next hop is my parent or child, increase the hop distance by 1
+     //TODO esta condição já não me está a fazer sentido
      else if(isIPEqual(newNode.nextHopIP, parent) || findNode(childrenTable,newNode.nextHopIP) != nullptr){
          newNode.hopDistance = newNode.hopDistance + 1;
      }
-     //If the IP or nextHopIP is neither my parent nor my child (i.e., it belongs to another node in the network
-     // that is not directly connected to me), update nextHopIP to the sender's IP
-     else if(findNode(childrenTable,newNode.nextHopIP) == nullptr ){
+     //If the next hop is myself and the node is not one of my direct children, then it belongs to the subnet of one of my children.
+     // In this case, do not update the value, keep the one previously updated by the corresponding child that informed me about this node.
+     else if(isIPEqual(newNode.nextHopIP, myIP) && findNode(childrenTable,nodeIP) == nullptr ){
+         return;
+     }
+     //If the node is neither my parent nor my child (i.e., it belongs to another node in the network that is not directly connected to me)
+     // and the nextHopIP isn't myself update nextHopIP to the sender's IP
+     else {
         assignIP(newNode.nextHopIP, senderIP);
         newNode.hopDistance = newNode.hopDistance + 1;
      }

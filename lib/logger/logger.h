@@ -9,7 +9,7 @@
 #include <cstdio>
 #endif
 
-#include <stdarg.h>
+#include <cstdarg>
 #include <cstring>
 
 #define MAX_MODULES 10
