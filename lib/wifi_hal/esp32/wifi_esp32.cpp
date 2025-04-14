@@ -6,9 +6,6 @@ List ssidList;
 unsigned long lastParentDisconnectionTime = 0 ;
 int parentDisconnectionCount = 0;
 
-unsigned long lastChildDisconnectionTime = 0 ;
-int childDisconnectionCount = 0;
-
 int lostChildMAC[6];
 
 void (*parentDisconnectCallback)() = nullptr;
@@ -23,8 +20,7 @@ void (*childDisconnectCallback)() = nullptr;
  * @return void
  */
 void onSoftAPModeStationConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info){
-    Serial.println("[WIFI_EVENTS] Got station connected\n");
-
+    Serial.println("\n[WIFI_EVENTS] Station connected\n");
 }
 
 /**
@@ -36,11 +32,11 @@ void onSoftAPModeStationConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info
  * @return void
  */
 void onSoftAPModeStationDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info) {
-    Serial.println("[WIFI_EVENTS] Got station disconnected\n");
+    Serial.println("\n[WIFI_EVENTS] Station disconnected\n");
     unsigned long currentTime = millis();
     // On first disconnection, initialize the timer to the current time.
     // This prevents missing future disconnections after a long inactive period.
-    if (childDisconnectionCount == 0) lastParentDisconnectionTime = currentTime;
+    /***if (childDisconnectionCount == 0) lastParentDisconnectionTime = currentTime;
 
     // Check if the interval since the last disconnection is short enough
     // to avoid incrementing the counter for isolated or sporadic events.
@@ -55,7 +51,7 @@ void onSoftAPModeStationDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t i
                 childDisconnectCallback();
             }
         }
-    }
+    }***/
 }
 
 /**
@@ -67,7 +63,7 @@ void onSoftAPModeStationDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t i
  * @return void
  */
 void onStationModeGotIPHandler(WiFiEvent_t event, WiFiEventInfo_t info){
-    Serial.println("[WIFI_EVENTS] Local ESP32 IP: ");
+    Serial.print("\n[WIFI_EVENTS] Local ESP32 STA IP: ");
     Serial.println(WiFi.localIP());
 }
 
@@ -80,10 +76,10 @@ void onStationModeGotIPHandler(WiFiEvent_t event, WiFiEventInfo_t info){
  * @return void
  */
 void onStationModeConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info) {
-    Serial.println("[WIFI_EVENTS] Connected to AP\n");
+    Serial.println("\n[WIFI_EVENTS] Connected to AP\n");
     //WiFi.begin(SSID_PREFIX,PASS);
     parentDisconnectionCount = 0; // Reset the parent disconnection Counter
-    LOG(NETWORK,DEBUG,"Reset the parentDisconnectionCount: %i\n", parentDisconnectionCount);
+    //LOG(NETWORK,DEBUG,"Reset the parentDisconnectionCount: %i\n", parentDisconnectionCount);
 }
 
 /**
@@ -95,9 +91,8 @@ void onStationModeConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info) {
  * @return void
  */
 void onStationModeDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info){
-    Serial.println("[WIFI_EVENTS] Disconnected From AP\n");
-    Serial.print("[WIFI_EVENTS] WiFi lost connection. Reason: ");
-    Serial.println(info.wifi_sta_disconnected.reason);
+    Serial.printf("\n[WIFI_EVENTS] Disconnected from AP. Reason: %u\n",info.wifi_sta_disconnected.reason);
+
     unsigned long currentTime = millis();
 
     // On first disconnection, initialize the timer to the current time.
@@ -108,11 +103,11 @@ void onStationModeDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info){
     // to avoid incrementing the counter for isolated or sporadic events.
     if(currentTime - lastParentDisconnectionTime <=3000){
         parentDisconnectionCount++;
-        LOG(NETWORK,DEBUG,"Incremented the parentDisconnectionCount: %i\n", parentDisconnectionCount);
+        //LOG(NETWORK,DEBUG,"Incremented the parentDisconnectionCount: %i\n", parentDisconnectionCount);
 
         // When repeated disconnections surpass the defined threshold queue an event to initiate parent recovery procedures
         if(parentDisconnectionCount >= disconnectionThreshold) {
-            LOG(NETWORK,DEBUG,"parentDisconnectionCount above the threshold\n");
+            //LOG(NETWORK,DEBUG,"parentDisconnectionCount above the threshold\n");
             // Callback code, global func pointer defined in wifi_hal.h:22 and initialized in lifecycle.cpp:48
             if (parentDisconnectCallback != nullptr){
                 parentDisconnectCallback();
@@ -202,6 +197,7 @@ void startWifiAP(const char* SSID, const char* Pass, const IPAddress& localIP, c
 
     //Init Wifi Event Handlers
     initWifiEventHandlers();
+    initAuxTables();
 
     Serial.printf("My MAC: %s\n", WiFi.macAddress().c_str());
 
@@ -252,11 +248,14 @@ void connectToAP(const char * SSID, const char * PASS) {
     WiFi.mode(WIFI_AP_STA); //AP
     WiFi.begin(SSID, PASS);
 
+    Serial.print("Connecting to AP\n");
     // Wait for the Wi-Fi connection to establish or until timeout is reached
     while(WiFi.status() != WL_CONNECTED){
-        delay(150);
         Serial.println(Get_WiFiStatus(WiFi.status()));
+        //Serial.print("...");
+        delay(150);
     }
+
 }
 /**
  * stopWifiAP

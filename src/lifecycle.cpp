@@ -59,7 +59,7 @@ State initNode(Event event){
     parentDisconnectCallback = onParentDisconnect;
     childDisconnectCallback = onChildDisconnect;
 
-    LOG(STATE_MACHINE,INFO,"Entered Init State\n");
+    LOG(STATE_MACHINE,INFO,"Init State\n");
     parseMAC(getMyMAC().c_str(), MAC);
     setIPs(MAC);
 
@@ -107,7 +107,7 @@ State initNode(Event event){
 
 State search(Event event){
     int i, k, nodeIP[4];
-    LOG(STATE_MACHINE,INFO,"Entered Search State\n");
+    LOG(STATE_MACHINE,INFO,"Search State\n");
     char MAC[20];
     int MAC_int[6];
 
@@ -117,14 +117,14 @@ State search(Event event){
     }while ( ssidList.len == 0 );
 
     //Print the found networks
-    LOG(NETWORK,DEBUG, "Found %i SSIDs\n", ssidList.len);
+    LOG(NETWORK,DEBUG, "Found %i Wi-Fi networks.\n", ssidList.len);
     for (i=0; i<ssidList.len; i++){
         LOG(NETWORK,INFO,"Found SSID: %s\n", ssidList.item[i]);
         sscanf(ssidList.item[i], "JessicaNode%s", MAC);
         parseMAC(MAC,MAC_int);
         getIPFromMAC(MAC_int, nodeIP);
         if(inMySubnet(nodeIP)){
-            LOG(NETWORK,DEBUG,"Removing: %i.%i.%i.%i from the ssid list\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
+            //LOG(NETWORK,DEBUG,"Removing: %i.%i.%i.%i from the ssid list\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
             //Remove of the ssidList
             for (k = i; k < ssidList.len-1; k++) {
                 strcpy( ssidList.item[k] , ssidList.item[k+1]);
@@ -133,18 +133,18 @@ State search(Event event){
             ssidList.len --;
         }
     }
-    LOG(NETWORK,DEBUG, "Found %i possible new parents.\n Final List\n", ssidList.len);
+    /***LOG(NETWORK,DEBUG, "Found %i possible new parents.\n Final List\n", ssidList.len);
     for (i=0; i<ssidList.len; i++) {
         LOG(NETWORK, INFO, "%s\n", ssidList.item[i]);
-        //delay(1000);
-    }
+        delay(1000);
+    }***/
 
     insertFirst(stateMachineEngine, eSuccess);
     return sChooseParent;
 }
 
 State joinNetwork(Event event){
-    LOG(STATE_MACHINE,INFO,"Entered choose parent State\n");
+    LOG(STATE_MACHINE,INFO,"Join Network State\n");
     int packetSize = 0, connectedParentIP[4];
     IPAddress mySTAIP, connectedGateway;
     messageParameters params;
@@ -154,9 +154,9 @@ State joinNetwork(Event event){
     if(ssidList.len != 0){
         //Connect to each parent to request their information in order to select the preferred parent.
         for (int i = 0; i < ssidList.len; i++) {
-            LOG(NETWORK,DEBUG,"Before connecting to AP\n");
+            //LOG(NETWORK,DEBUG,"Before connecting to AP\n");
             connectToAP(ssidList.item[i], PASS);
-            LOG(NETWORK,INFO,"Connected to potential parent. My STA IP: %s; Gateway: %s\n", getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
+            //LOG(NETWORK,INFO,"→ Connected to Potential Parent: %s\n", getGatewayIP().toString().c_str());
             mySTAIP = getMySTAIP();
             delay(1000);
 
@@ -168,20 +168,18 @@ State joinNetwork(Event event){
             connectedParentIP[2] = getGatewayIP()[2];connectedParentIP[3] = getGatewayIP()[3];
             sendMessage(connectedParentIP, msg);
 
-            LOG(NETWORK,INFO,"Waiting for parent response\n");
 
             //Wait for the parent to respond
             while((packetSize = incomingMessage()) == 0);
 
             if (packetSize > 0){
                 receiveMessage(buffer);
-                LOG(MESSAGES,INFO,"Parent Response: %s\n", buffer);
+                //LOG(MESSAGES,INFO,"Parent Response: %s\n", buffer);
                 handleParentInfoResponse(buffer, possibleParents, i);
                 possibleParents[i].ssid = ssidList.item[i];
-                LOG(NETWORK,INFO,"possibleParents Info- nrChildren: %i rootHopDistance: %i IP: %i.%i.%i.%i\n", possibleParents[i].nrOfChildren, possibleParents[i].rootHopDistance,possibleParents[i].parentIP[0], possibleParents[i].parentIP[1], possibleParents[i].parentIP[2], possibleParents[i].parentIP[3]);
             }
             if(ssidList.len != 1){
-                LOG(NETWORK,DEBUG,"Disconnecting from AP\n");
+                //LOG(NETWORK,DEBUG,"Disconnecting from AP\n");
                 disconnectFromAP();
             }
         }
@@ -189,7 +187,7 @@ State joinNetwork(Event event){
         parentInfo preferredParent = chooseParent(possibleParents,ssidList.len);
         //Connect to the preferred parent
         if(ssidList.len != 1)connectToAP(preferredParent.ssid, PASS);
-        LOG(NETWORK,INFO,"Preferred Parent- IP: %i.%i.%i.%i nrChildren: %i rootHopDistance: %i\n",preferredParent.parentIP[0], preferredParent.parentIP[1], preferredParent.parentIP[2], preferredParent.parentIP[3], preferredParent.nrOfChildren, preferredParent.rootHopDistance);
+        LOG(NETWORK,INFO,"Selected Parent -> IP: %i.%i.%i.%i | Children: %i | RootHopDist: %i\n",preferredParent.parentIP[0], preferredParent.parentIP[1], preferredParent.parentIP[2], preferredParent.parentIP[3], preferredParent.nrOfChildren, preferredParent.rootHopDistance);
 
         //Update parent information on global variable
         parent[0] = preferredParent.parentIP[0]; parent[1] = preferredParent.parentIP[1];
@@ -210,7 +208,7 @@ State joinNetwork(Event event){
         //Process the routing table update
         if (packetSize > 0){
             receiveMessage(buffer);
-            LOG(MESSAGES,INFO,"Parent Response: %s\n", buffer);
+            //LOG(MESSAGES,INFO,"Parent Response: %s\n", buffer);
             handleFullRoutingTableUpdate(buffer);
             LOG(NETWORK,INFO,"Routing Table Updated:\n");
             tablePrint(routingTable,printRoutingStruct);
@@ -227,13 +225,13 @@ State joinNetwork(Event event){
     }
 
     ssidList.len = 0 ;
-    LOG(NETWORK,INFO,"---------------------Node successfully added to the network----------------------\n");
+    LOG(NETWORK,INFO,"-------- Node successfully added to the network --------\n");
     changeWifiMode(3);
     return sIdle;
 }
 
 State idle(Event event){
-    LOG(STATE_MACHINE,INFO,"Entered Idle State\n");
+    LOG(STATE_MACHINE,INFO,"Active State\n");
     if (event == eMessage){
         insertFirst(stateMachineEngine, eMessage);
         return sHandleMessages;
@@ -248,34 +246,35 @@ State idle(Event event){
 }
 
 State handleMessages(Event event){
-    LOG(STATE_MACHINE,INFO,"Entered handle Messages State\n");
+    LOG(STATE_MACHINE,INFO,"Handle Messages State\n");
     int messageType, flag = 0;
 
     sscanf(messageBuffer, "%d", &messageType);
 
     switch (messageType) {
         case PARENT_DISCOVERY_REQUEST:
+            LOG(MESSAGES,INFO,"Received [Parent Discovery Request] message: \"%s\"\n", messageBuffer);
             handleParentDiscoveryRequest(messageBuffer);
             break;
 
         case CHILD_REGISTRATION_REQUEST:
-            LOG(MESSAGES,INFO,"Message Type Child Registration Request\n");
+            LOG(MESSAGES,INFO,"Received [Child Registration Request] message: \"%s\"\n", messageBuffer);
             handleChildRegistrationRequest(messageBuffer);
             flag = 1;
             break;
 
         case FULL_ROUTING_TABLE_UPDATE:
-            LOG(MESSAGES,INFO,"Message Type Full Routing Update\n");
+            LOG(MESSAGES,INFO,"Received [Full Routing Update] message: \"%s\"\n", messageBuffer);
             handleFullRoutingTableUpdate(messageBuffer);
             break;
 
         case PARTIAL_ROUTING_TABLE_UPDATE:
-            LOG(MESSAGES,INFO,"Message Type Partial Routing Table Update\n");
+            LOG(MESSAGES,INFO,"Received [Partial Routing Update] message: \"%s\"\n", messageBuffer);
             handlePartialRoutingUpdate(messageBuffer);
             break;
 
         case TOPOLOGY_BREAK_ALERT:
-            LOG(MESSAGES,INFO,"Message Type Partial Routing Table Update\n");
+            LOG(MESSAGES,INFO,"Received [Topology Break Alert] message: \"%s\"\n", messageBuffer);
             handleTopologyBreakAlert(messageBuffer);
             break;
 
@@ -288,12 +287,12 @@ State handleMessages(Event event){
             break;
 
         case DATA_MESSAGE:
-            LOG(MESSAGES,INFO,"Data Message\n");
+            LOG(MESSAGES,INFO,"Received [Data] message: \"%s\"\n", messageBuffer);
             handleDataMessage(messageBuffer);
             break;
 
         case ACK_MESSAGE:
-            LOG(MESSAGES,INFO,"ACK Message\n");
+            LOG(MESSAGES,INFO,"Received [ACK] message: \"%s\"\n", messageBuffer);
             handleAckMessage(messageBuffer);
             break;
     }
@@ -306,7 +305,7 @@ State parentRecovery(Event event){
     char message[50];
     messageParameters parameters;
 
-    LOG(STATE_MACHINE,INFO,"Entered Parent Recovery State\n");
+    LOG(STATE_MACHINE,INFO,"Parent Recovery State\n");
 
     assignIP(parameters.senderIP, myIP);
     encodeMessage(message,TOPOLOGY_BREAK_ALERT,parameters);
@@ -328,7 +327,7 @@ State parentRecovery(Event event){
     //TODO wait for my parent response
 
     // Disconnect permanently from the current parent to stop disconnection events and enable connection to a new one
-    LOG(NETWORK,INFO,"Disconnecting permanently from my parent\n");
+    LOG(NETWORK,INFO,"Disconnecting permanently from parent node\n");
     disconnectFromAP();
 
     insertLast(stateMachineEngine, eSearch);
@@ -337,7 +336,7 @@ State parentRecovery(Event event){
 
 
 State childRecovery(Event event){
-    LOG(STATE_MACHINE,INFO,"Entered Child Recovery State\n");
+    LOG(STATE_MACHINE,INFO,"Child Recovery State\n");
 
     int i, j, invalidHopDistance = -1;
     int lostChildIP[4], subNetSize = 0, lostNodeSubnetwork[routingTable->numberOfItems][4], invalidIP[4]={-1,-1,-1,-1};

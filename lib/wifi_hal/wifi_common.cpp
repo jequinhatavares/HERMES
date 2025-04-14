@@ -1,0 +1,52 @@
+//#include "wifi_interface.h"
+#include "wifi_common.h"
+
+
+TableEntry lTable[TableMaxSize];
+TableInfo LTable = {
+        .numberOfItems = 0,
+        .isEqual = isMACEqual,
+        .table = lTable,
+        .setKey = setMAC,
+        .setValue = setTime,
+};
+TableInfo* lostChildrenTable = &LTable;
+
+int MAC[TableMaxSize][6];
+unsigned long lastChildDisconnectionTime[TableMaxSize];
+
+bool isMACEqual(void* a, void* b){
+    int* aMAC = (int*) a;
+    int* bMAC = (int*) b;
+    //printf("In Function is MACEqual\n");
+    if(aMAC[0] == bMAC[0] && aMAC[1] == bMAC[1] && aMAC[2] == bMAC[2] && aMAC[3] == bMAC[3] && aMAC[4] == bMAC[4] && aMAC[5] == bMAC[5]){
+        return true;
+    }
+    return false;
+}
+
+
+void setMAC(void* av, void* bv){
+    int* a = (int*) av;
+    int* b = (int*) bv;
+    //Serial.printf("Key.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a[0],a[1],a[2],a[3], b[0],b[1],b[2],b[3]);
+    a[0] = b[0];
+    a[1] = b[1];
+    a[2] = b[2];
+    a[3] = b[3];
+    a[4] = b[4];
+    a[5] = b[5];
+}
+
+void setTime(void* av, void* bv){
+    unsigned long *a = (unsigned long *) av;
+    unsigned long *b = (unsigned long *) bv;
+
+    //Serial.printf("Values.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a->nextHopIP[0],a->nextHopIP[1],a->nextHopIP[2],a->nextHopIP[3], b->nextHopIP[0],b->nextHopIP[1],b->nextHopIP[2],b->nextHopIP[3]);
+    a = b;
+}
+
+void initAuxTables(){
+    //Serial.printf("SizeOf int[4]: %i struct: %i", sizeof(int[4]), sizeof(routingTableEntry));
+    tableInit(lostChildrenTable,MAC, lastChildDisconnectionTime, sizeof(int[6]),sizeof(unsigned long));
+}

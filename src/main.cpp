@@ -34,7 +34,7 @@ void setup(){
 
     //Serial.setTimeout(10000);
 
-    enableModule(STATE_MACHINE);
+    //enableModule(STATE_MACHINE);
     enableModule(MESSAGES);
     enableModule(NETWORK);
     enableModule(DEBUG_SERVER);
@@ -87,10 +87,9 @@ void loop(){
 
     int packet_size = incomingMessage();
     if (packet_size > 0){
-        LOG(MESSAGES,INFO,"PacketSize: %d\n", packet_size);
-        LOG(MESSAGES,INFO,"Theres incoming messages\n");
+        //LOG(MESSAGES,INFO,"PacketSize: %d\n", packet_size);
         receiveMessage(messageBuffer);
-        LOG(MESSAGES,INFO,"Received: %s\n", messageBuffer);
+        //LOG(MESSAGES,INFO,"Received: %s\n", messageBuffer);
         insertLast(stateMachineEngine, eMessage);
     }
     if(stateMachineEngine->size != 0){

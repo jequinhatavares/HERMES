@@ -5,17 +5,17 @@
 #include <../table/table.h>
 #include <logger.h>
 
-typedef struct routingTableEntry {
-    int hopDistance;
-    int nextHopIP[4];
-} routingTableEntry;
-
 typedef struct parentInfo{
     char* ssid;
     int parentIP[4];
     int rootHopDistance;
     int nrOfChildren;
 }parentInfo;
+
+typedef struct routingTableEntry {
+    int hopDistance;
+    int nextHopIP[4];
+} routingTableEntry;
 
 extern TableInfo* routingTable;
 extern TableInfo* childrenTable;

@@ -4,7 +4,7 @@
 
 #include <WiFi.h>
 
-#include "../wifi_hal.h"
+#include "../wifi_interface.h"
 
 void onSoftAPModeStationConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info);
 
@@ -16,33 +16,6 @@ void onStationModeConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info);
 
 void onStationModeDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info);
 
-void initWifiEventHandlers();
-
-String Get_WiFiStatus(int Status);
-
-void startWifiSTA(const IPAddress& localIP, const IPAddress& gateway, const IPAddress& subnet, const IPAddress& dns);
-
-void startWifiAP(const char* SSID, const char* Pass, const IPAddress& localIP, const IPAddress& gateway, const IPAddress& subnet);
-
-void searchAP(String);
-
-void connectToAP(const char*, const char*);
-
-void stopWifiAP();
-
-void disconnectFromAP();
-
-int numberOfSTAConnected();
-
-IPAddress getGatewayIP();
-
-IPAddress getMySTAIP();
-
-String getMyMAC();
-
-IPAddress getMyAPIP();
-
-void changeWifiMode(int);
 
 #endif//ESP32
 #endif //ESP32WIFI_H

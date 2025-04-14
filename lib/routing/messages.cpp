@@ -195,11 +195,14 @@ void handleChildRegistrationRequest(char * msg){
     newNode.hopDistance = 1;
     updateRoutingTable(childAPIP, newNode, childAPIP);
 
+    LOG(NETWORK,INFO, "New child connected.\n");
+
     //Send my routing table to my child
-    LOG(MESSAGES,INFO,"Sending my routing Table to child:");
+    //LOG(MESSAGES,INFO,"Sending my routing Table to child:");
+    LOG(MESSAGES, INFO, "Sending [Full Routing Update] to: %d.%d.%d.%d\n",childAPIP[0], childAPIP[1], childAPIP[2], childAPIP[3]);
     assignIP(parameters.senderIP,myIP);
     encodeMessage(messageBufferLarge,FULL_ROUTING_TABLE_UPDATE,parameters);
-    LOG(MESSAGES,INFO,"%s to -> %d.%d.%d.%d\n",messageBufferLarge, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
+    //LOG(MESSAGES,INFO,"%s to -> %d.%d.%d.%d\n",messageBufferLarge, childSTAIP[0], childSTAIP[1], childSTAIP[2], childSTAIP[3]);
     sendMessage(childSTAIP,messageBufferLarge);
 
     //Propagate the new node information trough the network

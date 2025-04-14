@@ -130,7 +130,6 @@ void LOG(LogModules module, LogLevels level, const char* format, ...) {
     va_start(args,format); //Initialize argument list
 
     //logHeaders(module);
-    printf("Logs ");
     #if defined(ESP32) || defined(ESP8266)
         char buffer[500];
         vsnprintf(buffer, sizeof(buffer),format,args);
