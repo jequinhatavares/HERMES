@@ -50,3 +50,11 @@ void initAuxTables(){
     //Serial.printf("SizeOf int[4]: %i struct: %i", sizeof(int[4]), sizeof(routingTableEntry));
     tableInit(lostChildrenTable,MAC, lastChildDisconnectionTime, sizeof(int[6]),sizeof(unsigned long));
 }
+
+void setTableEntry(TableInfo *table, void* key, void* value){
+    if( tableFind(table, key) == -1){//The node is not present in the table
+        tableAdd(table, key, value);
+    }else{//The node is already present in the table
+        tableUpdate(table, key, value);
+    }
+}

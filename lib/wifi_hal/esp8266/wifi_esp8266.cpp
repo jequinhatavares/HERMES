@@ -43,6 +43,7 @@ void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnect
 void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisconnected& info) {
     Serial.println("\n[WIFI_EVENTS] Station disconnected\n");
     unsigned long currentTime = millis();
+
     // On first disconnection, initialize the timer to the current time.
     // This prevents missing future disconnections after a long inactive period.
     /***if (childDisconnectionCount == 0) lastChildDisconnectionTime = currentTime;
@@ -61,6 +62,9 @@ void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisc
             }
         }
     }***/
+    if(tableFind(lostChildrenTable, (void*) info.mac) == -1){
+        
+    }
 
 }
 

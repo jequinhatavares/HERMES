@@ -34,7 +34,7 @@ void setup(){
 
     //Serial.setTimeout(10000);
 
-    //enableModule(STATE_MACHINE);
+    enableModule(STATE_MACHINE);
     enableModule(MESSAGES);
     enableModule(NETWORK);
     enableModule(DEBUG_SERVER);
