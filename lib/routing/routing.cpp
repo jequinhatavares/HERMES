@@ -274,26 +274,25 @@ void updateRoutingTable2(int nodeIP[4], routingTableEntry newNode, int senderIP[
     routingTableEntry updatedEntry;
     routingTableEntry *nodeEntry = (routingTableEntry*) findNode(routingTable, nodeIP);
 
-    if(newNode.hopDistance == -1){ //Node is unreachable
-        tableRemove(routingTable, nodeIP);
-        return;
-    }
-    if(newNode.hopDistance+1< nodeEntry->hopDistance){
-        assignIP(updatedEntry.nextHopIP ,senderIP);
-        updatedEntry.hopDistance = newNode.hopDistance+1;
+    if( nodeEntry == nullptr){ // If the node is not in the table add it
+        assignIP(updatedEntry.nextHopIP, senderIP);
+        updatedEntry.hopDistance = newNode.hopDistance + 1;
+        tableAdd(routingTable, nodeIP, &newNode);
+    }else{//The node is already present in the table
+        if(newNode.hopDistance == -1){ //Node is unreachable to the sender
+            //if the nextHop to the node is the sender then remove the node from the routing table
+            if(isIPEqual(nodeEntry->nextHopIP,senderIP )){
+                tableRemove(routingTable, nodeIP);
+            }
+            return;
+        }
+        if(newNode.hopDistance + 1 < nodeEntry->hopDistance){ //If the new path has a lower cost update the entry with the
+            assignIP(updatedEntry.nextHopIP ,senderIP);
+            updatedEntry.hopDistance = newNode.hopDistance+1;
+        }
+        tableUpdate(routingTable, nodeIP, &newNode);
     }
 
-    if( nodeEntry == nullptr){
-        //LOG(NETWORK,DEBUG,"Adding new node\n");
-        tableAdd(routingTable, nodeIP, &newNode);
-        //Serial.printf("Routing Table\n");
-    }else{//The node is already present in the table
-        //Serial.printf("4\n");
-        //LOG(NETWORK,DEBUG,"Updating node\n");
-        tableUpdate(routingTable, nodeIP, &newNode);
-        //Serial.printf("Routing Table\n");
-        //Serial.printf("5\n");
-    }
 }
 /**
  * updateChildrenTable

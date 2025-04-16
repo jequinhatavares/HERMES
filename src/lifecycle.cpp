@@ -307,6 +307,7 @@ State parentRecovery(Event event){
     messageParameters parameters;
 
     LOG(STATE_MACHINE,INFO,"Parent Recovery State\n");
+    delay(10000);
 
     assignIP(parameters.senderIP, myIP);
     encodeMessage(message,TOPOLOGY_BREAK_ALERT,parameters);
@@ -370,32 +371,39 @@ State childRecovery(Event event){
             }
 
             // Remove the lost child from my children table
+            LOG(NETWORK,DEBUG,"Removing Node from my routing Table\n");
             tableRemove(childrenTable, lostChildIP);
             numberOfChildren--;
+            LOG(NETWORK,DEBUG,"Updated Children Table\n");
+            tablePrint(childrenTable, printChildStruct);
 
             // Remove unreachable nodes from the routing table.
             for (i = 0; i < subNetSize; ++i) {
                 tableRemove(routingTable, lostNodeSubnetwork[i]);
             }
+            LOG(NETWORK,DEBUG,"Updated Routing Table\n");
+            tablePrint(routingTable, printRoutingStruct);
 
             // Notify the rest of the network about nodes that are no longer reachable.
             for (i = 0; i < subNetSize; i++) {
                 for (j = 0; j < routingTable->numberOfItems; ++j) {
                     destinationIP = (int*) tableKey(routingTable,j);
-
-                    assignIP(parameters.IP1,lostNodeSubnetwork[i]);
-                    assignIP(parameters.IP2,lostNodeSubnetwork[i]);
-                    assignIP(parameters.senderIP,myIP);
-                    parameters.hopDistance = -1;
-                    encodeMessage(message, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
-                    LOG(MESSAGES,DEBUG,"Sending message: %s to: %i.%i.%i.%i\n", message, destinationIP[0], destinationIP[1], destinationIP[2], destinationIP[3]);
-                    sendMessage(destinationIP, message);
+                    if(isIPEqual(destinationIP, myIP)){
+                        assignIP(parameters.IP1,lostNodeSubnetwork[i]);
+                        assignIP(parameters.IP2,lostNodeSubnetwork[i]);
+                        assignIP(parameters.senderIP,myIP);
+                        parameters.hopDistance = -1;
+                        encodeMessage(message, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
+                        LOG(MESSAGES,DEBUG,"Sending [Partial Routing Update] message: %s to: %i.%i.%i.%i\n", message, destinationIP[0], destinationIP[1], destinationIP[2], destinationIP[3]);
+                        sendMessage(destinationIP, message);
+                    }
                 }
             }
+            // The procedure is finished so the child can be removed from the lostChildrenTable
+            tableRemove(lostChildrenTable, MAC);
         }
         subNetSize = 0;
     }
-
 
     //insertLast(stateMachineEngine, eSearch);
     return sIdle;
@@ -406,7 +414,7 @@ void handleTimers(){
     for (int i = 0; i < lostChildrenTable->numberOfItems; i++) {
         MAC = (int*) tableKey(lostChildrenTable, i);
         childConnectionStatus *status = (childConnectionStatus*)tableRead(lostChildrenTable, MAC);
-        if(currentTime - status->childDisconnectionTime >= 10000){
+        if(currentTime - status->childDisconnectionTime >= 1000){
             status->childTimedOut = true;
             insertLast(stateMachineEngine, eLostChildConnection);
         }

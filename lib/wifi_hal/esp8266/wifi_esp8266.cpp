@@ -85,7 +85,7 @@ void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisc
 
 }
 
-/**DDS
+/**
  * onStationModeGotIPHandler
  * Event handler called when the device running in Station (STA) mode successfully obtains an IP address.
  *
