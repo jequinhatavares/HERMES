@@ -83,7 +83,6 @@ bool oneTimeMessage = true;
 
 void loop(){
     //Wait for incoming requests
-    messageParameters params;
 
     int packet_size = incomingMessage();
     if (packet_size > 0){
@@ -92,6 +91,7 @@ void loop(){
         //LOG(MESSAGES,INFO,"Received: %s\n", messageBuffer);
         insertLast(stateMachineEngine, eMessage);
     }
+    handleTimers();
     if(stateMachineEngine->size != 0){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
     }

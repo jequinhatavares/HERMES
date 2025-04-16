@@ -1,14 +1,13 @@
 //#include "wifi_interface.h"
 #include "wifi_common.h"
 
-
 TableEntry lTable[TableMaxSize];
 TableInfo LTable = {
         .numberOfItems = 0,
         .isEqual = isMACEqual,
         .table = lTable,
         .setKey = setMAC,
-        .setValue = setTime,
+        .setValue = setConnectionStatus,
 };
 TableInfo* lostChildrenTable = &LTable;
 
@@ -38,12 +37,14 @@ void setMAC(void* av, void* bv){
     a[5] = b[5];
 }
 
-void setTime(void* av, void* bv){
-    unsigned long *a = (unsigned long *) av;
-    unsigned long *b = (unsigned long *) bv;
+void setConnectionStatus(void* av, void* bv){
+    childConnectionStatus *a = (childConnectionStatus *) av;
+    childConnectionStatus *b = (childConnectionStatus *) bv;
 
     //Serial.printf("Values.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a->nextHopIP[0],a->nextHopIP[1],a->nextHopIP[2],a->nextHopIP[3], b->nextHopIP[0],b->nextHopIP[1],b->nextHopIP[2],b->nextHopIP[3]);
-    a = b;
+    //*a = *b;
+    a->childDisconnectionTime = b->childDisconnectionTime;
+    a->childTimedOut = b->childTimedOut;
 }
 
 void initAuxTables(){

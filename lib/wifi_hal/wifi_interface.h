@@ -15,17 +15,17 @@ typedef struct List {
 } List;
 
 
+
 extern TableInfo* lostChildrenTable;
 
 
 extern List ssidList;
 
-extern int lostChildMAC[6];
 
 // These callbacks let Wi-Fi events interact with other components (e.g., enqueueing state machine events)
 // without tight coupling, avoiding direct dependencies.
 extern void (*parentDisconnectCallback)();
-extern void (*childDisconnectCallback)();
+extern bool (*isChildRegisteredCallback)(int*);
 
 
 

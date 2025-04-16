@@ -12,10 +12,9 @@ unsigned long lastParentDisconnectionTime = 0 ;
 int parentDisconnectionCount = 0;
 
 
-int lostChildMAC[6];
 
 void (*parentDisconnectCallback)() = nullptr;
-void (*childDisconnectCallback)() = nullptr;
+bool (*isChildRegisteredCallback)(int*) = nullptr;
 
 
 
@@ -29,6 +28,14 @@ void (*childDisconnectCallback)() = nullptr;
  */
 void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnected& info) {
     Serial.println("\n[WIFI_EVENTS] Station connected\n");
+    int *lostChildMAC = (int*) info.mac ;
+
+    if(isChildRegisteredCallback(lostChildMAC)){
+        if(tableFind(lostChildrenTable, (void*)lostChildMAC ) != -1){
+            tableRemove(lostChildrenTable,(void*)lostChildMAC);
+        }
+    }
+
     //Serial.printf("[WIFI_EVENTS] my local IP:");
     //Serial.println(WiFi.localIP());
 }
@@ -42,7 +49,10 @@ void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnect
  */
 void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisconnected& info) {
     Serial.println("\n[WIFI_EVENTS] Station disconnected\n");
+    int *lostChildMAC = (int*) info.mac ;
     unsigned long currentTime = millis();
+    childConnectionStatus lostChild;
+    lostChild.childDisconnectionTime = currentTime;
 
     // On first disconnection, initialize the timer to the current time.
     // This prevents missing future disconnections after a long inactive period.
@@ -62,8 +72,12 @@ void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisc
             }
         }
     }***/
-    if(tableFind(lostChildrenTable, (void*) info.mac) == -1){
-        
+    if(isChildRegisteredCallback(lostChildMAC)){
+        if(tableFind(lostChildrenTable, (void*)lostChildMAC ) == -1){
+            tableAdd(lostChildrenTable,lostChildMAC, &lostChild);
+        }else{
+            tableUpdate(lostChildrenTable,lostChildMAC, &lostChild);
+        }
     }
 
 }
@@ -76,7 +90,7 @@ void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisc
  * @return void
  */
 void onStationModeGotIPHandler(const WiFiEventStationModeGotIP& info) {
-    Serial.print("\n[WIFI_EVENTS] Local STA ESP8266 STA IP: ");
+    Serial.print("\n[WIFI_EVENTS] Local STA IP: ");
     Serial.println(info.ip);
 }
 

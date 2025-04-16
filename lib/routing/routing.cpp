@@ -270,6 +270,31 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4
     }
 }
 
+void updateRoutingTable2(int nodeIP[4], routingTableEntry newNode, int senderIP[4]){
+    routingTableEntry updatedEntry;
+    routingTableEntry *nodeEntry = (routingTableEntry*) findNode(routingTable, nodeIP);
+
+    if(newNode.hopDistance == -1){ //Node is unreachable
+        tableRemove(routingTable, nodeIP);
+        return;
+    }
+    if(newNode.hopDistance+1< nodeEntry->hopDistance){
+        assignIP(updatedEntry.nextHopIP ,senderIP);
+        updatedEntry.hopDistance = newNode.hopDistance+1;
+    }
+
+    if( nodeEntry == nullptr){
+        //LOG(NETWORK,DEBUG,"Adding new node\n");
+        tableAdd(routingTable, nodeIP, &newNode);
+        //Serial.printf("Routing Table\n");
+    }else{//The node is already present in the table
+        //Serial.printf("4\n");
+        //LOG(NETWORK,DEBUG,"Updating node\n");
+        tableUpdate(routingTable, nodeIP, &newNode);
+        //Serial.printf("Routing Table\n");
+        //Serial.printf("5\n");
+    }
+}
 /**
  * updateChildrenTable
  * Updates or adds an entry in the children table to map an AP IP to its STA IP.

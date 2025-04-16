@@ -51,6 +51,7 @@ extern IPAddress dns;
 
 void parseMAC(const char* macStr, int* macArray);
 void setIPs(const int* MAC);
+void handleTimers();
 //#define eMessage ((Event) 4)
 
 void getIPFromMAC(int * MAC, int* IP);
