@@ -28,16 +28,16 @@ bool (*isChildRegisteredCallback)(int*) = nullptr;
  */
 void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnected& info) {
     Serial.println("\n[WIFI_EVENTS] Station connected\n");
-    int *lostChildMAC = (int*) info.mac ;
+    int lostChildMAC[6];
+    lostChildMAC[0] = info.mac[0];lostChildMAC[1] = info.mac[1];
+    lostChildMAC[2] = info.mac[2];lostChildMAC[3] = info.mac[3];
+    lostChildMAC[4] = info.mac[4];lostChildMAC[5] = info.mac[5];
 
     if(isChildRegisteredCallback(lostChildMAC)){
         if(tableFind(lostChildrenTable, (void*)lostChildMAC ) != -1){
             tableRemove(lostChildrenTable,(void*)lostChildMAC);
         }
     }
-
-    //Serial.printf("[WIFI_EVENTS] my local IP:");
-    //Serial.println(WiFi.localIP());
 }
 
 /**
@@ -49,7 +49,10 @@ void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnect
  */
 void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisconnected& info) {
     Serial.println("\n[WIFI_EVENTS] Station disconnected\n");
-    int *lostChildMAC = (int*) info.mac ;
+    int lostChildMAC[6];
+    lostChildMAC[0] = info.mac[0];lostChildMAC[1] = info.mac[1];
+    lostChildMAC[2] = info.mac[2];lostChildMAC[3] = info.mac[3];
+    lostChildMAC[4] = info.mac[4];lostChildMAC[5] = info.mac[5];
     unsigned long currentTime = millis();
     childConnectionStatus lostChild;
     lostChild.childDisconnectionTime = currentTime;
