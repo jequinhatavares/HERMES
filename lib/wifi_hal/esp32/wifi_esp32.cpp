@@ -6,10 +6,9 @@ List ssidList;
 unsigned long lastParentDisconnectionTime = 0 ;
 int parentDisconnectionCount = 0;
 
-int lostChildMAC[6];
 
 void (*parentDisconnectCallback)() = nullptr;
-void (*childDisconnectCallback)() = nullptr;
+bool (*isChildRegisteredCallback)(int*) = nullptr;
 
 /**
  * onSoftAPModeStationConnectedHandler
@@ -21,6 +20,16 @@ void (*childDisconnectCallback)() = nullptr;
  */
 void onSoftAPModeStationConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info){
     Serial.println("\n[WIFI_EVENTS] Station connected\n");
+    int lostChildMAC[6];
+    lostChildMAC[0] = info.wifi_ap_staconnected.mac[0];lostChildMAC[1] = info.wifi_ap_staconnected.mac[1];
+    lostChildMAC[2] = info.wifi_ap_staconnected.mac[2];lostChildMAC[3] = info.wifi_ap_staconnected.mac[3];
+    lostChildMAC[4] = info.wifi_ap_staconnected.mac[4];lostChildMAC[5] = info.wifi_ap_staconnected.mac[5];
+
+    if(isChildRegisteredCallback(lostChildMAC)){
+        if(tableFind(lostChildrenTable, (void*)lostChildMAC ) != -1){
+            tableRemove(lostChildrenTable,(void*)lostChildMAC);
+        }
+    }
 }
 
 /**
@@ -33,7 +42,14 @@ void onSoftAPModeStationConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info
  */
 void onSoftAPModeStationDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info) {
     Serial.println("\n[WIFI_EVENTS] Station disconnected\n");
+    int lostChildMAC[6];
+    lostChildMAC[0] = info.wifi_ap_stadisconnected.mac[0];lostChildMAC[1] = info.wifi_ap_stadisconnected.mac[1];
+    lostChildMAC[2] = info.wifi_ap_stadisconnected.mac[2];lostChildMAC[3] = info.wifi_ap_stadisconnected.mac[3];
+    lostChildMAC[4] = info.wifi_ap_stadisconnected.mac[4];lostChildMAC[5] = info.wifi_ap_stadisconnected.mac[5];
+
     unsigned long currentTime = millis();
+    childConnectionStatus lostChild;
+    lostChild.childDisconnectionTime = currentTime;
     // On first disconnection, initialize the timer to the current time.
     // This prevents missing future disconnections after a long inactive period.
     /***if (childDisconnectionCount == 0) lastParentDisconnectionTime = currentTime;
@@ -52,6 +68,13 @@ void onSoftAPModeStationDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t i
             }
         }
     }***/
+    if(isChildRegisteredCallback(lostChildMAC)){
+        if(tableFind(lostChildrenTable, (void*)lostChildMAC ) == -1){
+            tableAdd(lostChildrenTable,lostChildMAC, &lostChild);
+        }else{
+            tableUpdate(lostChildrenTable,lostChildMAC, &lostChild);
+        }
+    }
 }
 
 /**
