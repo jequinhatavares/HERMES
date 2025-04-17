@@ -479,6 +479,7 @@ void propagateMessage(char* message, int* sourceIP){
     if(!isIPEqual(sourceIP, parent) && hasParent){
         //LOG(MESSAGES, DEBUG, "Propagating Message to parent: %i.%i.%i.%i\n", parent[0],parent[1],parent[2],parent[3]);
         sendMessage(parent, message);
+
     }
     //Forward the message to all children except the one that sent it to me
     for(int i = 0; i< childrenTable->numberOfItems; i++){

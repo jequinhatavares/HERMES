@@ -32,6 +32,8 @@ void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnect
     lostChildMAC[0] = info.mac[0];lostChildMAC[1] = info.mac[1];
     lostChildMAC[2] = info.mac[2];lostChildMAC[3] = info.mac[3];
     lostChildMAC[4] = info.mac[4];lostChildMAC[5] = info.mac[5];
+    LOG(NETWORK,DEBUG,"STA ConnectionTime: %lu\n", millis());
+
 
     if(isChildRegisteredCallback(lostChildMAC)){
         if(tableFind(lostChildrenTable, (void*)lostChildMAC ) != -1){
@@ -49,6 +51,8 @@ void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnect
  */
 void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisconnected& info) {
     Serial.println("\n[WIFI_EVENTS] Station disconnected\n");
+    LOG(NETWORK,DEBUG,"STA DisconnectionTime: %lu\n", millis());
+
     int lostChildMAC[6];
     lostChildMAC[0] = info.mac[0];lostChildMAC[1] = info.mac[1];
     lostChildMAC[2] = info.mac[2];lostChildMAC[3] = info.mac[3];
@@ -107,7 +111,7 @@ void onStationModeGotIPHandler(const WiFiEventStationModeGotIP& info) {
 void onStationModeConnectedHandler(const WiFiEventStationModeConnected& info) {
     Serial.println("\n[WIFI_EVENTS] Connected to AP\n");
     parentDisconnectionCount = 0; // Reset the parent disconnection Counter
-    //LOG(NETWORK,DEBUG,"Reset the parentDisconnectionCount: %i\n", parentDisconnectionCount);
+    LOG(NETWORK,DEBUG,"ConnectionTime: %lu\n", millis());
 }
 
 /**
@@ -119,6 +123,7 @@ void onStationModeConnectedHandler(const WiFiEventStationModeConnected& info) {
  */
 void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& info) {
     Serial.printf("\n[WIFI_EVENTS] Disconnected from AP. Reason: %u\n", info.reason);
+    LOG(NETWORK,DEBUG,"DisconnectionTime: %lu\n", millis());
 
     unsigned long currentTime = millis();
 
