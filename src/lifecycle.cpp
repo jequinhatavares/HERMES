@@ -386,18 +386,15 @@ State childRecovery(Event event){
 
             // Notify the rest of the network about nodes that are no longer reachable.
             for (i = 0; i < subNetSize; i++) {
-                for (j = 0; j < routingTable->numberOfItems; ++j) {
-                    destinationIP = (int*) tableKey(routingTable,j);
-                    if(isIPEqual(destinationIP, myIP)){
-                        assignIP(parameters.IP1,lostNodeSubnetwork[i]);
-                        assignIP(parameters.IP2,lostNodeSubnetwork[i]);
-                        assignIP(parameters.senderIP,myIP);
-                        parameters.hopDistance = -1;
-                        encodeMessage(message, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
-                        LOG(MESSAGES,DEBUG,"Sending [Partial Routing Update] message: %s to: %i.%i.%i.%i\n", message, destinationIP[0], destinationIP[1], destinationIP[2], destinationIP[3]);
-                        sendMessage(destinationIP, message);
-                    }
-                }
+                // Send message informing other nodes in the network about the lost nodes
+                assignIP(parameters.IP1,lostNodeSubnetwork[i]);
+                assignIP(parameters.IP2,lostNodeSubnetwork[i]);
+                assignIP(parameters.senderIP,myIP);
+                parameters.hopDistance = -1;
+                encodeMessage(message, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
+                LOG(MESSAGES,DEBUG,"Sending [Partial Routing Update] message: %s to: %i.%i.%i.%i\n", message, destinationIP[0], destinationIP[1], destinationIP[2], destinationIP[3]);
+                propagateMessage(message, myIP);
+
             }
             // The procedure is finished so the child can be removed from the lostChildrenTable
             tableRemove(lostChildrenTable, MAC);
