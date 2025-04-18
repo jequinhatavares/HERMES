@@ -372,7 +372,7 @@ State childRecovery(Event event){
             }
 
             // Remove the lost child from my children table
-            LOG(NETWORK,DEBUG,"Removing Node :%i.%i.%i.%i from my children Table\n",lostChildIP[0],lostChildIP[1],lostChildIP[2],lostChildIP[3]);
+            LOG(NETWORK,DEBUG,"Updating unreachable Node :%i.%i.%i.%i from my children Table\n",lostChildIP[0],lostChildIP[1],lostChildIP[2],lostChildIP[3]);
             tableRemove(childrenTable, lostChildIP);
             numberOfChildren--;
             LOG(NETWORK,DEBUG,"Updated Children Table\n");

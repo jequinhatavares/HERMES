@@ -93,6 +93,7 @@ void cliInteraction(){
     if (Serial.available() > 0){
 
         showMenu();
+
         while (choice != 6) {
 
             while (Serial.available() == 0) {} // Wait for user input
@@ -120,6 +121,7 @@ void cliInteraction(){
 
                 case 5:
                     Serial.println("Disconnecting from parent...\n");
+                    disconnectFromAP();
                     parentDisconnectCallback();
                     break;
 
@@ -128,7 +130,7 @@ void cliInteraction(){
                     break;
 
                 default:
-                    Serial.println("Invalid option. Try again.");
+                    if (choice != 0)Serial.println("Invalid option. Try again.");
                     break;
             }
         }

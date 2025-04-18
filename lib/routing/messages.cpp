@@ -481,7 +481,7 @@ void propagateMessage(char* message, int* sourceIP){
     //Send the message to my parent only if it exists and is reachable
     if(parentRoutingEntry != nullptr){
         if(!isIPEqual(sourceIP, parent) && parentRoutingEntry->hopDistance != -1){
-            //LOG(MESSAGES, DEBUG, "Propagating Message to parent: %i.%i.%i.%i\n", parent[0],parent[1],parent[2],parent[3]);
+            LOG(MESSAGES, DEBUG, "Propagating Message to parent: %i.%i.%i.%i\n", parent[0],parent[1],parent[2],parent[3]);
             sendMessage(parent, message);
         }
     }
@@ -493,7 +493,7 @@ void propagateMessage(char* message, int* sourceIP){
         //        ((int*)childrenTable->table[i].key)[0],((int*)childrenTable->table[i].key)[1],((int*)childrenTable->table[i].key)[2],((int*)childrenTable->table[i].key)[3]);
         if (childRoutingEntry != nullptr){
             if(!isIPEqual((int*)childrenTable->table[i].key, sourceIP) && childRoutingEntry->hopDistance != -1){
-                //LOG(MESSAGES, DEBUG, "Propagating Message to: %i.%i.%i.%i\n", ((int*)childrenTable->table[i].key)[0],((int*)childrenTable->table[i].key)[1],((int*)childrenTable->table[i].key)[2],((int*)childrenTable->table[i].key)[3]);
+                LOG(MESSAGES, DEBUG, "Propagating Message to: %i.%i.%i.%i\n", ((int*)childrenTable->table[i].key)[0],((int*)childrenTable->table[i].key)[1],((int*)childrenTable->table[i].key)[2],((int*)childrenTable->table[i].key)[3]);
                 sendMessage((int*)childrenTable->table[i].value, message);
             }
         }
