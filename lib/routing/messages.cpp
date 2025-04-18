@@ -476,19 +476,27 @@ void propagateMessage(char* message, int* sourceIP){
     // If the message didn't come from the parent and i have a parent, forward it to the parent
     //LOG(MESSAGES, DEBUG, "SourceIP: %i.%i.%i.%i\nParentIP: %i.%i.%i.%i hasParent: %i\n",sourceIP[0], sourceIP[1],sourceIP[2],sourceIP[3],
     //   parent[0],parent[1],parent[2],parent[3],hasParent);
-    if(!isIPEqual(sourceIP, parent) && hasParent){
-        //LOG(MESSAGES, DEBUG, "Propagating Message to parent: %i.%i.%i.%i\n", parent[0],parent[1],parent[2],parent[3]);
-        sendMessage(parent, message);
-
+    routingTableEntry *childRoutingEntry;
+    routingTableEntry *parentRoutingEntry = (routingTableEntry*)findNode(routingTable, parent);
+    if(parentRoutingEntry != nullptr){
+        if(!isIPEqual(sourceIP, parent) && parentRoutingEntry->hopDistance != -1){
+            //LOG(MESSAGES, DEBUG, "Propagating Message to parent: %i.%i.%i.%i\n", parent[0],parent[1],parent[2],parent[3]);
+            sendMessage(parent, message);
+        }
     }
+
     //Forward the message to all children except the one that sent it to me
     for(int i = 0; i< childrenTable->numberOfItems; i++){
+        childRoutingEntry = (routingTableEntry*)findNode(routingTable, (int*)childrenTable->table[i].key);
         //LOG(MESSAGES, DEBUG, "SourceIP: %i.%i.%i.%i ChildIP: %i.%i.%i.%i\n",sourceIP[0], sourceIP[1],sourceIP[2],sourceIP[3],
         //        ((int*)childrenTable->table[i].key)[0],((int*)childrenTable->table[i].key)[1],((int*)childrenTable->table[i].key)[2],((int*)childrenTable->table[i].key)[3]);
-        if(!isIPEqual((int*)childrenTable->table[i].key, sourceIP)){
-            //LOG(MESSAGES, DEBUG, "Propagating Message to: %i.%i.%i.%i\n", ((int*)childrenTable->table[i].key)[0],((int*)childrenTable->table[i].key)[1],((int*)childrenTable->table[i].key)[2],((int*)childrenTable->table[i].key)[3]);
-            sendMessage((int*)childrenTable->table[i].value, message);
+        if (childRoutingEntry != nullptr){
+            if(!isIPEqual((int*)childrenTable->table[i].key, sourceIP) && childRoutingEntry->hopDistance != -1){
+                //LOG(MESSAGES, DEBUG, "Propagating Message to: %i.%i.%i.%i\n", ((int*)childrenTable->table[i].key)[0],((int*)childrenTable->table[i].key)[1],((int*)childrenTable->table[i].key)[2],((int*)childrenTable->table[i].key)[3]);
+                sendMessage((int*)childrenTable->table[i].value, message);
+            }
         }
+
     }
 
 }
