@@ -149,10 +149,12 @@ State search(Event event){
 State joinNetwork(Event event){
     LOG(STATE_MACHINE,INFO,"Join Network State\n");
     int packetSize = 0, connectedParentIP[4];
+    unsigned long currentTime, startTime;
     IPAddress mySTAIP, connectedGateway;
     messageParameters params;
     char buffer[256] = "", msg[50] = "",largeMessage[200] = "";
     parentInfo possibleParents[10];
+    unsigned long interval;
 
     if(ssidList.len != 0){
         //Connect to each parent to request their information in order to select the preferred parent.
@@ -171,13 +173,18 @@ State joinNetwork(Event event){
             connectedParentIP[2] = getGatewayIP()[2];connectedParentIP[3] = getGatewayIP()[3];
             sendMessage(connectedParentIP, msg);
 
-
             //Wait for the parent to respond
-            while((packetSize = incomingMessage()) == 0);
+            startTime = millis();
+            currentTime = startTime;
+            while(((packetSize = incomingMessage()) == 0) && ((currentTime - startTime) <=1000)){
+                currentTime = millis();
+                interval = currentTime - startTime;
+                LOG(MESSAGES,INFO,"Time waiting for parent response %lu\n", interval);
+            }
 
             if (packetSize > 0){
                 receiveMessage(buffer);
-                //LOG(MESSAGES,INFO,"Parent Response: %s\n", buffer);
+                LOG(MESSAGES,INFO,"Parent [Parent Info Response] Response: %s\n", buffer);
                 handleParentInfoResponse(buffer, possibleParents, i);
                 possibleParents[i].ssid = ssidList.item[i];
             }
@@ -206,12 +213,19 @@ State joinNetwork(Event event){
         sendMessage(parent, msg);
 
         //Wait for the parent to respond with his routing table information
-        while((packetSize = incomingMessage()) == 0);
+        startTime = millis();
+        currentTime = startTime;
+        while(((packetSize = incomingMessage()) == 0) && ((currentTime - startTime) <=2000)){
+            currentTime = millis();
+            interval = currentTime - startTime;
+            LOG(MESSAGES,INFO,"Time waiting for parent response %lu\n", interval);
+        }
+
 
         //Process the routing table update
         if (packetSize > 0){
             receiveMessage(buffer);
-            //LOG(MESSAGES,INFO,"Parent Response: %s\n", buffer);
+            LOG(MESSAGES,INFO,"Parent [Full Routing Update]: Response  %s\n", buffer);
             handleFullRoutingTableUpdate(buffer);
             LOG(NETWORK,INFO,"Routing Table Updated:\n");
             tablePrint(routingTable,printRoutingStruct);
