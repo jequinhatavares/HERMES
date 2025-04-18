@@ -205,7 +205,6 @@ State joinNetwork(Event event){
             currentTime = millis();
         }
 
-
         //Process the routing table update
         if (packetSize > 0){
             receiveMessage(buffer);
@@ -344,6 +343,7 @@ State childRecovery(Event event){
     int *nodeIP, *destinationIP, *MAC;
     char message[50];
     messageParameters parameters;
+    routingTableEntry unreachableEntry;
 
     for (int k = 0; k <lostChildrenTable->numberOfItems ; k++) {
         MAC = (int*) tableKey(lostChildrenTable, i);
@@ -378,10 +378,12 @@ State childRecovery(Event event){
             LOG(NETWORK,DEBUG,"Updated Children Table\n");
             tablePrint(childrenTable, printChildStruct);
 
-            // Remove unreachable nodes from the routing table.
+            unreachableEntry.hopDistance = -1;
+            // Mark the nodes as unreachable in the routing table.
             for (i = 0; i < subNetSize; ++i) {
                 LOG(NETWORK,DEBUG,"Removing Node: %i.%i.%i.%i from my routing Table\n",lostNodeSubnetwork[i][0],lostNodeSubnetwork[i][1],lostNodeSubnetwork[i][2],lostNodeSubnetwork[i][3]);
-                tableRemove(routingTable, lostNodeSubnetwork[i]);
+                assignIP(unreachableEntry.nextHopIP,lostNodeSubnetwork[i]);
+                tableUpdate(routingTable, lostNodeSubnetwork[i],&unreachableEntry);
             }
             LOG(NETWORK,DEBUG,"Updated Routing Table\n");
             tablePrint(routingTable, printRoutingStruct);

@@ -236,19 +236,21 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4
          assignIP(newNode.nextHopIP, parent);
      }
      //If the node is my child, its hop distance is 1
-     else if(findNode(childrenTable,nodeIP) != nullptr){
+     else if(findNode(childrenTable,nodeIP) ){
          newNode.hopDistance = 1;
          assignIP(newNode.nextHopIP, nodeIP);
      }
      //If the next hop is my parent or child, increase the hop distance by 1
      //TODO esta condição já não me está a fazer sentido
-     else if(isIPEqual(newNode.nextHopIP, parent) || findNode(childrenTable,newNode.nextHopIP) != nullptr){
+     else if( (isIPEqual(newNode.nextHopIP, parent) || findNode(childrenTable,newNode.nextHopIP) != nullptr) && newNode.hopDistance != -1){
          newNode.hopDistance = newNode.hopDistance + 1;
      }
      //If the next hop is myself and the node is not one of my direct children, then it belongs to the subnet of one of my children.
      // In this case, do not update the value, keep the one previously updated by the corresponding child that informed me about this node.
      else if(isIPEqual(newNode.nextHopIP, myIP) && findNode(childrenTable,nodeIP) == nullptr ){
          return;
+     }else if(newNode.hopDistance == -1){ //the node is no longer reachable
+         newNode.hopDistance = -1;
      }
      //If the node is neither my parent nor my child (i.e., it belongs to another node in the network that is not directly connected to me)
      // and the nextHopIP isn't myself update nextHopIP to the sender's IP
