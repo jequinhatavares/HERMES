@@ -478,6 +478,7 @@ void propagateMessage(char* message, int* sourceIP){
     //   parent[0],parent[1],parent[2],parent[3],hasParent);
     routingTableEntry *childRoutingEntry;
     routingTableEntry *parentRoutingEntry = (routingTableEntry*)findNode(routingTable, parent);
+    //Send the message to my parent only if it exists and is reachable
     if(parentRoutingEntry != nullptr){
         if(!isIPEqual(sourceIP, parent) && parentRoutingEntry->hopDistance != -1){
             //LOG(MESSAGES, DEBUG, "Propagating Message to parent: %i.%i.%i.%i\n", parent[0],parent[1],parent[2],parent[3]);

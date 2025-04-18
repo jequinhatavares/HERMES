@@ -25,7 +25,18 @@ bool isFirstMessage = true;
 
 //227:96:230:135 root
 //227:96:237:119
+void waitForEnter() {
+    // Wait for Enter
+    while (Serial.available() <= 0) {
+        delay(10);
+    }
+    // Flush anything else left in the serial buffer
+    while (Serial.available()) {
+        Serial.read();
+    }
 
+    Serial.println("Starting program...");
+}
 
 void setup(){
     int MAC[6];
@@ -65,6 +76,8 @@ void setup(){
     #endif
     Serial.printf("Code uploaded through multi_upload_tool.py V1\n");
     LOG(NETWORK,INFO,"My MAC addr: %s\n",getMyMAC().c_str());
+
+    waitForEnter();
 
     Advance(SM, eSuccess);//Init
 
