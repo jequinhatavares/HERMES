@@ -251,7 +251,7 @@ void handleFullRoutingTableUpdate(char * msg){
         newNode.nextHopIP[2] = nextHopIP[2];newNode.nextHopIP[3] = nextHopIP[3];
         newNode.hopDistance = hopDistance;
         //Update the Routing Table
-        updateRoutingTable(nodeIP,newNode,sourceIP);
+        updateRoutingTable2(nodeIP,newNode,sourceIP);
         token = strtok(NULL, "|");
     }
 
@@ -285,7 +285,7 @@ void handlePartialRoutingUpdate(char *msg){
     newNode.nextHopIP[2] = nextHopIP[2];newNode.nextHopIP[3] = nextHopIP[3];
     newNode.hopDistance = hopDistance;
 
-    updateRoutingTable(nodeIP,newNode, senderIP);
+    updateRoutingTable2(nodeIP,newNode, senderIP);
 
     // Propagate the routing table update to the network
     routingTableEntry*nodeEntry = (routingTableEntry*) findNode(routingTable,nodeIP);
