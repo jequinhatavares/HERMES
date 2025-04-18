@@ -29,6 +29,10 @@ bool isFirstMessage = true;
 
 void setup(){
     int MAC[6];
+    char ssid[256];
+
+    strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
+    strcat(ssid, getMyMAC().c_str());
 
     Serial.begin(115200);
 
@@ -68,6 +72,8 @@ void setup(){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Search APs
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Choose Parent
     }
+
+    //startWifiAP(ssid,PASS, localIP, gateway, subnet);
 
     changeWifiMode(3);
     LOG(NETWORK,INFO,"My SoftAP IP: %s\nMy STA IP %s\nGateway IP: %s\n", getMyAPIP().toString().c_str(), getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());

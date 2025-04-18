@@ -211,7 +211,7 @@ void startWifiAP(const char* SSID, const char* Pass, const IPAddress& localIP, c
 
     // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
     //WiFi.config(localIP, gateway, subnet, gateway);
-    WiFi.mode(WIFI_AP);
+    //WiFi.mode(WIFI_AP);
     // Start the Access Point with the SSID defined in SSID_PREFIX
     WiFi.softAPConfig(localIP, gateway, subnet);
     WiFi.softAP(SSID, Pass);

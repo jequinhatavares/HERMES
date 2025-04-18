@@ -58,6 +58,7 @@ State initNode(Event event){
     messageVizParameters vizParameters;
     messageParameters params;
 
+
     // Set up WiFi event callbacks (parent/child loss) to trigger state machine transitions
     parentDisconnectCallback = onParentDisconnect;
     isChildRegisteredCallback = isChildRegistered;
@@ -70,6 +71,7 @@ State initNode(Event event){
 
     begin_transport();
 
+
     numberOfChildren = 0;
 
     initTables();
@@ -80,7 +82,6 @@ State initNode(Event event){
     me.hopDistance = 0;
     updateRoutingTable(myIP,me,invalidIP);
 
-
     if (!iamRoot){
         insertFirst(stateMachineEngine, eSuccess);
         return sSearch;
@@ -90,19 +91,6 @@ State initNode(Event event){
         assignIP(rootIP,myIP);
         hasParent = false;
         reportNewNodeToViz(myIP,invalidIP);
-
-        //If the visualization program is active, pass the new node information to it
-        //assignIP(vizParameters.IP1, myIP);
-        //assignIP(vizParameters.IP2, invalidIP);
-        //encodeVizMessage(msg,NEW_NODE,vizParameters);
-//
-        //sprintf(params.payload, "%s", msg);
-        //strcpy(msg , "");
-//
-        //encodeMessage(msg, DEBUG_MESSAGE, params);
-        ////sprintf(msg, "8 %s", params.payload);
-        //LOG(DEBUG_SERVER,DEBUG,msg);
-        //"8 0 %i.%i.%i.%i -1.-1.-1.-1", myIP[0], myIP[1], myIP[2], myIP[3]
 
         return sIdle;
     };
@@ -178,8 +166,6 @@ State joinNetwork(Event event){
             currentTime = startTime;
             while(((packetSize = incomingMessage()) == 0) && ((currentTime - startTime) <=1000)){
                 currentTime = millis();
-                interval = currentTime - startTime;
-                LOG(MESSAGES,INFO,"Time waiting for parent response %lu\n", interval);
             }
 
             if (packetSize > 0){
@@ -217,8 +203,6 @@ State joinNetwork(Event event){
         currentTime = startTime;
         while(((packetSize = incomingMessage()) == 0) && ((currentTime - startTime) <=2000)){
             currentTime = millis();
-            interval = currentTime - startTime;
-            LOG(MESSAGES,INFO,"Time waiting for parent response %lu\n", interval);
         }
 
 
