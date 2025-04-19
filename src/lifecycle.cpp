@@ -71,7 +71,6 @@ State initNode(Event event){
 
     begin_transport();
 
-
     numberOfChildren = 0;
 
     initTables();
@@ -80,7 +79,10 @@ State initNode(Event event){
     myIP[0] = localIP[0]; myIP[1] = localIP[1];myIP[2] = localIP[2]; myIP[3] = localIP[3];
     me.nextHopIP[0] = localIP[0]; me.nextHopIP[1] = localIP[1];me.nextHopIP[2] = localIP[2]; me.nextHopIP[3] = localIP[3];
     me.hopDistance = 0;
+    me.sequenceNumber = mySequenceNumber;
     updateRoutingTable(myIP,me,invalidIP);
+
+    lastRoutingUpdateTime = millis();
 
     if (!iamRoot){
         insertFirst(stateMachineEngine, eSuccess);
@@ -220,6 +222,7 @@ State joinNetwork(Event event){
             assignIP(params.senderIP, myIP);
             encodeMessage(largeMessage, FULL_ROUTING_TABLE_UPDATE, params);
             sendMessage(parent, largeMessage);
+            lastRoutingUpdateTime = millis();
         }
 
     }
@@ -412,6 +415,8 @@ State childRecovery(Event event){
 }
 void handleTimers(){
     int* MAC;
+    char messageBufferLarge[200]; //36 + 32*X
+    messageParameters parameters;
     unsigned long currentTime = millis();
     for (int i = 0; i < lostChildrenTable->numberOfItems; i++) {
         MAC = (int*) tableKey(lostChildrenTable, i);
@@ -421,6 +426,13 @@ void handleTimers(){
             insertLast(stateMachineEngine, eLostChildConnection);
         }
     }
+    if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
+        mySequenceNumber = mySequenceNumber + 2;
+        //Update my sequence number
+        encodeMessage(messageBufferLarge,FULL_ROUTING_TABLE_UPDATE,parameters);
+        propagateMessage(messageBufferLarge,myIP);
+    }
+
 }
 
 /**

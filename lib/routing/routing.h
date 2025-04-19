@@ -15,6 +15,7 @@ typedef struct parentInfo{
 typedef struct routingTableEntry {
     int hopDistance;
     int nextHopIP[4];
+    int sequenceNumber;
 } routingTableEntry;
 
 extern TableInfo* routingTable;
@@ -28,6 +29,10 @@ extern bool hasParent;
 
 extern int myIP[4];
 extern int rootIP[4];
+extern int mySequenceNumber;
+
+extern unsigned long lastRoutingUpdateTime;
+#define ROUTING_UPDATE_INTERVAL 15000
 //extern int debugServerIP[4];
 
 bool isIPEqual(void* a, void* b);
@@ -40,7 +45,7 @@ void printChildStruct(TableEntry* Table);
 void* findNode(TableInfo* Table, int nodeIP[4]);
 int* findRouteToNode(int nodeIP[4]);
 void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4]);
-void updateRoutingTable2(int nodeIP[4], routingTableEntry newNode, int senderIP[4]);
+void updateRoutingTable2(int nodeIP[4], int hopDistance, int sequenceNumber, int senderIP[4]);
 void updateChildrenTable(int APIP[4], int STAIP[4]);
 parentInfo chooseParent(parentInfo* possibleParents, int n);
 bool inMySubnet(int* nodeIP);

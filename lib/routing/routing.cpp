@@ -12,6 +12,9 @@ bool hasParent = false;
 int parent[4];
 int myIP[4];
 int rootIP[4];
+int mySequenceNumber = 2;
+unsigned long lastRoutingUpdateTime;
+
 //int debugServerIP[4]={0,0,0,0};
 
 #undef TableMaxSize
@@ -47,12 +50,8 @@ TableInfo RTable = {
 };
 TableInfo* routingTable = &RTable;
 
-int IP[TableMaxSize][4]{{1,1,1,1},{2,2,2,2}, {3,3,3,3}};
-routingTableEntry routingTableEntries[TableMaxSize] = {
-        {.hopDistance=1,.nextHopIP ={1,1,1,1}},
-        {.hopDistance=2,.nextHopIP ={2,2,2,2}},
-        {.hopDistance=3,.nextHopIP ={3,3,3,3}},
-};
+int IP[TableMaxSize][4];
+routingTableEntry routingTableEntries[TableMaxSize];
 
 /***
  * Children Table Variables
@@ -272,54 +271,36 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4
     }
 }
 
-void updateRoutingTable2(int nodeIP[4], routingTableEntry newNode, int senderIP[4]){
+void updateRoutingTable2(int nodeIP[4], int hopDistance, int sequenceNumber, int senderIP[4]){
     routingTableEntry updatedEntry;
     routingTableEntry *nodeEntry = (routingTableEntry*) findNode(routingTable, nodeIP);
 
     LOG(NETWORK,DEBUG,"NodeIP: %i.%i.%i.%i\n",nodeIP[0],nodeIP[1],nodeIP[2], nodeIP[3]);
     if( nodeEntry == nullptr){ // If the node is not in the table add it
         LOG(NETWORK,DEBUG,"new entry\n",nodeIP[0],nodeIP[1],nodeIP[2], nodeIP[3]);
-
         assignIP(updatedEntry.nextHopIP, senderIP);
-        updatedEntry.hopDistance = newNode.hopDistance + 1;
+        updatedEntry.hopDistance = hopDistance + 1;
         tableAdd(routingTable, nodeIP, &updatedEntry);
+        return;
     }else{//The node is already present in the table
-        if(newNode.hopDistance == -1){ //Node is unreachable to the sender
-            LOG(NETWORK,DEBUG,"unreachable entry\n",nodeIP[0],nodeIP[1],nodeIP[2], nodeIP[3]);
-
-            //if the nextHop to the node is the sender then remove the node from the routing table
-            //if(isIPEqual(nodeEntry->nextHopIP,senderIP )){
-            assignIP(updatedEntry.nextHopIP, senderIP);
-            updatedEntry.hopDistance = -1;
-            tableUpdate(routingTable, nodeIP,&updatedEntry);
+        if(sequenceNumber > nodeEntry->sequenceNumber){
+            assignIP(updatedEntry.nextHopIP ,senderIP);
+            updatedEntry.hopDistance = hopDistance + 1;
+            updatedEntry.sequenceNumber = sequenceNumber;
+            tableUpdate(routingTable, nodeIP, &updatedEntry);
             return;
         }
-        //If the new path has a lower cost update the entry with the
-        else if(newNode.hopDistance + 1 < nodeEntry->hopDistance){
-            LOG(NETWORK,DEBUG,"lowerHop Count\n",nodeIP[0],nodeIP[1],nodeIP[2], nodeIP[3]);
+        else if(sequenceNumber == nodeEntry->sequenceNumber){
+            //If the new path has a lower cost update the routing with the new information containing the shorter pathh
+            if(hopDistance + 1 < nodeEntry->hopDistance){
+                LOG(NETWORK,DEBUG,"lowerHop Count\n",nodeIP[0],nodeIP[1],nodeIP[2], nodeIP[3]);
 
-            assignIP(updatedEntry.nextHopIP ,senderIP);
-            updatedEntry.hopDistance = newNode.hopDistance + 1;
-            tableUpdate(routingTable, nodeIP, &updatedEntry);
-
-        }
-
-        // Update the routing table if the path through the current next-hop neighbor now has a higher cost to the destination
-        else if(isIPEqual(nodeEntry->nextHopIP, senderIP) && newNode.hopDistance + 1 > nodeEntry->hopDistance ){
-            LOG(NETWORK,DEBUG,"Higher Hop Count\n",nodeIP[0],nodeIP[1],nodeIP[2], nodeIP[3]);
-
-            assignIP(updatedEntry.nextHopIP ,senderIP);
-            updatedEntry.hopDistance = newNode.hopDistance+1;
-            LOG(NETWORK,DEBUG,"Updated value distance:%i\n",updatedEntry.hopDistance);
-
-            tableUpdate(routingTable, nodeIP, &updatedEntry);
-        }
-
-        else if (nodeEntry->hopDistance == -1  && newNode.hopDistance >=0){
-            assignIP(updatedEntry.nextHopIP ,senderIP);
-            updatedEntry.hopDistance = newNode.hopDistance + 1;
-            tableUpdate(routingTable, nodeIP, &updatedEntry);
-
+                assignIP(updatedEntry.nextHopIP ,senderIP);
+                updatedEntry.hopDistance = hopDistance + 1;
+                updatedEntry.sequenceNumber = sequenceNumber;
+                tableUpdate(routingTable, nodeIP, &updatedEntry);
+                return;
+            }
         }
     }
 

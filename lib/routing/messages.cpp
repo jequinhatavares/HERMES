@@ -45,16 +45,15 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
                     parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
         case FULL_ROUTING_TABLE_UPDATE:
-            //3 [senderIP] [rootIP] |[node1 IP] [next hop IP] [hopDistance] |[node2 IP] [next hop IP] [hopDistance] |....
+            //3 [senderIP] [rootIP] |[node1 IP] [hopDistance] [Sequence Number1]|[node2 IP] [hopDistance] [Sequence Number2]|....
             sprintf(msg, "%i %i.%i.%i.%i %i.%i.%i.%i |",type,parameters.senderIP[0],parameters.senderIP[1],parameters.senderIP[2],
                     parameters.senderIP[3],rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
 
             for (int i = 0; i < routingTable->numberOfItems; i++) {
-                sprintf(tempMsg,"%i.%i.%i.%i %i.%i.%i.%i %i |",((int*)routingTable->table[i].key)[0],
+                sprintf(tempMsg,"%i.%i.%i.%i %i %i|",((int*)routingTable->table[i].key)[0],
                         ((int*)routingTable->table[i].key)[1],((int*)routingTable->table[i].key)[2],
-                        ((int*)routingTable->table[i].key)[3],((routingTableEntry *)routingTable->table[i].value)->nextHopIP[0],
-                        ((routingTableEntry *)routingTable->table[i].value)->nextHopIP[1],((routingTableEntry *)routingTable->table[i].value)->nextHopIP[2],
-                        ((routingTableEntry *)routingTable->table[i].value)->nextHopIP[3],((routingTableEntry *)routingTable->table[i].value)->hopDistance);
+                        ((int*)routingTable->table[i].key)[3],((routingTableEntry *)routingTable->table[i].value)->hopDistance,
+                        ((routingTableEntry *)routingTable->table[i].value)->sequenceNumber);
 
                 strcat(msg, tempMsg);
                 strcpy(tempMsg , "");
@@ -63,11 +62,9 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
             break;
 
         case PARTIAL_ROUTING_TABLE_UPDATE:
-            //4 [senderIP] [node1 IP] [next hop IP] [hopDistance]
-            sprintf(msg,"%i %i.%i.%i.%i %i.%i.%i.%i %i.%i.%i.%i %i",type,parameters.senderIP[0],parameters.senderIP[1],parameters.senderIP[2],
-                    parameters.senderIP[3],parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
-                    parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3],
-                    parameters.hopDistance);
+            //4 [senderIP] [node1 IP] [hopDistance] [sequenceNumber]
+            sprintf(msg,"%i %i.%i.%i.%i %i.%i.%i.%i %i %i",type,parameters.senderIP[0],parameters.senderIP[1],parameters.senderIP[2],
+                    parameters.senderIP[3],parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],parameters.hopDistance, parameters.sequenceNumber);
             break;
 
         case PARENT_LIST_ADVERTISEMENT:
@@ -171,13 +168,13 @@ void handleParentInfoResponse(char* msg, parentInfo *parents, int i){
 */
 void handleChildRegistrationRequest(char * msg){
     int type;
-    int childAPIP[4], childSTAIP[4];
+    int childAPIP[4], childSTAIP[4],sequenceNumber;
     char messageBuffer1[50] = "", messageBufferLarge[300] = "";
     routingTableEntry newNode;
     messageParameters parameters;
 
-    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],
-           &childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3] );
+    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %d", &type, &childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],
+           &childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3], &sequenceNumber);
 
 
     // If the node is already registered as my child, do not increment the number of children.
@@ -209,6 +206,7 @@ void handleChildRegistrationRequest(char * msg){
     assignIP(parameters.IP1,childAPIP);
     assignIP(parameters.IP2,childAPIP);
     parameters.hopDistance = 1;
+    parameters.sequenceNumber = sequenceNumber;
     assignIP(parameters.senderIP,myIP);
     encodeMessage(messageBuffer1, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
     propagateMessage(messageBuffer1, childAPIP);
@@ -228,8 +226,7 @@ void handleChildRegistrationRequest(char * msg){
 void handleFullRoutingTableUpdate(char * msg){
     int type;
     int nodeIP[4], nextHopIP[4], sourceIP[4];
-    int hopDistance;
-    routingTableEntry newNode;
+    int hopDistance,sequenceNumber;
     messageParameters parameters;
     char messageBuffer1[300];
     //Parse Message Type and root node IP
@@ -241,17 +238,13 @@ void handleFullRoutingTableUpdate(char * msg){
     token = strtok(NULL, "|");
 
     while (token != NULL) {
-        sscanf(token, "%d.%d.%d.%d %d.%d.%d.%d %d",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],
-               &nextHopIP[0],&nextHopIP[1],&nextHopIP[2],&nextHopIP[3], &hopDistance);
+        sscanf(token, "%d.%d.%d.%d %d %d",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&hopDistance,&sequenceNumber);
         //Serial.printf("Token: %s\n", token);
 
         //Serial.printf("Parsed IP values: nodeIP %d.%d.%d.%d nextHopIp %d.%d.%d.%d hopDistance %d\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],
                      // nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3], hopDistance);
-        newNode.nextHopIP[0] = nextHopIP[0];newNode.nextHopIP[1] = nextHopIP[1];
-        newNode.nextHopIP[2] = nextHopIP[2];newNode.nextHopIP[3] = nextHopIP[3];
-        newNode.hopDistance = hopDistance;
         //Update the Routing Table
-        updateRoutingTable2(nodeIP,newNode,sourceIP);
+        updateRoutingTable2(nodeIP,hopDistance,sequenceNumber,sourceIP);
         token = strtok(NULL, "|");
     }
 
@@ -272,29 +265,27 @@ void handleFullRoutingTableUpdate(char * msg){
 */
 void handlePartialRoutingUpdate(char *msg){
     int type;
-    int nodeIP[4], nextHopIP[4], senderIP[4];
+    int nodeIP[4], nextHopIP[4], senderIP[4],sequenceNumber;
     int hopDistance;
     char messageBuffer1[50] = "";
     routingTableEntry newNode;
     messageParameters parameters;
 
-    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %d.%d.%d.%d %d",&type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3], &nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],
-           &nextHopIP[0],&nextHopIP[1],&nextHopIP[2],&nextHopIP[3], &hopDistance);
+    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %d %d",&type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
+           &nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&hopDistance,&sequenceNumber);
 
-    newNode.nextHopIP[0] = nextHopIP[0];newNode.nextHopIP[1] = nextHopIP[1];
-    newNode.nextHopIP[2] = nextHopIP[2];newNode.nextHopIP[3] = nextHopIP[3];
     newNode.hopDistance = hopDistance;
 
-    updateRoutingTable2(nodeIP,newNode, senderIP);
+    updateRoutingTable2(nodeIP,hopDistance,sequenceNumber, senderIP);
 
     // Propagate the routing table update to the network
     routingTableEntry*nodeEntry = (routingTableEntry*) findNode(routingTable,nodeIP);
     if(nodeEntry != nullptr){
         //Propagate the routing table update information trough the network
         assignIP(parameters.IP1,nodeIP);
-        assignIP(parameters.IP2,nodeEntry->nextHopIP);
         parameters.hopDistance = nodeEntry->hopDistance;
         assignIP(parameters.senderIP,myIP);
+        parameters.sequenceNumber = sequenceNumber;
         encodeMessage(messageBuffer1, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
         propagateMessage(messageBuffer1, senderIP);
     }else{

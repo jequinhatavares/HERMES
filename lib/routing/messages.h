@@ -15,6 +15,7 @@ typedef struct messageParameters{
     int nrOfPossibleParents = 0;
     int** possibleParents;
     int hopDistance = -1;
+    int sequenceNumber = 0;
     int childrenNumber = -1;
     char payload[200] = "";
 }messageParameters;
