@@ -300,6 +300,8 @@ void updateRoutingTable2(int nodeIP[4], routingTableEntry newNode, int senderIP[
 
             assignIP(updatedEntry.nextHopIP ,senderIP);
             updatedEntry.hopDistance = newNode.hopDistance + 1;
+            tableUpdate(routingTable, nodeIP, &updatedEntry);
+
         }
 
         // Update the routing table if the path through the current next-hop neighbor now has a higher cost to the destination
@@ -311,6 +313,13 @@ void updateRoutingTable2(int nodeIP[4], routingTableEntry newNode, int senderIP[
             LOG(NETWORK,DEBUG,"Updated value distance:%i\n",updatedEntry.hopDistance);
 
             tableUpdate(routingTable, nodeIP, &updatedEntry);
+        }
+
+        else if (nodeEntry->hopDistance == -1  && newNode.hopDistance >=0){
+            assignIP(updatedEntry.nextHopIP ,senderIP);
+            updatedEntry.hopDistance = newNode.hopDistance + 1;
+            tableUpdate(routingTable, nodeIP, &updatedEntry);
+
         }
     }
 
