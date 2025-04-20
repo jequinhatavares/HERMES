@@ -271,7 +271,7 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4
     }
 }
 
-void updateRoutingTable2(int nodeIP[4], int hopDistance, int sequenceNumber, int senderIP[4]){
+bool updateRoutingTable2(int nodeIP[4], int hopDistance, int sequenceNumber, int senderIP[4]){
     routingTableEntry updatedEntry;
     routingTableEntry *nodeEntry = (routingTableEntry*) findNode(routingTable, nodeIP);
 
@@ -281,14 +281,14 @@ void updateRoutingTable2(int nodeIP[4], int hopDistance, int sequenceNumber, int
         assignIP(updatedEntry.nextHopIP, senderIP);
         updatedEntry.hopDistance = hopDistance + 1;
         tableAdd(routingTable, nodeIP, &updatedEntry);
-        return;
+        return true;
     }else{//The node is already present in the table
         if(sequenceNumber > nodeEntry->sequenceNumber){
             assignIP(updatedEntry.nextHopIP ,senderIP);
             updatedEntry.hopDistance = hopDistance + 1;
             updatedEntry.sequenceNumber = sequenceNumber;
             tableUpdate(routingTable, nodeIP, &updatedEntry);
-            return;
+            return true;
         }
         else if(sequenceNumber == nodeEntry->sequenceNumber){
             //If the new path has a lower cost update the routing with the new information containing the shorter pathh
@@ -299,10 +299,11 @@ void updateRoutingTable2(int nodeIP[4], int hopDistance, int sequenceNumber, int
                 updatedEntry.hopDistance = hopDistance + 1;
                 updatedEntry.sequenceNumber = sequenceNumber;
                 tableUpdate(routingTable, nodeIP, &updatedEntry);
-                return;
+                return true;
             }
         }
     }
+    return  false;
 
 }
 /**

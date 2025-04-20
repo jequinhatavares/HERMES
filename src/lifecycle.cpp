@@ -346,7 +346,7 @@ State childRecovery(Event event){
     int *nodeIP, *destinationIP, *MAC;
     char message[50];
     messageParameters parameters;
-    routingTableEntry unreachableEntry;
+    routingTableEntry unreachableEntry, *lostNodeTableEntry;
 
     for (int k = 0; k <lostChildrenTable->numberOfItems ; k++) {
         MAC = (int*) tableKey(lostChildrenTable, i);
@@ -383,25 +383,30 @@ State childRecovery(Event event){
 
             unreachableEntry.hopDistance = -1;
             // Mark the nodes as unreachable in the routing table.
-            for (i = 0; i < subNetSize; ++i) {
+            for (i = 0; i < subNetSize; i++) {
+                // Mark the nodes as unreachable in the routing table
+                lostNodeTableEntry = (routingTableEntry*)tableRead(routingTable, lostNodeSubnetwork[i]);
                 LOG(NETWORK,DEBUG,"Removing Node: %i.%i.%i.%i from my routing Table\n",lostNodeSubnetwork[i][0],lostNodeSubnetwork[i][1],lostNodeSubnetwork[i][2],lostNodeSubnetwork[i][3]);
                 assignIP(unreachableEntry.nextHopIP,lostNodeSubnetwork[i]);
+                unreachableEntry.sequenceNumber = lostNodeTableEntry->sequenceNumber + 1;
                 tableUpdate(routingTable, lostNodeSubnetwork[i],&unreachableEntry);
+
+                // Send message informing other nodes in the network about the lost nodes
+                assignIP(parameters.IP1,lostNodeSubnetwork[i]);
+                assignIP(parameters.IP2,lostNodeSubnetwork[i]);
+                assignIP(parameters.senderIP,myIP);
+                parameters.hopDistance = -1;
+                // Increment the lost child’s sequence number by 1, symbolizing that this route is now invalid due to the loss of connectivity
+                parameters.sequenceNumber = lostNodeTableEntry->sequenceNumber +1;
+                encodeMessage(message, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
+                propagateMessage(message, myIP);
             }
             LOG(NETWORK,DEBUG,"Updated Routing Table\n");
             tablePrint(routingTable, printRoutingStruct);
 
             // Notify the rest of the network about nodes that are no longer reachable.
             for (i = 0; i < subNetSize; i++) {
-                // Send message informing other nodes in the network about the lost nodes
 
-                assignIP(parameters.IP1,lostNodeSubnetwork[i]);
-                assignIP(parameters.IP2,lostNodeSubnetwork[i]);
-                assignIP(parameters.senderIP,myIP);
-
-                parameters.hopDistance = -1;
-                encodeMessage(message, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
-                propagateMessage(message, myIP);
 
             }
             // The procedure is finished so the child can be removed from the lostChildrenTable
