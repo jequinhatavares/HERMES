@@ -102,6 +102,9 @@ bool oneTimeMessage = true;
 
 void loop(){
     //Wait for incoming requests
+    //LOG(NETWORK,DEBUG,"1.0\n");
+
+    //delay(2000);
 
     int packet_size = incomingMessage();
     if (packet_size > 0){
@@ -111,11 +114,16 @@ void loop(){
         insertLast(stateMachineEngine, eMessage);
     }
     handleTimers();
+    //LOG(NETWORK,DEBUG,"4\n");
     if(stateMachineEngine->size != 0){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
     }
 
+    //LOG(NETWORK,DEBUG,"5\n");
+
     cliInteraction();
+
+    //LOG(NETWORK,DEBUG,"6\n");
 
 }
 #endif

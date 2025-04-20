@@ -190,6 +190,7 @@ void handleChildRegistrationRequest(char * msg){
     newNode.nextHopIP[0] = childAPIP[0];newNode.nextHopIP[1] = childAPIP[1];
     newNode.nextHopIP[2] = childAPIP[2];newNode.nextHopIP[3] = childAPIP[3];
     newNode.hopDistance = 1;
+    newNode.sequenceNumber = sequenceNumber;
     updateRoutingTable(childAPIP, newNode, childAPIP);
 
     LOG(NETWORK,INFO, "New child connected.\n");
@@ -229,7 +230,7 @@ void handleFullRoutingTableUpdate(char * msg){
     int hopDistance,sequenceNumber;
     messageParameters parameters;
     char messageBuffer1[300];
-    bool hasRoutingChanged = false;
+    bool hasRoutingChanged = false, hasRoutingChangedTemp = false ;
     //Parse Message Type and root node IP
     sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type,&sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
 
@@ -245,7 +246,8 @@ void handleFullRoutingTableUpdate(char * msg){
         //Serial.printf("Parsed IP values: nodeIP %d.%d.%d.%d nextHopIp %d.%d.%d.%d hopDistance %d\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],
                      // nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3], hopDistance);
         //Update the Routing Table
-        hasRoutingChanged = hasRoutingChanged || updateRoutingTable2(nodeIP,hopDistance,sequenceNumber,sourceIP);
+        hasRoutingChangedTemp = updateRoutingTable2(nodeIP,hopDistance,sequenceNumber,sourceIP);
+        hasRoutingChanged = hasRoutingChanged || hasRoutingChangedTemp ;
         token = strtok(NULL, "|");
     }
 

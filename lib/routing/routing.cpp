@@ -148,7 +148,8 @@ void initTables(){
  * @return (void)
  */
 void printRoutingStruct(TableEntry* Table){
-    LOG(NETWORK,INFO,"Node[%d.%d.%d.%d] → NextHop[%d.%d.%d.%d] | (Distance: %d) | (Sequence Number: %d)\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
+    LOG(NETWORK,INFO,"Node[%d.%d.%d.%d] → NextHop[%d.%d.%d.%d] | (Distance: %d) | (Sequence Number: %d)\n",
+           ((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
            ((routingTableEntry *)Table->value)->nextHopIP[0],((routingTableEntry *)Table->value)->nextHopIP[1],
            ((routingTableEntry *)Table->value)->nextHopIP[2],((routingTableEntry *)Table->value)->nextHopIP[3],
            ((routingTableEntry *)Table->value)->hopDistance,((routingTableEntry *)Table->value)->sequenceNumber);
@@ -281,6 +282,7 @@ bool updateRoutingTable2(int nodeIP[4], int hopDistance, int sequenceNumber, int
         LOG(NETWORK,DEBUG,"new entry\n",nodeIP[0],nodeIP[1],nodeIP[2], nodeIP[3]);
         assignIP(updatedEntry.nextHopIP, senderIP);
         updatedEntry.hopDistance = hopDistance + 1;
+        updatedEntry.sequenceNumber = sequenceNumber;
         tableAdd(routingTable, nodeIP, &updatedEntry);
         return true;
     }else{//The node is already present in the table
@@ -295,7 +297,6 @@ bool updateRoutingTable2(int nodeIP[4], int hopDistance, int sequenceNumber, int
             //If the new path has a lower cost update the routing with the new information containing the shorter pathh
             if(hopDistance + 1 < nodeEntry->hopDistance){
                 LOG(NETWORK,DEBUG,"lowerHop Count\n",nodeIP[0],nodeIP[1],nodeIP[2], nodeIP[3]);
-
                 assignIP(updatedEntry.nextHopIP ,senderIP);
                 updatedEntry.hopDistance = hopDistance + 1;
                 updatedEntry.sequenceNumber = sequenceNumber;

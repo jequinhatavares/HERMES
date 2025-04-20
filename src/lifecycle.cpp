@@ -58,7 +58,6 @@ State initNode(Event event){
     messageVizParameters vizParameters;
     messageParameters params;
 
-
     // Set up WiFi event callbacks (parent/child loss) to trigger state machine transitions
     parentDisconnectCallback = onParentDisconnect;
     isChildRegisteredCallback = isChildRegistered;
@@ -211,7 +210,7 @@ State joinNetwork(Event event){
         //Process the routing table update
         if (packetSize > 0){
             receiveMessage(buffer);
-            LOG(MESSAGES,INFO,"Parent [Full Routing Update]: Response  %s\n", buffer);
+            LOG(MESSAGES,INFO,"Parent [Full Routing Update] Response: %s\n", buffer);
             handleFullRoutingTableUpdate(buffer);
             LOG(NETWORK,INFO,"Routing Table Updated:\n");
             tablePrint(routingTable,printRoutingStruct);
@@ -424,6 +423,7 @@ void handleTimers(){
     char messageBufferLarge[300]; //36 + 32*X
     messageParameters parameters;
     unsigned long currentTime = millis();
+    //LOG(NETWORK,DEBUG,"1\n");
     for (int i = 0; i < lostChildrenTable->numberOfItems; i++) {
         MAC = (int*) tableKey(lostChildrenTable, i);
         childConnectionStatus *status = (childConnectionStatus*)tableRead(lostChildrenTable, MAC);
@@ -432,7 +432,7 @@ void handleTimers(){
             insertLast(stateMachineEngine, eLostChildConnection);
         }
     }
-    if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
+    /***if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
         LOG(NETWORK,INFO,"Sending a Periodic Update to my Neighbors\n");
         mySequenceNumber = mySequenceNumber + 2;
         updateMySequenceNumber(mySequenceNumber);
@@ -441,7 +441,7 @@ void handleTimers(){
         encodeMessage(messageBufferLarge,FULL_ROUTING_TABLE_UPDATE,parameters);
         propagateMessage(messageBufferLarge,myIP);
         lastRoutingUpdateTime = currentTime;
-    }
+    }***/
 
 }
 
