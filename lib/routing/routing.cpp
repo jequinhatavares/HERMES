@@ -148,10 +148,10 @@ void initTables(){
  * @return (void)
  */
 void printRoutingStruct(TableEntry* Table){
-    LOG(NETWORK,INFO,"Node[%d.%d.%d.%d] → NextHop[%d.%d.%d.%d] | (Distance: %d)\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
+    LOG(NETWORK,INFO,"Node[%d.%d.%d.%d] → NextHop[%d.%d.%d.%d] | (Distance: %d) | (Sequence Number: %d)\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
            ((routingTableEntry *)Table->value)->nextHopIP[0],((routingTableEntry *)Table->value)->nextHopIP[1],
            ((routingTableEntry *)Table->value)->nextHopIP[2],((routingTableEntry *)Table->value)->nextHopIP[3],
-           ((routingTableEntry *)Table->value)->hopDistance);
+           ((routingTableEntry *)Table->value)->hopDistance,((routingTableEntry *)Table->value)->sequenceNumber);
 }
 
 void printChildStruct(TableEntry* Table){
