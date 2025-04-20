@@ -436,6 +436,7 @@ void handleTimers(){
         LOG(NETWORK,INFO,"Sending a Periodic Update to my Neighbors\n");
         mySequenceNumber = mySequenceNumber + 2;
         updateMySequenceNumber(mySequenceNumber);
+        assignIP(parameters.senderIP, myIP);
         //Update my sequence number
         encodeMessage(messageBufferLarge,FULL_ROUTING_TABLE_UPDATE,parameters);
         propagateMessage(messageBufferLarge,myIP);
