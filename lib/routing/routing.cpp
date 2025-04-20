@@ -122,6 +122,7 @@ void setValue(void* av, void* bv){
     //Serial.printf("Values.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a->nextHopIP[0],a->nextHopIP[1],a->nextHopIP[2],a->nextHopIP[3], b->nextHopIP[0],b->nextHopIP[1],b->nextHopIP[2],b->nextHopIP[3]);
 
     a->hopDistance = b->hopDistance;
+    a->sequenceNumber = b->sequenceNumber;
     a->nextHopIP[0] = b->nextHopIP[0];
     a->nextHopIP[1] = b->nextHopIP[1];
     a->nextHopIP[2] = b->nextHopIP[2];
