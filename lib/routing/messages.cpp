@@ -231,6 +231,7 @@ void handleFullRoutingTableUpdate(char * msg){
     messageParameters parameters;
     char messageBuffer1[300];
     bool hasRoutingChanged = false, hasRoutingChangedTemp = false ;
+    routingTableEntry newNode;
     //Parse Message Type and root node IP
     sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type,&sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
 
@@ -246,7 +247,11 @@ void handleFullRoutingTableUpdate(char * msg){
         //Serial.printf("Parsed IP values: nodeIP %d.%d.%d.%d nextHopIp %d.%d.%d.%d hopDistance %d\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],
                      // nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3], hopDistance);
         //Update the Routing Table
-        hasRoutingChangedTemp = updateRoutingTable2(nodeIP,hopDistance,sequenceNumber,sourceIP);
+        newNode.hopDistance = hopDistance;
+        newNode.sequenceNumber = sequenceNumber;
+        assignIP(newNode.nextHopIP,myIP);
+        //hasRoutingChangedTemp = updateRoutingTable(nodeIP,newNode,sourceIP);
+        updateRoutingTable(nodeIP,newNode,sourceIP);
         hasRoutingChanged = hasRoutingChanged || hasRoutingChangedTemp ;
         token = strtok(NULL, "|");
     }

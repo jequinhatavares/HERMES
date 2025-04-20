@@ -226,6 +226,8 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4
     //routingTableEntry *ptr = (routingTableEntry*) findNode(routingTable, nodeIP);
     //Serial.printf("Routing Table before inserting the new node\n");
 
+    //LOG(NETWORK,DEBUG,"NodeIP: %i.%i.%i.%i\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
+
      //If it is my IP, the hop distance is zero, and the next node is myself
      if(isIPEqual(nodeIP, myIP)){
          newNode.hopDistance = 0;
