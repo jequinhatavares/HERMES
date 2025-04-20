@@ -197,6 +197,7 @@ State joinNetwork(Event event){
         mySTAIP = getMySTAIP();
         params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
         params.IP2[0] = mySTAIP[0]; params.IP2[1] = mySTAIP[1]; params.IP2[2] = mySTAIP[2]; params.IP2[3] = mySTAIP[3];
+        params.sequenceNumber = mySequenceNumber;
         encodeMessage(msg, CHILD_REGISTRATION_REQUEST, params);
         sendMessage(parent, msg);
 
@@ -433,6 +434,7 @@ void handleTimers(){
     }
     if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
         mySequenceNumber = mySequenceNumber + 2;
+        updateMySequenceNumber(mySequenceNumber);
         //Update my sequence number
         encodeMessage(messageBufferLarge,FULL_ROUTING_TABLE_UPDATE,parameters);
         propagateMessage(messageBufferLarge,myIP);

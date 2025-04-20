@@ -41,8 +41,8 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
             break;
         case CHILD_REGISTRATION_REQUEST:
             //2 [my AP IP] [my STA IP]
-            sprintf(msg,"%i %i.%i.%i.%i %i.%i.%i.%i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
-                    parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
+            sprintf(msg,"%i %i.%i.%i.%i %i.%i.%i.%i %i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
+                    parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3], parameters.sequenceNumber);
             break;
         case FULL_ROUTING_TABLE_UPDATE:
             //3 [senderIP] [rootIP] |[node1 IP] [hopDistance] [Sequence Number1]|[node2 IP] [hopDistance] [Sequence Number2]|....
@@ -229,6 +229,7 @@ void handleFullRoutingTableUpdate(char * msg){
     int hopDistance,sequenceNumber;
     messageParameters parameters;
     char messageBuffer1[300];
+    bool hasRoutingChanged = false;
     //Parse Message Type and root node IP
     sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type,&sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
 
@@ -244,14 +245,17 @@ void handleFullRoutingTableUpdate(char * msg){
         //Serial.printf("Parsed IP values: nodeIP %d.%d.%d.%d nextHopIp %d.%d.%d.%d hopDistance %d\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],
                      // nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3], hopDistance);
         //Update the Routing Table
-        updateRoutingTable2(nodeIP,hopDistance,sequenceNumber,sourceIP);
+        hasRoutingChanged = hasRoutingChanged || updateRoutingTable2(nodeIP,hopDistance,sequenceNumber,sourceIP);
         token = strtok(NULL, "|");
     }
 
-    //Propagate the routing table update information trough the network
-    assignIP(parameters.senderIP,myIP);
-    encodeMessage(messageBuffer1, FULL_ROUTING_TABLE_UPDATE, parameters);
-    propagateMessage(messageBuffer1, sourceIP);
+    if (hasRoutingChanged){
+        //Propagate the routing table update information trough the network
+        assignIP(parameters.senderIP,myIP);
+        encodeMessage(messageBuffer1, FULL_ROUTING_TABLE_UPDATE, parameters);
+        propagateMessage(messageBuffer1, sourceIP);
+    }
+
 
 }
 
@@ -268,6 +272,7 @@ void handlePartialRoutingUpdate(char *msg){
     int nodeIP[4], nextHopIP[4], senderIP[4],sequenceNumber;
     int hopDistance;
     char messageBuffer1[50] = "";
+    bool hasRoutingChanged = false;
     routingTableEntry newNode;
     messageParameters parameters;
 
@@ -276,21 +281,23 @@ void handlePartialRoutingUpdate(char *msg){
 
     newNode.hopDistance = hopDistance;
 
-    updateRoutingTable2(nodeIP,hopDistance,sequenceNumber, senderIP);
+    hasRoutingChanged = updateRoutingTable2(nodeIP,hopDistance,sequenceNumber, senderIP);
 
-    // Propagate the routing table update to the network
-    routingTableEntry*nodeEntry = (routingTableEntry*) findNode(routingTable,nodeIP);
-    if(nodeEntry != nullptr){
-        //Propagate the routing table update information trough the network
-        assignIP(parameters.IP1,nodeIP);
-        parameters.hopDistance = nodeEntry->hopDistance;
-        assignIP(parameters.senderIP,myIP);
-        parameters.sequenceNumber = sequenceNumber;
-        encodeMessage(messageBuffer1, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
-        propagateMessage(messageBuffer1, senderIP);
-    }else{
-        LOG(NETWORK,ERROR, "❌ Routing Table Update Failed: The node in the routing update was not"
-                           " properly added to the routing table. The table lookup returned a null pointer.");
+    // If the routing update caused a change in my routing table, propagate the updated information to the rest of the network
+    if(hasRoutingChanged){
+        routingTableEntry*nodeEntry = (routingTableEntry*) findNode(routingTable,nodeIP);
+        if(nodeEntry != nullptr){
+            //Propagate the routing table update information trough the network
+            assignIP(parameters.IP1,nodeIP);
+            parameters.hopDistance = nodeEntry->hopDistance;
+            assignIP(parameters.senderIP,myIP);
+            parameters.sequenceNumber = sequenceNumber;
+            encodeMessage(messageBuffer1, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
+            propagateMessage(messageBuffer1, senderIP);
+        }else{
+            LOG(NETWORK,ERROR, "❌ Routing Table Update Failed: The node in the routing update was not"
+                               " properly added to the routing table. The table lookup returned a null pointer.");
+        }
     }
 
 }

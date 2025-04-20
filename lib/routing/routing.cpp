@@ -419,3 +419,14 @@ bool inMySubnet(int* nodeIP){
     }
     return false;
 }
+
+void updateMySequenceNumber(int newSequenceNumber){
+    routingTableEntry updatedEntry;
+    routingTableEntry *myEntry = (routingTableEntry*) findNode(routingTable, myIP);
+    if(myEntry != nullptr){
+        assignIP(updatedEntry.nextHopIP,myIP);
+        updatedEntry.hopDistance = 0;
+        updatedEntry.sequenceNumber = newSequenceNumber;
+        tableUpdate(routingTable, myIP, &updatedEntry);
+    }
+}
