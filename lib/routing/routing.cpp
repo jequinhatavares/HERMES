@@ -274,16 +274,16 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4
 }
 
 bool updateRoutingTable2(int nodeIP[4], int hopDistance, int sequenceNumber, int senderIP[4]){
-    routingTableEntry updatedEntry;
-    routingTableEntry *nodeEntry = (routingTableEntry*) findNode(routingTable, nodeIP);
+    //routingTableEntry updatedEntry;
+    //routingTableEntry *nodeEntry = (routingTableEntry*) findNode(routingTable, nodeIP);
 
-    LOG(NETWORK,DEBUG,"NodeIP: %i.%i.%i.%i\n",nodeIP[0],nodeIP[1],nodeIP[2], nodeIP[3]);
-    if( nodeEntry == nullptr){ // If the node is not in the table add it
-        LOG(NETWORK,DEBUG,"new entry\n",nodeIP[0],nodeIP[1],nodeIP[2], nodeIP[3]);
-        assignIP(updatedEntry.nextHopIP, senderIP);
-        updatedEntry.hopDistance = hopDistance + 1;
-        updatedEntry.sequenceNumber = sequenceNumber;
-        tableAdd(routingTable, nodeIP, &updatedEntry);
+    LOG(NETWORK,DEBUG,"NodeIP: %i.%i.%i.%i\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
+    /***if( nodeEntry == nullptr){ // If the node is not in the table add it
+        LOG(NETWORK,DEBUG,"new entry\n");
+        //assignIP(updatedEntry.nextHopIP, senderIP);
+        //updatedEntry.hopDistance = hopDistance + 1;
+        //updatedEntry.sequenceNumber = sequenceNumber;
+        //tableAdd(routingTable, nodeIP, &updatedEntry);
         return true;
     }else{//The node is already present in the table
         if(sequenceNumber > nodeEntry->sequenceNumber){
@@ -296,7 +296,7 @@ bool updateRoutingTable2(int nodeIP[4], int hopDistance, int sequenceNumber, int
         else if(sequenceNumber == nodeEntry->sequenceNumber){
             //If the new path has a lower cost update the routing with the new information containing the shorter pathh
             if(hopDistance + 1 < nodeEntry->hopDistance){
-                LOG(NETWORK,DEBUG,"lowerHop Count\n",nodeIP[0],nodeIP[1],nodeIP[2], nodeIP[3]);
+                LOG(NETWORK,DEBUG,"lowerHop Count\n");
                 assignIP(updatedEntry.nextHopIP ,senderIP);
                 updatedEntry.hopDistance = hopDistance + 1;
                 updatedEntry.sequenceNumber = sequenceNumber;
@@ -304,7 +304,7 @@ bool updateRoutingTable2(int nodeIP[4], int hopDistance, int sequenceNumber, int
                 return true;
             }
         }
-    }
+    }***/
     return  false;
 
 }

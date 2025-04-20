@@ -60,7 +60,7 @@ void setup(){
 
     //To auto initialize the root node has the node with the IP 135.230.96.1
     parseMAC(getMyMAC().c_str(), MAC);
-    if(MAC[5] == 12 && MAC[4] == 150 && MAC[3] == 51)
+    if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96)
     {
         iamRoot = true;
     }
