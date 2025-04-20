@@ -421,7 +421,7 @@ State childRecovery(Event event){
 }
 void handleTimers(){
     int* MAC;
-    char messageBufferLarge[200]; //36 + 32*X
+    char messageBufferLarge[300]; //36 + 32*X
     messageParameters parameters;
     unsigned long currentTime = millis();
     for (int i = 0; i < lostChildrenTable->numberOfItems; i++) {
@@ -433,11 +433,13 @@ void handleTimers(){
         }
     }
     if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
+        LOG(NETWORK,INFO,"Sending a Periodic Update to my Neighbors\n");
         mySequenceNumber = mySequenceNumber + 2;
         updateMySequenceNumber(mySequenceNumber);
         //Update my sequence number
         encodeMessage(messageBufferLarge,FULL_ROUTING_TABLE_UPDATE,parameters);
         propagateMessage(messageBufferLarge,myIP);
+        lastRoutingUpdateTime = currentTime;
     }
 
 }

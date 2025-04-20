@@ -250,6 +250,7 @@ void handleFullRoutingTableUpdate(char * msg){
     }
 
     if (hasRoutingChanged){
+        LOG(NETWORK,INFO, "Routing Information has changed->propagate new info\n");
         //Propagate the routing table update information trough the network
         assignIP(parameters.senderIP,myIP);
         encodeMessage(messageBuffer1, FULL_ROUTING_TABLE_UPDATE, parameters);
@@ -285,6 +286,7 @@ void handlePartialRoutingUpdate(char *msg){
 
     // If the routing update caused a change in my routing table, propagate the updated information to the rest of the network
     if(hasRoutingChanged){
+        LOG(NETWORK,INFO, "Routing Information has changed->propagate new info\n");
         routingTableEntry*nodeEntry = (routingTableEntry*) findNode(routingTable,nodeIP);
         if(nodeEntry != nullptr){
             //Propagate the routing table update information trough the network
