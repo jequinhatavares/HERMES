@@ -309,7 +309,7 @@ State parentRecovery(Event event){
     messageParameters parameters;
 
     LOG(STATE_MACHINE,INFO,"Parent Recovery State\n");
-    delay(10000);
+    delay(30000);
 
     assignIP(parameters.senderIP, myIP);
     encodeMessage(message,TOPOLOGY_BREAK_ALERT,parameters);
@@ -333,6 +333,10 @@ State parentRecovery(Event event){
     // Disconnect permanently from the current parent to stop disconnection events and enable connection to a new one
     LOG(NETWORK,INFO,"Disconnecting permanently from parent node\n");
     disconnectFromAP();
+
+    //Increment mySequence Number
+    mySequenceNumber = mySequenceNumber + 2;
+    updateMySequenceNumber(mySequenceNumber);
 
     insertLast(stateMachineEngine, eSearch);
     return sSearch;
@@ -389,15 +393,15 @@ State childRecovery(Event event){
                 LOG(NETWORK,DEBUG,"Removing Node: %i.%i.%i.%i from my routing Table\n",lostNodeSubnetwork[i][0],lostNodeSubnetwork[i][1],lostNodeSubnetwork[i][2],lostNodeSubnetwork[i][3]);
                 assignIP(unreachableEntry.nextHopIP,lostNodeSubnetwork[i]);
                 unreachableEntry.sequenceNumber = lostNodeTableEntry->sequenceNumber + 1;
+                unreachableEntry.hopDistance = -1;
                 tableUpdate(routingTable, lostNodeSubnetwork[i],&unreachableEntry);
 
                 // Send message informing other nodes in the network about the lost nodes
                 assignIP(parameters.IP1,lostNodeSubnetwork[i]);
-                assignIP(parameters.IP2,lostNodeSubnetwork[i]);
                 assignIP(parameters.senderIP,myIP);
-                parameters.hopDistance = -1;
+                parameters.hopDistance = lostNodeTableEntry->hopDistance;
                 // Increment the lost child’s sequence number by 1, symbolizing that this route is now invalid due to the loss of connectivity
-                parameters.sequenceNumber = lostNodeTableEntry->sequenceNumber +1;
+                parameters.sequenceNumber = lostNodeTableEntry->sequenceNumber;
                 encodeMessage(message, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
                 propagateMessage(message, myIP);
             }
