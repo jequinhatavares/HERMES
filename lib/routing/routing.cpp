@@ -282,7 +282,7 @@ bool updateRoutingTableSN(int nodeIP[4], int hopDistance, int sequenceNumber, in
     routingTableEntry updatedEntry;
     routingTableEntry *nodeEntry = (routingTableEntry*) findNode(routingTable, nodeIP);
 
-    LOG(NETWORK,DEBUG,"NodeIP: %i.%i.%i.%i\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
+    //LOG(NETWORK,DEBUG,"NodeIP: %i.%i.%i.%i\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
     //Serial.printf("NodeIP\n");//Isto não deu erro
     //Serial.printf("In routing Update NodeIP: %i.%i.%i.%i\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);//Isto não deu erro
     if( nodeEntry == nullptr){ // If the node is not in the table add it
@@ -294,8 +294,13 @@ bool updateRoutingTableSN(int nodeIP[4], int hopDistance, int sequenceNumber, in
         return true;
     }else{//The node is already present in the table
         if(sequenceNumber > nodeEntry->sequenceNumber){
+
+            if ( sequenceNumber % 2 != 0){ //Odd sequence number
+                updatedEntry.hopDistance = hopDistance;
+            }else{
+                updatedEntry.hopDistance = hopDistance + 1;
+            }
             assignIP(updatedEntry.nextHopIP ,senderIP);
-            updatedEntry.hopDistance = hopDistance + 1;
             updatedEntry.sequenceNumber = sequenceNumber;
             tableUpdate(routingTable, nodeIP, &updatedEntry);
             return true;
