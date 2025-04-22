@@ -10,10 +10,9 @@
 #include "net_viz.h"
 
 typedef struct messageParameters{
-    int senderIP[4] = {0,0,0,0};
     int IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};
-    int nrOfPossibleParents = 0;
-    int** possibleParents;
+    int nrOfNodes = 0;
+    int **IP;
     int hopDistance = -1;
     int sequenceNumber = 0;
     int childrenNumber = -1;
