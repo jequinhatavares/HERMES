@@ -79,7 +79,7 @@ State initNode(Event event){
     me.nextHopIP[0] = localIP[0]; me.nextHopIP[1] = localIP[1];me.nextHopIP[2] = localIP[2]; me.nextHopIP[3] = localIP[3];
     me.hopDistance = 0;
     me.sequenceNumber = mySequenceNumber;
-    updateRoutingTable(myIP,me,invalidIP);
+    tableAdd(routingTable,myIP,&me);
 
     lastRoutingUpdateTime = millis();
 

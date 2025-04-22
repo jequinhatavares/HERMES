@@ -191,7 +191,8 @@ void handleChildRegistrationRequest(char * msg){
     newNode.nextHopIP[2] = childAPIP[2];newNode.nextHopIP[3] = childAPIP[3];
     newNode.hopDistance = 1;
     newNode.sequenceNumber = sequenceNumber;
-    updateRoutingTable(childAPIP, newNode, childAPIP);
+    //updateRoutingTable(childAPIP, newNode, childAPIP);
+    updateRoutingTableSN(childAPIP,newNode, childAPIP);
 
     LOG(NETWORK,INFO, "New child connected.\n");
 
@@ -229,7 +230,7 @@ void handleFullRoutingTableUpdate(char * msg){
     int nodeIP[4], nextHopIP[4], sourceIP[4];
     int hopDistance,sequenceNumber;
     messageParameters parameters;
-    char messageBuffer1[300];
+    static char messageBuffer1[300]="";
     bool hasRoutingChanged = false, hasRoutingChangedTemp = false ;
     routingTableEntry newNode;
     //Parse Message Type and root node IP
@@ -250,8 +251,9 @@ void handleFullRoutingTableUpdate(char * msg){
         newNode.hopDistance = hopDistance;
         newNode.sequenceNumber = sequenceNumber;
         assignIP(newNode.nextHopIP,myIP);
-        //hasRoutingChangedTemp = updateRoutingTable(nodeIP,newNode,sourceIP);
-        updateRoutingTable(nodeIP,newNode,sourceIP);
+        //updateRoutingTableSN(nodeIP,newNode,sourceIP);
+        hasRoutingChangedTemp = updateRoutingTableSN(nodeIP,newNode,sourceIP);
+        //updateRoutingTable(nodeIP,newNode,sourceIP);
         hasRoutingChanged = hasRoutingChanged || hasRoutingChangedTemp ;
         token = strtok(NULL, "|");
     }
@@ -289,7 +291,9 @@ void handlePartialRoutingUpdate(char *msg){
 
     newNode.hopDistance = hopDistance;
 
-    hasRoutingChanged = updateRoutingTable2(nodeIP,hopDistance,sequenceNumber, senderIP);
+    //updateRoutingTable(nodeIP,newNode,senderIP);
+
+    hasRoutingChanged = updateRoutingTableSN(nodeIP,newNode, senderIP);
 
     // If the routing update caused a change in my routing table, propagate the updated information to the rest of the network
     if(hasRoutingChanged){
