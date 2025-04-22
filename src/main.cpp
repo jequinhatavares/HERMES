@@ -123,7 +123,7 @@ void loop(){
 
     cliInteraction();
 
-    LOG(NETWORK,DEBUG,"6\n");
+    //LOG(NETWORK,DEBUG,"6\n");
 
 }
 #endif

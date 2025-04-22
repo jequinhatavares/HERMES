@@ -189,10 +189,10 @@ void handleChildRegistrationRequest(char * msg){
     //Add the child node to the routing table
     newNode.nextHopIP[0] = childAPIP[0];newNode.nextHopIP[1] = childAPIP[1];
     newNode.nextHopIP[2] = childAPIP[2];newNode.nextHopIP[3] = childAPIP[3];
-    newNode.hopDistance = 1;
+    newNode.hopDistance = 0;
     newNode.sequenceNumber = sequenceNumber;
     //updateRoutingTable(childAPIP, newNode, childAPIP);
-    updateRoutingTableSN(childAPIP,newNode, childAPIP);
+    updateRoutingTableSN(childAPIP,0,sequenceNumber,childAPIP);
 
     LOG(NETWORK,INFO, "New child connected.\n");
 
@@ -248,11 +248,8 @@ void handleFullRoutingTableUpdate(char * msg){
         //Serial.printf("Parsed IP values: nodeIP %d.%d.%d.%d nextHopIp %d.%d.%d.%d hopDistance %d\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],
                      // nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3], hopDistance);
         //Update the Routing Table
-        newNode.hopDistance = hopDistance;
-        newNode.sequenceNumber = sequenceNumber;
-        assignIP(newNode.nextHopIP,myIP);
         //updateRoutingTableSN(nodeIP,newNode,sourceIP);
-        hasRoutingChangedTemp = updateRoutingTableSN(nodeIP,newNode,sourceIP);
+        hasRoutingChangedTemp = updateRoutingTableSN(nodeIP,hopDistance,sequenceNumber,sourceIP);
         //updateRoutingTable(nodeIP,newNode,sourceIP);
         hasRoutingChanged = hasRoutingChanged || hasRoutingChangedTemp ;
         token = strtok(NULL, "|");
@@ -279,21 +276,19 @@ void handleFullRoutingTableUpdate(char * msg){
 */
 void handlePartialRoutingUpdate(char *msg){
     int type;
-    int nodeIP[4], nextHopIP[4], senderIP[4],sequenceNumber;
+    int nodeIP[4], senderIP[4],sequenceNumber;
     int hopDistance;
     char messageBuffer1[50] = "";
     bool hasRoutingChanged = false;
-    routingTableEntry newNode;
     messageParameters parameters;
 
     sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %d %d",&type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
            &nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&hopDistance,&sequenceNumber);
 
-    newNode.hopDistance = hopDistance;
 
     //updateRoutingTable(nodeIP,newNode,senderIP);
 
-    hasRoutingChanged = updateRoutingTableSN(nodeIP,newNode, senderIP);
+    hasRoutingChanged = updateRoutingTableSN(nodeIP,hopDistance,sequenceNumber, senderIP);
 
     // If the routing update caused a change in my routing table, propagate the updated information to the rest of the network
     if(hasRoutingChanged){

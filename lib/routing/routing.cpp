@@ -278,8 +278,8 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4
     }
 }***/
 
-bool updateRoutingTableSN(int nodeIP[4], routingTableEntry newNode, int senderIP[4]){
-    //routingTableEntry updatedEntry;
+bool updateRoutingTableSN(int nodeIP[4], int hopDistance, int sequenceNumber, int senderIP[4]){
+    routingTableEntry updatedEntry;
     routingTableEntry *nodeEntry = (routingTableEntry*) findNode(routingTable, nodeIP);
 
     LOG(NETWORK,DEBUG,"NodeIP: %i.%i.%i.%i\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
@@ -287,31 +287,31 @@ bool updateRoutingTableSN(int nodeIP[4], routingTableEntry newNode, int senderIP
     //Serial.printf("In routing Update NodeIP: %i.%i.%i.%i\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);//Isto não deu erro
     if( nodeEntry == nullptr){ // If the node is not in the table add it
         //LOG(NETWORK,DEBUG,"new entry\n");
-        assignIP(newNode.nextHopIP, senderIP);
-        newNode.hopDistance = newNode.hopDistance + 1;
-        newNode.sequenceNumber = newNode.sequenceNumber;
-        tableAdd(routingTable, nodeIP, &newNode);
+        assignIP(updatedEntry.nextHopIP, senderIP);
+        updatedEntry.hopDistance = hopDistance + 1;
+        updatedEntry.sequenceNumber = sequenceNumber;
+        tableAdd(routingTable, nodeIP, &updatedEntry);
         return true;
     }else{//The node is already present in the table
-        if(newNode.sequenceNumber > nodeEntry->sequenceNumber){
-            assignIP(newNode.nextHopIP ,senderIP);
-            newNode.hopDistance = newNode.hopDistance + 1;
-            newNode.sequenceNumber = newNode.sequenceNumber;
-            tableUpdate(routingTable, nodeIP, &newNode);
+        if(sequenceNumber > nodeEntry->sequenceNumber){
+            assignIP(updatedEntry.nextHopIP ,senderIP);
+            updatedEntry.hopDistance = hopDistance + 1;
+            updatedEntry.sequenceNumber = sequenceNumber;
+            tableUpdate(routingTable, nodeIP, &updatedEntry);
             return true;
         }
-        else if(newNode.sequenceNumber == nodeEntry->sequenceNumber){
+        else if(sequenceNumber == nodeEntry->sequenceNumber){
             //If the new path has a lower cost update the routing with the new information containing the shorter pathh
-            if(newNode.hopDistance + 1 < nodeEntry->hopDistance){
+            if(hopDistance + 1 < nodeEntry->hopDistance){
                 //LOG(NETWORK,DEBUG,"lowerHop Count\n");
-                assignIP(newNode.nextHopIP ,senderIP);
-                newNode.hopDistance = newNode.hopDistance + 1;
-                newNode.sequenceNumber = newNode.sequenceNumber;
-                tableUpdate(routingTable, nodeIP, &newNode);
+                assignIP(updatedEntry.nextHopIP ,senderIP);
+                updatedEntry.hopDistance = hopDistance + 1;
+                updatedEntry.sequenceNumber = sequenceNumber;
+                tableUpdate(routingTable, nodeIP, &updatedEntry);
                 return true;
             }
         }
-    }/******/
+    }
     return false;
 
 }

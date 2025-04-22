@@ -171,7 +171,7 @@ State joinNetwork(Event event){
 
             if (packetSize > 0){
                 receiveMessage(buffer);
-                LOG(MESSAGES,INFO,"Parent [Parent Info Response] Response: %s\n", buffer);
+                LOG(MESSAGES,INFO,"Parent [Parent Info Response]: %s\n", buffer);
                 handleParentInfoResponse(buffer, possibleParents, i);
                 possibleParents[i].ssid = ssidList.item[i];
             }
