@@ -436,7 +436,7 @@ void handleTimers(){
             insertLast(stateMachineEngine, eLostChildConnection);
         }
     }
-    /***if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
+    if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
         LOG(NETWORK,INFO,"Sending a Periodic Update to my Neighbors\n");
         mySequenceNumber = mySequenceNumber + 2;
         updateMySequenceNumber(mySequenceNumber);
@@ -445,7 +445,7 @@ void handleTimers(){
         encodeMessage(messageBufferLarge,FULL_ROUTING_TABLE_UPDATE,parameters);
         propagateMessage(messageBufferLarge,myIP);
         lastRoutingUpdateTime = currentTime;
-    }***/
+    }
 
 }
 
