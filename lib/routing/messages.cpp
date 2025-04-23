@@ -176,6 +176,7 @@ void handleParentInfoResponse(char* msg, parentInfo *parents, int i){
 void handleChildRegistrationRequest(char * msg){
     int type;
     int childAPIP[4], childSTAIP[4],sequenceNumber;
+    int ipList[1][4];
     char messageBuffer1[50] = "", messageBufferLarge[300] = "";
     routingTableEntry newNode;
     messageParameters parameters;
@@ -210,19 +211,15 @@ void handleChildRegistrationRequest(char * msg){
     LOG(MESSAGES,INFO,"Message: %s\n",messageBufferLarge);
     sendMessage(childSTAIP,messageBufferLarge);
     delay(1000);
-    LOG(MESSAGES,INFO,"Message Sent\n");
 
 
     //Propagate the new node information trough the network
-    LOG(MESSAGES,INFO,"1\n");
-    parameters.IP[0] = childAPIP;
-    LOG(MESSAGES,INFO,"2\n");
+    assignIP(parameters.IP[0], childAPIP);
     parameters.nrOfNodes = 1;
-    LOG(MESSAGES,INFO,"3\n"); //erro a seguir nesta linha
+
     encodeMessage(messageBuffer1, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
-    LOG(MESSAGES,INFO,"4\n");
     propagateMessage(messageBuffer1, childAPIP);
-    LOG(MESSAGES,INFO,"5\n");
+    LOG(MESSAGES,INFO,"Sending: %s\n",messageBuffer1);
 
     //Sending new node information to the DEBUG visualization program, if enabled
     reportNewNodeToViz(childAPIP, myIP);
@@ -260,9 +257,9 @@ void handleFullRoutingTableUpdate(char * msg){
         //Update the Routing Table
         //updateRoutingTableSN(nodeIP,newNode,sourceIP);
         hasRoutingChangedTemp = updateRoutingTableSN(nodeIP,hopDistance,sequenceNumber,sourceIP);
-        //updateRoutingTable(nodeIP,newNode,sourceIP);
-        if(hasRoutingChanged == true){
-            parameters.IP[nrOfChanges] = nodeIP;
+        // If the node's routing entry was modified, add it to the list of nodes to include in the Partial routing update
+        if(hasRoutingChangedTemp == true){
+            assignIP(parameters.IP[nrOfChanges], nodeIP);
             nrOfChanges ++;
         }
         hasRoutingChanged = hasRoutingChanged || hasRoutingChangedTemp ;
@@ -270,9 +267,12 @@ void handleFullRoutingTableUpdate(char * msg){
     }
 
     if (hasRoutingChanged){
+        parameters.nrOfNodes = nrOfChanges;
         LOG(NETWORK,INFO, "Routing Information has changed->propagate new info\n");
         //Propagate the routing table update information trough the network
         encodeMessage(messageBuffer1, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
+        LOG(NETWORK,INFO, "Message: %s\n", messageBuffer1);
+
         propagateMessage(messageBuffer1, sourceIP);
     }
 
@@ -313,8 +313,9 @@ void handlePartialRoutingUpdate(char *msg){
         //Update the Routing Table
         //updateRoutingTableSN(nodeIP,newNode,sourceIP);
         hasRoutingChangedTemp = updateRoutingTableSN(nodeIP,hopDistance,sequenceNumber,senderIP);
-        if(hasRoutingChanged == true){
-            parameters.IP[nrOfChanges] = nodeIP;
+        // If the node's routing entry was modified, add it to the list of nodes to include in the Partial routing update
+        if(hasRoutingChangedTemp == true){
+            assignIP(parameters.IP[nrOfChanges],nodeIP);
             nrOfChanges ++;
         }
         //updateRoutingTable(nodeIP,newNode,sourceIP);

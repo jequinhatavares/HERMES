@@ -12,7 +12,7 @@
 typedef struct messageParameters{
     int IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};
     int nrOfNodes = 0;
-    int **IP;
+    int IP[10][4];
     int hopDistance = -1;
     int sequenceNumber = 0;
     int childrenNumber = -1;

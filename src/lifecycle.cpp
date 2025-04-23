@@ -139,11 +139,10 @@ State joinNetwork(Event event){
     LOG(STATE_MACHINE,INFO,"Join Network State\n");
     int packetSize = 0, connectedParentIP[4];
     unsigned long currentTime, startTime;
-    IPAddress mySTAIP, connectedGateway;
+    IPAddress mySTAIP;
     messageParameters params;
-    char buffer[256] = "", msg[50] = "",largeMessage[200] = "";
+    static char buffer[256] = "", msg[50] = "",largeMessage[200] = "";
     parentInfo possibleParents[10];
-    unsigned long interval;
 
     if(ssidList.len != 0){
         //Connect to each parent to request their information in order to select the preferred parent.
@@ -343,7 +342,7 @@ State parentRecovery(Event event){
 
 State childRecovery(Event event){
     LOG(STATE_MACHINE,INFO,"Child Recovery State\n");
-    int i, j, invalidHopDistance = -1;
+    int i;
     int lostChildIP[4], subNetSize = 0, lostNodeSubnetwork[routingTable->numberOfItems][4], **lostNodes;
     int *nodeIP, *MAC;
     char message[50];
@@ -351,65 +350,69 @@ State childRecovery(Event event){
     routingTableEntry unreachableEntry, *lostNodeTableEntry;
 
     for (int k = 0; k <lostChildrenTable->numberOfItems ; k++) {
-        MAC = (int*) tableKey(lostChildrenTable, i);
-        childConnectionStatus *status = (childConnectionStatus*)tableRead(lostChildrenTable, MAC);
-        if(status->childTimedOut){
-            //Transform the lost child MAC into a IP
-            getIPFromMAC(MAC,lostChildIP);
-            LOG(NETWORK,DEBUG,"Lost Child MAC: %i.%i.%i.%i.%i.%i \n", MAC[0], MAC[1], MAC[2], MAC[3], MAC[4], MAC[6]);
-            LOG(NETWORK,DEBUG,"Lost Child IP: %i.%i.%i.%i \n", lostChildIP[0], lostChildIP[1], lostChildIP[2], lostChildIP[3]);
+        MAC = (int*) tableKey(lostChildrenTable, k);
+        if(MAC != nullptr){
+            childConnectionStatus *status = (childConnectionStatus*)tableRead(lostChildrenTable, MAC);
+            if(status->childTimedOut){
 
-            // Identify all nodes that were part of the lost child’s subnetwork.
-            for (i = 0; i < routingTable->numberOfItems; i++) {
-                nodeIP = (int*) tableKey(routingTable, i);
-                routingTableEntry* routingValue = (routingTableEntry*) findNode(routingTable,nodeIP);
-                if(routingValue != nullptr){
-                    // If the next Hop IP is the IP of the lost child, it means this node is part of the
-                    // lostChild subnetwork (including itself)
-                    if(isIPEqual(routingValue->nextHopIP, lostChildIP)){
-                        LOG(NETWORK,DEBUG,"Node: %i.%i.%i.%i belongs to lost child subnetwork\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
-                        assignIP(lostNodeSubnetwork[subNetSize],nodeIP);
-                        parameters.IP[subNetSize] = lostNodeSubnetwork[subNetSize];
-                        subNetSize ++;
+                //Transform the lost child MAC into a IP
+                getIPFromMAC(MAC,lostChildIP);
+                LOG(NETWORK,DEBUG,"Lost Child MAC: %i.%i.%i.%i.%i.%i \n", MAC[0], MAC[1], MAC[2], MAC[3], MAC[4], MAC[6]);
+                LOG(NETWORK,DEBUG,"Lost Child IP: %i.%i.%i.%i \n", lostChildIP[0], lostChildIP[1], lostChildIP[2], lostChildIP[3]);
+
+                // Identify all nodes that were part of the lost child’s subnetwork.
+                for (i = 0; i < routingTable->numberOfItems; i++) {
+                    nodeIP = (int*) tableKey(routingTable, i);
+                    routingTableEntry* routingValue = (routingTableEntry*) findNode(routingTable,nodeIP);
+                    if(routingValue != nullptr){
+                        // If the next Hop IP is the IP of the lost child, it means this node is part of the
+                        // lostChild subnetwork (including itself)
+                        if(isIPEqual(routingValue->nextHopIP, lostChildIP)){
+
+                            LOG(NETWORK,DEBUG,"Node: %i.%i.%i.%i belongs to lost child subnetwork\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
+                            assignIP(lostNodeSubnetwork[subNetSize],nodeIP);
+                            assignIP(parameters.IP[subNetSize], nodeIP);
+                            subNetSize ++;
+                        }
+                    }else{
+                        LOG(NETWORK, ERROR, "❌ Valid entry in routing table contains a pointer to null instead of the routing entry.\n");
                     }
-                }else{
-                    LOG(NETWORK, ERROR, "❌ Valid entry in routing table contains a pointer to null instead of the routing entry.\n");
                 }
-            }
-            parameters.nrOfNodes = subNetSize;
+                parameters.nrOfNodes = subNetSize;
 
+                // Remove the lost child from my children table
+                LOG(NETWORK,DEBUG,"Removing unreachable Node :%i.%i.%i.%i from my children Table\n",lostChildIP[0],lostChildIP[1],lostChildIP[2],lostChildIP[3]);
+                tableRemove(childrenTable, lostChildIP);
+                numberOfChildren--;
+                LOG(NETWORK,DEBUG,"Updated Children Table\n");
+                tablePrint(childrenTable, printChildStruct);
 
-            // Remove the lost child from my children table
-            LOG(NETWORK,DEBUG,"Updating unreachable Node :%i.%i.%i.%i from my children Table\n",lostChildIP[0],lostChildIP[1],lostChildIP[2],lostChildIP[3]);
-            tableRemove(childrenTable, lostChildIP);
-            numberOfChildren--;
-            LOG(NETWORK,DEBUG,"Updated Children Table\n");
-            tablePrint(childrenTable, printChildStruct);
-
-            unreachableEntry.hopDistance = -1;
-            // Mark the nodes as unreachable in the routing table.
-            for (i = 0; i < subNetSize; i++) {
-                // Mark the nodes as unreachable in the routing table
-                lostNodeTableEntry = (routingTableEntry*)tableRead(routingTable, lostNodeSubnetwork[i]);
-                LOG(NETWORK,DEBUG,"Removing Node: %i.%i.%i.%i from my routing Table\n",lostNodeSubnetwork[i][0],lostNodeSubnetwork[i][1],lostNodeSubnetwork[i][2],lostNodeSubnetwork[i][3]);
-                assignIP(unreachableEntry.nextHopIP,lostNodeSubnetwork[i]);
-                // Increment the lost child’s sequence number by 1, symbolizing that this route is now invalid due to the loss of connectivity
-                unreachableEntry.sequenceNumber = lostNodeTableEntry->sequenceNumber + 1;
                 unreachableEntry.hopDistance = -1;
-                tableUpdate(routingTable, lostNodeSubnetwork[i],&unreachableEntry);
+                // Mark the nodes as unreachable in the routing table.
+                for (i = 0; i < subNetSize; i++) {
+                    // Mark the nodes as unreachable in the routing table
+                    lostNodeTableEntry = (routingTableEntry*)tableRead(routingTable, lostNodeSubnetwork[i]);
+                    LOG(NETWORK,DEBUG,"Updating Node: %i.%i.%i.%i from my routing Table\n",lostNodeSubnetwork[i][0],lostNodeSubnetwork[i][1],lostNodeSubnetwork[i][2],lostNodeSubnetwork[i][3]);
+                    assignIP(unreachableEntry.nextHopIP,lostNodeSubnetwork[i]);
+                    // Increment the lost child’s sequence number by 1, symbolizing that this route is now invalid due to the loss of connectivity
+                    unreachableEntry.sequenceNumber = lostNodeTableEntry->sequenceNumber + 1;
+                    unreachableEntry.hopDistance = -1;
+                    tableUpdate(routingTable, lostNodeSubnetwork[i],&unreachableEntry);
 
-                // Notify the rest of the network about nodes that are no longer reachable.
-                encodeMessage(message, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
-                propagateMessage(message, myIP);
+                    // Notify the rest of the network about nodes that are no longer reachable.
+                    encodeMessage(message, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
+                    propagateMessage(message, myIP);
+                }
+                LOG(NETWORK,DEBUG,"Updated Routing Table:\n");
+                tablePrint(routingTable, printRoutingStruct);
+
+
+                // The procedure is finished so the child can be removed from the lostChildrenTable
+                tableRemove(lostChildrenTable, MAC);
             }
-            LOG(NETWORK,DEBUG,"Updated Routing Table\n");
-            tablePrint(routingTable, printRoutingStruct);
-
-
-            // The procedure is finished so the child can be removed from the lostChildrenTable
-            tableRemove(lostChildrenTable, MAC);
+            subNetSize = 0;
         }
-        subNetSize = 0;
+
     }
 
     //insertLast(stateMachineEngine, eSearch);

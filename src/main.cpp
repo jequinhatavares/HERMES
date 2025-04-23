@@ -46,6 +46,7 @@ void setup(){
     strcat(ssid, getMyMAC().c_str());
 
     Serial.begin(115200);
+    Serial.setDebugOutput(true);
 
     //Serial.setTimeout(10000);
 
@@ -103,6 +104,7 @@ bool oneTimeMessage = true;
 void loop(){
     //Wait for incoming requests
     //LOG(NETWORK,DEBUG,"1.0\n");
+    //Serial.printf("1\n");
 
     //delay(2000);
 
@@ -113,16 +115,24 @@ void loop(){
         //LOG(MESSAGES,INFO,"Received: %s\n", messageBuffer);
         insertLast(stateMachineEngine, eMessage);
     }
+    //Serial.printf("2\n");
+
     handleTimers();
+
+    //Serial.printf("3\n");
+
     //LOG(NETWORK,DEBUG,"4\n");
     if(stateMachineEngine->size != 0){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
     }
 
+    //Serial.printf("4\n");
+
     //LOG(NETWORK,DEBUG,"5\n");
 
     cliInteraction();
-
+    //Serial.printf("5\n");
+    //delay(100);
     //LOG(NETWORK,DEBUG,"6\n");
 
 }
