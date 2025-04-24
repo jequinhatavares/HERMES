@@ -46,7 +46,7 @@ void setup(){
     strcat(ssid, getMyMAC().c_str());
 
     Serial.begin(115200);
-    Serial.setDebugOutput(true);
+    //Serial.setDebugOutput(true);
 
     //Serial.setTimeout(10000);
 
