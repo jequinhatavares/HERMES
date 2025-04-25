@@ -307,7 +307,6 @@ State parentRecovery(Event event){
     messageParameters parameters;
 
     LOG(STATE_MACHINE,INFO,"Parent Recovery State\n");
-    delay(30000);
 
     encodeMessage(message,TOPOLOGY_BREAK_ALERT,parameters);
 
