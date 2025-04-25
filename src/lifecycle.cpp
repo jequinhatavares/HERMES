@@ -315,7 +315,6 @@ State parentRecovery(Event event){
     for (int i = 0; i < childrenTable->numberOfItems; ++i) {
         STAIP = (int*) findNode(childrenTable, (int*) childrenTable->table[i].key);
         if(STAIP != nullptr){
-
             sendMessage(STAIP,message);
         }
         else{
