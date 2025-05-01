@@ -139,7 +139,7 @@ State joinNetwork(Event event){
     LOG(STATE_MACHINE,INFO,"Join Network State\n");
     int packetSize = 0, connectedParentIP[4];
     unsigned long currentTime, startTime;
-    IPAddress mySTAIP;
+    int mySTAIP[4];
     messageParameters params;
     static char buffer[256] = "", msg[50] = "",largeMessage[200] = "";
     parentInfo possibleParents[10];
@@ -150,15 +150,14 @@ State joinNetwork(Event event){
             //LOG(NETWORK,DEBUG,"Before connecting to AP\n");
             connectToAP(ssidList.item[i], PASS);
             //LOG(NETWORK,INFO,"→ Connected to Potential Parent: %s\n", getGatewayIP().toString().c_str());
-            mySTAIP = getMySTAIP();
+            getMySTAIP(mySTAIP);
             delay(1000);
 
             //Send a Parent Discovery Request to the connected parent
             params.IP1[0] = mySTAIP[0]; params.IP1[1] = mySTAIP[1]; params.IP1[2] = mySTAIP[2]; params.IP1[3] = mySTAIP[3];
             encodeMessage(msg, PARENT_DISCOVERY_REQUEST, params);
 
-            connectedParentIP[0] = getGatewayIP()[0];connectedParentIP[1] = getGatewayIP()[1];
-            connectedParentIP[2] = getGatewayIP()[2];connectedParentIP[3] = getGatewayIP()[3];
+            getGatewayIP(connectedParentIP);
             LOG(NETWORK, DEBUG, "Sent message:%s to %i.%i.%i.%i", msg,connectedParentIP[0],connectedParentIP[1],connectedParentIP[2],connectedParentIP[3]);
             delay(1000);
             sendMessage(connectedParentIP, msg);
@@ -194,7 +193,7 @@ State joinNetwork(Event event){
         hasParent = true;
 
         //Send a Child Registration Request to the parent
-        mySTAIP = getMySTAIP();
+         getMySTAIP(mySTAIP);
         params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
         params.IP2[0] = mySTAIP[0]; params.IP2[1] = mySTAIP[1]; params.IP2[2] = mySTAIP[2]; params.IP2[3] = mySTAIP[3];
         params.sequenceNumber = mySequenceNumber;

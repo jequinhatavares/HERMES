@@ -325,8 +325,10 @@ int numberOfSTAConnected(){
  *
  * @return The gateway IP address as an IPAddress object.
  */
-IPAddress getGatewayIP(){
-    return WiFi.gatewayIP();
+void getGatewayIP(int *IP){
+    IPAddress ip = WiFi.gatewayIP();
+    IP[0] = ip[0];IP[1] = ip[1];
+    IP[2] = ip[2];IP[3] = ip[3];
 }
 
 /**
@@ -335,8 +337,10 @@ IPAddress getGatewayIP(){
  *
  * @return The local IP address as an IPAddress object.
  */
-IPAddress getMySTAIP(){
-    return WiFi.localIP();
+void getMySTAIP(int* IP){
+    IPAddress ip =  WiFi.localIP();
+    IP[0] = ip[0];IP[1] = ip[1];
+    IP[2] = ip[2];IP[3] = ip[3];
 }
 
 /**
@@ -357,8 +361,10 @@ String getMyMAC(){
  * @return The IP address as an IPAddress object.
  */
 
-IPAddress getMyAPIP(){
-    return WiFi.softAPIP();
+void getMyAPIP(int *IP){
+    IPAddress ip =  WiFi.softAPIP();
+    IP[0] = ip[0];IP[1] = ip[1];
+    IP[2] = ip[2];IP[3] = ip[3];
 }
 /**
  * changeWifiMode

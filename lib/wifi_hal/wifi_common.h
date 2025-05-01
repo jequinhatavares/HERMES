@@ -1,5 +1,5 @@
-#ifndef WIFIROUTING_WIFI_COMMON_H
-#define WIFIROUTING_WIFI_COMMON_H
+#ifndef WIFI_COMMON_H
+#define WIFI_COMMON_H
 #include "table.h"
 
 typedef struct childConnectionStatus{
@@ -12,4 +12,4 @@ void setMAC(void* av, void* bv);
 void setConnectionStatus(void* av, void* bv);
 void initAuxTables();
 
-#endif //WIFIROUTING_WIFI_COMMON_H
+#endif //WIFI_COMMON_H

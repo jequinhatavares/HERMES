@@ -37,10 +37,10 @@ void connectToAP(const char*, const char*);
 void stopWifiAP();
 void disconnectFromAP();
 int numberOfSTAConnected();
-IPAddress getGatewayIP();
-IPAddress getMySTAIP();
+void getGatewayIP(int* IP);
+void getMySTAIP(int* IP);
 String getMyMAC();
-IPAddress getMyAPIP();
+void getMyAPIP(int* IP);
 void changeWifiMode(int);
 
 
