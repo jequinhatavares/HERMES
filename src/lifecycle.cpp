@@ -1,9 +1,9 @@
 #include "lifecycle.h"
 
-IPAddress localIP;
-IPAddress gateway;
-IPAddress subnet;
-IPAddress dns;
+int localIP[4];
+int gateway[4];
+int subnet[4];
+int dns[4];
 
 
 StateMachine SM_ = {
@@ -475,9 +475,14 @@ void parseMAC(const char* macStr, int* macArray) {
  * The generated IP address will be: 227.96.230.135 //TODO correct this docs
  */
 void setIPs(const int* MAC){
-    localIP = IPAddress(MAC[5],MAC[4],MAC[3],1) ;
-    gateway = IPAddress(MAC[5],MAC[4],MAC[3],1) ;
-    subnet = IPAddress(255,255,255,0) ;
+    localIP[0] = MAC[5];localIP[1] = MAC[4];
+    localIP[2] = MAC[3];localIP[3] = 1;
+
+    gateway[0] = MAC[5];gateway[1] = MAC[4];
+    gateway[2] = MAC[3];gateway[3] = 1;
+
+    subnet[0] = 255;subnet[1] = 255;
+    subnet[2] = 255;subnet[3] =0;
 }
 
 void getIPFromMAC(int * MAC, int* IP){

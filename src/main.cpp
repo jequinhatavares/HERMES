@@ -54,6 +54,7 @@ void setup(){
     enableModule(MESSAGES);
     enableModule(NETWORK);
     enableModule(DEBUG_SERVER);
+    enableModule(CLI);
 
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
@@ -96,9 +97,6 @@ void setup(){
 //WiFiClient client;
 //bool client_defined = false;
 
-IPAddress ip, childIP;
-char serialBuffer[200];
-bool oneTimeMessage = true;
 
 
 void loop(){

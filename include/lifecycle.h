@@ -44,10 +44,10 @@ State childRecovery(Event event);
 extern StateMachine* SM;
 extern CircularBuffer* stateMachineEngine;
 
-extern IPAddress localIP;
-extern IPAddress gateway;
-extern IPAddress subnet;
-extern IPAddress dns;
+extern int localIP[4];
+extern int gateway[4];
+extern int subnet[4];
+extern int dns[4];
 
 
 void parseMAC(const char* macStr, int* macArray);

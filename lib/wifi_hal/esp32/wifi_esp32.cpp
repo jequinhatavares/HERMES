@@ -196,10 +196,16 @@ String Get_WiFiStatus(int Status){
  *
  * @return void
  */
-void startWifiSTA(const IPAddress& localIP, const IPAddress& gateway, const IPAddress& subnet, const IPAddress& dns){
-    // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
+void startWifiSTA(int* localIP, int* gateway, int* subnet, int* dns){
+    IPAddress localIP_, gateway_, subnet_ ,dns_;
+    //Translate the IP addresses from int[4] to the IPAddress Class
+    localIP_ = IPAddress(localIP[0],localIP[1],localIP[2],localIP[3]);
+    gateway_ = IPAddress(gateway[0],gateway[1],gateway[2],gateway[3]);
+    subnet_ = IPAddress(subnet[0],subnet[1],subnet[2],subnet[3]);
+    dns_ = IPAddress(dns[0],dns[1],dns[2],dns[3]);
+    // Set the Wi-Fi mode to operate as Station (STA)
     WiFi.mode(WIFI_STA);
-    WiFi.config(localIP, gateway, subnet, dns);
+    WiFi.config(localIP_, gateway_, subnet_, dns_);
 }
 /**
  * startWifiAP
@@ -207,13 +213,19 @@ void startWifiSTA(const IPAddress& localIP, const IPAddress& gateway, const IPAd
  *
  * @return void
  */
-void startWifiAP(const char* SSID, const char* Pass, const IPAddress& localIP, const IPAddress& gateway, const IPAddress& subnet){
+void startWifiAP(const char* SSID, const char* Pass, int* localIP, int* gateway, int* subnet){
 
     // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
     //WiFi.config(localIP, gateway, subnet, gateway);
     //WiFi.mode(WIFI_AP);
     // Start the Access Point with the SSID defined in SSID_PREFIX
-    WiFi.softAPConfig(localIP, gateway, subnet);
+     IPAddress localIP_, gateway_, subnet_ ;
+    //Translate the IP addresses from int[4] to the IPAddress Class
+    localIP_ = IPAddress(localIP[0],localIP[1],localIP[2],localIP[3]);
+    gateway_ = IPAddress(gateway[0],gateway[1],gateway[2],gateway[3]);
+    subnet_ = IPAddress(subnet[0],subnet[1],subnet[2],subnet[3]);
+
+    WiFi.softAPConfig(localIP_, gateway_, subnet_);
     WiFi.softAP(SSID, Pass);
     Serial.print("My SoftAP IP:");
     Serial.print(WiFi.softAPIP());

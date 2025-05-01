@@ -30,8 +30,8 @@ extern bool (*isChildRegisteredCallback)(int*);
 
 void initWifiEventHandlers();
 String Get_WiFiStatus(int Status);
-void startWifiSTA(const IPAddress& localIP, const IPAddress& gateway, const IPAddress& subnet, const IPAddress& dns);
-void startWifiAP(const char* SSID, const char* Pass, const IPAddress& localIP, const IPAddress& gateway, const IPAddress& subnet);
+void startWifiSTA(int* localIP, int* gateway, int* subnet, int* dns);
+void startWifiAP(const char* SSID, const char* Pass, int* localIP, int* gateway, int* subnet);
 void searchAP(String);
 void connectToAP(const char*, const char*);
 void stopWifiAP();
