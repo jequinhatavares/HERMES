@@ -4,7 +4,6 @@
 
 #include <ESP8266WiFi.h>
 
-//#include "../wifi_hal.h"
 #include "../wifi_interface.h"
 
 void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnected& info);

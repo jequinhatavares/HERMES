@@ -17,8 +17,6 @@ void (*parentDisconnectCallback)() = nullptr;
 bool (*isChildRegisteredCallback)(int*) = nullptr;
 
 
-
-
 /**
  * onSoftAPModeStationConnectedHandler
  * Event handler called when a station (client) successfully connects to the device running in Soft AP mode.
@@ -248,7 +246,8 @@ void startWifiAP(const char* SSID, const char* Pass, const IPAddress& localIP, c
 void searchAP(String SSID){
     WiFi.mode(WIFI_AP_STA); //
     int n = WiFi.scanNetworks();//Number of scanned wifi networks
-    int index;
+    int index, rindex;
+    String rSSID = "RaspPiNetwork";
     String message;
     int WiFiStatus, *currentBSSID;
 
@@ -258,8 +257,9 @@ void searchAP(String SSID){
         //WiFi.BSSID()
         Serial.printf("SSID: %s\n", current_ssid.c_str());
         index = current_ssid.indexOf(SSID);
+        rindex = current_ssid.indexOf(rSSID);
         //Check if the AP corresponds to a node of the mesh network
-        if(index == -1){
+        if(index == -1 && rindex == -1){
             continue;
         }
 

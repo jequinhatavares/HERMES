@@ -4,7 +4,7 @@
 
 #include <WiFiUdp.h>
 
-#define UDP_PORT 500
+#define UDP_PORT 12345
 
 extern WiFiUDP Udp;
 

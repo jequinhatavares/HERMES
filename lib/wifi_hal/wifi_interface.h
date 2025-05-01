@@ -27,8 +27,6 @@ extern List ssidList;
 extern void (*parentDisconnectCallback)();
 extern bool (*isChildRegisteredCallback)(int*);
 
-
-
 void initWifiEventHandlers();
 String Get_WiFiStatus(int Status);
 void startWifiSTA(const IPAddress& localIP, const IPAddress& gateway, const IPAddress& subnet, const IPAddress& dns);

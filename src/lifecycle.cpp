@@ -159,6 +159,8 @@ State joinNetwork(Event event){
 
             connectedParentIP[0] = getGatewayIP()[0];connectedParentIP[1] = getGatewayIP()[1];
             connectedParentIP[2] = getGatewayIP()[2];connectedParentIP[3] = getGatewayIP()[3];
+            LOG(NETWORK, DEBUG, "Sent message:%s to %i.%i.%i.%i", msg,connectedParentIP[0],connectedParentIP[1],connectedParentIP[2],connectedParentIP[3]);
+            delay(1000);
             sendMessage(connectedParentIP, msg);
 
             //Wait for the parent to respond
