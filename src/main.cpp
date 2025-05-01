@@ -59,6 +59,9 @@ void setup(){
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
 
+#ifdef ESP8266
+    EspClass::wdtDisable();
+#endif
 
     //To auto initialize the root node has the node with the IP 135.230.96.1
     parseMAC(getMyMAC().c_str(), MAC);

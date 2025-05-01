@@ -139,7 +139,7 @@ State joinNetwork(Event event){
     LOG(STATE_MACHINE,INFO,"Join Network State\n");
     int packetSize = 0, connectedParentIP[4];
     unsigned long currentTime, startTime;
-    int mySTAIP[4];
+    int mySTAIP[4], nrOfPossibleParents = 0;
     messageParameters params;
     static char buffer[256] = "", msg[50] = "",largeMessage[200] = "";
     parentInfo possibleParents[10];
@@ -159,8 +159,8 @@ State joinNetwork(Event event){
 
             getGatewayIP(connectedParentIP);
             LOG(NETWORK, DEBUG, "Sent message:%s to %i.%i.%i.%i", msg,connectedParentIP[0],connectedParentIP[1],connectedParentIP[2],connectedParentIP[3]);
-            delay(1000);
             sendMessage(connectedParentIP, msg);
+            LOG(NETWORK,DEBUG,"1\n");
 
             //Wait for the parent to respond
             startTime = getCurrentTime();
@@ -168,17 +168,32 @@ State joinNetwork(Event event){
             while(((packetSize = incomingMessage()) == 0) && ((currentTime - startTime) <=1000)){
                 currentTime = getCurrentTime();
             }
+            LOG(NETWORK,DEBUG,"2\n");
+            delay(1000);
+
 
             if (packetSize > 0){
+                LOG(MESSAGES,INFO,"Receiving Message from Parent\n");
                 receiveMessage(buffer);
                 LOG(MESSAGES,INFO,"Parent [Parent Info Response]: %s\n", buffer);
                 handleParentInfoResponse(buffer, possibleParents, i);
                 possibleParents[i].ssid = ssidList.item[i];
+                nrOfPossibleParents ++;
             }
+            LOG(NETWORK,DEBUG,"3\n");
+
             if(ssidList.len != 1){
                 //LOG(NETWORK,DEBUG,"Disconnecting from AP\n");
                 disconnectFromAP();
             }
+            delay(1000);
+
+        }
+
+        //If none of the parents respond return to search state
+        if(nrOfPossibleParents == 0){
+            insertLast(stateMachineEngine, eSearch);
+            return sSearch;
         }
         //With all the information gathered from the potential parents, select the preferred parent
         parentInfo preferredParent = chooseParent(possibleParents,ssidList.len);
@@ -193,7 +208,7 @@ State joinNetwork(Event event){
         hasParent = true;
 
         //Send a Child Registration Request to the parent
-         getMySTAIP(mySTAIP);
+        getMySTAIP(mySTAIP);
         params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
         params.IP2[0] = mySTAIP[0]; params.IP2[1] = mySTAIP[1]; params.IP2[2] = mySTAIP[2]; params.IP2[3] = mySTAIP[3];
         params.sequenceNumber = mySequenceNumber;
@@ -206,6 +221,7 @@ State joinNetwork(Event event){
         while(((packetSize = incomingMessage()) == 0) && ((currentTime - startTime) <=2000)){
             currentTime = getCurrentTime();
         }
+        delay(1000);
 
         //Process the routing table update
         if (packetSize > 0){
@@ -222,7 +238,8 @@ State joinNetwork(Event event){
             encodeMessage(largeMessage, FULL_ROUTING_TABLE_UPDATE, params);
             sendMessage(parent, largeMessage);
             lastRoutingUpdateTime = getCurrentTime();
-        }
+        }/*****/
+        delay(1000);
 
     }
 

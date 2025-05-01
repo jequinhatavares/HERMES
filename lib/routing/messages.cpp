@@ -151,9 +151,10 @@ void handleParentInfoResponse(char* msg, parentInfo *parents, int i){
     int messageType;
     int rootDistance, nrChildren;
     int parentIP[4];
-    sscanf(msg, "%d %d.%d.%d.%d %d %d", &messageType, &parentIP[0],&parentIP[1],&parentIP[2],&parentIP[3],&rootDistance,&nrChildren);
+    sscanf(msg, "%d", &messageType);
 
     if (messageType == PARENT_INFO_RESPONSE){
+            sscanf(msg, "%d %d.%d.%d.%d %d %d", &messageType, &parentIP[0],&parentIP[1],&parentIP[2],&parentIP[3],&rootDistance,&nrChildren);
             parents[i].rootHopDistance = rootDistance;
             parents[i].nrOfChildren = nrChildren;
             parents[i].parentIP[0]=parentIP[0];
