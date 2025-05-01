@@ -30,7 +30,7 @@ void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnect
     lostChildMAC[0] = info.mac[0];lostChildMAC[1] = info.mac[1];
     lostChildMAC[2] = info.mac[2];lostChildMAC[3] = info.mac[3];
     lostChildMAC[4] = info.mac[4];lostChildMAC[5] = info.mac[5];
-    //LOG(NETWORK,DEBUG,"STA ConnectionTime: %lu\n", millis());
+    //LOG(NETWORK,DEBUG,"STA ConnectionTime: %lu\n", getCurrentTime());
 
 
     if(isChildRegisteredCallback(lostChildMAC)){
@@ -49,13 +49,13 @@ void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnect
  */
 void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisconnected& info) {
     Serial.println("\n[WIFI_EVENTS] Station disconnected\n");
-    //LOG(NETWORK,DEBUG,"STA DisconnectionTime: %lu\n", millis());
+    //LOG(NETWORK,DEBUG,"STA DisconnectionTime: %lu\n", getCurrentTime());
 
     int lostChildMAC[6];
     lostChildMAC[0] = info.mac[0];lostChildMAC[1] = info.mac[1];
     lostChildMAC[2] = info.mac[2];lostChildMAC[3] = info.mac[3];
     lostChildMAC[4] = info.mac[4];lostChildMAC[5] = info.mac[5];
-    unsigned long currentTime = millis();
+    unsigned long currentTime = getCurrentTime();
     childConnectionStatus lostChild;
     lostChild.childDisconnectionTime = currentTime;
 
@@ -109,7 +109,7 @@ void onStationModeGotIPHandler(const WiFiEventStationModeGotIP& info) {
 void onStationModeConnectedHandler(const WiFiEventStationModeConnected& info) {
     Serial.println("\n[WIFI_EVENTS] Connected to AP\n");
     parentDisconnectionCount = 0; // Reset the parent disconnection Counter
-    //LOG(NETWORK,DEBUG,"ConnectionTime: %lu\n", millis());
+    //LOG(NETWORK,DEBUG,"ConnectionTime: %lu\n", getCurrentTime());
 }
 
 /**
@@ -121,9 +121,9 @@ void onStationModeConnectedHandler(const WiFiEventStationModeConnected& info) {
  */
 void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& info) {
     Serial.printf("\n[WIFI_EVENTS] Disconnected from AP. Reason: %u\n", info.reason);
-    //LOG(NETWORK,DEBUG,"DisconnectionTime: %lu\n", millis());
+    //LOG(NETWORK,DEBUG,"DisconnectionTime: %lu\n", getCurrentTime());
 
-    unsigned long currentTime = millis();
+    unsigned long currentTime = getCurrentTime();
 
     // On first disconnection, initialize the timer to the current time.
     // This prevents missing future disconnections after a long inactive period.

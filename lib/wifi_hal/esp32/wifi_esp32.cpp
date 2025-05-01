@@ -47,7 +47,7 @@ void onSoftAPModeStationDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t i
     lostChildMAC[2] = info.wifi_ap_stadisconnected.mac[2];lostChildMAC[3] = info.wifi_ap_stadisconnected.mac[3];
     lostChildMAC[4] = info.wifi_ap_stadisconnected.mac[4];lostChildMAC[5] = info.wifi_ap_stadisconnected.mac[5];
 
-    unsigned long currentTime = millis();
+    unsigned long currentTime = getCurrentTime();
     childConnectionStatus lostChild;
     lostChild.childDisconnectionTime = currentTime;
     // On first disconnection, initialize the timer to the current time.
@@ -116,7 +116,7 @@ void onStationModeConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info) {
 void onStationModeDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info){
     Serial.printf("\n[WIFI_EVENTS] Disconnected from AP. Reason: %u\n",info.wifi_sta_disconnected.reason);
 
-    unsigned long currentTime = millis();
+    unsigned long currentTime = getCurrentTime();
 
     // On first disconnection, initialize the timer to the current time.
     // This prevents missing future disconnections after a long inactive period.

@@ -1,5 +1,5 @@
 #if defined(ESP32) || defined(ESP8266)
-#include <Arduino.h>
+//#include <Arduino.h>
 #include <wifi_hal.h>
 #include <transport_hal.h>
 #include <cstdio>

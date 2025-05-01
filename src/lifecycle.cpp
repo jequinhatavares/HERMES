@@ -81,7 +81,7 @@ State initNode(Event event){
     me.sequenceNumber = mySequenceNumber;
     tableAdd(routingTable,myIP,&me);
 
-    lastRoutingUpdateTime = millis();
+    lastRoutingUpdateTime = getCurrentTime();
 
     if (!iamRoot){
         insertFirst(stateMachineEngine, eSuccess);
@@ -164,10 +164,10 @@ State joinNetwork(Event event){
             sendMessage(connectedParentIP, msg);
 
             //Wait for the parent to respond
-            startTime = millis();
+            startTime = getCurrentTime();
             currentTime = startTime;
             while(((packetSize = incomingMessage()) == 0) && ((currentTime - startTime) <=1000)){
-                currentTime = millis();
+                currentTime = getCurrentTime();
             }
 
             if (packetSize > 0){
@@ -202,10 +202,10 @@ State joinNetwork(Event event){
         sendMessage(parent, msg);
 
         //Wait for the parent to respond with his routing table information
-        startTime = millis();
+        startTime = getCurrentTime();
         currentTime = startTime;
         while(((packetSize = incomingMessage()) == 0) && ((currentTime - startTime) <=2000)){
-            currentTime = millis();
+            currentTime = getCurrentTime();
         }
 
         //Process the routing table update
@@ -222,7 +222,7 @@ State joinNetwork(Event event){
         if(childrenTable->numberOfItems > 0){
             encodeMessage(largeMessage, FULL_ROUTING_TABLE_UPDATE, params);
             sendMessage(parent, largeMessage);
-            lastRoutingUpdateTime = millis();
+            lastRoutingUpdateTime = getCurrentTime();
         }
 
     }
@@ -422,7 +422,7 @@ void handleTimers(){
     int* MAC;
     char messageBufferLarge[300]; //36 + 32*X
     messageParameters parameters;
-    unsigned long currentTime = millis();
+    unsigned long currentTime = getCurrentTime();
     //LOG(NETWORK,DEBUG,"1\n");
     for (int i = 0; i < lostChildrenTable->numberOfItems; i++) {
         MAC = (int*) tableKey(lostChildrenTable, i);

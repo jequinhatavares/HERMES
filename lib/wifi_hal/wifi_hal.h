@@ -1,8 +1,6 @@
 #ifndef WIFI_H
 #define WIFI_H
 
-//#include "lifecycle.h"
-
 
 #if defined(ESP8266)
     #include "esp8266/wifi_esp8266.h"

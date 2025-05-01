@@ -1,6 +1,7 @@
 #ifndef WIFIROUTING_WIFI_INTERFACE_H
 #define WIFIROUTING_WIFI_INTERFACE_H
 
+#include <time_hal.h>
 #include "logger.h"
 #include "table.h"
 #include "wifi_common.h"
