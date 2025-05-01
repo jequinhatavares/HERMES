@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include "cli.h"
 
 /**
@@ -8,17 +7,17 @@
  * @return void
  */
 void showMenu() {
-    Serial.println("\n======================================================================");
-    Serial.println("                       💻 Command Line Menu 💻                       ");
-    Serial.println("======================================================================");
-    Serial.println("[1] Send a new message");
-    Serial.println("[2] Print Routing Table");
-    Serial.println("[3] Print Children Table");
-    Serial.println("[4] Print Root Node");
-    Serial.println("[5] Force the node to disconnect from its current parent");
-    Serial.println("[6] Exit program");
-    Serial.println("======================================================================");
-    Serial.print("> ");
+    LOG(CLI,INFO,"\n======================================================================\n");
+    LOG(CLI,INFO,"                       💻 Command Line Menu 💻                       \n");
+    LOG(CLI,INFO,"======================================================================\n");
+    LOG(CLI,INFO,"[1] Send a new message\n");
+    LOG(CLI,INFO,"[2] Print Routing Table\n");
+    LOG(CLI,INFO,"[3] Print Children Table\n");
+    LOG(CLI,INFO,"[4] Print Root Node\n");
+    LOG(CLI,INFO,"[5] Force the node to disconnect from its current parent\n");
+    LOG(CLI,INFO,"[6] Exit program\n");
+    LOG(CLI,INFO,"======================================================================\n");
+    LOG(CLI,INFO,"> ");
 
 }
 
@@ -32,11 +31,11 @@ void showMenu() {
  * @return void
  */
 void readIPAddress(int *ip, const char *prompt) {
-    Serial.printf("%s (format: X.X.X.X): ", prompt);
+    LOG(CLI,INFO,"%s (format: X.X.X.X): ", prompt);
     while (Serial.available() == 0) {} // Wait for input
     String input = Serial.readStringUntil('\n');
     if (sscanf(input.c_str(), "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]) != 4) {
-        Serial.println("❌ Invalid IP format. Please try again.");
+        LOG(CLI,INFO,"❌ Invalid IP format. Please try again.\n");
         readIPAddress(ip, prompt);
     }
 }
@@ -56,8 +55,8 @@ void getDataMessage() {
 
     //delay(100); // Give Serial buffer time to clear
 
-    Serial.println("\n=== Message Formatting ===");
-    Serial.print("Enter message payload: ");
+    LOG(CLI,INFO,"\n=== Message Formatting ===\n");
+    LOG(CLI,INFO,"Enter message payload: ");
     while (Serial.available() == 0) {}// Wait for input
     Serial.readStringUntil('\n');
     String payload = Serial.readStringUntil('\n');
@@ -74,9 +73,9 @@ void getDataMessage() {
     if(ptrIP != nullptr){
         assignIP(nextHopIP, ptrIP);
         sendMessage(nextHopIP, msg);
-        Serial.printf("✅ Message sent successfully: %s to %d.%d.%d.%d\n", msg,nextHopIP[0], nextHopIP[1], nextHopIP[2], nextHopIP[3]);
+        LOG(CLI,INFO, "✅ Message sent successfully: %s to %d.%d.%d.%d\n", msg,nextHopIP[0], nextHopIP[1], nextHopIP[2], nextHopIP[3]);
     }else {
-        Serial.println("❌ No route found. Message not sent.");
+        LOG(CLI,INFO,"❌ No route found. Message not sent.");
     }
 
 }
@@ -106,31 +105,31 @@ void cliInteraction(){
                     break;
 
                 case 2:
-                    Serial.println("---------------------------- Routing Table ----------------------------\n");
+                    LOG(CLI,INFO,"---------------------------- Routing Table ----------------------------\n");
                     tablePrint(routingTable, printRoutingStruct);
                     break;
 
                 case 3:
-                    Serial.println("---------------------------- Children Table ----------------------------\n");
+                    LOG(CLI,INFO,"---------------------------- Children Table ----------------------------\n");
                     tablePrint(childrenTable, printChildStruct);
                     break;
 
                 case 4:
-                    Serial.printf("Root Node IP: %i.%i.%i.%i\n", rootIP[0], rootIP[1],rootIP[2],rootIP[3]);
+                    LOG(CLI,INFO,"Root Node IP: %i.%i.%i.%i\n", rootIP[0], rootIP[1],rootIP[2],rootIP[3]);
                     break;
 
                 case 5:
-                    Serial.println("Disconnecting from parent...\n");
+                    LOG(CLI,INFO,"Disconnecting from parent...\n");
                     disconnectFromAP();
                     parentDisconnectCallback();
                     break;
 
                 case 6:
-                    Serial.println("Exiting...\n");
+                    LOG(CLI,INFO,"Exiting...\n");
                     break;
 
                 default:
-                    if (choice != 0)Serial.println("Invalid option. Try again.");
+                    if (choice != 0)LOG(CLI,INFO,"Invalid option. Try again.");
                     break;
             }
         }
