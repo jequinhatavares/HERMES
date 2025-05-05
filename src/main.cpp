@@ -111,7 +111,7 @@ void loop(){
 
     int packet_size = incomingMessage();
     if (packet_size > 0){
-        //LOG(MESSAGES,INFO,"PacketSize: %d\n", packet_size);
+        LOG(MESSAGES,INFO,"PacketSize: %d\n", packet_size);
         receiveMessage(messageBuffer);
         //LOG(MESSAGES,INFO,"Received: %s\n", messageBuffer);
         insertLast(stateMachineEngine, eMessage);

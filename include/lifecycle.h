@@ -53,8 +53,6 @@ extern int dns[4];
 void parseMAC(const char* macStr, int* macArray);
 void setIPs(const int* MAC);
 void handleTimers();
-//#define eMessage ((Event) 4)
-
 void getIPFromMAC(int * MAC, int* IP);
 #endif //LIFECYCLE_H
 

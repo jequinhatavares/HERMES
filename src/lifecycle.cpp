@@ -139,7 +139,7 @@ State joinNetwork(Event event){
     LOG(STATE_MACHINE,INFO,"Join Network State\n");
     int packetSize = 0, connectedParentIP[4];
     unsigned long currentTime, startTime;
-    int mySTAIP[4], nrOfPossibleParents = 0;
+    int mySTAIP[4], nrOfPossibleParents = 0, messageType = 0;
     messageParameters params;
     static char buffer[256] = "", msg[50] = "",largeMessage[200] = "";
     parentInfo possibleParents[10];
@@ -173,32 +173,47 @@ State joinNetwork(Event event){
 
 
             if (packetSize > 0){
+                LOG(MESSAGES,INFO,"Size of Message from Parent %i\n", packetSize);
                 LOG(MESSAGES,INFO,"Receiving Message from Parent\n");
                 receiveMessage(buffer);
                 LOG(MESSAGES,INFO,"Parent [Parent Info Response]: %s\n", buffer);
+                sscanf(msg, "%d", &messageType);
                 handleParentInfoResponse(buffer, possibleParents, i);
-                possibleParents[i].ssid = ssidList.item[i];
-                nrOfPossibleParents ++;
+                if(messageType == 1){
+                    possibleParents[i].ssid = ssidList.item[i];
+                    nrOfPossibleParents ++;
+                }
             }
             LOG(NETWORK,DEBUG,"3\n");
 
             if(ssidList.len != 1){
                 //LOG(NETWORK,DEBUG,"Disconnecting from AP\n");
+                LOG(NETWORK,DEBUG,"4\n");
                 disconnectFromAP();
+                LOG(NETWORK,DEBUG,"5\n");
+
             }
-            delay(1000);
+            LOG(NETWORK,DEBUG,"6\n");
+
 
         }
+
+        LOG(NETWORK,DEBUG,"7\n");
 
         //If none of the parents respond return to search state
         if(nrOfPossibleParents == 0){
             insertLast(stateMachineEngine, eSearch);
             return sSearch;
         }
+        LOG(NETWORK,DEBUG,"8\n");
+
         //With all the information gathered from the potential parents, select the preferred parent
         parentInfo preferredParent = chooseParent(possibleParents,ssidList.len);
+        LOG(NETWORK,DEBUG,"9\n");
         //Connect to the preferred parent
         if(ssidList.len != 1)connectToAP(preferredParent.ssid, PASS);
+        LOG(NETWORK,DEBUG,"10\n");
+
         LOG(NETWORK,INFO,"Selected Parent -> IP: %i.%i.%i.%i | Children: %i | RootHopDist: %i\n",preferredParent.parentIP[0], preferredParent.parentIP[1], preferredParent.parentIP[2], preferredParent.parentIP[3], preferredParent.nrOfChildren, preferredParent.rootHopDistance);
 
         //Update parent information on global variable

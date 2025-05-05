@@ -259,7 +259,7 @@ void searchAP(String SSID){
     WiFi.mode(WIFI_AP_STA); //
     int n = WiFi.scanNetworks();//Number of scanned wifi networks
     int index, rindex;
-    String rSSID = "RaspPiNetwork";
+    String rSSID = "RaspiNet";
     String message;
     int WiFiStatus, *currentBSSID;
 
