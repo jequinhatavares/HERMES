@@ -40,6 +40,8 @@ extern char messageBuffer[256];
 
 void encodeMessage(char* msg, messageType type, messageParameters parameters);
 
+bool isMessageValid(int expectedMessageType,char* msg);
+
 void handleParentDiscoveryRequest(char* msg);
 void handleParentInfoResponse(char* msg, parentInfo *parents, int i);
 void handleChildRegistrationRequest(char * msg);

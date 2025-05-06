@@ -50,15 +50,15 @@ bool isChildRegistered(int* MAC){
 
 State initNode(Event event){
     int MAC[6];
-    char strMAC[30], ssid[256], msg[40]; // Make sure this buffer is large enough to hold the entire SSID
+    char strMAC[30], ssid[256]; // Make sure this buffer is large enough to hold the entire SSID
+    routingTableEntry me;
+    int invalidIP[4] = {-1,-1,-1,-1};
+
+
     strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
     getMyMAC(MAC);
     sprintf(strMAC, "%i:%i:%i:%i:%i:%i",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
-    LOG(NETWORK,DEBUG,"strMAC: %s\n",strMAC);
     strcat(ssid,strMAC);
-    LOG(NETWORK,DEBUG,"My SSID: %s\n",ssid);
-    routingTableEntry me;
-    int invalidIP[4] = {-1,-1,-1,-1};
 
 
     // Set up WiFi event callbacks (parent/child loss) to trigger state machine transitions
@@ -101,68 +101,72 @@ State initNode(Event event){
 }
 
 State search(Event event){
-    int i, k, nodeIP[4];
     LOG(STATE_MACHINE,INFO,"Search State\n");
+    int i, k, nodeIP[4];
     int MAC[6];
 
+    // Clear reachableNetworks before rescanning
+    for (i = 0; i < reachableNetworks.len; ++i) {
+        strcpy(reachableNetworks.item[reachableNetworks.len], "");
+    }
+    reachableNetworks.len = 0;
 
     //Find nodes in the network
     do{
         searchAP(SSID_PREFIX);
-    }while ( ssidList.len == 0 );
+    }while ( reachableNetworks.len == 0 );
 
-    //Print the found networks
-    LOG(NETWORK,DEBUG, "Found %i Wi-Fi networks.\n", ssidList.len);
-    for (i=0; i<ssidList.len; i++){
-        LOG(NETWORK,INFO,"Found SSID: %s\n", ssidList.item[i]);
-        sscanf(ssidList.item[i], "JessicaNode%i:%i:%i:%i:%i:%i",&MAC[0],&MAC[1],&MAC[2],&MAC[3],&MAC[4],&MAC[5]);
+    //Remove from the reachableNetworks all nodes that belong to my subnetwork (to avoid connecting to them and forming loops)
+    LOG(NETWORK,DEBUG, "Found %i Wi-Fi networks.\n", reachableNetworks.len);
+    for (i=0; i<reachableNetworks.len; i++){
+        LOG(NETWORK,INFO,"Found SSID: %s\n", reachableNetworks.item[i]);
+        sscanf(reachableNetworks.item[i], "JessicaNode%i:%i:%i:%i:%i:%i",&MAC[0],&MAC[1],&MAC[2],&MAC[3],&MAC[4],&MAC[5]);
         getIPFromMAC(MAC, nodeIP);
         if(inMySubnet(nodeIP)){
-            //LOG(NETWORK,DEBUG,"Removing: %i.%i.%i.%i from the ssid list\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
-            //Remove of the ssidList
-            for (k = i; k < ssidList.len-1; k++) {
-                strcpy( ssidList.item[k] , ssidList.item[k+1]);
+            //Remove nodes that are part of my subnetwork of the reachableNetworks List
+            for (k = i; k < reachableNetworks.len-1; k++) {
+                strcpy( reachableNetworks.item[k] , reachableNetworks.item[k+1]);
             }
             i = i-1;
-            ssidList.len --;
+            reachableNetworks.len --;
         }
     }
-    /***LOG(NETWORK,DEBUG, "Found %i possible new parents.\n Final List\n", ssidList.len);
-    for (i=0; i<ssidList.len; i++) {
-        LOG(NETWORK, INFO, "%s\n", ssidList.item[i]);
-        delay(1000);
-    }***/
 
-    insertFirst(stateMachineEngine, eSuccess);
-    return sChooseParent;
+    //If the search after filtering returns a non-empty list, proceed to the choose parent state
+    if(reachableNetworks.len > 0){
+        insertFirst(stateMachineEngine, eSuccess);
+        return sChooseParent;
+    }else{//If not continuing searching
+        insertFirst(stateMachineEngine, eSearch);
+        return sSearch;
+    }
+
 }
 
 State joinNetwork(Event event){
     LOG(STATE_MACHINE,INFO,"Join Network State\n");
     int packetSize = 0, connectedParentIP[4];
     unsigned long currentTime, startTime;
-    int mySTAIP[4], nrOfPossibleParents = 0, messageType = 0;
+    int mySTAIP[4], nrOfPossibleParents = 0;
     messageParameters params;
     static char buffer[256] = "", msg[50] = "",largeMessage[200] = "";
     parentInfo possibleParents[10];
 
-    if(ssidList.len != 0){
+    if(reachableNetworks.len != 0){
         //Connect to each parent to request their information in order to select the preferred parent.
-        for (int i = 0; i < ssidList.len; i++) {
+        for (int i = 0; i < reachableNetworks.len; i++) {
             //LOG(NETWORK,DEBUG,"Before connecting to AP\n");
-            connectToAP(ssidList.item[i], PASS);
+            Serial.print("Connecting to AP\n");
+            connectToAP(reachableNetworks.item[i], PASS);
             //LOG(NETWORK,INFO,"→ Connected to Potential Parent: %s\n", getGatewayIP().toString().c_str());
             getMySTAIP(mySTAIP);
-            delay(1000);
 
             //Send a Parent Discovery Request to the connected parent
             params.IP1[0] = mySTAIP[0]; params.IP1[1] = mySTAIP[1]; params.IP1[2] = mySTAIP[2]; params.IP1[3] = mySTAIP[3];
             encodeMessage(msg, PARENT_DISCOVERY_REQUEST, params);
 
             getGatewayIP(connectedParentIP);
-            LOG(NETWORK, DEBUG, "Sent message:%s to %i.%i.%i.%i", msg,connectedParentIP[0],connectedParentIP[1],connectedParentIP[2],connectedParentIP[3]);
             sendMessage(connectedParentIP, msg);
-            LOG(NETWORK,DEBUG,"1\n");
 
             //Wait for the parent to respond
             startTime = getCurrentTime();
@@ -170,51 +174,36 @@ State joinNetwork(Event event){
             while(((packetSize = incomingMessage()) == 0) && ((currentTime - startTime) <=1000)){
                 currentTime = getCurrentTime();
             }
-            LOG(NETWORK,DEBUG,"2\n");
-            delay(1000);
-
 
             if (packetSize > 0){
-                LOG(MESSAGES,INFO,"Size of Message from Parent %i\n", packetSize);
-                LOG(MESSAGES,INFO,"Receiving Message from Parent\n");
                 receiveMessage(buffer);
                 LOG(MESSAGES,INFO,"Parent [Parent Info Response]: %s\n", buffer);
-                sscanf(msg, "%d", &messageType);
-                handleParentInfoResponse(buffer, possibleParents, i);
-                if(messageType == 1){
-                    possibleParents[i].ssid = ssidList.item[i];
+                if(isMessageValid(PARENT_INFO_RESPONSE,buffer)){
+                    handleParentInfoResponse(buffer, possibleParents, nrOfPossibleParents);
+                    possibleParents[nrOfPossibleParents].ssid = reachableNetworks.item[i];
                     nrOfPossibleParents ++;
                 }
-            }
-            LOG(NETWORK,DEBUG,"3\n");
 
-            if(ssidList.len != 1){
-                //LOG(NETWORK,DEBUG,"Disconnecting from AP\n");
-                LOG(NETWORK,DEBUG,"4\n");
+            }
+
+            if(reachableNetworks.len != 1){
+                Serial.print("Disconnecting from AP\n");
                 disconnectFromAP();
-                LOG(NETWORK,DEBUG,"5\n");
-
             }
-            LOG(NETWORK,DEBUG,"6\n");
-
 
         }
-
-        LOG(NETWORK,DEBUG,"7\n");
 
         //If none of the parents respond return to search state
         if(nrOfPossibleParents == 0){
+            LOG(NETWORK,DEBUG,"Zero possible parents\n");
             insertLast(stateMachineEngine, eSearch);
             return sSearch;
         }
-        LOG(NETWORK,DEBUG,"8\n");
 
         //With all the information gathered from the potential parents, select the preferred parent
-        parentInfo preferredParent = chooseParent(possibleParents,ssidList.len);
-        LOG(NETWORK,DEBUG,"9\n");
+        parentInfo preferredParent = chooseParent(possibleParents,reachableNetworks.len);
         //Connect to the preferred parent
-        if(ssidList.len != 1)connectToAP(preferredParent.ssid, PASS);
-        LOG(NETWORK,DEBUG,"10\n");
+        if(reachableNetworks.len != 1)connectToAP(preferredParent.ssid, PASS);
 
         LOG(NETWORK,INFO,"Selected Parent -> IP: %i.%i.%i.%i | Children: %i | RootHopDist: %i\n",preferredParent.parentIP[0], preferredParent.parentIP[1], preferredParent.parentIP[2], preferredParent.parentIP[3], preferredParent.nrOfChildren, preferredParent.rootHopDistance);
 
@@ -254,12 +243,11 @@ State joinNetwork(Event event){
             encodeMessage(largeMessage, FULL_ROUTING_TABLE_UPDATE, params);
             sendMessage(parent, largeMessage);
             lastRoutingUpdateTime = getCurrentTime();
-        }/*****/
-        delay(1000);
+        }
 
     }
 
-    ssidList.len = 0 ;
+    reachableNetworks.len = 0 ;
     LOG(NETWORK,INFO,"-------- Node successfully added to the network --------\n");
     changeWifiMode(3);
     return sIdle;

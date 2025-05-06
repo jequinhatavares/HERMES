@@ -10,17 +10,16 @@
 
 extern bool initializeAP;
 
-typedef struct List {
+typedef struct List{
     char item[10][50];
     int len = 0;
 } List;
 
 
-
 extern TableInfo* lostChildrenTable;
 
 
-extern List ssidList;
+extern List reachableNetworks;
 
 
 // These callbacks let Wi-Fi events interact with other components (e.g., enqueueing state machine events)

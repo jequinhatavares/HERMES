@@ -1,7 +1,7 @@
 #ifdef ESP32
 #include "wifi_esp32.h"
 
-List ssidList;
+List reachableNetworks;
 
 unsigned long lastParentDisconnectionTime = 0 ;
 int parentDisconnectionCount = 0;
@@ -248,7 +248,7 @@ void searchAP(const char* SSID){
     WiFi.mode(WIFI_AP_STA);
     int n = WiFi.scanNetworks();//Number of scanned wifi networks
     int index, rindex;
-    const char* rSSID = "RaspPiNetwork";
+    const char* rSSID = "RaspiNet";
     String message;
     int WiFiStatus;
     List listAPs;
@@ -266,13 +266,13 @@ void searchAP(const char* SSID){
             continue;
         }
 
-        strcpy(ssidList.item[ssidList.len], current_ssid.c_str());
-        ssidList.len++;
+        strcpy(reachableNetworks.item[reachableNetworks.len], current_ssid.c_str());
+        reachableNetworks.len++;
 
     }
    // Delete the scan result to free memory for code below.
     WiFi.scanDelete();
-    //return ssidList;
+    //return reachableNetworks;
 }
 
 /**
@@ -287,7 +287,6 @@ void connectToAP(const char * SSID, const char * PASS) {
     WiFi.mode(WIFI_AP_STA); //AP
     WiFi.begin(SSID, PASS);
 
-    Serial.print("Connecting to AP\n");
     // Wait for the Wi-Fi connection to establish or until timeout is reached
     while(WiFi.status() != WL_CONNECTED){
         Serial.println(getWifiStatus(WiFi.status()));

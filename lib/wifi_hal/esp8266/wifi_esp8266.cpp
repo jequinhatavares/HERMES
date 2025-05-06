@@ -6,7 +6,7 @@ WiFiEventHandler wifiSTAConnectedHandler;
 WiFiEventHandler wifiDisconnectHandler;
 WiFiEventHandler wifiAPGotSta;
 
-List ssidList;
+List reachableNetworks;
 
 unsigned long lastParentDisconnectionTime = 0 ;
 int parentDisconnectionCount = 0;
@@ -31,7 +31,6 @@ void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnect
     lostChildMAC[2] = info.mac[2];lostChildMAC[3] = info.mac[3];
     lostChildMAC[4] = info.mac[4];lostChildMAC[5] = info.mac[5];
     //LOG(NETWORK,DEBUG,"STA ConnectionTime: %lu\n", getCurrentTime());
-
 
     if(isChildRegisteredCallback(lostChildMAC)){
         if(tableFind(lostChildrenTable, (void*)lostChildMAC ) != -1){
@@ -236,15 +235,10 @@ void startWifiAP(const char* SSID, const char* Pass, int* localIP, int* gateway,
     WiFi.softAPConfig(localIP_, gateway_, subnet_);
     WiFi.softAP(SSID, Pass);
 
-    //WiFi.setSleepMode(WIFI_NONE_SLEEP);
-    //Serial.print("My SoftAP IP:");
-    //Serial.print(WiFi.softAPIP());
-
     //Init Wifi Event Handlers
     initWifiEventHandlers();
+    //Init the table that are going to save the lost children information
     initAuxTables();
-
-    //Serial.printf("My MAC: %s\n", WiFi.macAddress().c_str());
 
 }
 
@@ -274,14 +268,14 @@ void searchAP(const char* SSID){
             continue;
         }
 
-        strcpy(ssidList.item[ssidList.len], current_ssid.c_str());
-        ssidList.len++;
+        strcpy(reachableNetworks.item[reachableNetworks.len], current_ssid.c_str());
+        reachableNetworks.len++;
 
     }
     // Delete the scan result to free memory for code below.
     WiFi.scanDelete();
 
-    //return ssidList;
+    //return reachableNetworks;
 }
 
 /**
@@ -297,7 +291,6 @@ void connectToAP(const char * SSID, const char * PASS) {
     WiFi.begin(SSID, PASS);
     //WiFi.setOutputPower(8.5);
 
-    Serial.print("Connecting to AP\n");
     // Wait for the Wi-Fi connection to establish or until timeout is reached
     while(WiFi.status() != WL_CONNECTED){
         delay(150);

@@ -117,6 +117,101 @@ void encodeMessage(char * msg, messageType type, messageParameters parameters){
     }
 }
 
+bool isMessageValid(int expectedMessageType,char* msg){
+    int type, parsedFields=0;
+    // First, check if the message starts with an integer, as all valid messages do
+    if (sscanf(msg, "%i", &type) != 1) {
+        return false; // Cannot even extract the type
+    }
+
+    //If the message hasn't from the expected type
+    if(type != expectedMessageType){
+        return false;
+    }
+
+    switch (type) {
+        case PARENT_DISCOVERY_REQUEST: {
+            int ip[4];
+            parsedFields = sscanf(msg, "%d %d.%d.%d.%d", &type, &ip[0], &ip[1], &ip[2], &ip[3]);
+            if(parsedFields != 5){
+                return false;
+            }
+            break;
+        }
+        case PARENT_INFO_RESPONSE: {
+            int ip[4], hopDistance, children;
+            parsedFields = sscanf(msg, "%d %d.%d.%d.%d %d %d", &type, &ip[0], &ip[1], &ip[2], &ip[3], &hopDistance, &children);
+            if(parsedFields != 7){
+                LOG(MESSAGES, ERROR, "Invalid PARENT_INFO_RESPONSE\n");
+                return false;
+            }
+            return true;
+        }
+        /***case CHILD_REGISTRATION_REQUEST: {
+            int ip1[4], ip2[4], seqNum;
+            return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %d", &type, &ip1[0], &ip1[1], &ip1[2], &ip1[3],
+                           &ip2[0], &ip2[1], &ip2[2], &ip2[3], &seqNum) == 11);
+            break;
+        }
+        case FULL_ROUTING_TABLE_UPDATE: {
+            // Complex format, must contain two IPs and at least one '|' separator
+            int ip1[4], ip2[4];
+            const char* separator = strchr(msg, '|');
+            if (!separator) return false; // No '|' character found
+            return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &ip1[0], &ip1[1], &ip1[2], &ip1[3],
+                           &ip2[0], &ip2[1], &ip2[2], &ip2[3]) == 9);
+            break;
+        }
+        case PARTIAL_ROUTING_TABLE_UPDATE: {
+            int ip[4];
+            const char* separator = strchr(msg, '|');
+            if (!separator) return false;
+            return (sscanf(msg, "%d %d.%d.%d.%d", &type, &ip[0], &ip[1], &ip[2], &ip[3]) == 5);
+            break;
+        }
+        case PARENT_LIST_ADVERTISEMENT: {
+            int ip1[4], ip2[4];
+            return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &ip1[0], &ip1[1], &ip1[2], &ip1[3],
+                           &ip2[0], &ip2[1], &ip2[2], &ip2[3]) == 9);
+            // extra parent IPs come after, but you could check those separately if needed
+            break;
+        }
+        case PARENT_REASSIGNMENT_COMMAND: {
+            int ip[4];
+            return (sscanf(msg, "%d %d.%d.%d.%d", &type, &ip[0], &ip[1], &ip[2], &ip[3]) == 5);
+            break;
+        }
+        case TOPOLOGY_BREAK_ALERT: {
+            int ip[4];
+            return (sscanf(msg, "%d %d.%d.%d.%d", &type, &ip[0], &ip[1], &ip[2], &ip[3]) == 5);
+            break;
+        }
+        case DEBUG_MESSAGE: {
+            // You expect a string after the type, so minimum two parts
+            int dummy;
+            char payload[100];
+            return (sscanf(msg, "%d %[^\n]", &dummy, payload) == 2);
+            break;
+        }
+        case DATA_MESSAGE: {
+            int ip1[4], ip2[4];
+            char payload[100];
+            return (sscanf(msg, "%d %s %d.%d.%d.%d %d.%d.%d.%d", &type, payload, &ip1[0], &ip1[1], &ip1[2], &ip1[3],
+                           &ip2[0], &ip2[1], &ip2[2], &ip2[3]) == 11);
+            break;
+        }
+        case ACK_MESSAGE: {
+            int ip1[4], ip2[4];
+            return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &ip1[0], &ip1[1], &ip1[2], &ip1[3],
+                           &ip2[0], &ip2[1], &ip2[2], &ip2[3]) == 9);
+            break;
+        }***/
+        default: // The message is not one of the valid message types
+            return false;
+    }
+    return true;
+}
+
 /**
  * handleParentDiscoveryRequest
  * Handles a PARENT_DISCOVERY_REQUEST message by decoding it and sending parent information.
@@ -210,8 +305,6 @@ void handleChildRegistrationRequest(char * msg){
     encodeMessage(messageBufferLarge,FULL_ROUTING_TABLE_UPDATE,parameters);
     LOG(MESSAGES,INFO,"Message: %s\n",messageBufferLarge);
     sendMessage(childSTAIP,messageBufferLarge);
-    delay(1000);
-
 
     //Propagate the new node information trough the network
     assignIP(parameters.IP[0], childAPIP);
@@ -219,8 +312,6 @@ void handleChildRegistrationRequest(char * msg){
 
     encodeMessage(messageBuffer1, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
     propagateMessage(messageBuffer1, childAPIP);
-    LOG(MESSAGES,INFO,"Sending: %s\n",messageBuffer1);
-
     //Sending new node information to the DEBUG visualization program, if enabled
     reportNewNodeToViz(childAPIP, myIP);
 
@@ -239,7 +330,7 @@ void handleFullRoutingTableUpdate(char * msg){
     int hopDistance,sequenceNumber;
     messageParameters parameters;
     static char messageBuffer1[300]="";
-    bool hasRoutingChanged = false, hasRoutingChangedTemp = false ;
+    bool isRoutingTableChanged = false, isRoutingEntryChanged = false ;
     //Parse Message Type and root node IP
     sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type,&sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
 
@@ -256,23 +347,21 @@ void handleFullRoutingTableUpdate(char * msg){
                      // nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3], hopDistance);
         //Update the Routing Table
         //updateRoutingTableSN(nodeIP,newNode,sourceIP);
-        hasRoutingChangedTemp = updateRoutingTableSN(nodeIP,hopDistance,sequenceNumber,sourceIP);
+        isRoutingEntryChanged = updateRoutingTableSN(nodeIP,hopDistance,sequenceNumber,sourceIP);
         // If the node's routing entry was modified, add it to the list of nodes to include in the Partial routing update
-        if(hasRoutingChangedTemp == true){
+        if(isRoutingEntryChanged == true){
             assignIP(parameters.IP[nrOfChanges], nodeIP);
             nrOfChanges ++;
         }
-        hasRoutingChanged = hasRoutingChanged || hasRoutingChangedTemp ;
+        isRoutingTableChanged = isRoutingTableChanged || isRoutingEntryChanged ;
         token = strtok(NULL, "|");
     }
 
-    if (hasRoutingChanged){
+    if (isRoutingTableChanged){
         parameters.nrOfNodes = nrOfChanges;
         LOG(NETWORK,INFO, "Routing Information has changed->propagate new info\n");
         //Propagate the routing table update information trough the network
         encodeMessage(messageBuffer1, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
-        LOG(NETWORK,INFO, "Message: %s\n", messageBuffer1);
-
         propagateMessage(messageBuffer1, sourceIP);
     }
 
@@ -292,7 +381,7 @@ void handlePartialRoutingUpdate(char *msg){
     int nodeIP[4], senderIP[4],sequenceNumber;
     int hopDistance;
     char messageBuffer1[50] = "";
-    bool hasRoutingChanged = false, hasRoutingChangedTemp = false;
+    bool isRoutingTableChanged = false, isRoutingEntryChanged = false;
     messageParameters parameters;
 
 
@@ -312,19 +401,19 @@ void handlePartialRoutingUpdate(char *msg){
         // nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3], hopDistance);
         //Update the Routing Table
         //updateRoutingTableSN(nodeIP,newNode,sourceIP);
-        hasRoutingChangedTemp = updateRoutingTableSN(nodeIP,hopDistance,sequenceNumber,senderIP);
+        isRoutingEntryChanged = updateRoutingTableSN(nodeIP,hopDistance,sequenceNumber,senderIP);
         // If the node's routing entry was modified, add it to the list of nodes to include in the Partial routing update
-        if(hasRoutingChangedTemp == true){
+        if(isRoutingEntryChanged == true){
             assignIP(parameters.IP[nrOfChanges],nodeIP);
             nrOfChanges ++;
         }
         //updateRoutingTable(nodeIP,newNode,sourceIP);
-        hasRoutingChanged = hasRoutingChanged || hasRoutingChangedTemp ;
+        isRoutingTableChanged = isRoutingTableChanged || isRoutingEntryChanged ;
         token = strtok(NULL, "|");
     }
 
     // If the routing update caused a change in my routing table, propagate the updated information to the rest of the network
-    if(hasRoutingChanged){
+    if(isRoutingTableChanged){
         LOG(NETWORK,INFO, "Routing Information has changed->propagate new info\n");
         routingTableEntry*nodeEntry = (routingTableEntry*) findNode(routingTable,nodeIP);
         if(nodeEntry != nullptr){
@@ -388,7 +477,6 @@ void handleDataMessage(char *msg){
     int sourceIP[4], destinationIP[4], nextHopIP[4];
     int *nextHopPtr = nullptr;
     char payload[50];
-    routingTableEntry newNode;
     messageParameters parameters;
 
     sscanf(msg, "%d %s %d.%d.%d.%d %d.%d.%d.%d",&type, payload, &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
