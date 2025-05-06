@@ -40,10 +40,6 @@ void waitForEnter() {
 
 void setup(){
     int MAC[6];
-    char ssid[256];
-
-    strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
-    strcat(ssid, getMyMAC().c_str());
 
     Serial.begin(115200);
     //Serial.setDebugOutput(true);
@@ -64,7 +60,7 @@ void setup(){
 #endif
 
     //To auto initialize the root node has the node with the IP 135.230.96.1
-    parseMAC(getMyMAC().c_str(), MAC);
+    getMyMAC(MAC);
     if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96)
     {
         iamRoot = true;
@@ -80,7 +76,7 @@ void setup(){
         LOG(NETWORK,INFO,"ESP8266\n");
     #endif
     Serial.printf("Code uploaded through multi_upload_tool.py V1\n");
-    LOG(NETWORK,INFO,"My MAC addr: %s\n",getMyMAC().c_str());
+    LOG(NETWORK,INFO,"My MAC addr: %i.%i.%i.%i.%i.%i\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
 
     waitForEnter();
 

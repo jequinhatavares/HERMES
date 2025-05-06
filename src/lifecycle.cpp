@@ -50,20 +50,23 @@ bool isChildRegistered(int* MAC){
 
 State initNode(Event event){
     int MAC[6];
-    char ssid[256], msg[40]; // Make sure this buffer is large enough to hold the entire SSID
+    char strMAC[30], ssid[256], msg[40]; // Make sure this buffer is large enough to hold the entire SSID
     strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
-    strcat(ssid, getMyMAC().c_str());
+    getMyMAC(MAC);
+    sprintf(strMAC, "%i:%i:%i:%i:%i:%i",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
+    LOG(NETWORK,DEBUG,"strMAC: %s\n",strMAC);
+    strcat(ssid,strMAC);
+    LOG(NETWORK,DEBUG,"My SSID: %s\n",ssid);
     routingTableEntry me;
     int invalidIP[4] = {-1,-1,-1,-1};
-    messageVizParameters vizParameters;
-    messageParameters params;
+
 
     // Set up WiFi event callbacks (parent/child loss) to trigger state machine transitions
     parentDisconnectCallback = onParentDisconnect;
     isChildRegisteredCallback = isChildRegistered;
 
     LOG(STATE_MACHINE,INFO,"Init State\n");
-    parseMAC(getMyMAC().c_str(), MAC);
+    getMyMAC(MAC);
     setIPs(MAC);
 
     startWifiAP(ssid,PASS, localIP, gateway, subnet);
@@ -100,8 +103,8 @@ State initNode(Event event){
 State search(Event event){
     int i, k, nodeIP[4];
     LOG(STATE_MACHINE,INFO,"Search State\n");
-    char MAC[20];
-    int MAC_int[6];
+    int MAC[6];
+
 
     //Find nodes in the network
     do{
@@ -112,9 +115,8 @@ State search(Event event){
     LOG(NETWORK,DEBUG, "Found %i Wi-Fi networks.\n", ssidList.len);
     for (i=0; i<ssidList.len; i++){
         LOG(NETWORK,INFO,"Found SSID: %s\n", ssidList.item[i]);
-        sscanf(ssidList.item[i], "JessicaNode%s", MAC);
-        parseMAC(MAC,MAC_int);
-        getIPFromMAC(MAC_int, nodeIP);
+        sscanf(ssidList.item[i], "JessicaNode%i:%i:%i:%i:%i:%i",&MAC[0],&MAC[1],&MAC[2],&MAC[3],&MAC[4],&MAC[5]);
+        getIPFromMAC(MAC, nodeIP);
         if(inMySubnet(nodeIP)){
             //LOG(NETWORK,DEBUG,"Removing: %i.%i.%i.%i from the ssid list\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
             //Remove of the ssidList
@@ -236,7 +238,6 @@ State joinNetwork(Event event){
         while(((packetSize = incomingMessage()) == 0) && ((currentTime - startTime) <=2000)){
             currentTime = getCurrentTime();
         }
-        delay(1000);
 
         //Process the routing table update
         if (packetSize > 0){

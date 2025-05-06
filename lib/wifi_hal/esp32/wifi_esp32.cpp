@@ -164,7 +164,7 @@ void initWifiEventHandlers(){
  * @param Status -Wi-Fi status code
  * @return A string describing the Wi-Fi status
  */
-String Get_WiFiStatus(int Status){
+const char* getWifiStatus(int Status){
     switch(Status){
         case WL_IDLE_STATUS:
             return "WL_IDLE_STATUS";
@@ -244,19 +244,19 @@ void startWifiAP(const char* SSID, const char* Pass, int* localIP, int* gateway,
  *
  * @return A List structure containing the SSIDs of Wi-Fi networks
  */
-void searchAP(String SSID){
+void searchAP(const char* SSID){
     WiFi.mode(WIFI_AP_STA);
     int n = WiFi.scanNetworks();//Number of scanned wifi networks
     int index, rindex;
-    String rSSID = "RaspPiNetwork";
+    const char* rSSID = "RaspPiNetwork";
     String message;
     int WiFiStatus;
     List listAPs;
+    String current_ssid;
 
     //Serial.printf("Number of scanned Networks: %i\n",n);
     for (int i = 0; i < n; ++i) {
         String current_ssid = WiFi.SSID(i);
-        //String string = "ola";
         //Serial.printf("SSID: %s\n", current_ssid.c_str());
         index = current_ssid.indexOf(SSID);
         rindex = current_ssid.indexOf(rSSID);
@@ -290,8 +290,7 @@ void connectToAP(const char * SSID, const char * PASS) {
     Serial.print("Connecting to AP\n");
     // Wait for the Wi-Fi connection to establish or until timeout is reached
     while(WiFi.status() != WL_CONNECTED){
-        Serial.println(Get_WiFiStatus(WiFi.status()));
-        //Serial.print("...");
+        Serial.println(getWifiStatus(WiFi.status()));
         delay(150);
     }
 
@@ -361,9 +360,14 @@ void getMySTAIP(int* IP){
  *
  * @return The MAC address as a String.
  */
-String getMyMAC(){
-    //Serial.printf("My MAC: %s", WiFi.macAddress().c_str());
-    return WiFi.macAddress();
+void getMyMAC(int* MAC){
+    unsigned int unsignedMAC[6];
+    //Converting MAC from hexadecimal to unsigned int
+    sscanf(WiFi.macAddress().c_str(),"%x:%x:%x:%x:%x:%x",&unsignedMAC[0],&unsignedMAC[1],&unsignedMAC[2],&unsignedMAC[3],&unsignedMAC[4],&unsignedMAC[5]);
+
+    for (int i = 0; i < 6; i++) {
+        MAC[i] = (int)unsignedMAC[i];
+    }
 }
 
 /**

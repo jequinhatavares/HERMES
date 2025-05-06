@@ -171,7 +171,7 @@ void initWifiEventHandlers(){
  * @param Status -Wi-Fi status code
  * @return A string describing the Wi-Fi status
  */
-String Get_WiFiStatus(int Status){
+const char* getWifiStatus(int Status){
     switch(Status){
         case WL_IDLE_STATUS:
             return "WL_IDLE_STATUS";
@@ -255,19 +255,18 @@ void startWifiAP(const char* SSID, const char* Pass, int* localIP, int* gateway,
  *
  * @return A List structure containing the SSIDs of Wi-Fi networks
  */
-void searchAP(String SSID){
+void searchAP(const char* SSID){
     WiFi.mode(WIFI_AP_STA); //
     int n = WiFi.scanNetworks();//Number of scanned wifi networks
     int index, rindex;
-    String rSSID = "RaspiNet";
-    String message;
-    int WiFiStatus, *currentBSSID;
+    const char* rSSID = "RaspiNet";
+    String current_ssid;
 
     //Serial.printf("Number of scanned Networks: %i\n",n);
     for (int i = 0; i < n; ++i) {
-        String current_ssid = WiFi.SSID(i);
+        current_ssid = WiFi.SSID(i);
         //WiFi.BSSID()
-        Serial.printf("SSID: %s\n", current_ssid.c_str());
+        //Serial.printf("SSID: %s\n", current_ssid.c_str());
         index = current_ssid.indexOf(SSID);
         rindex = current_ssid.indexOf(rSSID);
         //Check if the AP corresponds to a node of the mesh network
@@ -302,7 +301,7 @@ void connectToAP(const char * SSID, const char * PASS) {
     // Wait for the Wi-Fi connection to establish or until timeout is reached
     while(WiFi.status() != WL_CONNECTED){
         delay(150);
-        Serial.println(Get_WiFiStatus(WiFi.status()));
+        Serial.println(getWifiStatus(WiFi.status()));
         //Serial.print("...");
     }
     //Serial.print("\n");
@@ -372,9 +371,15 @@ void getMySTAIP(int *IP){
  *
  * @return The MAC address as a String.
  */
-String getMyMAC(){
+void getMyMAC(int* MAC){
     //Serial.printf("My MAC: %s", WiFi.macAddress().c_str());
-    return WiFi.macAddress();
+    unsigned int unsignedMAC[6];
+    //Converting MAC from hexadecimal to unsigned int
+    sscanf(WiFi.macAddress().c_str(),"%x:%x:%x:%x:%x:%x",&unsignedMAC[0],&unsignedMAC[1],&unsignedMAC[2],&unsignedMAC[3],&unsignedMAC[4],&unsignedMAC[5]);
+
+    for (int i = 0; i < 6; i++) {
+        MAC[i] = (int)unsignedMAC[i];
+    }
 }
 
 /**

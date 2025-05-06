@@ -29,17 +29,17 @@ extern void (*parentDisconnectCallback)();
 extern bool (*isChildRegisteredCallback)(int*);
 
 void initWifiEventHandlers();
-String Get_WiFiStatus(int Status);
+const char* getWifiStatus(int Status);
 void startWifiSTA(int* localIP, int* gateway, int* subnet, int* dns);
 void startWifiAP(const char* SSID, const char* Pass, int* localIP, int* gateway, int* subnet);
-void searchAP(String);
+void searchAP(const char*);
 void connectToAP(const char*, const char*);
 void stopWifiAP();
 void disconnectFromAP();
 int numberOfSTAConnected();
 void getGatewayIP(int* IP);
 void getMySTAIP(int* IP);
-String getMyMAC();
+void getMyMAC(int* MAC);
 void getMyAPIP(int* IP);
 void changeWifiMode(int);
 
