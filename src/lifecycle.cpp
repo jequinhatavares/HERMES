@@ -149,7 +149,7 @@ State joinNetwork(Event event){
     unsigned long currentTime, startTime;
     int mySTAIP[4], nrOfPossibleParents = 0;
     messageParameters params;
-    static char buffer[256] = "", msg[50] = "",largeMessage[200] = "";
+    static char buffer[256] = "";
     parentInfo possibleParents[10];
 
     if(reachableNetworks.len != 0){
@@ -163,10 +163,10 @@ State joinNetwork(Event event){
 
             //Send a Parent Discovery Request to the connected parent
             params.IP1[0] = mySTAIP[0]; params.IP1[1] = mySTAIP[1]; params.IP1[2] = mySTAIP[2]; params.IP1[3] = mySTAIP[3];
-            encodeMessage(msg, PARENT_DISCOVERY_REQUEST, params);
+            encodeMessage(smallSendBuffer,sizeof (smallSendBuffer),PARENT_DISCOVERY_REQUEST, params);
 
             getGatewayIP(connectedParentIP);
-            sendMessage(connectedParentIP, msg);
+            sendMessage(connectedParentIP, smallSendBuffer);
 
             //Wait for the parent to respond
             startTime = getCurrentTime();
@@ -176,10 +176,10 @@ State joinNetwork(Event event){
             }
 
             if (packetSize > 0){
-                receiveMessage(buffer);
+                receiveMessage(receiveBuffer);
                 LOG(MESSAGES,INFO,"Parent [Parent Info Response]: %s\n", buffer);
-                if(isMessageValid(PARENT_INFO_RESPONSE,buffer)){
-                    handleParentInfoResponse(buffer, possibleParents, nrOfPossibleParents);
+                if(isMessageValid(PARENT_INFO_RESPONSE,receiveBuffer)){
+                    handleParentInfoResponse(receiveBuffer, possibleParents, nrOfPossibleParents);
                     possibleParents[nrOfPossibleParents].ssid = reachableNetworks.item[i];
                     nrOfPossibleParents ++;
                 }
@@ -218,8 +218,8 @@ State joinNetwork(Event event){
         params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
         params.IP2[0] = mySTAIP[0]; params.IP2[1] = mySTAIP[1]; params.IP2[2] = mySTAIP[2]; params.IP2[3] = mySTAIP[3];
         params.sequenceNumber = mySequenceNumber;
-        encodeMessage(msg, CHILD_REGISTRATION_REQUEST, params);
-        sendMessage(parent, msg);
+        encodeMessage(smallSendBuffer, sizeof(smallSendBuffer), CHILD_REGISTRATION_REQUEST, params);
+        sendMessage(parent, smallSendBuffer);
 
         //Wait for the parent to respond with his routing table information
         startTime = getCurrentTime();
@@ -230,9 +230,9 @@ State joinNetwork(Event event){
 
         //Process the routing table update
         if (packetSize > 0){
-            receiveMessage(buffer);
+            receiveMessage(receiveBuffer);
             LOG(MESSAGES,INFO,"Parent [Full Routing Update] Response: %s\n", buffer);
-            handleFullRoutingTableUpdate(buffer);
+            handleFullRoutingTableUpdate(receiveBuffer);
             LOG(NETWORK,INFO,"Routing Table Updated:\n");
             tablePrint(routingTable,printRoutingStruct);
         }
@@ -240,8 +240,8 @@ State joinNetwork(Event event){
         // If the joining node has children (i.e., his subnetwork has nodes), it must also send its routing table to its new parent.
         // This ensures that the rest of the network becomes aware of the entire subtree associated with the new node
         if(childrenTable->numberOfItems > 0){
-            encodeMessage(largeMessage, FULL_ROUTING_TABLE_UPDATE, params);
-            sendMessage(parent, largeMessage);
+            encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),FULL_ROUTING_TABLE_UPDATE, params);
+            sendMessage(parent, largeSendBuffer);
             lastRoutingUpdateTime = getCurrentTime();
         }
 
@@ -272,51 +272,51 @@ State handleMessages(Event event){
     LOG(STATE_MACHINE,INFO,"Handle Messages State\n");
     int messageType, flag = 0;
 
-    sscanf(messageBuffer, "%d", &messageType);
+    sscanf(receiveBuffer, "%d", &messageType);
 
     switch (messageType) {
         case PARENT_DISCOVERY_REQUEST:
-            LOG(MESSAGES,INFO,"Received [Parent Discovery Request] message: \"%s\"\n", messageBuffer);
-            handleParentDiscoveryRequest(messageBuffer);
+            LOG(MESSAGES,INFO,"Received [Parent Discovery Request] message: \"%s\"\n", receiveBuffer);
+            handleParentDiscoveryRequest(receiveBuffer);
             break;
 
         case CHILD_REGISTRATION_REQUEST:
-            LOG(MESSAGES,INFO,"Received [Child Registration Request] message: \"%s\"\n", messageBuffer);
-            handleChildRegistrationRequest(messageBuffer);
+            LOG(MESSAGES,INFO,"Received [Child Registration Request] message: \"%s\"\n", receiveBuffer);
+            handleChildRegistrationRequest(receiveBuffer);
             flag = 1;
             break;
 
         case FULL_ROUTING_TABLE_UPDATE:
-            LOG(MESSAGES,INFO,"Received [Full Routing Update] message: \"%s\"\n", messageBuffer);
-            handleFullRoutingTableUpdate(messageBuffer);
+            LOG(MESSAGES,INFO,"Received [Full Routing Update] message: \"%s\"\n", receiveBuffer);
+            handleFullRoutingTableUpdate(receiveBuffer);
             break;
 
         case PARTIAL_ROUTING_TABLE_UPDATE:
-            LOG(MESSAGES,INFO,"Received [Partial Routing Update] message: \"%s\"\n", messageBuffer);
-            handlePartialRoutingUpdate(messageBuffer);
+            LOG(MESSAGES,INFO,"Received [Partial Routing Update] message: \"%s\"\n", receiveBuffer);
+            handlePartialRoutingUpdate(receiveBuffer);
             break;
 
         case TOPOLOGY_BREAK_ALERT:
-            LOG(MESSAGES,INFO,"Received [Topology Break Alert] message: \"%s\"\n", messageBuffer);
-            handleTopologyBreakAlert(messageBuffer);
+            LOG(MESSAGES,INFO,"Received [Topology Break Alert] message: \"%s\"\n", receiveBuffer);
+            handleTopologyBreakAlert(receiveBuffer);
             break;
 
         case DEBUG_REGISTRATION_REQUEST:
-            if(iamRoot)handleDebugRegistrationRequest(messageBuffer);
+            if(iamRoot)handleDebugRegistrationRequest(receiveBuffer);
             break;
 
         case DEBUG_MESSAGE:
-            handleDebugMessage(messageBuffer);
+            handleDebugMessage(receiveBuffer);
             break;
 
         case DATA_MESSAGE:
-            LOG(MESSAGES,INFO,"Received [Data] message: \"%s\"\n", messageBuffer);
-            handleDataMessage(messageBuffer);
+            LOG(MESSAGES,INFO,"Received [Data] message: \"%s\"\n", receiveBuffer);
+            handleDataMessage(receiveBuffer);
             break;
 
         case ACK_MESSAGE:
-            LOG(MESSAGES,INFO,"Received [ACK] message: \"%s\"\n", messageBuffer);
-            handleAckMessage(messageBuffer);
+            LOG(MESSAGES,INFO,"Received [ACK] message: \"%s\"\n", receiveBuffer);
+            handleAckMessage(receiveBuffer);
             break;
     }
 
@@ -330,7 +330,7 @@ State parentRecovery(Event event){
 
     LOG(STATE_MACHINE,INFO,"Parent Recovery State\n");
 
-    encodeMessage(message,TOPOLOGY_BREAK_ALERT,parameters);
+    encodeMessage(smallSendBuffer,sizeof(smallSendBuffer),TOPOLOGY_BREAK_ALERT,parameters);
 
     //TODO tell my children that i lost connection to my parent
     LOG(MESSAGES,INFO,"Informing my children about the lost connection\n");
@@ -365,7 +365,6 @@ State childRecovery(Event event){
     int i;
     int lostChildIP[4], subNetSize = 0, lostNodeSubnetwork[routingTable->numberOfItems][4], **lostNodes;
     int *nodeIP, *MAC;
-    char message[50];
     messageParameters parameters;
     routingTableEntry unreachableEntry, *lostNodeTableEntry;
 
@@ -420,8 +419,8 @@ State childRecovery(Event event){
                     tableUpdate(routingTable, lostNodeSubnetwork[i],&unreachableEntry);
 
                     // Notify the rest of the network about nodes that are no longer reachable.
-                    encodeMessage(message, PARTIAL_ROUTING_TABLE_UPDATE, parameters);
-                    propagateMessage(message, myIP);
+                    encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),PARTIAL_ROUTING_TABLE_UPDATE, parameters);
+                    propagateMessage(largeSendBuffer, myIP);
                 }
                 LOG(NETWORK,DEBUG,"Updated Routing Table:\n");
                 tablePrint(routingTable, printRoutingStruct);
@@ -440,7 +439,6 @@ State childRecovery(Event event){
 }
 void handleTimers(){
     int* MAC;
-    char messageBufferLarge[300]; //36 + 32*X
     messageParameters parameters;
     unsigned long currentTime = getCurrentTime();
     //LOG(NETWORK,DEBUG,"1\n");
@@ -457,8 +455,8 @@ void handleTimers(){
         mySequenceNumber = mySequenceNumber + 2;
         updateMySequenceNumber(mySequenceNumber);
         //Update my sequence number
-        encodeMessage(messageBufferLarge,FULL_ROUTING_TABLE_UPDATE,parameters);
-        propagateMessage(messageBufferLarge,myIP);
+        encodeMessage(largeSendBuffer, sizeof(largeSendBuffer),FULL_ROUTING_TABLE_UPDATE,parameters);
+        propagateMessage(largeSendBuffer,myIP);
         lastRoutingUpdateTime = currentTime;
     }
 

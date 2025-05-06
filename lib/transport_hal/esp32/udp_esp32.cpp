@@ -22,7 +22,7 @@ void sendMessage(int address[4], const char * msg){
     Udp.beginPacket(address_, UDP_PORT);
     char reply[] = "Packet received!\n";
 
-    Udp.write((const uint8_t*) msg, 255);
+    Udp.write((const uint8_t*) msg, strlen(msg));
     Udp.endPacket();
 }
 

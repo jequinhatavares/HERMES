@@ -66,7 +66,7 @@ void getDataMessage() {
     readIPAddress(parameters.IP1, "Enter source node IP");
     readIPAddress(parameters.IP2, "Enter destination node IP");
 
-    encodeMessage(msg, DATA_MESSAGE, parameters);
+    encodeMessage(msg,sizeof(msg),DATA_MESSAGE, parameters);
 
     ptrIP = findRouteToNode(parameters.IP2);
 

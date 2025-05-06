@@ -35,10 +35,12 @@ typedef enum messageType{
     ACK_MESSAGE,//11
 }messageType;
 
-extern char messageBuffer[256];
+extern char receiveBuffer[256];
+extern char largeSendBuffer[256];
+extern char smallSendBuffer[50];
 
 
-void encodeMessage(char* msg, messageType type, messageParameters parameters);
+void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParameters parameters);
 
 bool isMessageValid(int expectedMessageType,char* msg);
 

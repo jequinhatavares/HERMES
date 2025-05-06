@@ -100,10 +100,15 @@ void setup(){
 void loop(){
 
     //Wait for incoming requests
-    int packet_size = incomingMessage();
-    if (packet_size > 0){
-        receiveMessage(messageBuffer);
-        insertLast(stateMachineEngine, eMessage);
+    int packetSize = incomingMessage();
+    if (packetSize > 0){
+        if(packetSize <= 255){
+            receiveMessage(receiveBuffer);
+            insertLast(stateMachineEngine, eMessage);
+        }else{
+            LOG(MESSAGES, ERROR,"Receiving buffer is too small packet has size:%i\n", packetSize);
+        }
+
     }
 
     handleTimers();

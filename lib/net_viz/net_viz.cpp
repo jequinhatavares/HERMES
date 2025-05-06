@@ -27,7 +27,7 @@ void reportNewNodeToViz(int* nodeIP, int* parentIP){
 
     sprintf(parameters.payload, "%s", msg);
     strcpy(msg , "");
-    encodeMessage(msg, DEBUG_MESSAGE, parameters);
+    encodeMessage(msg, sizeof (msg),DEBUG_MESSAGE, parameters);
 
     if(!iamRoot)sendMessage(rootIP,msg);
     else LOG(DEBUG_SERVER,DEBUG,msg);
