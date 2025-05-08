@@ -11,7 +11,7 @@
 
 typedef enum messageVizType{
     NEW_NODE, //0
-    DELETE_NODE, //1
+    DELETED_NODE, //1
     CHANGE_PARENT, //2
 }messageVizType;
 
@@ -22,6 +22,7 @@ typedef struct messageVizParameters{
 void encodeVizMessage(char* msg, messageVizType type, messageVizParameters parameters);
 
 void reportNewNodeToViz(int* nodeIP, int* parentIP);
+void reportDeletedNodeToViz(int* nodeIP);
 
 
 #endif //NET_VIZ_H

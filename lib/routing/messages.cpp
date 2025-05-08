@@ -276,7 +276,6 @@ void handleParentInfoResponse(char* msg, parentInfo *parents, int i){
 void handleChildRegistrationRequest(char * msg){
     int type;
     int childAPIP[4], childSTAIP[4],sequenceNumber;
-    int ipList[1][4];
     routingTableEntry newNode;
     messageParameters parameters;
 

@@ -178,7 +178,7 @@ void* findNode(TableInfo* Table, int nodeIP[4]){
  * Determines the next hop for routing a packet to a given node.
  *
  * @param nodeIP - The IP address of the destination node.
- * @return (int*) - A pointer to the next-hop IP address.
+ * @return (int*) - A pointer to the next-hop IP address or nullptr in case of no route found
  */
 int* findRouteToNode(int nodeIP[4]){
 

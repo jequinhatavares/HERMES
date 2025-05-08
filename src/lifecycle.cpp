@@ -428,7 +428,10 @@ State childRecovery(Event event){
 
                 // The procedure is finished so the child can be removed from the lostChildrenTable
                 tableRemove(lostChildrenTable, MAC);
-            }
+
+                //Report the deleted node to the monitoring server
+                reportDeletedNodeToViz(lostChildIP);
+                }
             subNetSize = 0;
         }
 

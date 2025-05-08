@@ -7,13 +7,9 @@
 #include "../wifi_interface.h"
 
 void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnected& info);
-
 void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisconnected& info);
-
 void onStationModeGotIPHandler(const WiFiEventStationModeGotIP& info);
-
 void onStationModeConnectedHandler(const WiFiEventStationModeConnected& info);
-
 void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& info);
 
 
