@@ -133,81 +133,96 @@ bool isMessageValid(int expectedMessageType,char* msg){
 
     switch (type) {
         case PARENT_DISCOVERY_REQUEST: {
-            int ip[4];
-            parsedFields = sscanf(msg, "%d %d.%d.%d.%d", &type, &ip[0], &ip[1], &ip[2], &ip[3]);
+            int IP[4];
+            parsedFields = sscanf(msg, "%d %d.%d.%d.%d", &type, &IP[0], &IP[1], &IP[2], &IP[3]);
             if(parsedFields != 5){
                 return false;
             }
             break;
         }
         case PARENT_INFO_RESPONSE: {
-            int ip[4], hopDistance, children;
-            parsedFields = sscanf(msg, "%d %d.%d.%d.%d %d %d", &type, &ip[0], &ip[1], &ip[2], &ip[3], &hopDistance, &children);
+            int IP[4], hopDistance, children;
+            parsedFields = sscanf(msg, "%d %d.%d.%d.%d %d %d", &type, &IP[0], &IP[1], &IP[2], &IP[3], &hopDistance, &children);
             if(parsedFields != 7){
                 LOG(MESSAGES, ERROR, "Invalid PARENT_INFO_RESPONSE\n");
                 return false;
             }
             return true;
         }
-        /***case CHILD_REGISTRATION_REQUEST: {
-            int ip1[4], ip2[4], seqNum;
-            return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %d", &type, &ip1[0], &ip1[1], &ip1[2], &ip1[3],
-                           &ip2[0], &ip2[1], &ip2[2], &ip2[3], &seqNum) == 11);
+        case CHILD_REGISTRATION_REQUEST: {
+            int IP1[4], IP2[4], seqNum;
+            return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %d", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
+                           &IP2[0], &IP2[1], &IP2[2], &IP2[3], &seqNum) == 11);
             break;
         }
         case FULL_ROUTING_TABLE_UPDATE: {
-            // Complex format, must contain two IPs and at least one '|' separator
-            int ip1[4], ip2[4];
-            const char* separator = strchr(msg, '|');
-            if (!separator) return false; // No '|' character found
-            return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &ip1[0], &ip1[1], &ip1[2], &ip1[3],
-                           &ip2[0], &ip2[1], &ip2[2], &ip2[3]) == 9);
+            int IP1[4], IP2[4],hopDistance,sequenceNumber;
+            if(sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],&IP2[0], &IP2[1], &IP2[2], &IP2[3]) != 9)return false;
+            char* token = strtok(msg, "|");
+
+            token = strtok(NULL, "|");
+
+            while (token != NULL) {
+                if(sscanf(token, "%d.%d.%d.%d %d %d",&IP1[0],&IP1[1],&IP1[2],&IP1[3],&hopDistance,&sequenceNumber) != 6) return false;
+                token = strtok(NULL, "|");
+            }
+            return true;
             break;
         }
         case PARTIAL_ROUTING_TABLE_UPDATE: {
-            int ip[4];
-            const char* separator = strchr(msg, '|');
-            if (!separator) return false;
-            return (sscanf(msg, "%d %d.%d.%d.%d", &type, &ip[0], &ip[1], &ip[2], &ip[3]) == 5);
+            int IP1[4], hopDistance,sequenceNumber;
+            if(sscanf(msg, "%d %d.%d.%d.%d", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3]) != 5)return false;
+            char* token = strtok(msg, "|");
+
+            token = strtok(NULL, "|");
+
+            while (token != NULL) {
+                if(sscanf(token, "%d.%d.%d.%d %d %d",&IP1[0],&IP1[1],&IP1[2],&IP1[3],&hopDistance,&sequenceNumber) != 6) return false;
+                token = strtok(NULL, "|");
+            }
+            return true;
             break;
         }
         case PARENT_LIST_ADVERTISEMENT: {
-            int ip1[4], ip2[4];
-            return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &ip1[0], &ip1[1], &ip1[2], &ip1[3],
-                           &ip2[0], &ip2[1], &ip2[2], &ip2[3]) == 9);
+            /***int IP1[4], IP2[4];
+            return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
+                           &IP2[0], &IP2[1], &IP2[2], &IP2[3]) == 9);***/
             // extra parent IPs come after, but you could check those separately if needed
+            return true;
             break;
         }
         case PARENT_REASSIGNMENT_COMMAND: {
-            int ip[4];
-            return (sscanf(msg, "%d %d.%d.%d.%d", &type, &ip[0], &ip[1], &ip[2], &ip[3]) == 5);
+            /***int IP[4];
+            return (sscanf(msg, "%d %d.%d.%d.%d", &type, &IP[0], &IP[1], &IP[2], &IP[3]) == 5);***/
+            return true;
             break;
         }
         case TOPOLOGY_BREAK_ALERT: {
-            int ip[4];
-            return (sscanf(msg, "%d %d.%d.%d.%d", &type, &ip[0], &ip[1], &ip[2], &ip[3]) == 5);
+            /***int IP[4];
+            return (sscanf(msg, "%d %d.%d.%d.%d", &type, &IP[0], &IP[1], &IP[2], &IP[3]) == 5);***/
+            return true;
             break;
         }
         case DEBUG_MESSAGE: {
-            // You expect a string after the type, so minimum two parts
-            int dummy;
+            /***int dummy;
             char payload[100];
-            return (sscanf(msg, "%d %[^\n]", &dummy, payload) == 2);
+            return (sscanf(msg, "%d %[^\n]", &dummy, payload) == 2);***/
+            return true;
             break;
         }
         case DATA_MESSAGE: {
-            int ip1[4], ip2[4];
-            char payload[100];
-            return (sscanf(msg, "%d %s %d.%d.%d.%d %d.%d.%d.%d", &type, payload, &ip1[0], &ip1[1], &ip1[2], &ip1[3],
-                           &ip2[0], &ip2[1], &ip2[2], &ip2[3]) == 11);
+            int IP1[4], IP2[4];
+            char payload[200];
+            return (sscanf(msg, "%d %199s %d.%d.%d.%d %d.%d.%d.%d", &type, payload, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
+                           &IP2[0], &IP2[1], &IP2[2], &IP2[3]) == 10);
             break;
         }
         case ACK_MESSAGE: {
-            int ip1[4], ip2[4];
-            return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &ip1[0], &ip1[1], &ip1[2], &ip1[3],
-                           &ip2[0], &ip2[1], &ip2[2], &ip2[3]) == 9);
+            int IP1[4], IP2[4];
+            return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
+                           &IP2[0], &IP2[1], &IP2[2], &IP2[3]) == 9);
             break;
-        }***/
+        }
         default: // The message is not one of the valid message types
             return false;
     }
@@ -389,7 +404,6 @@ void handlePartialRoutingUpdate(char *msg){
     int hopDistance;
     bool isRoutingTableChanged = false, isRoutingEntryChanged = false;
     messageParameters parameters;
-
 
     //Parse Message Type and senderIP
     sscanf(msg, "%d %d.%d.%d.%d", &type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
