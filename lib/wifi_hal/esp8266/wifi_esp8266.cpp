@@ -245,9 +245,11 @@ void startWifiAP(const char* SSID, const char* Pass, int* localIP, int* gateway,
 
 /**
  * searchAP
- * Scans for available Wi-Fi networks and filters them based on their SSID
+ * Scans for available Wi-Fi networks and filters them based on their SSID.
+ * Stores the resulting list in the reachableNetworks global variable.
  *
- * @return A List structure containing the SSIDs of Wi-Fi networks
+ * @params SSID - The char array holding the SSID used to filter scan results.
+ * @return void
  */
 void searchAP(const char* SSID){
     WiFi.mode(WIFI_AP_STA); //
@@ -334,11 +336,13 @@ int numberOfSTAConnected(){
     int n = WiFi.softAPgetStationNum();
     return n;
 }
+
 /**
  * getGatewayIP
- * Retrieves the IP address of the AP that the device is connected to.
+ * Retrieves the Gateway IP address.
  *
- * @return The gateway IP address as an IPAddress object.
+ * @param IP - the array that will store the IP address.
+ * @return void
  */
 void getGatewayIP(int *IP){
     IPAddress ip = WiFi.gatewayIP();
@@ -347,10 +351,11 @@ void getGatewayIP(int *IP){
 }
 
 /**
- * getMyIP
+ * getMySTAIP
  * Retrieves the device local IP address assigned by the Access Point it is connected to.
  *
- * @return The local IP address as an IPAddress object.
+ * @param IP - the array that will store the IP address.
+ * @return void.
  */
 void getMySTAIP(int *IP){
     IPAddress ip = WiFi.localIP();
@@ -362,7 +367,8 @@ void getMySTAIP(int *IP){
  * getMyMAC
  * Retrieves the MAC address of the device
  *
- * @return The MAC address as a String.
+ * @param MAC - the array that will store the MAC address.
+ * @return void.
  */
 void getMyMAC(int* MAC){
     //Serial.printf("My MAC: %s", WiFi.macAddress().c_str());
@@ -379,7 +385,8 @@ void getMyMAC(int* MAC){
  * getMyAPIP
  * Retrieves the IP address of the device as a Wi-Fi Access Point (AP).
  *
- * @return The IP address as an IPAddress object.
+ * @param IP - the array that will store the IP address.
+ * @return void.
  */
 void getMyAPIP(int* IP){
     IPAddress ip = WiFi.softAPIP();
