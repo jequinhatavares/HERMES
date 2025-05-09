@@ -359,7 +359,7 @@ void test_new_node_routing_table_initialization(){
 }
 
 void test_routing_table_partial_update_new_node_from_child(){
-    char msg[100] = "4 3.3.3.3 4.4.4.4 1 2";
+    char msg[100] = "4 3.3.3.3 |4.4.4.4 1 2";
     int senderIP[4];
 
     int otherNodeIP[4] = {4,4,4,4};
@@ -421,7 +421,7 @@ void test_routing_table_partial_update_new_node_from_child(){
 }
 
 void test_routing_table_partial_update_new_node_from_parent(){
-    char msg[100] = "4 1.1.1.1 2.2.2.2 1 2";
+    char msg[100] = "4 1.1.1.1 |2.2.2.2 1 2";
     int senderIP[4];
 
     int otherNodeIP[4] = {2,2,2,2};
@@ -572,7 +572,7 @@ void test_routing_table_update_with_node_from_child_subnetwork(){
     //printf("NextHop: %i.%i.%i.%i\n",grandSonNodeUpdated->nextHopIP[0],grandSonNodeUpdated->nextHopIP[1],grandSonNodeUpdated->nextHopIP[2],grandSonNodeUpdated->nextHopIP[3]);
     TEST_ASSERT(isIPEqual(grandSonNodeUpdated->nextHopIP, childNodeIP));
 
-    tableClean(routingTable);
+    tableClean(routingTable);/******/
 }
 
 void test_routing_table_partial_update_delete_node_from_child(){
@@ -710,10 +710,10 @@ void test_routing_table_partial_update_delete_node_from_parent(){
 void test_routing_table_update_node_changing_parent_with_previous_unreachable_update(){
     //1->3->4--->6, 1->2 ,3->5
     //Encoding the full routing update coming from my parent
-    char partialRoutingTableUpdateLostChild[100] = "4 4.4.4.4 6.6.6.6 -1 3";//Node 4 reported that 6 is unreachable
-    char partialRoutingTableUpdate[100] = "4 5.5.5.5 6.6.6.6 1 4";//Node 6 changed his parent from 4 to 5
-    char partialRoutingTableUpdateLostChild2[100] = "4 5.5.5.5 6.6.6.6 -1 5";//Node 5 reported that 6 is unreachable
-    char partialRoutingTableUpdate2[100] = "4 1.1.1.1 6.6.6.6 2 6";//Node 1 reposts that can now view 6 using 2, meaning 6 changed parent from 5 to 2
+    char partialRoutingTableUpdateLostChild[100] = "4 4.4.4.4 |6.6.6.6 -1 3";//Node 4 reported that 6 is unreachable
+    char partialRoutingTableUpdate[100] = "4 5.5.5.5 |6.6.6.6 1 4";//Node 6 changed his parent from 4 to 5
+    char partialRoutingTableUpdateLostChild2[100] = "4 5.5.5.5 |6.6.6.6 -1 5";//Node 5 reported that 6 is unreachable
+    char partialRoutingTableUpdate2[100] = "4 1.1.1.1 |6.6.6.6 2 6";//Node 1 reposts that can now view 6 using 2, meaning 6 changed parent from 5 to 2
 
     //MyIP IP initialization
     myIP[0] = 3;myIP[1] = 3;

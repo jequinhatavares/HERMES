@@ -64,7 +64,7 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
             break;
 
         case PARTIAL_ROUTING_TABLE_UPDATE:
-            //4 [senderIP] [node1 IP] [hopDistance] [sequenceNumber]| [node2 IP] [hopDistance] [sequenceNumber] ...
+            //4 [senderIP] |[node1 IP] [hopDistance] [sequenceNumber]| [node2 IP] [hopDistance] [sequenceNumber] ...
             snprintf(msg,bufferSize,"%i %i.%i.%i.%i |",type,myIP[0],myIP[1],myIP[2],myIP[3]);
             for (int i = 0; i < parameters.nrOfNodes; i++){
                 nodeRoutingEntry = (routingTableEntry*)tableRead(routingTable, parameters.IP[i]);
