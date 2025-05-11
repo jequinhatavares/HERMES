@@ -40,9 +40,6 @@ void setup(){
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
 
-#ifdef ESP8266
-    EspClass::wdtDisable();
-#endif
 
     //To auto initialize the root node has the node with the IP 135.230.96.1
     getMyMAC(MAC);
@@ -60,7 +57,7 @@ void setup(){
     #ifdef ESP8266
         LOG(NETWORK,INFO,"ESP8266\n");
     #endif
-    Serial.printf("Code uploaded through multi_upload_tool.py V1\n");
+    LOG(NETWORK,INFO,"Code uploaded through multi_upload_tool.py V1\n");
     LOG(NETWORK,INFO,"My MAC addr: %i.%i.%i.%i.%i.%i\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
 
     waitForEnter();
@@ -83,14 +80,13 @@ void setup(){
 
 
 void loop(){
+    int packetSize;
 
     //Wait for incoming requests
-    int packetSize = incomingMessage();
+    packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer));
     if (packetSize > 0){
-        if(packetSize <= 255){
-            receiveMessage(receiveBuffer);
-            insertLast(stateMachineEngine, eMessage);
-        }else{
+        insertLast(stateMachineEngine, eMessage);
+        if(packetSize >= 255){
             LOG(MESSAGES, ERROR,"Receiving buffer is too small packet has size:%i\n", packetSize);
         }
 
@@ -117,47 +113,65 @@ void loop(){
 #include <../lib/transport_hal/raspberrypi/udp_raspberrypi.h>
 #include <../lib/time_hal/raspberrypi/time_raspberrypi.h>
 
+//#include <wifi_hal.h>
+//#include <transport_hal.h>
+#include "lifecycle.h"
+#include "cli.h"
+#include "logger.h"
+
+void setup();
+
+void setup(){
+
+    enableModule(STATE_MACHINE);
+    enableModule(MESSAGES);
+    enableModule(NETWORK);
+    enableModule(DEBUG_SERVER);
+    enableModule(CLI);
+
+    lastModule = MESSAGES;
+    currentLogLevel = DEBUG;
+
+    initWifiEventHandlers();
+    initTime();
+
+    iamRoot = true;
+
+    Advance(SM, eSuccess);//Init
+
+    if(!iamRoot){
+        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Search APs
+        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Choose Parent
+    }
+
+}
 
 int main() {
-    int fd;
-    char buffer[BUFFER_SIZE];
-    char sendBuffer[50] = "0 Hello from RaspberryPi";
-    int IP[4],MAC[6];
 
     printf("Hello, world from Raspberry Pi!\n");
-    beginTransport();
-    startWifiEventListener();
-    initWifiEventHandlers();
 
-    initTime();
-    getCurrentTime();
-    searchAP2();
+    setup();
 
     while (1) {
-        ssize_t n = receiveMessage(buffer);
-        if (n > 0) {
-            printf("[RECEIVED] %s\n", buffer);
-            sendMessage(remoteIP, sendBuffer);
-        } else if (n == 0) {
-            // Timeout, no message received
-            printf("No message received in the last second\n");
-        } else {
-            // Error
-            printf("Error receiving message\n");
+        int packetSize;
+
+        //Wait for incoming requests
+        packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer));
+        if (packetSize > 0){
+            insertLast(stateMachineEngine, eMessage);
+            if(packetSize >= 255){
+                LOG(MESSAGES, ERROR,"Receiving buffer is too small packet has size:%i\n", packetSize);
+            }
+
         }
 
-        ssize_t m = waitForWifiEvent(buffer); // for hostapd events
-        if (m > 0) {
-            printf("[HOSTAPD EVENT] %s\n", buffer);
-            parseWifiEventInfo(buffer);
-        } else if (m < 0) {
-            printf("Error receiving hostapd event\n");
-        }else {
-            printf("No hostapd message received in the last second\n");
+        handleTimers();
+
+        if(stateMachineEngine->size != 0){
+            Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
         }
 
-        getCurrentTime();
-
+        //cliInteraction();
     }
 
     close(sockfd);

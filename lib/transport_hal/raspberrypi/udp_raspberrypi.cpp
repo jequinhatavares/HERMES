@@ -47,7 +47,7 @@ void beginTransport(){
  * @param buffer - A char array to store the received message.
  * @return The number of bytes received, or 0 if the timeout occurred, or -1 if an error happened.
  */
-int receiveMessage(char *buffer) {
+int receiveMessage(char *buffer,size_t bufferSize) {
     struct sockaddr_in senderAddr;
     socklen_t addrLen = sizeof(senderAddr);
     fd_set readfds;
@@ -120,7 +120,4 @@ void sendMessage(int IP[4],const char *message) {
     }
 }
 
-int incomingMessage(){
-    return 0;
-}
 #endif

@@ -171,12 +171,11 @@ State joinNetwork(Event event){
             //Wait for the parent to respond
             startTime = getCurrentTime();
             currentTime = startTime;
-            while(((packetSize = incomingMessage()) == 0) && ((currentTime - startTime) <=1000)){
+            while(((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=1000)){
                 currentTime = getCurrentTime();
             }
 
             if (packetSize > 0){
-                receiveMessage(receiveBuffer);
                 LOG(MESSAGES,INFO,"Parent [Parent Info Response]: %s\n", buffer);
                 if(isMessageValid(PARENT_INFO_RESPONSE,receiveBuffer)){
                     handleParentInfoResponse(receiveBuffer, possibleParents, nrOfPossibleParents);
@@ -224,13 +223,13 @@ State joinNetwork(Event event){
         //Wait for the parent to respond with his routing table information
         startTime = getCurrentTime();
         currentTime = startTime;
-        while(((packetSize = incomingMessage()) == 0) && ((currentTime - startTime) <=2000)){
+        while(((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=2000)){
             currentTime = getCurrentTime();
         }
 
         //Process the routing table update
         if (packetSize > 0){
-            receiveMessage(receiveBuffer);
+            receiveMessage(receiveBuffer,sizeof(receiveBuffer));
             LOG(MESSAGES,INFO,"Parent [Full Routing Update] Response: %s\n", buffer);
             handleFullRoutingTableUpdate(receiveBuffer);
             LOG(NETWORK,INFO,"Routing Table Updated:\n");

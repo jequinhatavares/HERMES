@@ -98,6 +98,8 @@ void registerWifiEventHandler(wifi_event_t event, wifi_event_handler_t handler) 
  * @return void
  */
 void initWifiEventHandlers(){
+    //Start Wi-Fi event listeners
+    startWifiEventListener();
     //Register the Wi-Fi Event Callbacks
     registerWifiEventHandler(WIFI_EVENT_AP_STACONNECTED,onAPModeStationConnectedHandler);
     registerWifiEventHandler(WIFI_EVENT_AP_STADISCONNECTED,onAPModeStationDisconnectedHandler);

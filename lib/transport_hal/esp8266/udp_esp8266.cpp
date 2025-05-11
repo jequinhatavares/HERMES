@@ -30,31 +30,24 @@ void broadcastMessage(){
 }
 
 /**
- * incomingMessage
- * Checks for incoming UDP packets and returns the size of the received packet.
- *
- * @return The size of the incoming packet, or 0 if no packet is available.
- */
-int incomingMessage(){
-    int packetSize = Udp.parsePacket();
-    return packetSize;
-}
-
-/**
  * receiveMessage
  * Reads an incoming UDP message and stores it in the provided buffer.
  *
  * @param buffer A character array to store the received message.
  * @return void
  */
-void receiveMessage(char* buffer){
-    int len = Udp.read(buffer, 255);
-    //IPAddress sender = Udp.remoteIP();
-    //senderIP[0] = sender[0];senderIP[1] = sender[1];
-    //senderIP[2] = sender[2];senderIP[3] = sender[3];
-    if(len>0){
-        buffer[len] = '\0';
+int receiveMessage(char* buffer, size_t bufferSize){
+    int packetSize = Udp.parsePacket();
+    if (0<packetSize<bufferSize){
+        int len = Udp.read(buffer, bufferSize);
+        //IPAddress sender = Udp.remoteIP();
+        //senderIP[0] = sender[0];senderIP[1] = sender[1];
+        //senderIP[2] = sender[2];senderIP[3] = sender[3];
+        if(len>0){
+            buffer[len] = '\0';
+        }
     }
+    return packetSize;
 }
 
 /**
