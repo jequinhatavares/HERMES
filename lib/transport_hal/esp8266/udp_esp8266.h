@@ -4,15 +4,8 @@
 
 #include <WiFiUdp.h>
 
-#define UDP_PORT 12345
+#include "../udp_interface.h"
 
-extern WiFiUDP Udp;
-
-void sendMessage(const int address[4], const char * msg);
-void broadcastMessage();
-int incomingMessage();
-void receiveMessage(char* buffer);
-void begin_transport();
 
 #endif
 #endif //UDP_ESP8266_H

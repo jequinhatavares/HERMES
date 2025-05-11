@@ -1,8 +1,6 @@
 #ifdef ESP32
 #include "udp_esp32.h"
 
-//#include <WiFiUdp.h>
-//#define UDP_PORT 500
 
 WiFiUDP Udp;
 

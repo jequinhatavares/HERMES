@@ -1,3 +1,5 @@
+// defined(ESP32) || defined(ESP8266)
+
 #include "cli.h"
 
 /**
@@ -135,3 +137,4 @@ void cliInteraction(){
         }
     }
 }
+//#endif

@@ -1,27 +1,12 @@
 #if defined(ESP32) || defined(ESP8266)
-//#include <Arduino.h>
 #include <wifi_hal.h>
 #include <transport_hal.h>
-#include <cstdio>
-#include <cstring>
 #include "lifecycle.h"
 #include "cli.h"
 #include "logger.h"
 
 //#include "../lib/wifi_hal/wifi_hal.h"
 //#include "../lib/transport_hal/esp32/udp_esp32.h"
-
-#define MAX_CLIENTS 4
-bool isFirstMessage = true;
-
-
-//void setIPs(int n){
-//    localIP = IPAddress(n,n,n,n);
-//    gateway = IPAddress(n,n,n,n);
-//    subnet = IPAddress(255,255,255,0);
-//    dns = IPAddress(n,n,n,n);
-//}
-
 
 //227:96:230:135 root
 //227:96:237:119
@@ -123,8 +108,8 @@ void loop(){
 }
 #endif
 
-#ifdef PC
-#include <stdio.h>
+#ifdef raspberrypi_3b
+
 int main(){
     printf("Hello World\n");
     return 0;
