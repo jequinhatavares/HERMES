@@ -110,8 +110,60 @@ void loop(){
 
 #ifdef raspberrypi_3b
 
-int main(){
-    printf("Hello World\n");
+#include <stdio.h>
+#include <unistd.h>
+
+#include <../lib/wifi_hal/wifi_raspberrypi.h>
+#include <../lib/transport_hal/udp_raspberrypi.h>
+#include <../lib/time_hal/time_raspberrypi.h>
+
+
+int main() {
+    int fd;
+    char buffer[BUFFER_SIZE];
+    char sendBuffer[50] = "0 Hello from RaspberryPi";
+    int IP[4],MAC[6];
+
+    printf("Hello, world from Raspberry Pi!\n");
+    beginTransport();
+    startWifiEventListener();
+    initWifiEventHandlers();
+
+    initTime();
+    getCurrentTime();
+    searchAP2();
+
+    while (1) {
+        ssize_t n = receiveMessage(buffer);
+        if (n > 0) {
+            printf("[RECEIVED] %s\n", buffer);
+            sendMessage(sendBuffer,remoteIP);
+        } else if (n == 0) {
+            // Timeout, no message received
+            printf("No message received in the last second\n");
+        } else {
+            // Error
+            printf("Error receiving message\n");
+        }
+
+        ssize_t m = waitForWifiEvent(buffer); // for hostapd events
+        if (m > 0) {
+            printf("[HOSTAPD EVENT] %s\n", buffer);
+            parseWifiEventInfo(buffer);
+        } else if (m < 0) {
+            printf("Error receiving hostapd event\n");
+        }else {
+            printf("No hostapd message received in the last second\n");
+        }
+
+        getCurrentTime();
+
+    }
+
+    close(sockfd);
+    close(hostapd_sockfd);
+
     return 0;
 }
+
 #endif
