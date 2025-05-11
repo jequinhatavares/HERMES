@@ -17,6 +17,8 @@
 #include <linux/wireless.h>
 #include <errno.h>
 
+#include "../wifi_interface.h"
+
 #define EVENTS_BUFFER_SIZE 1024
 
 #define MAX_WIFI_EVENTS 2
@@ -39,7 +41,7 @@ extern int hostapd_sockfd;
 
 
 void registerWifiEventHandler(wifi_event_t event, wifi_event_handler_t handler);
-void initWifiEventHandlers();
+//void initWifiEventHandlers();
 
 void startWifiEventListener();
 ssize_t waitForWifiEvent(char *buffer);
@@ -48,14 +50,14 @@ void parseWifiEventInfo(char *msg);
 void onAPModeStationConnectedHandler(wifi_event_info__t *info);
 void onAPModeStationDisconnectedHandler(wifi_event_info__t *info);
 
-void getMyAPIP(int*IP);
-void getMySTAIP(int*IP);
-void getMyMAC(int* MAC);
-void getGatewayIP(int*IP);
+//void getMyAPIP(int*IP);
+//void getMySTAIP(int*IP);
+//void getMyMAC(int* MAC);
+//void getGatewayIP(int*IP);
 void parseWifiScanResults(char *buffer, size_t length);
-void searchAP();
 void searchAP2();
-int numberOfSTAConnected();
+//void searchAP();
+//int numberOfSTAConnected();
 
 
 

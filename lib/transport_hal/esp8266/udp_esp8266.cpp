@@ -58,12 +58,12 @@ void receiveMessage(char* buffer){
 }
 
 /**
- * begin_transport
+ * beginTransport
  * Initializes the UDP transport
  *
  * @return void
  */
-void begin_transport(){
+void beginTransport(){
     Udp.begin(UDP_PORT);
 }
 #endif

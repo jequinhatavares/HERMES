@@ -7,6 +7,11 @@ int hostapd_sockfd;
 wifi_event_handler_t wifi_event_handlers[MAX_WIFI_EVENTS] = {nullptr};
 
 
+void (*parentDisconnectCallback)() = nullptr;
+bool (*isChildRegisteredCallback)(int*) = nullptr;
+
+List reachableNetworks;
+
 /**
  * onSoftAPModeStationConnectedHandler
  * Event handler called when a station (client) successfully connects to the device running in AP mode.
@@ -349,7 +354,7 @@ void parseWifiScanResults(char *buffer, size_t length) {
 }
 
 
-void searchAP(){
+void searchAP(const char* SSID){
     int fd;
     struct iwreq req;
     char buffer[0xFFFF]; // Big buffer for results
@@ -531,6 +536,7 @@ void stopWifiAP() {
 }
 
 const char* getWifiStatus(int Status) {
+    return "NULL";
 }
 
 #endif

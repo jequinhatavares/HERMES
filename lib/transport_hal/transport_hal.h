@@ -13,5 +13,8 @@
 #if defined(NATIVE)
     #include "PC/udp_pc.h"
 #endif
+#if defined(raspberrypi_3b)
+    #include "raspberrypi/udp_raspberrypi.h"
+#endif
 
 #endif //TRANSPORT_HAL_H

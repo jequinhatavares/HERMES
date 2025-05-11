@@ -71,7 +71,7 @@ State initNode(Event event){
 
     startWifiAP(ssid,PASS, localIP, gateway, subnet);
 
-    begin_transport();
+    beginTransport();
 
     numberOfChildren = 0;
 
@@ -156,7 +156,7 @@ State joinNetwork(Event event){
         //Connect to each parent to request their information in order to select the preferred parent.
         for (int i = 0; i < reachableNetworks.len; i++) {
             //LOG(NETWORK,DEBUG,"Before connecting to AP\n");
-            Serial.print("Connecting to AP\n");
+            LOG(NETWORK,INFO,"Connecting to AP\n");
             connectToAP(reachableNetworks.item[i], PASS);
             //LOG(NETWORK,INFO,"→ Connected to Potential Parent: %s\n", getGatewayIP().toString().c_str());
             getMySTAIP(mySTAIP);
@@ -187,7 +187,7 @@ State joinNetwork(Event event){
             }
 
             if(reachableNetworks.len != 1){
-                Serial.print("Disconnecting from AP\n");
+                LOG(NETWORK,INFO,"Disconnecting from AP\n");
                 disconnectFromAP();
             }
 

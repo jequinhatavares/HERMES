@@ -6,7 +6,7 @@
 
 void sendMessage(int address[4], const char * msg);
 int incomingMessage();
-void receiveMessage(char* buffer);
-void begin_transport();
+int receiveMessage(char* buffer);
+void beginTransport();
 
 #endif //UDP_INTERFACE_H

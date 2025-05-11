@@ -33,6 +33,7 @@ void showMenu() {
  * @return void
  */
 void readIPAddress(int *ip, const char *prompt) {
+    #if defined(ESP32) || defined(ESP8266)
     LOG(CLI,INFO,"%s (format: X.X.X.X): ", prompt);
     while (Serial.available() == 0) {} // Wait for input
     String input = Serial.readStringUntil('\n');
@@ -40,6 +41,7 @@ void readIPAddress(int *ip, const char *prompt) {
         LOG(CLI,INFO,"❌ Invalid IP format. Please try again.\n");
         readIPAddress(ip, prompt);
     }
+    #endif
 }
 
 /**
@@ -50,6 +52,7 @@ void readIPAddress(int *ip, const char *prompt) {
  * @return void
  */
 void getDataMessage() {
+    #if defined(ESP32) || defined(ESP8266)
     messageParameters parameters;
     int nextHopIP[4];
     char msg[255]="";
@@ -79,7 +82,7 @@ void getDataMessage() {
     }else {
         LOG(CLI,INFO,"❌ No route found. Message not sent.");
     }
-
+    #endif
 }
 
 /**
@@ -90,6 +93,7 @@ void getDataMessage() {
  * @return void
  */
 void cliInteraction(){
+    #if defined(ESP32) || defined(ESP8266)
     int choice = 0;
     if (Serial.available() > 0){
 
@@ -136,5 +140,6 @@ void cliInteraction(){
             }
         }
     }
+#endif
 }
 //#endif

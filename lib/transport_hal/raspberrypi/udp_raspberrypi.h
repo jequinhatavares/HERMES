@@ -11,16 +11,18 @@
 #include <sys/select.h>
 #include <errno.h>
 
-#define PORT 12345 //careful normal (non-root) users on Linux cannot bind ports < 1024. Port 500 does not work
+//UDP PORT numbers: careful normal (non-root) users on Linux cannot bind ports < 1024. Port 500 does not work
 #define BUFFER_SIZE 1024
 
 extern int sockfd;
 extern int remoteIP[4];
 
+#include "../udp_interface.h"
 
-void beginTransport();
-int receiveMessage(char *buffer);
-void sendMessage(const char *message, int IP[4]);
+
+//void beginTransport();
+//int receiveMessage(char *buffer);
+//void sendMessage(const char *message, int IP[4]);
 
 
 #endif

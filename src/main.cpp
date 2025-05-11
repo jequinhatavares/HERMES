@@ -113,9 +113,9 @@ void loop(){
 #include <stdio.h>
 #include <unistd.h>
 
-#include <../lib/wifi_hal/wifi_raspberrypi.h>
-#include <../lib/transport_hal/udp_raspberrypi.h>
-#include <../lib/time_hal/time_raspberrypi.h>
+#include <../lib/wifi_hal/raspberrypi/wifi_raspberrypi.h>
+#include <../lib/transport_hal/raspberrypi/udp_raspberrypi.h>
+#include <../lib/time_hal/raspberrypi/time_raspberrypi.h>
 
 
 int main() {
@@ -137,7 +137,7 @@ int main() {
         ssize_t n = receiveMessage(buffer);
         if (n > 0) {
             printf("[RECEIVED] %s\n", buffer);
-            sendMessage(sendBuffer,remoteIP);
+            sendMessage(remoteIP, sendBuffer);
         } else if (n == 0) {
             // Timeout, no message received
             printf("No message received in the last second\n");

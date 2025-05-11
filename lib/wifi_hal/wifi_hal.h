@@ -11,6 +11,10 @@
     #include "esp32/wifi_esp32.h"
 #endif
 
+#if defined(raspberrypi_3b)
+    #include "raspberrypi/wifi_raspberrypi.h"
+#endif
+
 //#if defined(raspberrypi_3b)
     //#include "raspberrypi/wifi_raspberrypi.h"
 //#endif

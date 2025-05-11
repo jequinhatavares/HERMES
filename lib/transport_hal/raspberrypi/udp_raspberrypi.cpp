@@ -25,7 +25,7 @@ void beginTransport(){
     memset(&localAddr, 0, sizeof(localAddr));
     localAddr.sin_family = AF_INET;
     localAddr.sin_addr.s_addr = INADDR_ANY;
-    localAddr.sin_port = htons(PORT);
+    localAddr.sin_port = htons(UDP_PORT);
 
     if (bind(sockfd, (struct sockaddr *)&localAddr, sizeof(localAddr)) < 0) {
         perror("bind failed");
@@ -35,7 +35,7 @@ void beginTransport(){
         return;
     }
 
-    printf("UDP node started on port %d\n", PORT);
+    printf("UDP node started on port %d\n", UDP_PORT);
 
 }
 
@@ -94,11 +94,11 @@ int receiveMessage(char *buffer) {
  * @param IP - An array of four integers representing the target IP address.
  * @return void
  */
-void sendMessage(const char *message, int IP[4]) {
+void sendMessage(int IP[4],const char *message) {
     int sentBytes=0;
     struct sockaddr_in targetAddr;
     targetAddr.sin_family = AF_INET;
-    targetAddr.sin_port = htons(PORT);
+    targetAddr.sin_port = htons(UDP_PORT);
     uint32_t addr;
 
 
@@ -120,4 +120,7 @@ void sendMessage(const char *message, int IP[4]) {
     }
 }
 
+int incomingMessage(){
+    return 0;
+}
 #endif

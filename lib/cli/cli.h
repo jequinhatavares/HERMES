@@ -1,4 +1,3 @@
-#if defined(ESP32) || defined(ESP8266)
 
 #include "messages.h"
 #include "transport_hal.h"
@@ -11,4 +10,3 @@ void readIPAddress(int *ip, const char *prompt);
 void getDataMessage();
 void cliInteraction();
 
-#endif

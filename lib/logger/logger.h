@@ -5,7 +5,7 @@
 #include <Arduino.h>
 #endif
 
-#ifdef NATIVE
+#if defined(NATIVE) || defined(raspberrypi_3b)
 #include <cstdio>
 #endif
 
