@@ -2,10 +2,12 @@
 #define MESSAGES_H
 
 #include "../table/table.h"
-//#include <table.h>
+//#include "table.h"
 #include "routing.h"
 #include "logger.h"
-#include "transport_hal.h"
+#include <transport_hal.h>
+//#include <../transport_hal/transport_hal.h>
+//#include "transport_hal.h"
 //#include "lifecycle.h"
 #include "net_viz.h"
 

@@ -3,6 +3,7 @@
 
 #include <transport_hal.h>
 #include <wifi_hal.h>
+//#include "../lib/wifi_hal/wifi_hal.h"
 #include <time_hal.h>
 #include <messages.h>
 #include <routing.h>

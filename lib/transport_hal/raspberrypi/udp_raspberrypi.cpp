@@ -82,6 +82,7 @@ int receiveMessage(char *buffer,size_t bufferSize) {
         ipAddr = ntohl(senderAddr.sin_addr.s_addr);
         remoteIP[0] = (ipAddr >> 24) & 0xFF;remoteIP[1] = (ipAddr >> 16) & 0xFF;
         remoteIP[2] = (ipAddr >> 8) & 0xFF;remoteIP[3] = (ipAddr) & 0xFF;
+        //printf("Message Received: %s\n",buffer);
     }
     return (int) n;
 }

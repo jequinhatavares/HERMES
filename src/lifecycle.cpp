@@ -166,12 +166,13 @@ State joinNetwork(Event event){
             encodeMessage(smallSendBuffer,sizeof (smallSendBuffer),PARENT_DISCOVERY_REQUEST, params);
 
             getGatewayIP(connectedParentIP);
+            LOG(NETWORK,INFO, "Connected to parent: %i.%i.%i.%i\n",connectedParentIP[0],connectedParentIP[1],connectedParentIP[2],connectedParentIP[3]);
             sendMessage(connectedParentIP, smallSendBuffer);
 
             //Wait for the parent to respond
             startTime = getCurrentTime();
             currentTime = startTime;
-            while(((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=1000)){
+            while(((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=3000)){
                 currentTime = getCurrentTime();
             }
 
@@ -194,7 +195,7 @@ State joinNetwork(Event event){
 
         //If none of the parents respond return to search state
         if(nrOfPossibleParents == 0){
-            LOG(NETWORK,DEBUG,"Zero possible parents\n");
+            LOG(NETWORK,DEBUG,"None of the parents Responded\n");
             insertLast(stateMachineEngine, eSearch);
             return sSearch;
         }
@@ -223,7 +224,7 @@ State joinNetwork(Event event){
         //Wait for the parent to respond with his routing table information
         startTime = getCurrentTime();
         currentTime = startTime;
-        while(((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=2000)){
+        while(((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=3000)){
             currentTime = getCurrentTime();
         }
 

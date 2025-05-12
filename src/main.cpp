@@ -1,3 +1,4 @@
+#define raspberrypi_3b
 #if defined(ESP32) || defined(ESP8266)
 #include <wifi_hal.h>
 #include <transport_hal.h>
@@ -105,19 +106,22 @@ void loop(){
 #endif
 
 #ifdef raspberrypi_3b
-
 #include <stdio.h>
 #include <unistd.h>
 
 #include <../lib/wifi_hal/raspberrypi/wifi_raspberrypi.h>
-#include <../lib/transport_hal/raspberrypi/udp_raspberrypi.h>
+//#include <../lib/transport_hal/raspberrypi/udp_raspberrypi.h>
+#include "transport_hal.h"
 #include <../lib/time_hal/raspberrypi/time_raspberrypi.h>
 
 //#include <wifi_hal.h>
 //#include <transport_hal.h>
-#include "lifecycle.h"
+//#include "lifecycle.h"
+#include <../include/lifecycle.h>
 #include "cli.h"
 #include "logger.h"
+
+//pio remote --agent raspberrypi run --force-remote -e raspberrypi_3b
 
 void setup();
 
@@ -132,7 +136,6 @@ void setup(){
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
 
-    initWifiEventHandlers();
     initTime();
 
     iamRoot = true;
@@ -148,8 +151,8 @@ void setup(){
 
 int main() {
 
-    printf("Hello, world from Raspberry Pi!\n");
-
+    printf("Hello, world from Raspberry Pi 12!\n");
+    LOG(NETWORK, INFO, "Logs are working\n");
     setup();
 
     while (1) {
@@ -165,7 +168,10 @@ int main() {
 
         }
 
+        waitForWifiEvent();
+
         handleTimers();
+
 
         if(stateMachineEngine->size != 0){
             Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
@@ -176,8 +182,9 @@ int main() {
 
     close(sockfd);
     close(hostapd_sockfd);
-
     return 0;
+
 }
+
 
 #endif

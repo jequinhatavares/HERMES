@@ -88,7 +88,7 @@ void logSimplePrint(const char* msg){
     #if defined(ESP32) || defined(ESP8266)
         Serial.printf("%s",msg);
     #endif
-    #ifdef NATIVE
+    #if defined(NATIVE) || defined(raspberrypi_3b)
         printf("%s",msg);
     #endif
 }
@@ -136,7 +136,7 @@ void LOG(LogModules module, LogLevels level, const char* format, ...) {
         Serial.printf("%s", buffer);
     #endif
 
-    #if defined(NATIVE)
+    #if defined(NATIVE) || defined(raspberrypi_3b)
         vprintf(format, args);
     #endif
 

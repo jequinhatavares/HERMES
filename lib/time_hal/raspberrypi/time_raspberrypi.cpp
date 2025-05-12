@@ -29,7 +29,7 @@ unsigned long getCurrentTime(){
     long nanoSeconds = now.tv_nsec - startTime.tv_nsec;
     long milliSeconds = (seconds * 1000) + (nanoSeconds / 1000000);
 
-    printf("Current Time: %lu\n",milliSeconds);
+    //printf("Current Time: %lu\n",milliSeconds);
     return (unsigned long) milliSeconds;
 }
 #endif

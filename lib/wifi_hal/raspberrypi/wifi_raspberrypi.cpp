@@ -20,9 +20,19 @@ List reachableNetworks;
  * @return void
  */
 void onAPModeStationConnectedHandler(wifi_event_info__t *info){
+    int lostChildMAC[6];
     printf("\n[WIFI_EVENTS] Station connected ");
     printf("MAC: %i:%i:%i:%i:%i:%i\n",info->MAC[0],info->MAC[1],info->MAC[2],info->MAC[3],info->MAC[4],info->MAC[5]);
-    numberOfSTAConnected();
+    lostChildMAC[0] = info->MAC[0];lostChildMAC[1] = info->MAC[1];
+    lostChildMAC[2] = info->MAC[2];lostChildMAC[3] = info->MAC[3];
+    lostChildMAC[4] = info->MAC[4];lostChildMAC[5] = info->MAC[5];
+    //LOG(NETWORK,DEBUG,"STA ConnectionTime: %lu\n", getCurrentTime());
+
+    if(isChildRegisteredCallback(lostChildMAC)){
+        if(tableFind(lostChildrenTable, (void*)lostChildMAC ) != -1){
+            tableRemove(lostChildrenTable,(void*)lostChildMAC);
+        }
+    }
 }
 
 /**
@@ -35,7 +45,22 @@ void onAPModeStationConnectedHandler(wifi_event_info__t *info){
 void onAPModeStationDisconnectedHandler(wifi_event_info__t *info){
     printf("\n[WIFI_EVENTS] Station Disconnected ");
     printf("MAC: %i:%i:%i:%i:%i:%i\n",info->MAC[0],info->MAC[1],info->MAC[2],info->MAC[3],info->MAC[4],info->MAC[5]);
-    numberOfSTAConnected();
+
+    int lostChildMAC[6];
+    lostChildMAC[0] = info->MAC[0];lostChildMAC[1] = info->MAC[1];
+    lostChildMAC[2] = info->MAC[2];lostChildMAC[3] = info->MAC[3];
+    lostChildMAC[4] = info->MAC[4];lostChildMAC[5] = info->MAC[5];
+    unsigned long currentTime = getCurrentTime();
+    childConnectionStatus lostChild;
+    lostChild.childDisconnectionTime = currentTime;
+
+     if(isChildRegisteredCallback(lostChildMAC)){
+        if(tableFind(lostChildrenTable, (void*)lostChildMAC ) == -1){
+            tableAdd(lostChildrenTable,lostChildMAC, &lostChild);
+        }else{
+            tableUpdate(lostChildrenTable,lostChildMAC, &lostChild);
+        }
+    }
 }
 
 /**
@@ -64,13 +89,10 @@ void parseWifiEventInfo(char *msg){
     }
 
     if (strcmp(eventType,"AP-STA-CONNECTED") == 0){
-        printf("Parsed: AP-STA-CONNECTED\n");
         //wifi_event_handlers[WIFI_EVENT_AP_STACONNECTED](&eventInfo);
     }else if(strcmp(eventType,"EAPOL-4WAY-HS-COMPLETED") == 0){
-        printf("Parsed: EAPOL-4WAY-HS-COMPLETED\n");
         wifi_event_handlers[WIFI_EVENT_AP_STACONNECTED](&eventInfo);
     }else if(strcmp(eventType,"AP-STA-DISCONNECTED") == 0){
-        printf("Parsed: AP-STA-DISCONNECTED\n");
         wifi_event_handlers[WIFI_EVENT_AP_STADISCONNECTED](&eventInfo);
     }else{
         printf("Error in Parsing type: %s\n",eventType);
@@ -164,30 +186,31 @@ void startWifiEventListener(){
  * @param buffer - A character array to store the received event data.
  * @return The number of bytes received, 0 if the timeout occurred, or -1 if an error happened.
  */
-ssize_t waitForWifiEvent(char *buffer) {
+void waitForWifiEvent() {
     fd_set readfds;
     struct timeval timeOut;
+    char buffer[200];
 
     FD_ZERO(&readfds);
     FD_SET(hostapd_sockfd, &readfds);
 
-    timeOut.tv_sec = 5;
+    timeOut.tv_sec = 1;
     timeOut.tv_usec = 0;
 
     int ready = select(hostapd_sockfd + 1, &readfds, NULL, NULL, &timeOut);
 
     if (ready < 0) {
         perror("hostapd select failed");
-        return -1;
+        return;
     } else if (ready == 0) {
-        return 0;
+        return;
     }
 
     ssize_t n = recv(hostapd_sockfd, buffer, EVENTS_BUFFER_SIZE - 1, 0);
-    if (n >= 0) {
-        buffer[n] = '\0';
+    if (n > 0) {
+        //buffer[n] = '\0';
+        parseWifiEventInfo(buffer);
     }
-    return n;
 }
 
 /**
@@ -315,9 +338,7 @@ void getMyMAC(int* MAC){
         for (int i = 0; i < 6; i++) {
             MAC[i] = (unsigned char) ifr.ifr_hwaddr.sa_data[i];
         }
-
-        printf("MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n",
-               MAC[0], MAC[1], MAC[2], MAC[3], MAC[4], MAC[5]);
+        //printf("MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n",MAC[0], MAC[1], MAC[2], MAC[3], MAC[4], MAC[5]);
     } else {
         perror("ioctl"); // If ioctl failed, print an error message
     }
@@ -521,6 +542,10 @@ void disconnectFromAP() {
 }
 
 void startWifiAP(const char* SSID, const char* Pass, int* localIP, int* gateway, int* subnet){
+    //Init Wifi Event Handlers
+    initWifiEventHandlers();
+    //Init the table that are going to save the lost children information
+    initAuxTables();
 
 }
 

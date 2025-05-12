@@ -44,7 +44,7 @@ void registerWifiEventHandler(wifi_event_t event, wifi_event_handler_t handler);
 //void initWifiEventHandlers();
 
 void startWifiEventListener();
-ssize_t waitForWifiEvent(char *buffer);
+void waitForWifiEvent();
 void parseWifiEventInfo(char *msg);
 
 void onAPModeStationConnectedHandler(wifi_event_info__t *info);
