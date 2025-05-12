@@ -1,4 +1,4 @@
-#define raspberrypi_3b
+//#define raspberrypi_3b
 #if defined(ESP32) || defined(ESP8266)
 #include <wifi_hal.h>
 #include <transport_hal.h>
