@@ -307,7 +307,15 @@ void getGatewayIP(int*IP){
             if (destination == 0) { // destination 0.0.0.0 means default route
                 struct in_addr gw_addr;
                 gw_addr.s_addr = gateway;
-                printf("Gateway for interface %s is: %s\n", iface, inet_ntoa(gw_addr));
+
+                // Convert IP from binary to string
+                const char *ip_str = inet_ntoa(gw_addr);
+                printf("Gateway for interface %s is: %s\n", iface, ip_str);
+
+                // Parse into IP[4]
+                if (sscanf(ip_str, "%d.%d.%d.%d", &IP[0], &IP[1], &IP[2], &IP[3]) != 4) {
+                    fprintf(stderr, "Failed to parse gateway IP string.\n");
+                }
                 break;
             }
         }
@@ -377,7 +385,7 @@ void parseWifiScanResults(char *buffer, size_t length) {
 }
 
 
-void searchAP(const char* SSID){
+void searchAP2(const char* SSID){
     int fd;
     struct iwreq req;
     char buffer[0xFFFF]; // Big buffer for results
@@ -432,9 +440,10 @@ void searchAP(const char* SSID){
  * @params SSID - The char array holding the SSID used to filter scan results.
  * @return void
  */
-void searchAP2(){
+void searchAP(const char* SSID){
     char buffer[1024];
     FILE *fp;
+    const char* rSSID = "RaspiNet";
 
     // Open a pipe to execute the 'iwlist' command and get the scan results
     fp = popen("iwlist wlan0 scan 2>/dev/null", "r");
@@ -448,11 +457,19 @@ void searchAP2(){
         // Look for lines that start with "ESSID"
         if (strstr(buffer, "ESSID") != NULL) {
             // Extract and print the SSID
-            char ssid[256];
-            if (sscanf(buffer, " ESSID:\"%255[^\"]\"", ssid) == 1) {
-                printf("SSID: %s\n", ssid);
+            char current_ssid[256];
+            if (sscanf(buffer, " ESSID:\"%255[^\"]\"", current_ssid) == 1) {
+                printf("SSID: %s\n", current_ssid);
             }
-        }
+
+            //Check if the AP corresponds to a node of the mesh network
+            if(strstr(current_ssid, SSID) == NULL && strstr(current_ssid, rSSID) == NULL){
+                continue;
+            }
+
+            strcpy(reachableNetworks.item[reachableNetworks.len], current_ssid);
+            reachableNetworks.len++;
+            }
     }
 
     // Close the file pointer after reading

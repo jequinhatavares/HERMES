@@ -138,7 +138,7 @@ void setup(){
 
     initTime();
 
-    iamRoot = true;
+    //iamRoot = true;
 
     Advance(SM, eSuccess);//Init
 
