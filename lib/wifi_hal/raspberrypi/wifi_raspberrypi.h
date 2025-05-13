@@ -21,18 +21,19 @@
 
 #define EVENTS_BUFFER_SIZE 1024
 
-#define MAX_WIFI_EVENTS 2
+#define MAX_WIFI_EVENTS 4
 
 typedef enum wifi_event_t{
     WIFI_EVENT_AP_STACONNECTED,
     WIFI_EVENT_AP_STADISCONNECTED,
-    //WIFI_EVENT_STA_CONNECTED,
-    //WIFI_EVENT_STA_DISCONNECTED,
+    WIFI_EVENT_STA_CONNECTED,
+    WIFI_EVENT_STA_DISCONNECTED,
 } wifi_event_t;
 
 typedef struct wifi_event_info__t{
     int IP[4];
     int MAC[6];
+    int reason;
 }wifi_event_info__t;
 
 typedef void (*wifi_event_handler_t)(wifi_event_info__t *info);

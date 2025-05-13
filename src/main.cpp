@@ -158,6 +158,8 @@ int main() {
     while (1) {
         int packetSize;
 
+        waitForWifiEvent();
+
         //Wait for incoming requests
         packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer));
         if (packetSize > 0){
@@ -168,10 +170,7 @@ int main() {
 
         }
 
-        waitForWifiEvent();
-
         handleTimers();
-
 
         if(stateMachineEngine->size != 0){
             Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));

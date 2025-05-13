@@ -2,6 +2,7 @@
 #include "wifi_raspberrypi.h"
 
 int hostapd_sockfd;
+int wpa_sockfd;
 
 //Contains the function pointes to each Wi-Fi event
 wifi_event_handler_t wifi_event_handlers[MAX_WIFI_EVENTS] = {nullptr};
@@ -9,6 +10,9 @@ wifi_event_handler_t wifi_event_handlers[MAX_WIFI_EVENTS] = {nullptr};
 
 void (*parentDisconnectCallback)() = nullptr;
 bool (*isChildRegisteredCallback)(int*) = nullptr;
+
+unsigned long lastParentDisconnectionTime = 0 ;
+int parentDisconnectionCount = 0;
 
 List reachableNetworks;
 
@@ -62,7 +66,55 @@ void onAPModeStationDisconnectedHandler(wifi_event_info__t *info){
         }
     }
 }
+/**
+ * onStationModeConnectedHandler
+ * Event handler called when the device running in Station (STA) mode successfully connects to an Access Point (AP).
+ *
+ * @param event The event type indicating the connection to the AP.
+ * @param info Additional event information
+ * @return void
+ */
+void onStationModeConnectedHandler(wifi_event_info__t *info) {
+    printf("\n[WIFI_EVENTS] Connected to AP\n");
+    //WiFi.begin(SSID_PREFIX,PASS);
+    parentDisconnectionCount = 0; // Reset the parent disconnection Counter
+    //LOG(NETWORK,DEBUG,"Reset the parentDisconnectionCount: %i\n", parentDisconnectionCount);
+}
 
+/**
+ * onStationModeDisconnectedHandler
+ * Event handler called when the device running in Station (STA) mode disconnects from an Access Point (AP).
+ *
+ * @param event The event type indicating the disconnection from the AP.
+ * @param info Additional event information
+ * @return void
+ */
+void onStationModeDisconnectedHandler(wifi_event_info__t *info){
+    printf("\n[WIFI_EVENTS] Disconnected from AP. Reason: %u\n",info->reason);
+
+    unsigned long currentTime = getCurrentTime();
+
+    // On first disconnection, initialize the timer to the current time.
+    // This prevents missing future disconnections after a long inactive period.
+    if (parentDisconnectionCount == 0) lastParentDisconnectionTime = currentTime;
+
+    // Check if the interval since the last disconnection is short enough
+    // to avoid incrementing the counter for isolated or sporadic events.
+    if(currentTime - lastParentDisconnectionTime <=3000){
+        parentDisconnectionCount++;
+        //LOG(NETWORK,DEBUG,"Incremented the parentDisconnectionCount: %i\n", parentDisconnectionCount);
+
+        // When repeated disconnections surpass the defined threshold queue an event to initiate parent recovery procedures
+        if(parentDisconnectionCount >= disconnectionThreshold) {
+            //LOG(NETWORK,DEBUG,"parentDisconnectionCount above the threshold\n");
+            // Callback code, global func pointer defined in wifi_hal.h:22 and initialized in lifecycle.cpp:48
+            if (parentDisconnectCallback != nullptr){
+                parentDisconnectCallback();
+            }
+        }
+    }
+
+}
 /**
  * parseWifiEventInfo
  * Parses a Wi-Fi event message and extracts relevant information such as event type and MAC address.
@@ -77,25 +129,57 @@ void parseWifiEventInfo(char *msg){
     unsigned int unsignedMAC[6];
     wifi_event_info__t eventInfo;
 
-    parsedFields = sscanf(msg,"<%i>%s %x:%x:%x:%x:%x:%x",&number,eventType,&unsignedMAC[0],&unsignedMAC[1],&unsignedMAC[2],&unsignedMAC[3],&unsignedMAC[4],&unsignedMAC[5]);
+    parsedFields = sscanf(msg,"<%i>%s ",&number,eventType);
 
-    if(parsedFields != 8){
-        printf("Error: sscanf returned wrong number of parsed values: %i\n",parsedFields);
+    if(parsedFields != 2){
+        //printf("Error: sscanf returned wrong number of parsed values: %i\n",parsedFields);
         return;
-    }
-    for (int i = 0; i < 6; i++) {
-        MAC[i] = (int)unsignedMAC[i];
-        eventInfo.MAC[i]=MAC[i];
     }
 
     if (strcmp(eventType,"AP-STA-CONNECTED") == 0){
         //wifi_event_handlers[WIFI_EVENT_AP_STACONNECTED](&eventInfo);
     }else if(strcmp(eventType,"EAPOL-4WAY-HS-COMPLETED") == 0){
+
+        parsedFields = sscanf(msg,"<%i>%s %x:%x:%x:%x:%x:%x",&number,eventType,&unsignedMAC[0],&unsignedMAC[1],&unsignedMAC[2],&unsignedMAC[3],&unsignedMAC[4],&unsignedMAC[5]);
+        for (int i = 0; i < 6; i++) {
+            MAC[i] = (int)unsignedMAC[i];
+            eventInfo.MAC[i]=MAC[i];
+        }
         wifi_event_handlers[WIFI_EVENT_AP_STACONNECTED](&eventInfo);
+
     }else if(strcmp(eventType,"AP-STA-DISCONNECTED") == 0){
+
+        parsedFields = sscanf(msg,"<%i>%s %x:%x:%x:%x:%x:%x",&number,eventType,&unsignedMAC[0],&unsignedMAC[1],&unsignedMAC[2],&unsignedMAC[3],&unsignedMAC[4],&unsignedMAC[5]);
+        for (int i = 0; i < 6; i++) {
+            MAC[i] = (int)unsignedMAC[i];
+            eventInfo.MAC[i]=MAC[i];
+        }
         wifi_event_handlers[WIFI_EVENT_AP_STADISCONNECTED](&eventInfo);
+
+    }else if(strcmp(eventType,"CTRL-EVENT-CONNECTED") == 0){
+        //<3>CTRL-EVENT-CONNECTED - Connection to ce:50:e3:60:e6:87 completed [id=0 id_str=]
+        parsedFields = sscanf(msg,"<%i>%s - Connection to %x:%x:%x:%x:%x:%x",&number,eventType,&unsignedMAC[0],&unsignedMAC[1],&unsignedMAC[2],&unsignedMAC[3],&unsignedMAC[4],&unsignedMAC[5]);
+        for (int i = 0; i < 6; i++) {
+            MAC[i] = (int)unsignedMAC[i];
+            eventInfo.MAC[i]=MAC[i];
+        }
+        wifi_event_handlers[WIFI_EVENT_STA_CONNECTED](&eventInfo);
+
+
+    }else if(strcmp(eventType,"CTRL-EVENT-DISCONNECTED") == 0){
+        //<3>CTRL-EVENT-DISCONNECTED bssid=ce:50:e3:60:e6:87 reason=3 locally_generated=1
+        int reason;
+        parsedFields = sscanf(msg,"<%i>%s bssid=%x:%x:%x:%x:%x:%x reason=%i",&number,eventType,&unsignedMAC[0],&unsignedMAC[1],&unsignedMAC[2],&unsignedMAC[3],&unsignedMAC[4],&unsignedMAC[5],&reason);
+        for (int i = 0; i < 6; i++) {
+            MAC[i] = (int)unsignedMAC[i];
+            eventInfo.MAC[i]=MAC[i];
+        }
+        eventInfo.reason = reason;
+        wifi_event_handlers[WIFI_EVENT_STA_DISCONNECTED](&eventInfo);
+
     }else{
-        printf("Error in Parsing type: %s\n",eventType);
+        //printf("Error in Parsing type: %s\n",eventType);
+        return;
     }
 }
 
@@ -125,6 +209,8 @@ void initWifiEventHandlers(){
     //Register the Wi-Fi Event Callbacks
     registerWifiEventHandler(WIFI_EVENT_AP_STACONNECTED,onAPModeStationConnectedHandler);
     registerWifiEventHandler(WIFI_EVENT_AP_STADISCONNECTED,onAPModeStationDisconnectedHandler);
+    registerWifiEventHandler(WIFI_EVENT_STA_CONNECTED,onStationModeConnectedHandler);
+    registerWifiEventHandler(WIFI_EVENT_STA_DISCONNECTED,onStationModeDisconnectedHandler);
 }
 
 /**
@@ -135,9 +221,12 @@ void initWifiEventHandlers(){
  */
 void startWifiEventListener(){
     struct sockaddr_un localAddr, remoteAddr;
-    const char *localSocketPath = "/tmp/hostap_cli_client";
+    const char *localAPSocketPath = "/tmp/hostap_cli_client";
     const char *hostapdSocketPath = "/var/run/hostapd/uap0";
+    const char *localSTASocketPath = "/tmp/hostap_cli_client";
+    const char *wpaSupplicantSocketPath = "/var/run/wpa_supplicant/wlan0";
 
+    // hostapd LISTENER
     hostapd_sockfd = socket(AF_UNIX, SOCK_DGRAM, 0);
     if (hostapd_sockfd < 0) {
         perror("socket failed");
@@ -146,10 +235,10 @@ void startWifiEventListener(){
 
     memset(&localAddr, 0, sizeof(localAddr));
     localAddr.sun_family = AF_UNIX;
-    strncpy(localAddr.sun_path, localSocketPath, sizeof(localAddr.sun_path) - 1);
+    strncpy(localAddr.sun_path, localAPSocketPath, sizeof(localAddr.sun_path) - 1);
 
     // Remove if socket file already exists
-    unlink(localSocketPath);
+    unlink(localAPSocketPath);
 
     if (bind(hostapd_sockfd, (struct sockaddr *)&localAddr, sizeof(localAddr)) < 0) {
         perror("bind failed");
@@ -176,6 +265,42 @@ void startWifiEventListener(){
     }
 
     printf("Hostapd transport initialized and attached!\n");
+
+    // WPA_SUPPLICANT LISTENER
+    wpa_sockfd = socket(AF_UNIX, SOCK_DGRAM, 0);
+    if (wpa_sockfd < 0) {
+        perror("wpa_supplicant socket failed");
+        exit(1);
+    }
+
+    memset(&localAddr, 0, sizeof(localAddr));
+    localAddr.sun_family = AF_UNIX;
+    strncpy(localAddr.sun_path, localSTASocketPath, sizeof(localAddr.sun_path) - 1);
+    unlink(localSTASocketPath);
+
+    if (bind(wpa_sockfd, (struct sockaddr *)&localAddr, sizeof(localAddr)) < 0) {
+        perror("wpa_supplicant bind failed");
+        close(wpa_sockfd);
+        exit(1);
+    }
+
+    memset(&remoteAddr, 0, sizeof(remoteAddr));
+    remoteAddr.sun_family = AF_UNIX;
+    strncpy(remoteAddr.sun_path, wpaSupplicantSocketPath, sizeof(remoteAddr.sun_path) - 1);
+
+    if (connect(wpa_sockfd, (struct sockaddr *)&remoteAddr, sizeof(remoteAddr)) < 0) {
+        perror("wpa_supplicant connect failed");
+        close(wpa_sockfd);
+        exit(1);
+    }
+
+    if (send(wpa_sockfd, attach_cmd, strlen(attach_cmd), 0) < 0) {
+        perror("wpa_supplicant send ATTACH failed");
+        close(wpa_sockfd);
+        exit(1);
+    }
+
+    printf("Wpa_supplicant transport initialized and attached!\n");
 }
 
 /**
@@ -190,14 +315,19 @@ void waitForWifiEvent() {
     fd_set readfds;
     struct timeval timeOut;
     char buffer[200];
+    int maxfd;
 
     FD_ZERO(&readfds);
     FD_SET(hostapd_sockfd, &readfds);
+    FD_SET(wpa_sockfd, &readfds);
 
     timeOut.tv_sec = 1;
     timeOut.tv_usec = 0;
 
-    int ready = select(hostapd_sockfd + 1, &readfds, NULL, NULL, &timeOut);
+    // Definir o maior descritor para o select
+    maxfd = (hostapd_sockfd > wpa_sockfd) ? hostapd_sockfd : wpa_sockfd;
+
+    int ready = select(maxfd + 1, &readfds, NULL, NULL, &timeOut);
 
     if (ready < 0) {
         perror("hostapd select failed");
@@ -206,10 +336,22 @@ void waitForWifiEvent() {
         return;
     }
 
-    ssize_t n = recv(hostapd_sockfd, buffer, EVENTS_BUFFER_SIZE - 1, 0);
-    if (n > 0) {
-        //buffer[n] = '\0';
-        parseWifiEventInfo(buffer);
+    // Verify hostapd events
+    if (FD_ISSET(hostapd_sockfd, &readfds)) {
+        ssize_t n = recv(hostapd_sockfd, buffer, sizeof(buffer) - 1, 0);
+        if (n > 0) {
+            buffer[n] = '\0';
+            parseWifiEventInfo(buffer);
+        }
+    }
+
+    // Verify wpa supplicant events
+    if (FD_ISSET(wpa_sockfd, &readfds)) {
+        ssize_t n = recv(wpa_sockfd, buffer, sizeof(buffer) - 1, 0);
+        if (n > 0) {
+            buffer[n] = '\0';
+            parseWifiEventInfo(buffer);
+        }
     }
 }
 
@@ -567,16 +709,13 @@ void startWifiAP(const char* SSID, const char* Pass, int* localIP, int* gateway,
 }
 
 void startWifiSTA(int* localIP, int* gateway, int* subnet, int* dns){
-
-
 }
 
 void changeWifiMode(int mode) {
 }
 
 
-
-void stopWifiAP() {
+void stopWifiAP(){
 }
 
 const char* getWifiStatus(int Status) {
