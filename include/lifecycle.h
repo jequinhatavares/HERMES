@@ -32,7 +32,8 @@ State childRecovery(Event event);
 #define sHandleMessages ((State) 4)
 #define sParentRecovery ((State) 5)
 #define sChildRecovery ((State) 6)
-#define sError ((State) 7)
+#define sForceRestart ((State) 7)
+#define sError ((State) 8)
 
 #define eSuccess ((Event) 0)
 #define eSearch ((Event) 1)
@@ -41,6 +42,7 @@ State childRecovery(Event event);
 #define eLostParentConnection ((Event) 4)
 #define eParentUnreachable ((Event) 5)
 #define eLostChildConnection ((Event) 6)
+#define eRestart ((Event) 7)
 
 extern StateMachine* SM;
 extern CircularBuffer* stateMachineEngine;
@@ -50,6 +52,8 @@ extern int gateway[4];
 extern int subnet[4];
 extern int dns[4];
 
+extern int consecutiveSearchCount;
+extern bool lostParent;
 
 void parseMAC(const char* macStr, int* macArray);
 void setIPs(const int* MAC);

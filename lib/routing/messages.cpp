@@ -98,19 +98,24 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
             snprintf(msg,bufferSize,"%i %i.%i.%i.%i",type,myIP[0],myIP[1],myIP[2],myIP[3]);
             break;
 
+        case PARENT_RESET_NOTIFICATION:
+            //8 [senderIP]
+            snprintf(msg,bufferSize,"%i",type);
+            break;
+
         case DEBUG_MESSAGE:
-            //9 [DEBUG message payload]
+            //10 [DEBUG message payload]
             snprintf(msg,bufferSize,"%i %s\n",type,parameters.payload);
             break;
 
         case DATA_MESSAGE:
-            //9 [message payload] [source node IP] [destination node IP]
+            //11 [message payload] [source node IP] [destination node IP]
             snprintf(msg,bufferSize,"%i %s %i.%i.%i.%i %i.%i.%i.%i",type,parameters.payload,parameters.IP1[0],parameters.IP1[1],
                     parameters.IP1[2],parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
 
         case ACK_MESSAGE:
-            //10 [source node IP] [destination node IP]
+            //12 [source node IP] [destination node IP]
             snprintf(msg,bufferSize,"%i %i.%i.%i.%i %i.%i.%i.%i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],
                     parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
@@ -203,6 +208,11 @@ bool isMessageValid(int expectedMessageType,char* msg){
             return true;
             break;
         }
+        case PARENT_RESET_NOTIFICATION:
+            //8 [senderIP]
+            return(sscanf(msg,"%i",type)== 1);
+            break;
+
         case DEBUG_MESSAGE: {
             /***int dummy;
             char payload[100];
@@ -458,6 +468,12 @@ void handleTopologyBreakAlert(char *msg){
     sscanf(msg, "%d %d.%d.%d.%d",&type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
     // Propagate the message to my children
     propagateMessage(msg, senderIP);
+}
+
+void handleParentResetNotification(char *msg){
+
+    // Permanently disconnect from the parent node
+    //disconnectFromAP();
 }
 /**
  * handleDebugMessage

@@ -1,14 +1,16 @@
 #ifndef MESSAGES_H
 #define MESSAGES_H
 
-#include "../table/table.h"
 //#include "table.h"
+#include "../table/table.h"
 #include "routing.h"
-#include "logger.h"
+//#include <wifi_hal.h>
 #include <transport_hal.h>
+//#include "../wifi_hal/wifi_hal.h"
 //#include <../transport_hal/transport_hal.h>
 //#include "transport_hal.h"
 //#include "lifecycle.h"
+#include "logger.h"
 #include "net_viz.h"
 
 typedef struct messageParameters{
@@ -31,10 +33,11 @@ typedef enum messageType{
     PARENT_LIST_ADVERTISEMENT,//5
     PARENT_REASSIGNMENT_COMMAND, //6
     TOPOLOGY_BREAK_ALERT, //7
-    DEBUG_REGISTRATION_REQUEST, //8
-    DEBUG_MESSAGE,//9
-    DATA_MESSAGE,//10
-    ACK_MESSAGE,//11
+    PARENT_RESET_NOTIFICATION,//8
+    DEBUG_REGISTRATION_REQUEST,//9
+    DEBUG_MESSAGE,//10
+    DATA_MESSAGE,//11
+    ACK_MESSAGE,//12
 }messageType;
 
 extern char receiveBuffer[256];
@@ -52,6 +55,7 @@ void handleChildRegistrationRequest(char * msg);
 void handleFullRoutingTableUpdate(char *msg);
 void handlePartialRoutingUpdate(char *msg);
 void handleTopologyBreakAlert(char *msg);
+void handleParentResetNotification(char *msg);
 void handleDebugMessage(char* msg);
 void handleDataMessage(char *msg);
 void handleAckMessage(char *msg);

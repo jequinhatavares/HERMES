@@ -6,6 +6,9 @@ int subnet[4];
 int dns[4];
 
 
+int consecutiveSearchCount = 0;
+bool lostParent = false;
+
 StateMachine SM_ = {
         .current_state = sInit,
         .TransitionTable = {
@@ -132,6 +135,13 @@ State search(Event event){
         }
     }
 
+    if(lostParent == true){
+        if(consecutiveSearchCount == 3){
+            insertFirst(stateMachineEngine, eRestart);
+            return sForceRestart;
+        }
+        consecutiveSearchCount ++;
+    }
     //If the search after filtering returns a non-empty list, proceed to the choose parent state
     if(reachableNetworks.len > 0){
         insertFirst(stateMachineEngine, eSuccess);
@@ -301,6 +311,12 @@ State handleMessages(Event event){
             handleTopologyBreakAlert(receiveBuffer);
             break;
 
+        case PARENT_RESET_NOTIFICATION:
+            LOG(MESSAGES,INFO,"Received [Parent Reset Notification] message: \"%s\"\n", receiveBuffer);
+            handleParentResetNotification(receiveBuffer);
+            insertLast(stateMachineEngine, eLostParentConnection);
+            break;
+
         case DEBUG_REGISTRATION_REQUEST:
             if(iamRoot)handleDebugRegistrationRequest(receiveBuffer);
             break;
@@ -325,35 +341,32 @@ State handleMessages(Event event){
 
 State parentRecovery(Event event){
     int* STAIP= nullptr;
-    char message[50];
     messageParameters parameters;
 
     LOG(STATE_MACHINE,INFO,"Parent Recovery State\n");
 
-    encodeMessage(smallSendBuffer,sizeof(smallSendBuffer),TOPOLOGY_BREAK_ALERT,parameters);
+    // Disconnect permanently from the current parent to stop disconnection events and enable connection to a new one
+    LOG(NETWORK,INFO,"Disconnecting permanently from parent node\n");
+    disconnectFromAP();
 
-    //TODO tell my children that i lost connection to my parent
+    //Tell my children that i lost connection to my parent
+    encodeMessage(smallSendBuffer,sizeof(smallSendBuffer),TOPOLOGY_BREAK_ALERT,parameters);
     LOG(MESSAGES,INFO,"Informing my children about the lost connection\n");
     for (int i = 0; i < childrenTable->numberOfItems; ++i) {
         STAIP = (int*) findNode(childrenTable, (int*) childrenTable->table[i].key);
         if(STAIP != nullptr){
-            sendMessage(STAIP,message);
+            sendMessage(STAIP,smallSendBuffer);
         }
         else{
             LOG(NETWORK, ERROR, "❌ Valid entry in children table contains a pointer to null instead of the STA IP.\n");
         }
     }
 
-    //TODO try to contact with my parent
-    //TODO wait for my parent response
-
-    // Disconnect permanently from the current parent to stop disconnection events and enable connection to a new one
-    LOG(NETWORK,INFO,"Disconnecting permanently from parent node\n");
-    disconnectFromAP();
-
     //Increment mySequence Number
     mySequenceNumber = mySequenceNumber + 2;
     updateMySequenceNumber(mySequenceNumber);
+
+    lostParent = true;
 
     insertLast(stateMachineEngine, eSearch);
     return sSearch;
@@ -440,6 +453,47 @@ State childRecovery(Event event){
     //insertLast(stateMachineEngine, eSearch);
     return sIdle;
 }
+
+State forceRestart(Event event){
+    int *childAPIP, *childSTAIP, *nodeIP;
+    int invalidIP[4] = {-1,-1,-1,-1};
+    messageParameters parameters;
+    routingTableEntry me;
+    // If the node has children, notify them that its parent (this node) is restarting.
+    // This means it will no longer be their parent, and they should start searching for a new one.
+    for (int i = 0; i < childrenTable->numberOfItems; ++i) {
+        childAPIP = (int*) tableKey(childrenTable, i);
+        childSTAIP = (int*) tableRead(childrenTable,childAPIP);
+        // Notify the child with a message that the node is restarting
+        encodeMessage(smallSendBuffer, sizeof(smallSendBuffer),PARENT_RESET_NOTIFICATION,parameters);
+        sendMessage(childSTAIP,smallSendBuffer);
+    }
+
+    // Clear all entries from the children table
+    tableClean(childrenTable);
+
+    // Remove all routing entries, keeping only the node's own entry intact
+    tableClean(routingTable);
+    //Add myself again to my routing table
+    me.nextHopIP[0] = myIP[0]; me.nextHopIP[1] = myIP[1];me.nextHopIP[2] = myIP[2]; me.nextHopIP[3] = myIP[3];
+    me.hopDistance = 0;
+    me.sequenceNumber = mySequenceNumber;
+    tableAdd(routingTable,myIP,&me);
+
+    // Clear the stored parent IP
+    assignIP(parent,invalidIP);
+
+    // Clear the rootHopDistance and the number of children variables.
+    rootHopDistance = -1;
+    numberOfChildren = 0;
+
+    lostParent = false;
+    consecutiveSearchCount = 0;
+
+    insertLast(stateMachineEngine, eSearch);
+    return sSearch;
+}
+
 void handleTimers(){
     int* MAC;
     messageParameters parameters;
