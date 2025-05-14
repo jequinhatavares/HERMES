@@ -3,6 +3,8 @@
 #include <string.h>
 #include "messages.h"
 
+//pio test -e native -f "test_messages" -v
+
 void test_pdr_correct(){
     char msg[20] = "";
     messageParameters params;
@@ -25,7 +27,7 @@ void test_pir_incorrect(){
 
 void test_data_messages_encoding(){
     char msg[20] = "Hello", messageBuffer[100];
-    char correctMessage[100]= "10 Hello 1.1.1.1 2.2.2.2";
+    char correctMessage[100]= "11 Hello 1.1.1.1 2.2.2.2";
     messageParameters params;
     params.IP1[0] = 1; params.IP1[1] = 1; params.IP1[2] = 1; params.IP1[3] = 1;
     params.IP2[0] = 2; params.IP2[1] = 2; params.IP2[2] = 2; params.IP2[3] = 2;
@@ -117,18 +119,23 @@ void test_FRTU_messages_invalid_encoding(){
 
 void test_DATA_messages_invalid_encoding(){
 
-    char incorrectMessage[100]= "11 HELLO 1.1.1.1 2.2.2.2";
+    char incorrectMessage[100]= "12 HELLO 1.1.1.1 2.2.2.2";
     TEST_ASSERT(isMessageValid(DATA_MESSAGE,incorrectMessage) == false);
 
-    char incorrectMessage2[100]= "10 1.1.1.1 2.2.2.2 HELLO";
+    char incorrectMessage2[100]= "11 1.1.1.1 2.2.2.2 HELLO";
     TEST_ASSERT(isMessageValid(DATA_MESSAGE,incorrectMessage2) == false);
 
-    char incorrectMessage3[100]= "10 HELLO 1.1.1.1";
+    char incorrectMessage3[100]= "11 HELLO 1.1.1.1";
     TEST_ASSERT(isMessageValid(DATA_MESSAGE,incorrectMessage3) == false);
 
-    char correctMessage[100]= "10 HELLO 1.1.1.1 2.2.2.2";
+    char correctMessage[100]= "11 HELLO 1.1.1.1 2.2.2.2";
     TEST_ASSERT(isMessageValid(DATA_MESSAGE,correctMessage) == true);
 
+}
+
+void test_message_validity_with_invalid_IP(){
+    char correctMessage[100]= "0 -1.-1.-1.-1";
+    TEST_ASSERT(isMessageValid(PARENT_INFO_RESPONSE,correctMessage) == false);
 }
 void setUp(void){}
 
@@ -143,5 +150,6 @@ int main(int argc, char** argv){
     RUN_TEST(test_PIR_messages_invalid_encoding);
     RUN_TEST(test_FRTU_messages_invalid_encoding);
     RUN_TEST(test_DATA_messages_invalid_encoding);
+    RUN_TEST(test_message_validity_with_invalid_IP);
     UNITY_END();
 }

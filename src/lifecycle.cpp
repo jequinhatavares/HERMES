@@ -540,10 +540,6 @@ void handleTimers(){
  * @return void
  */
 void parseMAC(const char* macStr, int* macArray) {
-    //sscanf(macStr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
-    //       &macArray[0], &macArray[1], &macArray[2],
-    //       &macArray[3], &macArray[4], &macArray[5]);
-    //Serial.printf("Parsed MAC Bytes: %d:%d:%d:%d:%d:%d\n",macArray[0],macArray[1], macArray[2], macArray[3], macArray[4], macArray[5]);
     unsigned int bytes[6];
     sscanf(macStr, "%x:%x:%x:%x:%x:%x",&bytes[0], &bytes[1], &bytes[2],&bytes[3], &bytes[4], &bytes[5]);
 
