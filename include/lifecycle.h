@@ -23,6 +23,7 @@ State idle(Event event);
 State handleMessages(Event event);
 State parentRecovery(Event event);
 State childRecovery(Event event);
+State forceRestart(Event event);
 
 //s before the name means state and e means event
 #define sInit ((State) 0)

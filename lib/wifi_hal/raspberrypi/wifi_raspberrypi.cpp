@@ -10,6 +10,8 @@ wifi_event_handler_t wifi_event_handlers[MAX_WIFI_EVENTS] = {nullptr};
 
 void (*parentDisconnectCallback)() = nullptr;
 bool (*isChildRegisteredCallback)(int*) = nullptr;
+void (*forceRestartCallback)() = nullptr;
+
 
 unsigned long lastParentDisconnectionTime = 0 ;
 int parentDisconnectionCount = 0;

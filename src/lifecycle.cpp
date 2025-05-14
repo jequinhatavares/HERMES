@@ -19,6 +19,7 @@ StateMachine SM_ = {
                 [sHandleMessages] = handleMessages,
                 [sParentRecovery] = parentRecovery,
                 [sChildRecovery] = childRecovery,
+                [sForceRestart] = forceRestart,
         },
 };
 
@@ -33,7 +34,10 @@ static CircularBuffer cb_ = {
 };
 
 CircularBuffer* stateMachineEngine = &cb_;
-
+void onForceRestartCallback(){
+    LOG(NETWORK, DEBUG,"onForceRestart callback!\n");
+    insertLast(stateMachineEngine, eRestart);
+}
 void onParentDisconnect(){
     LOG(NETWORK, DEBUG,"onParentDisconnect callback!\n");
     insertLast(stateMachineEngine, eLostParentConnection);
@@ -67,6 +71,7 @@ State initNode(Event event){
     // Set up WiFi event callbacks (parent/child loss) to trigger state machine transitions
     parentDisconnectCallback = onParentDisconnect;
     isChildRegisteredCallback = isChildRegistered;
+    forceRestartCallback = onForceRestartCallback;
 
     LOG(STATE_MACHINE,INFO,"Init State\n");
     getMyMAC(MAC);
@@ -241,7 +246,7 @@ State joinNetwork(Event event){
         //Process the routing table update
         if (packetSize > 0){
             receiveMessage(receiveBuffer,sizeof(receiveBuffer));
-            LOG(MESSAGES,INFO,"Parent [Full Routing Update] Response: %s\n", buffer);
+            LOG(MESSAGES,INFO,"Parent [Full Routing Update] Response: %s\n", receiveBuffer);
             handleFullRoutingTableUpdate(receiveBuffer);
             LOG(NETWORK,INFO,"Routing Table Updated:\n");
             tablePrint(routingTable,printRoutingStruct);
@@ -274,6 +279,9 @@ State idle(Event event){
     }else if(event == eLostChildConnection){
         insertFirst(stateMachineEngine, eLostChildConnection);
         return sChildRecovery;
+    }else if(event == eRestart){
+        insertFirst(stateMachineEngine, eRestart);
+        return sForceRestart;
     }
     return sIdle;
 }
@@ -367,6 +375,7 @@ State parentRecovery(Event event){
     updateMySequenceNumber(mySequenceNumber);
 
     lostParent = true;
+    consecutiveSearchCount = 3;
 
     insertLast(stateMachineEngine, eSearch);
     return sSearch;
@@ -455,6 +464,7 @@ State childRecovery(Event event){
 }
 
 State forceRestart(Event event){
+    LOG(STATE_MACHINE,INFO,"Force Restart State\n");
     int *childAPIP, *childSTAIP, *nodeIP;
     int invalidIP[4] = {-1,-1,-1,-1};
     messageParameters parameters;
@@ -467,10 +477,13 @@ State forceRestart(Event event){
         // Notify the child with a message that the node is restarting
         encodeMessage(smallSendBuffer, sizeof(smallSendBuffer),PARENT_RESET_NOTIFICATION,parameters);
         sendMessage(childSTAIP,smallSendBuffer);
+        LOG(MESSAGES,DEBUG,"Sending: %s to: %i.%i.%i.%i\n",smallSendBuffer,childAPIP[0],childAPIP[1],childAPIP[2],childAPIP[3]);
     }
 
     // Clear all entries from the children table
     tableClean(childrenTable);
+    LOG(NETWORK,DEBUG,"Children Table Cleaning:\n");
+    tablePrint(childrenTable,printChildStruct);
 
     // Remove all routing entries, keeping only the node's own entry intact
     tableClean(routingTable);
@@ -479,6 +492,9 @@ State forceRestart(Event event){
     me.hopDistance = 0;
     me.sequenceNumber = mySequenceNumber;
     tableAdd(routingTable,myIP,&me);
+
+    LOG(NETWORK,DEBUG,"Routing Table Cleaning:\n");
+    tablePrint(routingTable,printRoutingStruct);
 
     // Clear the stored parent IP
     assignIP(parent,invalidIP);

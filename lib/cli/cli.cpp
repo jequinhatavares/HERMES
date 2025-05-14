@@ -130,6 +130,7 @@ void cliInteraction(){
                     parentDisconnectCallback();
                     break;
 
+
                 case 6:
                     LOG(CLI,INFO,"Exiting...\n");
                     break;

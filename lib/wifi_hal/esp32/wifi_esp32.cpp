@@ -9,6 +9,8 @@ int parentDisconnectionCount = 0;
 
 void (*parentDisconnectCallback)() = nullptr;
 bool (*isChildRegisteredCallback)(int*) = nullptr;
+void (*forceRestartCallback)() = nullptr;
+
 
 /**
  * onSoftAPModeStationConnectedHandler

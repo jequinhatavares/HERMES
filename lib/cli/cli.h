@@ -4,6 +4,7 @@
 #include "wifi_hal.h"
 #include "routing.h"
 #include "logger.h"
+//#include "lifecycle.h"
 
 void showMenu();
 void readIPAddress(int *ip, const char *prompt);
