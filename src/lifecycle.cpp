@@ -34,10 +34,8 @@ static CircularBuffer cb_ = {
 };
 
 CircularBuffer* stateMachineEngine = &cb_;
-void onForceRestartCallback(){
-    LOG(NETWORK, DEBUG,"onForceRestart callback!\n");
-    insertLast(stateMachineEngine, eRestart);
-}
+
+
 void onParentDisconnect(){
     LOG(NETWORK, DEBUG,"onParentDisconnect callback!\n");
     insertLast(stateMachineEngine, eLostParentConnection);
@@ -71,7 +69,6 @@ State initNode(Event event){
     // Set up WiFi event callbacks (parent/child loss) to trigger state machine transitions
     parentDisconnectCallback = onParentDisconnect;
     isChildRegisteredCallback = isChildRegistered;
-    forceRestartCallback = onForceRestartCallback;
 
     LOG(STATE_MACHINE,INFO,"Init State\n");
     getMyMAC(MAC);
@@ -375,7 +372,6 @@ State parentRecovery(Event event){
     updateMySequenceNumber(mySequenceNumber);
 
     lostParent = true;
-    consecutiveSearchCount = 3;
 
     insertLast(stateMachineEngine, eSearch);
     return sSearch;

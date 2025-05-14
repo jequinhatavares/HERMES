@@ -26,7 +26,6 @@ extern List reachableNetworks;
 // without tight coupling, avoiding direct dependencies.
 extern void (*parentDisconnectCallback)();
 extern bool (*isChildRegisteredCallback)(int*);
-extern void (*forceRestartCallback)();
 
 void initWifiEventHandlers();
 const char* getWifiStatus(int Status);
