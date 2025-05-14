@@ -115,6 +115,9 @@ void test_FRTU_messages_invalid_encoding(){
     char correctMessage[100]= "3 1.1.1.1 2.2.2.2 |1.1.1.1 2 2 |2.2.2.2 2 1 |2.2.2.2 2 1";
     TEST_ASSERT(isMessageValid(FULL_ROUTING_TABLE_UPDATE,correctMessage) == true);
 
+    char correctMessage2[100]= "3 135.230.96.1 135.230.96.1 |135.230.96.1 0 4|252.8.107.1 1 2|89.248.169.1 1 2|";
+    TEST_ASSERT(isMessageValid(FULL_ROUTING_TABLE_UPDATE,correctMessage2) == true);
+
 }
 
 void test_DATA_messages_invalid_encoding(){
@@ -133,6 +136,11 @@ void test_DATA_messages_invalid_encoding(){
 
 }
 
+void test_CRR_messages_validity(){
+    char correctMessage[100]= "2 252.8.107.1 135.230.96.100 2";
+    TEST_ASSERT(isMessageValid(2,correctMessage) == true);
+
+}
 void test_message_validity_with_invalid_IP(){
     char correctMessage[100]= "0 -1.-1.-1.-1";
     TEST_ASSERT(isMessageValid(PARENT_INFO_RESPONSE,correctMessage) == false);
@@ -150,6 +158,7 @@ int main(int argc, char** argv){
     RUN_TEST(test_PIR_messages_invalid_encoding);
     RUN_TEST(test_FRTU_messages_invalid_encoding);
     RUN_TEST(test_DATA_messages_invalid_encoding);
+    RUN_TEST(test_CRR_messages_validity);
     RUN_TEST(test_message_validity_with_invalid_IP);
     UNITY_END();
 }

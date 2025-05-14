@@ -242,11 +242,13 @@ State joinNetwork(Event event){
 
         //Process the routing table update
         if (packetSize > 0){
-            receiveMessage(receiveBuffer,sizeof(receiveBuffer));
             LOG(MESSAGES,INFO,"Parent [Full Routing Update] Response: %s\n", receiveBuffer);
-            handleFullRoutingTableUpdate(receiveBuffer);
-            LOG(NETWORK,INFO,"Routing Table Updated:\n");
-            tablePrint(routingTable,printRoutingStruct);
+            if(isMessageValid(FULL_ROUTING_TABLE_UPDATE,receiveBuffer)){
+                //LOG(MESSAGES,INFO,"Full Routing Update valid: %s\n", receiveBuffer);
+                handleFullRoutingTableUpdate(receiveBuffer);
+                LOG(NETWORK,INFO,"Routing Table Updated:\n");
+                tablePrint(routingTable,printRoutingStruct);
+            }
         }
 
         // If the joining node has children (i.e., his subnetwork has nodes), it must also send its routing table to its new parent.
@@ -288,7 +290,10 @@ State handleMessages(Event event){
     int messageType, flag = 0;
 
     sscanf(receiveBuffer, "%d", &messageType);
-
+    if(!isMessageValid(messageType, receiveBuffer)){
+        LOG(MESSAGES,ERROR,"Error: received message is invalid or malformed \"%s\"\n", receiveBuffer);
+        return sIdle;
+    }
     switch (messageType) {
         case PARENT_DISCOVERY_REQUEST:
             LOG(MESSAGES,INFO,"Received [Parent Discovery Request] message: \"%s\"\n", receiveBuffer);

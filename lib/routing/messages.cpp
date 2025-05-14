@@ -42,7 +42,7 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
                     parameters.hopDistance, parameters.childrenNumber);
             break;
         case CHILD_REGISTRATION_REQUEST:
-            //2 [my AP IP] [my STA IP]
+            //2 [my AP IP] [my STA IP] [my sequence number]
             snprintf(msg,bufferSize,"%i %i.%i.%i.%i %i.%i.%i.%i %i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
                     parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3], parameters.sequenceNumber);
             break;
@@ -157,13 +157,16 @@ bool isMessageValid(int expectedMessageType,char* msg){
         case CHILD_REGISTRATION_REQUEST: {
             int IP1[4], IP2[4], seqNum;
             return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %d", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
-                           &IP2[0], &IP2[1], &IP2[2], &IP2[3], &seqNum) == 11);
+                           &IP2[0], &IP2[1], &IP2[2], &IP2[3], &seqNum) == 10);
             break;
         }
         case FULL_ROUTING_TABLE_UPDATE: {
             int IP1[4], IP2[4],hopDistance,sequenceNumber;
-            if(sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],&IP2[0], &IP2[1], &IP2[2], &IP2[3]) != 9)return false;
-            char* token = strtok(msg, "|");
+            char msgCopy[255];
+            strcpy(msgCopy, msg);
+
+            if(sscanf(msgCopy, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],&IP2[0], &IP2[1], &IP2[2], &IP2[3]) != 9)return false;
+            char* token = strtok(msgCopy, "|");
 
             token = strtok(NULL, "|");
 
@@ -176,8 +179,10 @@ bool isMessageValid(int expectedMessageType,char* msg){
         }
         case PARTIAL_ROUTING_TABLE_UPDATE: {
             int IP1[4], hopDistance,sequenceNumber;
-            if(sscanf(msg, "%d %d.%d.%d.%d", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3]) != 5)return false;
-            char* token = strtok(msg, "|");
+            char msgCopy[255];
+            strcpy(msgCopy, msg);
+            if(sscanf(msgCopy, "%d %d.%d.%d.%d", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3]) != 5)return false;
+            char* token = strtok(msgCopy, "|");
 
             token = strtok(NULL, "|");
 
