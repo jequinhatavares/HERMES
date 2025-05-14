@@ -293,7 +293,7 @@ bool updateRoutingTableSN(int nodeIP[4], int hopDistance, int sequenceNumber, in
         }else{
             updatedEntry.hopDistance = hopDistance + 1;
         }
-        assignIP(updatedEntry.nextHopIP, );
+        assignIP(updatedEntry.nextHopIP, senderIP);
         updatedEntry.sequenceNumber = sequenceNumber;
         tableAdd(routingTable, nodeIP, &updatedEntry);
         return true;
