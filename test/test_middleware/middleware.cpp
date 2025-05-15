@@ -15,6 +15,7 @@ typedef struct metricTableEntry{
 metricTableEntry metrics[TableMaxSize];
 
 void setMetricValue(void* av, void*bv){
+    if(bv == nullptr)return;
     metricTableEntry *a = (metricTableEntry *) av;
     metricTableEntry *b = (metricTableEntry *) bv;
 
@@ -27,10 +28,14 @@ void printMetricStruct(TableEntry* Table){
         ((metricTableEntry *)Table->value)->processingCapacity);
 }
 
+
+
+/*** ****************************** Tests ****************************** ***/
+
 void test_init_middleware(){
     metricTableEntry metric;
     int IP[4]={1,1,1,1};
-    initMetricTable(setMetricValue, (void*) metrics,sizeof(metricTableEntry));
+    initMetricTable(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
 
     metric.processingCapacity = 1;
     updateMiddlewareMetric(&metric,IP);
@@ -40,8 +45,47 @@ void test_init_middleware(){
     metricTableEntry *metricValue = (metricTableEntry*) tableRead(metricTable,IP);
     TEST_ASSERT(metricValue != nullptr);
 
+    tableClean(metricTable);
 
 }
+
+void test_handle_middleware_message(){
+    metricTableEntry metric;
+    int nodeIP[4]={1,1,1,1};
+    char middlewareMsg[50] = "13 1.1.1.1 1";
+    initMetricTable(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
+
+    handleMiddlewareMessage(middlewareMsg);
+
+    tablePrint(metricTable, printMetricStruct);
+
+    metricTableEntry *metricValue = (metricTableEntry*) tableRead(metricTable,nodeIP);
+    TEST_ASSERT(metricValue != nullptr);/******/
+
+    tableClean(metricTable);
+
+}
+
+void test_encode_middleware_message(){
+    metricTableEntry metric;
+    int nodeIP[4]={1,1,1,1};
+    char middlewareMsg[50] = "1.1.1.1 1", msgBuffer[100];
+    initMetricTable(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
+
+    assignIP(myIP,nodeIP);
+    metric.processingCapacity = 1;
+    updateMiddlewareMetric(&metric,nodeIP);
+
+    encodeMiddlewareMessage(msgBuffer, sizeof(msgBuffer));
+
+    printf("Encoded Message: %s\n",msgBuffer);
+
+    TEST_ASSERT(strcmp(middlewareMsg,msgBuffer) == 0);/******/
+
+    tableClean(metricTable);
+
+}
+
 
 
 void setUp(void){
@@ -60,7 +104,8 @@ void tearDown(void){}
 int main(int argc, char** argv){
     UNITY_BEGIN();
     RUN_TEST(test_init_middleware);
-    //RUN_TEST(test_pir_incorrect);
+    RUN_TEST(test_handle_middleware_message);
+    RUN_TEST(test_encode_middleware_message);
 
     UNITY_END();
 }

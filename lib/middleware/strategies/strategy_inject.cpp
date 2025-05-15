@@ -1,18 +1,105 @@
 #include "strategy_inject.h"
 
+
+bool isIPEqual(void* a, void* b);
+void setIP(void* av, void* bv);
+
+//void (*setValue)(void*,void*) = nullptr;
+
 TableEntry mTable[TableMaxSize];
 TableInfo MTable = {
         .numberOfItems = 0,
         .isEqual = isIPEqual,
         .table = mTable,
-        .setKey = setKey,
-        .setValue = setValue,
+        .setKey = setIP,
+        .setValue = nullptr,
 };
 TableInfo* metricTable = &MTable;
 
-int IP[TableMaxSize][4];
-routingTableEntry routingTableEntries[TableMaxSize];
 
-void initMetricTable(){
+struct metricTableEntry{
+    int processingCapacity;
+};
 
+int nodeIP[TableMaxSize][4];
+
+void (*encodeMetricValue)(char*,size_t,void *) = nullptr;
+void (*decodeMetricValue)(char*,void *) = nullptr;
+
+
+void initMetricTable(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)) {
+    metricTable->setValue = setValueFunction;
+    tableInit(metricTable, nodeIP, metricStruct, sizeof(int[4]), metricStructSize);
+
+    encodeMetricValue = encodeMetricFunction;
+    decodeMetricValue = decodeMetricFunction;
+
+}
+void updateMiddlewareMetric(void* metricStruct, void* nodeIP){
+    int tableIndex = tableFind(metricTable,nodeIP);
+    if(tableIndex == -1){ //The node is not yet in the table
+        tableAdd(metricTable, nodeIP, metricStruct);
+    }else{ //The node is already present in the table
+        tableUpdate(metricTable, nodeIP, metricStruct);
+    }
+}
+
+void updateMiddleware(){
+
+}
+
+void encodeMiddlewareMessage(char* messageBuffer, size_t bufferSize){
+    char tmpBuffer[20];
+
+    snprintf(messageBuffer,bufferSize,"%i.%i.%i.%i ", myIP[0],myIP[1],myIP[2],myIP[3]);
+
+    void* metricValue = tableRead(metricTable, myIP);
+    if(metricValue != nullptr){
+        encodeMetricValue(tmpBuffer, sizeof(tmpBuffer),metricValue);
+        strcat(messageBuffer, tmpBuffer);
+    }
+
+}
+
+void handleMiddlewareMessage(char* messageBuffer){
+    char metricBuffer[20];
+    int nodeIP[4], type;
+    void  *emptyEntry = nullptr;
+    sscanf(messageBuffer,"%i %i.%i.%i.%i %s",&type,&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],metricBuffer);
+
+    void *metricValue = tableRead(metricTable,nodeIP);
+    if(metricValue != nullptr){
+        decodeMetricValue(metricBuffer,metricValue);
+        updateMiddlewareMetric(metricValue, nodeIP);
+    }else{
+        tableAdd(metricTable,nodeIP,emptyEntry);
+        metricValue = tableRead(metricTable,nodeIP);
+        decodeMetricValue(metricBuffer,metricValue);
+        updateMiddlewareMetric(metricValue, nodeIP);
+    }
+
+}
+
+/////////// USER Side Functions //////////////////////////
+
+void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry){
+    metricTableEntry *metric = (metricTableEntry*) metricEntry;
+    snprintf(buffer,bufferSize,"%i", metric->processingCapacity);
+}
+
+void decodeMetricEntry(char* buffer, void *metricEntry){
+    metricTableEntry *metric = (metricTableEntry*)metricEntry;
+    sscanf(buffer,"%i", &metric->processingCapacity);
+}
+
+
+
+void setIP(void* av, void* bv){
+    int* a = (int*) av;
+    int* b = (int*) bv;
+    //Serial.printf("Key.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a[0],a[1],a[2],a[3], b[0],b[1],b[2],b[3]);
+    a[0] = b[0];
+    a[1] = b[1];
+    a[2] = b[2];
+    a[3] = b[3];
 }
