@@ -5,12 +5,17 @@
 #include "lifecycle.h"
 #include "cli.h"
 #include "logger.h"
+#include "../lib/middleware/strategies/strategy_inject.h"
 
 //#include "../lib/wifi_hal/wifi_hal.h"
 //#include "../lib/transport_hal/esp32/udp_esp32.h"
 
 //227:96:230:135 root
 //227:96:237:119
+
+
+metricTableEntry metrics[TableMaxSize];
+
 void waitForEnter() {
     // Wait for Enter
     while (Serial.available() <= 0) {
@@ -26,7 +31,7 @@ void waitForEnter() {
 
 void setup(){
     int MAC[6];
-
+    metricTableEntry myMetric;
     Serial.begin(115200);
     //Serial.setDebugOutput(true);
 
@@ -62,6 +67,12 @@ void setup(){
     LOG(NETWORK,INFO,"My MAC addr: %i.%i.%i.%i.%i.%i\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
 
     waitForEnter();
+
+    //Middleware stuff
+    initMetricTable(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
+    myMetric.processingCapacity = MAC[5];
+    injectNodeMetric(&myMetric);
+
 
     Advance(SM, eSuccess);//Init
 

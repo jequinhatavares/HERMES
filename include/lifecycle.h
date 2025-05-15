@@ -12,6 +12,8 @@
 #include <snake_queue.h>
 #include <logger.h>
 #include <cstring>
+#include <../middleware/strategies/strategy_inject.h>
+
 
 #define SSID_PREFIX      		"JessicaNode"
 #define PASS     		        "123456789"

@@ -121,7 +121,10 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
             break;
 
         case MIDDLEWARE_MESSAGE:
-
+            snprintf(msg, bufferSize, "%i",type);
+            //Call function to encode the middleware message
+            encodeMiddlewareMessage(tempMsg, sizeof(tempMsg));
+            strcat(msg,tempMsg);
             break;
         default:
             break;
@@ -636,6 +639,19 @@ void handleDebugRegistrationRequest(char* msg){
 }
 
 /**
+ * handleDebugRegistrationRequest
+ * Handles a DEBUG_REGISTRATION_REQUEST: decodes the message, ...
+ *
+ * @param msg - The message to decode.
+ * @return void
+ */
+void handleMiddlewareMessage(char* msg){
+    int type;
+    //sscanf(msg, "%d %d.%d.%d.%d",&type, &debugServerIP[0],&debugServerIP[1],&debugServerIP[2],&debugServerIP[3]);
+}
+
+
+/**
  * propagateMessage
  * Propagates the message to other nodes in the network, sending it to all connected nodes except the one that
  * sent the message for propagation
@@ -673,4 +689,6 @@ void propagateMessage(char* message, int* sourceIP){
     }
 
 }
+
+
 

@@ -4,6 +4,7 @@
 //#include "table.h"
 #include <../table/table.h>
 #include <logger.h>
+#include <../middleware/strategies/strategy_inject.h>
 
 typedef struct parentInfo{
     char* ssid;

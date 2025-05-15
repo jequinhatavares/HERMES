@@ -259,6 +259,9 @@ State joinNetwork(Event event){
             lastRoutingUpdateTime = getCurrentTime();
         }
 
+        encodeMessage(smallSendBuffer, sizeof(smallSendBuffer),MIDDLEWARE_MESSAGE,params);
+        sendMessage(parent, smallSendBuffer);
+
     }
 
     reachableNetworks.len = 0 ;
@@ -343,6 +346,11 @@ State handleMessages(Event event){
         case ACK_MESSAGE:
             LOG(MESSAGES,INFO,"Received [ACK] message: \"%s\"\n", receiveBuffer);
             handleAckMessage(receiveBuffer);
+            break;
+
+        case MIDDLEWARE_MESSAGE:
+            LOG(MESSAGES,INFO,"Received [Middleware] message: \"%s\"\n", receiveBuffer);
+            handleMiddlewareMessage(receiveBuffer);
             break;
     }
 

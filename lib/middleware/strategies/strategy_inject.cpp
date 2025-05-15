@@ -6,6 +6,21 @@ void setIP(void* av, void* bv);
 
 //void (*setValue)(void*,void*) = nullptr;
 
+/***
+ * Middleware metrics table
+ *
+ * mTable[TableMaxSize] - An array where each element is a struct containing two pointers:
+ *                         one to the key (used for indexing the metrics table) and another to the value (the corresponding entry).
+ *
+ * TTable - A struct that holds metadata for the metrics table, including:
+ * * * .numberOfItems - The current number of entries in the metrics table.
+ * * * .isEqual - A function pointer for comparing table keys (IP addresses).
+* * * .table - A pointer to the mTable.
+ *
+ * childrenTable - A pointer to TTable, used for accessing the children table.
+ *
+ * nodeIP[TableMaxSize][4] - Preallocated memory for storing the IP addresses of the nodes.
+ ***/
 TableEntry mTable[TableMaxSize];
 TableInfo MTable = {
         .numberOfItems = 0,
@@ -16,13 +31,9 @@ TableInfo MTable = {
 };
 TableInfo* metricTable = &MTable;
 
-
-struct metricTableEntry{
-    int processingCapacity;
-};
-
 int nodeIP[TableMaxSize][4];
 
+//Function Pointers Initializers
 void (*encodeMetricValue)(char*,size_t,void *) = nullptr;
 void (*decodeMetricValue)(char*,void *) = nullptr;
 
@@ -35,6 +46,7 @@ void initMetricTable(void (*setValueFunction)(void*,void*), void *metricStruct, 
     decodeMetricValue = decodeMetricFunction;
 
 }
+
 void updateMiddlewareMetric(void* metricStruct, void* nodeIP){
     int tableIndex = tableFind(metricTable,nodeIP);
     if(tableIndex == -1){ //The node is not yet in the table
@@ -44,8 +56,8 @@ void updateMiddlewareMetric(void* metricStruct, void* nodeIP){
     }
 }
 
-void updateMiddleware(){
-
+void injectNodeMetric(void* metric){
+   updateMiddlewareMetric(metric, myIP);
 }
 
 void encodeMiddlewareMessage(char* messageBuffer, size_t bufferSize){
@@ -78,6 +90,9 @@ void handleMiddlewareMessage(char* messageBuffer){
         updateMiddlewareMetric(metricValue, nodeIP);
     }
 
+    //TODO propagate message
+
+
 }
 
 /////////// USER Side Functions //////////////////////////
@@ -102,4 +117,12 @@ void setIP(void* av, void* bv){
     a[1] = b[1];
     a[2] = b[2];
     a[3] = b[3];
+}
+
+void setMetricValue(void* av, void*bv){
+    if(bv == nullptr)return; //
+    metricTableEntry *a = (metricTableEntry *) av;
+    metricTableEntry *b = (metricTableEntry *) bv;
+
+    a->processingCapacity = b->processingCapacity;
 }

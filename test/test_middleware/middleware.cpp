@@ -8,14 +8,11 @@
 
 void setMetricValue(void* av, void*bv);
 
-typedef struct metricTableEntry{
-    int processingCapacity;
-}metricTableEntry;
 
 metricTableEntry metrics[TableMaxSize];
 
 void setMetricValue(void* av, void*bv){
-    if(bv == nullptr)return;
+    if(bv == nullptr)return; //
     metricTableEntry *a = (metricTableEntry *) av;
     metricTableEntry *b = (metricTableEntry *) bv;
 

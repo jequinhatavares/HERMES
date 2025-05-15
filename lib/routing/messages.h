@@ -4,8 +4,10 @@
 //#include "table.h"
 #include "../table/table.h"
 #include "routing.h"
+//#include "strategy.h"
 //#include <wifi_hal.h>
 #include <transport_hal.h>
+#include <../middleware/strategies/strategy_inject.h>
 //#include "../wifi_hal/wifi_hal.h"
 //#include <../transport_hal/transport_hal.h>
 //#include "transport_hal.h"
