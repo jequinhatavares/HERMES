@@ -38,6 +38,7 @@ typedef enum messageType{
     DEBUG_MESSAGE,//10
     DATA_MESSAGE,//11
     ACK_MESSAGE,//12
+    MIDDLEWARE_MESSAGE,//12
 }messageType;
 
 extern char receiveBuffer[256];

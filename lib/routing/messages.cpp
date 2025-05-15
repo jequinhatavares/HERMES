@@ -119,6 +119,10 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
             snprintf(msg,bufferSize,"%i %i.%i.%i.%i %i.%i.%i.%i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],
                     parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
+
+        case MIDDLEWARE_MESSAGE:
+
+            break;
         default:
             break;
     }
