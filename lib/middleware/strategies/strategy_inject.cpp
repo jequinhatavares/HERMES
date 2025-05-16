@@ -4,6 +4,9 @@
 bool isIPEqual(void* a, void* b);
 void setIP(void* av, void* bv);
 
+
+unsigned long lastMiddlewareUpdateTime = 0;
+
 //void (*setValue)(void*,void*) = nullptr;
 
 /***
@@ -127,6 +130,48 @@ void handleMiddlewareMessage(char* messageBuffer, size_t bufferSize){
 
     //TODO Dependency injection with the message layer
 
+}
+
+void middlewareInfluenceRouting(char* dataMessage){
+    void* bestMetric = nullptr, *currentMetric;
+    int *IP, bestMetricIP[4];
+    //Put where the logic to influence routing
+    for (int i = 0; i < metricTable->numberOfItems ; i++) {
+        IP = (int*) tableKey(metricTable,i);
+        currentMetric = tableRead(metricTable,IP);
+        if(compareMetrics(bestMetric,currentMetric) == 2){
+            bestMetric = currentMetric;
+            assignIP(bestMetricIP,IP);
+        }
+    }
+    LOG(MESSAGES,INFO,"Best Metric Node IP: %i.%i.%i.%i\n",bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
+
+
+}
+void middlewareOnTimer(){
+    unsigned long currentTime = getCurrentTime();
+    //Periodically send this node's metric to all other nodes in the network
+    if( (currentTime - lastMiddlewareUpdateTime) >= MIDDLEWARE_UPDATE_INTERVAL ){
+        snprintf(smallSendBuffer, sizeof(smallSendBuffer), "%i ",MIDDLEWARE_MESSAGE);
+        encodeMiddlewareMessage(smallSendBuffer, sizeof(smallSendBuffer));
+        propagateMessage(smallSendBuffer,myIP);
+        lastMiddlewareUpdateTime = currentTime;
+    }
+}
+int compareMetrics(void *metricAv,void*metricBv){
+    if(metricAv == nullptr && metricBv == nullptr) return -1;
+
+    if(metricAv == nullptr) return 2;
+
+    if(metricBv == nullptr) return 1;
+
+    metricTableEntry *metricA = (metricTableEntry*) metricAv;
+    metricTableEntry *metricB = (metricTableEntry*) metricBv;
+    if(metricA->processingCapacity >= metricB->processingCapacity){
+        return 1;
+    }else{
+        return 2;
+    }
 }
 
 void setIP(void* av, void* bv){

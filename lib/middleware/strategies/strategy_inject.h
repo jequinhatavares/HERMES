@@ -5,25 +5,31 @@
 #include "routing.h"
 #include "messages.h"
 #include "logger.h"
+#include "time_hal.h"
 
+#define MIDDLEWARE_UPDATE_INTERVAL 120000
 extern TableInfo* metricTable;
 
 struct metricTableEntry{
     int processingCapacity;
 };
 
+extern unsigned long lastMiddlewareUpdateTime;
+
 void initMetricTable(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
 void updateMiddlewareMetric(void* metricStruct, void * nodeIP);
 void encodeLocalMetric(char* messageBuffer, size_t bufferSize);
 void encodeMiddlewareMessage(char* messageBuffer, size_t bufferSize);
 void handleMiddlewareMessage(char* messageBuffer, size_t bufferSize);
-
+void middlewareInfluenceRouting(char* dataMessage);
+void middlewareOnTimer();
 
 void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry);
 void decodeMetricEntry(char* buffer, void *metricEntry);
-void setMetricValue(void* av, void*bv);
-void injectNodeMetric(void* metric);
 void printMetricStruct(TableEntry* Table);
+void setMetricValue(void* av, void*bv);
+int compareMetrics(void *metricAv,void*metricBv);
+void injectNodeMetric(void* metric);
 
 void setIP(void* av, void* bv);
 

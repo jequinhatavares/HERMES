@@ -543,6 +543,7 @@ void handleTimers(){
         lastRoutingUpdateTime = currentTime;
     }
 
+    middlewareOnTimer();
 }
 
 /**
