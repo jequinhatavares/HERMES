@@ -123,8 +123,7 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
         case MIDDLEWARE_MESSAGE:
             snprintf(msg, bufferSize, "%i",type);
             //Call function to encode the middleware message
-            encodeMiddlewareMessage(tempMsg, sizeof(tempMsg));
-            strcat(msg,tempMsg);
+            encodeMiddlewareMessage(msg, sizeof(msg));
             break;
         default:
             break;
