@@ -645,10 +645,6 @@ void handleDebugRegistrationRequest(char* msg){
  * @param msg - The message to decode.
  * @return void
  */
-void handleMiddlewareMessage(char* msg){
-    int type;
-    //sscanf(msg, "%d %d.%d.%d.%d",&type, &debugServerIP[0],&debugServerIP[1],&debugServerIP[2],&debugServerIP[3]);
-}
 
 
 /**

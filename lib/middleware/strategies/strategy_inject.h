@@ -3,6 +3,8 @@
 
 #include "table.h"
 #include "routing.h"
+#include "messages.h"
+#include "logger.h"
 
 extern TableInfo* metricTable;
 
@@ -12,6 +14,7 @@ struct metricTableEntry{
 
 void initMetricTable(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
 void updateMiddlewareMetric(void* metricStruct, void * nodeIP);
+void encodeLocalMetric(char* messageBuffer, size_t bufferSize);
 void encodeMiddlewareMessage(char* messageBuffer, size_t bufferSize);
 void handleMiddlewareMessage(char* messageBuffer);
 
@@ -19,6 +22,7 @@ void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry);
 void decodeMetricEntry(char* buffer, void *metricEntry);
 void setMetricValue(void* av, void*bv);
 void injectNodeMetric(void* metric);
+void printMetricStruct(TableEntry* Table);
 
 void setIP(void* av, void* bv);
 
