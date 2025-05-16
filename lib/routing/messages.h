@@ -66,5 +66,6 @@ void handleDebugRegistrationRequest(char* msg);
 void handleDebugMessage2(char* msg, int* nextHopIP);
 
 void propagateMessage(char* message, int* sourceIP);
+void encodeTunneledMessage(char* encodedMessage,size_t encodedMessageSize,char* encapsulatedMessage, int sourceIP[4], int destinationIP[4]);
 
 #endif //MESSAGES_H

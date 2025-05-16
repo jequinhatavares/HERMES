@@ -688,5 +688,13 @@ void propagateMessage(char* message, int* sourceIP){
 
 }
 
+void encodeTunneledMessage(char* encodedMessage,size_t encodedMessageSize,int sourceIP[4], int destinationIP[4], char* encapsulatedMessage){
+    messageParameters params;
+    assignIP(params.IP1,sourceIP);
+    assignIP(params.IP2,destinationIP);
+    strncpy(params.payload,encapsulatedMessage,sizeof(params.payload)-1);
+    encodeMessage(encodedMessage, encodedMessageSize,DATA_MESSAGE,params);
+}
+
 
 
