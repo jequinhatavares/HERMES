@@ -11,20 +11,6 @@ void setMetricValue(void* av, void*bv);
 
 metricTableEntry metrics[TableMaxSize];
 
-void setMetricValue(void* av, void*bv){
-    if(bv == nullptr)return; //
-    metricTableEntry *a = (metricTableEntry *) av;
-    metricTableEntry *b = (metricTableEntry *) bv;
-
-    a->processingCapacity = b->processingCapacity;
-}
-
-void printMetricStruct(TableEntry* Table){
-    LOG(NETWORK,INFO,"Node[%d.%d.%d.%d] → (Metric: %d) \n",
-        ((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
-        ((metricTableEntry *)Table->value)->processingCapacity);
-}
-
 
 
 /*** ****************************** Tests ****************************** ***/
@@ -48,16 +34,21 @@ void test_init_middleware(){
 
 void test_handle_middleware_message(){
     metricTableEntry metric;
+    int mynodeIP[4]={2,2,2,2};
     int nodeIP[4]={1,1,1,1};
-    char middlewareMsg[50] = "13 1.1.1.1 1";
+    char middlewareMsg[50] = "13 1.1.1.1 1.1.1.1 1";
+
+    assignIP(myIP,mynodeIP);
+
     initMetricTable(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
 
-    handleMiddlewareMessage(middlewareMsg);
+    handleMiddlewareMessage(middlewareMsg,sizeof(middlewareMsg));
 
     tablePrint(metricTable, printMetricStruct);
 
     metricTableEntry *metricValue = (metricTableEntry*) tableRead(metricTable,nodeIP);
-    TEST_ASSERT(metricValue != nullptr);/******/
+    TEST_ASSERT(metricValue != nullptr);
+    TEST_ASSERT(metricValue->processingCapacity == 1);
 
     tableClean(metricTable);
 
@@ -65,19 +56,19 @@ void test_handle_middleware_message(){
 
 void test_encode_middleware_message(){
     metricTableEntry metric;
-    int nodeIP[4]={1,1,1,1};
-    char middlewareMsg[50] = "1.1.1.1 1", msgBuffer[100];
+    int nodeIP[4]={2,2,2,2};
+    char middlewareMsg[50] = " 13 1.1.1.1 1.1.1.1 1", msgBuffer[100];
+    char correctEncodedMsg[50] = "13 2.2.2.2 1.1.1.1 1";
     initMetricTable(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
 
     assignIP(myIP,nodeIP);
     metric.processingCapacity = 1;
     updateMiddlewareMetric(&metric,nodeIP);
 
-    encodeMiddlewareMessage(msgBuffer, sizeof(msgBuffer));
+    encodeMiddlewareMessage(middlewareMsg, sizeof(middlewareMsg));
 
-    printf("Encoded Message: %s\n",msgBuffer);
 
-    TEST_ASSERT(strcmp(middlewareMsg,msgBuffer) == 0);/******/
+    TEST_ASSERT(strcmp(middlewareMsg,correctEncodedMsg) == 0);/******/
 
     tableClean(metricTable);
 

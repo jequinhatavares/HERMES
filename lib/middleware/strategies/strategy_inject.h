@@ -16,7 +16,8 @@ void initMetricTable(void (*setValueFunction)(void*,void*), void *metricStruct, 
 void updateMiddlewareMetric(void* metricStruct, void * nodeIP);
 void encodeLocalMetric(char* messageBuffer, size_t bufferSize);
 void encodeMiddlewareMessage(char* messageBuffer, size_t bufferSize);
-void handleMiddlewareMessage(char* messageBuffer);
+void handleMiddlewareMessage(char* messageBuffer, size_t bufferSize);
+
 
 void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry);
 void decodeMetricEntry(char* buffer, void *metricEntry);

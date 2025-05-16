@@ -121,7 +121,7 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
             break;
 
         case MIDDLEWARE_MESSAGE:
-            snprintf(msg, bufferSize, "%i",type);
+            snprintf(msg, bufferSize, "%i ",type);
             //Call function to encode the middleware message
             encodeMiddlewareMessage(msg, sizeof(msg));
             break;
@@ -244,6 +244,9 @@ bool isMessageValid(int expectedMessageType,char* msg){
                            &IP2[0], &IP2[1], &IP2[2], &IP2[3]) == 9);
             break;
         }
+        case MIDDLEWARE_MESSAGE:
+            return true;
+
         default: // The message is not one of the valid message types
             return false;
     }

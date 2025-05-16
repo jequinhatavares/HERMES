@@ -261,6 +261,7 @@ State joinNetwork(Event event){
 
         encodeMessage(smallSendBuffer, sizeof(smallSendBuffer),MIDDLEWARE_MESSAGE,params);
         sendMessage(parent, smallSendBuffer);
+        LOG(MESSAGES,INFO,"Sending [MIDDLEWARE_MESSAGE]: %s\n",smallSendBuffer);
 
     }
 
@@ -350,7 +351,7 @@ State handleMessages(Event event){
 
         case MIDDLEWARE_MESSAGE:
             LOG(MESSAGES,INFO,"Received [Middleware] message: \"%s\"\n", receiveBuffer);
-            handleMiddlewareMessage(receiveBuffer);
+            handleMiddlewareMessage(receiveBuffer, sizeof(receiveBuffer));
             break;
     }
 

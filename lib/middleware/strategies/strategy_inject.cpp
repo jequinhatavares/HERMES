@@ -75,6 +75,7 @@ void encodeMiddlewareMessage(char* messageBuffer, size_t bufferSize){
         encodeLocalMetric(tmpBuffer, sizeof(tmpBuffer));
         snprintf(tmpBuffer2, sizeof(tmpBuffer2),"%i.%i.%i.%i %s",myIP[0],myIP[1],myIP[2],myIP[3],tmpBuffer);
         strcat(messageBuffer,tmpBuffer2);
+
     }
 }
 
@@ -90,10 +91,11 @@ void encodeLocalMetric(char* messageBuffer, size_t bufferSize){
     }
 }
 
-void handleMiddlewareMessage(char* messageBuffer){
+void handleMiddlewareMessage(char* messageBuffer, size_t bufferSize){
     char metricBuffer[20];
     int senderIP[4],nodeIP[4], type;
     void  *emptyEntry = nullptr;
+
 
     //MESSAGE_TYPE [sender IP] [nodeIP] metric
     sscanf(messageBuffer,"%i %i.%i.%i.%i %i.%i.%i.%i %s",&type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
@@ -120,7 +122,7 @@ void handleMiddlewareMessage(char* messageBuffer){
     tablePrint(metricTable,printMetricStruct);
 
     //Encode this node IP as the sender IP and propagate the message
-    encodeMiddlewareMessage(messageBuffer, sizeof(messageBuffer));
+    encodeMiddlewareMessage(messageBuffer, bufferSize);
     propagateMessage(messageBuffer,senderIP);
 
     //TODO Dependency injection with the message layer
