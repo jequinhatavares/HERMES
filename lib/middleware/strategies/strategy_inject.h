@@ -1,7 +1,7 @@
 #ifndef STRATEGY_INJECT_H
 #define STRATEGY_INJECT_H
 
-#include "table.h"
+#include <../table/table.h>
 #include "routing.h"
 #include "messages.h"
 #include "logger.h"
