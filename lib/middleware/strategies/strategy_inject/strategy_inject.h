@@ -6,8 +6,8 @@
 //#include "../../routing/messages.h"
 #include "messages.h"
 #include "logger.h"
-#include "../../time_hal/time_hal.h"
-#include "../../transport_hal/transport_hal.h"
+#include "../../../time_hal/time_hal.h"
+#include "../../../transport_hal/transport_hal.h"
 
 #define MIDDLEWARE_UPDATE_INTERVAL 120000
 extern TableInfo* metricTable;
