@@ -19,7 +19,7 @@
 #define PASS     		        "123456789"
 
 #define APPLICATION_PROCESSING_INTERVAL 120000
-unsigned long lastApplicationProcessingTime;
+
 
 State initNode(Event event);
 State search(Event event);

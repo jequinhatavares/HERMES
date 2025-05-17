@@ -9,6 +9,8 @@ int dns[4];
 int consecutiveSearchCount = 0;
 bool lostParent = false;
 
+unsigned long lastApplicationProcessingTime = 0;
+
 StateMachine SM_ = {
         .current_state = sInit,
         .TransitionTable = {
@@ -19,8 +21,8 @@ StateMachine SM_ = {
                 [sHandleMessages] = handleMessages,
                 [sParentRecovery] = parentRecovery,
                 [sChildRecovery] = childRecovery,
-                [sExecuteTask] = executeTask,
                 [sForceRestart] = forceRestart,
+                [sExecuteTask] = executeTask,
         },
 };
 
@@ -162,7 +164,6 @@ State joinNetwork(Event event){
     unsigned long currentTime, startTime;
     int mySTAIP[4], nrOfPossibleParents = 0;
     messageParameters params;
-    static char buffer[256] = "";
     parentInfo possibleParents[10];
 
     if(reachableNetworks.len != 0){
@@ -286,6 +287,9 @@ State idle(Event event){
     }else if(event == eRestart){
         insertFirst(stateMachineEngine, eRestart);
         return sForceRestart;
+    }else if(event == eExecuteTask){
+        insertFirst(stateMachineEngine, eExecuteTask);
+        return sExecuteTask;
     }
     return sIdle;
 }
@@ -522,6 +526,7 @@ State forceRestart(Event event){
 }
 
 State executeTask(Event event){
+    LOG(STATE_MACHINE,INFO,"Execute Task State\n");
     messageParameters parameters;
     // In this state, an application-specific task will be executed.
     // The user defines a callback function in the application layer, which is invoked here to perform the desired operation.
@@ -533,7 +538,6 @@ State executeTask(Event event){
 
     encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),DATA_MESSAGE,parameters);
     middlewareInfluenceRouting(largeSendBuffer);
-    //sendMessage(larg)
     return sIdle;
 }
 void handleTimers(){
@@ -563,6 +567,7 @@ void handleTimers(){
 
     if( (currentTime-lastApplicationProcessingTime) >=APPLICATION_PROCESSING_INTERVAL){
         requestTaskExecution();
+        lastApplicationProcessingTime = currentTime;
     }
 }
 void requestTaskExecution(){
