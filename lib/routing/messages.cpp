@@ -109,9 +109,9 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
             break;
 
         case DATA_MESSAGE:
-            //11 [message payload] [source node IP] [destination node IP]
-            snprintf(msg,bufferSize,"%i %s %i.%i.%i.%i %i.%i.%i.%i",type,parameters.payload,parameters.IP1[0],parameters.IP1[1],
-                    parameters.IP1[2],parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
+            //11 [source node IP] [destination node IP] [message payload]
+            snprintf(msg,bufferSize,"%i %i.%i.%i.%i %i.%i.%i.%i %s",type,parameters.IP1[0],parameters.IP1[1],
+                    parameters.IP1[2],parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3],parameters.payload);
             break;
 
         case ACK_MESSAGE:
@@ -221,7 +221,7 @@ bool isMessageValid(int expectedMessageType,char* msg){
         }
         case PARENT_RESET_NOTIFICATION:
             //8 [senderIP]
-            return(sscanf(msg,"%i",type)== 1);
+            return(sscanf(msg,"%d",&type)== 1);
             break;
 
         case DEBUG_MESSAGE: {
@@ -234,8 +234,8 @@ bool isMessageValid(int expectedMessageType,char* msg){
         case DATA_MESSAGE: {
             int IP1[4], IP2[4];
             char payload[200];
-            return (sscanf(msg, "%d %199s %d.%d.%d.%d %d.%d.%d.%d", &type, payload, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
-                           &IP2[0], &IP2[1], &IP2[2], &IP2[3]) == 10);
+            return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %199s", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
+                           &IP2[0], &IP2[1], &IP2[2], &IP2[3], payload) == 10);
             break;
         }
         case ACK_MESSAGE: {
@@ -527,11 +527,11 @@ void handleDataMessage(char *msg){
     int type;
     int sourceIP[4], destinationIP[4], nextHopIP[4];
     int *nextHopPtr = nullptr;
-    char payload[50];
+    char payload[200];
     messageParameters parameters;
 
-    sscanf(msg, "%d %49s %d.%d.%d.%d %d.%d.%d.%d",&type, payload, &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
-        &destinationIP[0],&destinationIP[1],&destinationIP[2],&destinationIP[3]);
+    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %199s",&type, &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
+        &destinationIP[0],&destinationIP[1],&destinationIP[2],&destinationIP[3],payload);
     //Serial.printf("Message %s received from %d.%d.%d.%d to %d.%d.%d.%d", payload, senderIP[0],senderIP[1],senderIP[2],senderIP[3],
         //destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3]);
 
