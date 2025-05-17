@@ -160,12 +160,12 @@ void middlewareInfluenceRouting(char* dataMessage, size_t dataMessageSize){
 
 void middlewareOnTimer(){
     unsigned long currentTime = getCurrentTime();
-    LOG(NETWORK,DEBUG,"On middlewareOnTimer interval; %lu\n",(currentTime - lastMiddlewareUpdateTime));
     //Periodically send this node's metric to all other nodes in the network
     if( (currentTime - lastMiddlewareUpdateTime) >= MIDDLEWARE_UPDATE_INTERVAL ){
         snprintf(smallSendBuffer, sizeof(smallSendBuffer), "%i ",MIDDLEWARE_MESSAGE);
         encodeMiddlewareMessage(smallSendBuffer, sizeof(smallSendBuffer));
         propagateMessage(smallSendBuffer,myIP);
+        LOG(NETWORK,DEBUG,"Sending [MIDDLEWARE] Message: %s\n",smallSendBuffer);
         lastMiddlewareUpdateTime = currentTime;
     }
 }
