@@ -19,6 +19,7 @@ StateMachine SM_ = {
                 [sHandleMessages] = handleMessages,
                 [sParentRecovery] = parentRecovery,
                 [sChildRecovery] = childRecovery,
+                [sExecuteTask] = executeTask,
                 [sForceRestart] = forceRestart,
         },
 };
@@ -520,6 +521,21 @@ State forceRestart(Event event){
     return sSearch;
 }
 
+State executeTask(Event event){
+    messageParameters parameters;
+    // In this state, an application-specific task will be executed.
+    // The user defines a callback function in the application layer, which is invoked here to perform the desired operation.
+    int data = 5;
+
+    snprintf(parameters.payload, sizeof(parameters.payload),"DATA:%i",data);
+    assignIP(parameters.IP1,myIP);
+    assignIP(parameters.IP2,rootIP);
+
+    encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),DATA_MESSAGE,parameters);
+    middlewareInfluenceRouting(largeSendBuffer);
+    //sendMessage(larg)
+    return sIdle;
+}
 void handleTimers(){
     int* MAC;
     messageParameters parameters;
@@ -544,8 +560,14 @@ void handleTimers(){
     }
 
     middlewareOnTimer();
-}
 
+    if( (currentTime-lastApplicationProcessingTime) >=APPLICATION_PROCESSING_INTERVAL){
+        requestTaskExecution();
+    }
+}
+void requestTaskExecution(){
+    insertLast(stateMachineEngine, eExecuteTask);
+}
 /**
  * parseMAC
  * Converts a MAC address from string format (e.g., "CC:50:E3:60:E6:87") into a 6-byte array.

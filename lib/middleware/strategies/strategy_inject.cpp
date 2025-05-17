@@ -132,7 +132,7 @@ void handleMiddlewareMessage(char* messageBuffer, size_t bufferSize){
 
 }
 
-void middlewareInfluenceRouting(char* dataMessage, size_t dataMessageSize){
+void middlewareInfluenceRouting(char* dataMessage){
     void* bestMetric = nullptr, *currentMetric;
     int *IP, bestMetricIP[4], *nextHopIP;
     messageParameters params;

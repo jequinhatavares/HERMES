@@ -18,6 +18,9 @@
 #define SSID_PREFIX      		"JessicaNode"
 #define PASS     		        "123456789"
 
+#define APPLICATION_PROCESSING_INTERVAL 120000
+unsigned long lastApplicationProcessingTime;
+
 State initNode(Event event);
 State search(Event event);
 State joinNetwork(Event event);
@@ -26,6 +29,9 @@ State handleMessages(Event event);
 State parentRecovery(Event event);
 State childRecovery(Event event);
 State forceRestart(Event event);
+State executeTask(Event event);
+
+void requestTaskExecution();
 
 //s before the name means state and e means event
 #define sInit ((State) 0)
@@ -36,7 +42,8 @@ State forceRestart(Event event);
 #define sParentRecovery ((State) 5)
 #define sChildRecovery ((State) 6)
 #define sForceRestart ((State) 7)
-#define sError ((State) 8)
+#define sExecuteTask ((State) 8)
+#define sError ((State) 9)
 
 #define eSuccess ((Event) 0)
 #define eSearch ((Event) 1)
@@ -45,7 +52,8 @@ State forceRestart(Event event);
 #define eLostParentConnection ((Event) 4)
 #define eParentUnreachable ((Event) 5)
 #define eLostChildConnection ((Event) 6)
-#define eRestart ((Event) 7)
+#define eExecuteTask ((Event) 7)
+#define eRestart ((Event) 8)
 
 extern StateMachine* SM;
 extern CircularBuffer* stateMachineEngine;
