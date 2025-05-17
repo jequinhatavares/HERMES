@@ -1,8 +1,6 @@
 #include "routing.h"
 
 
-#include <cstdio>
-
 #define LIMIT_PARENT_VISIBILITY
 
 bool iamRoot = false;
