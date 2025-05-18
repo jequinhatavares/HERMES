@@ -7,6 +7,7 @@ void setIP(void* av, void* bv);
 
 unsigned long lastMiddlewareUpdateTime = 0;
 
+
 //void (*setValue)(void*,void*) = nullptr;
 
 /***
@@ -24,21 +25,22 @@ unsigned long lastMiddlewareUpdateTime = 0;
  *
  * nodeIP[TableMaxSize][4] - Preallocated memory for storing the IP addresses of the nodes.
  ***/
-TableEntry mTable[TableMaxSize];
-TableInfo MTable = {
+TableEntry psTable[TableMaxSize];
+TableInfo PSTable = {
         .numberOfItems = 0,
         .isEqual = isIPEqual,
-        .table = mTable,
+        .table = psTable,
         .setKey = setIP,
         .setValue = nullptr,
 };
-TableInfo* metricTable = &MTable;
+TableInfo* publishSubscribeTable = &PSTable;
 
 int nodes[TableMaxSize][4];
 
 //Function Pointers Initializers
 void (*encodeMetricValue)(char*,size_t,void *) = nullptr;
 void (*decodeMetricValue)(char*,void *) = nullptr;
+
 
 
 void initMetricTable(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)) {
