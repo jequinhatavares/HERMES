@@ -15,4 +15,12 @@ typedef struct PubSubInfo{
     int subscribedTopics[MAX_TOPICS];
 }PubSubInfo;
 
+typedef enum PubSubMessageType{
+    PUBSUB_PUBLISH,
+    PUBSUB_SUBSCRIBE,
+    PUBSUB_UNSUBSCRIBE,
+    PUBSUB_ADVERTISE,
+    PUBSUB_UNADVERTISE,
+} PubSubMessageType;
+
 #endif //STRATEGY_PUBSUB_H

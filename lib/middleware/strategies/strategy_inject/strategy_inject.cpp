@@ -25,16 +25,15 @@ unsigned long lastMiddlewareUpdateTime = 0;
  *
  * nodeIP[TableMaxSize][4] - Preallocated memory for storing the IP addresses of the nodes.
  ***/
-TableEntry psTable[TableMaxSize];
-TableInfo PSTable = {
+TableEntry mTable[TableMaxSize];
+TableInfo MTable = {
         .numberOfItems = 0,
         .isEqual = isIPEqual,
-        .table = psTable,
-        .setKey = setIP,
+        .table = mTable,
+        .setKey = setKey,
         .setValue = nullptr,
 };
-TableInfo* publishSubscribeTable = &PSTable;
-
+TableInfo* metricTable = &MTable;
 int nodes[TableMaxSize][4];
 
 //Function Pointers Initializers
