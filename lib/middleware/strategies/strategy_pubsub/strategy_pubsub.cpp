@@ -273,7 +273,36 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
 }
 
 void middlewareInfluenceRoutingPubSub(char* dataMessage){
+    int i,j,k;
+    PubSubInfo *myPubSubInfo, *nodePubSubInfo;
+    int *nodeIP;
 
+    myPubSubInfo = (PubSubInfo*) tableRead(publishSubscribeTable,myIP);
+    if(myPubSubInfo == nullptr){
+        LOG(MESSAGES,ERROR,"ERROR: This node is not present in the Middleware PubSub Table\n");
+        return;
+    }
+    for (i = 0; i < publishSubscribeTable->numberOfItems; i++) {
+        nodeIP = (int*) tableKey(publishSubscribeTable,i);
+        if(nodeIP != nullptr){
+
+            if(isIPEqual(nodeIP,myIP)){
+                continue;
+            }
+            nodePubSubInfo = (PubSubInfo*) tableRead(publishSubscribeTable,nodeIP);
+
+            if(nodePubSubInfo != nullptr){
+                for (j = 0; j < MAX_TOPICS; ++j) {
+                    for (k = 0; k < MAX_TOPICS; ++k) {
+                        if(nodePubSubInfo->subscribedTopics[i] == myPubSubInfo->publishedTopics[k] ){
+                            //TODO send message
+                        }
+                    }
+                }
+            }
+
+        }
+    }
 }
 
 void setPubSubInfo(void* av, void* bv){
