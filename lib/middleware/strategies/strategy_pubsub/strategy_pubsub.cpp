@@ -393,6 +393,37 @@ void subscribeToTopic(char topic) {
 
 }
 
+void unsubscribeToTopic(char topic){
+    int i,k;
+    PubSubInfo *myPubSubInfo,myInitInfo;
+
+    myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
+    if(myPubSubInfo != nullptr){ // Update my entry in the table if it already exists
+        for (i = 0; i < MAX_TOPICS ; i++) {
+            //If the topic is found in the subscribed topics list, unsubscribe
+            if (myPubSubInfo->subscribedTopics[i] == topic) {
+                // Remove the subscription by shifting all subsequent entries one position forward to overwrite the target
+                for (k = i; k < MAX_TOPICS - 1; k++) {
+                    myPubSubInfo->subscribedTopics[k] = myPubSubInfo->subscribedTopics[k + 1];
+                }
+                //TODO put the last position to -1
+                myPubSubInfo->subscribedTopics[MAX_TOPICS - 1] = -1;
+                break;
+            }
+        }
+    }else{ // If my entry doesn't exist, create it
+        for (i = 0; i < MAX_TOPICS; i++) {
+            myInitInfo.publishedTopics[i] = -1;
+            myInitInfo.subscribedTopics[i] = -1;
+        }
+        tableAdd(pubsubTable,myIP,&myInitInfo);
+    }
+
+    // Announce that i am subscribing to that topic
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE,topic);
+    propagateMessage(smallSendBuffer,myIP);
+}
+
 void advertiseTopic(char topic){
     int i;
     PubSubInfo *myPubSubInfo, myInitInfo;
@@ -423,6 +454,37 @@ void advertiseTopic(char topic){
     propagateMessage(smallSendBuffer,myIP);
 }
 
+void unadvertiseTopic(char topic){
+    int i,k;
+    PubSubInfo *myPubSubInfo, myInitInfo;
+
+    myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
+    if(myPubSubInfo != nullptr){ // Update my entry in the table if it already exists
+        for (i = 0; i < MAX_TOPICS ; i++) {
+            //If the topic is found in the subscribed topics list, unsubscribe
+            if (myPubSubInfo->publishedTopics[i] == topic) {
+                // Remove the subscription by shifting all subsequent entries one position forward to overwrite the target
+                for (k = i; k < MAX_TOPICS - 1; k++) {
+                    myPubSubInfo->publishedTopics[k] = myPubSubInfo->publishedTopics[k + 1];
+                }
+                //TODO put the last position to -1
+                myPubSubInfo->publishedTopics[MAX_TOPICS - 1] = -1;
+                break;
+            }
+        }
+    }else{ // If my entry doesn't exist, create it
+        for (i = 0; i < MAX_TOPICS; i++) {
+            myInitInfo.subscribedTopics[i] = -1;
+            if(i == 0){myInitInfo.publishedTopics[i] = topic;}
+            else{myInitInfo.publishedTopics[i] = -1;}
+        }
+        tableAdd(pubsubTable,myIP,&myInitInfo);
+    }
+
+    // Advertise to other nodes that I am publishing this topic
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_UNADVERTISE,topic);
+    propagateMessage(smallSendBuffer,myIP);
+}
 /******************          User Defined functions            **********************/
 void decodeTopic(char* dataMessage, void* topicType){
     sscanf(dataMessage,"%*i %i", topicType);

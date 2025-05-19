@@ -31,6 +31,9 @@ void rewriteSenderIP(char* messageBuffer, size_t bufferSize);
 
 void decodeTopic(char* dataMessage, int* topicType);
 
-
+void subscribeToTopic(char topic);
+void unsubscribeToTopic(char topic);
+void advertiseTopic(char topic);
+void unadvertiseTopic(char topic);
 
 #endif //STRATEGY_PUBSUB_H
