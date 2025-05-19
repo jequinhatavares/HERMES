@@ -273,36 +273,73 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
 }
 
 void middlewareInfluenceRoutingPubSub(char* dataMessage){
-    int i,j,k;
+    int i,j;
     PubSubInfo *myPubSubInfo, *nodePubSubInfo;
     int *nodeIP;
+    int topicType;
+    bool publisher = false;
+    messageParameters parameters;
+    routingTableEntry *routingTableValue;
 
+    // Determine which topic is being published
+    decodeTopic(dataMessage,&topicType);
+
+    // First, read this node's entry in the table to check my published topics
     myPubSubInfo = (PubSubInfo*) tableRead(publishSubscribeTable,myIP);
     if(myPubSubInfo == nullptr){
         LOG(MESSAGES,ERROR,"ERROR: This node is not present in the Middleware PubSub Table\n");
         return;
     }
+
+    // Verify if this node is the publisher of the topic
+    for (i  = 0; i < MAX_TOPICS; i++) {
+        if(myPubSubInfo->publishedTopics[i] == topicType){
+            publisher = true;
+        }
+    }
+    if(!publisher) return;
+
+    // Go through the table to find which nodes have subscribed to the topic I'm publishing
     for (i = 0; i < publishSubscribeTable->numberOfItems; i++) {
         nodeIP = (int*) tableKey(publishSubscribeTable,i);
         if(nodeIP != nullptr){
 
+            //Discard my entry in the table
             if(isIPEqual(nodeIP,myIP)){
                 continue;
             }
             nodePubSubInfo = (PubSubInfo*) tableRead(publishSubscribeTable,nodeIP);
 
-            if(nodePubSubInfo != nullptr){
+            if(nodePubSubInfo != nullptr){// Safeguarding against null pointers
                 for (j = 0; j < MAX_TOPICS; ++j) {
-                    for (k = 0; k < MAX_TOPICS; ++k) {
-                        if(nodePubSubInfo->subscribedTopics[i] == myPubSubInfo->publishedTopics[k] ){
-                            //TODO send message
+                    // For each entry in the table, check if any of its subscribed topics match the topic I'm publishing
+                    if(nodePubSubInfo->subscribedTopics[i] == topicType ){
+
+                        // Encode the DATA_MESSAGE to send to the subscriber
+                        assignIP(parameters.IP1,myIP);
+                        assignIP(parameters.IP1,nodeIP);
+                        strncpy(parameters.payload,dataMessage, sizeof(parameters.payload));
+                        encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),DATA_MESSAGE,parameters);
+
+                        // Send the published topic to the subscriber node
+                        routingTableValue = (routingTableEntry*) findRouteToNode(nodeIP);
+                        if(routingTableValue != nullptr){
+                            sendMessage(routingTableValue->nextHopIP,largeSendBuffer);
+                        }else{
+                            LOG(NETWORK,ERROR,"ERROR: Unable to find a path to the node in the routing table\n");
                         }
                     }
+
                 }
             }
 
         }
     }
+}
+
+/******************          User Defined functions            **********************/
+void decodeTopic(char* dataMessage, int* topicType){
+    sscanf(dataMessage,"%*i %i", topicType);
 }
 
 void setPubSubInfo(void* av, void* bv){

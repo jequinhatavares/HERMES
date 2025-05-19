@@ -23,4 +23,13 @@ typedef enum PubSubMessageType{
     PUBSUB_UNADVERTISE,
 } PubSubMessageType;
 
+void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize);
+void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize);
+void middlewareInfluenceRoutingPubSub(char* dataMessage);
+
+
+void decodeTopic(char* dataMessage, int* topicType);
+
+
+
 #endif //STRATEGY_PUBSUB_H
