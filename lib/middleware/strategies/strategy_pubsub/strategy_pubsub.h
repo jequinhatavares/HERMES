@@ -27,8 +27,9 @@ typedef enum PubSubMessageType{
 void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType typePubSub, int topic);
 void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize);
 void middlewareInfluenceRoutingPubSub(char* dataMessage);
+void middlewareOnTimerPubSub();
 
-void rewriteSenderIP(char* messageBuffer, size_t bufferSize);
+void rewriteSenderIP(char* messageBuffer, size_t bufferSize, PubSubMessageType type);
 
 void printPubSubStruct(TableEntry* Table);
 void decodeTopic(char* dataMessage, int* topicType);

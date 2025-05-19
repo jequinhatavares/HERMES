@@ -29,6 +29,7 @@ TableInfo* pubsubTable = &PSTable;
 
 int nodes[TableMaxSize][4];
 
+unsigned long lastMiddlewareUpdateTime = 0;
 
 //Function Pointers Initializers
 void (*encodeTopicValue)(char*,size_t,void *) = nullptr;
@@ -45,20 +46,45 @@ void initMiddlewarePubSub(void (*encodeTopicFunction)(char*,size_t,void *),void 
     decodeTopicValue = decodeTopicFunction;
 }
 
-void rewriteSenderIP(char* messageBuffer, size_t bufferSize){
+void rewriteSenderIP(char* messageBuffer, size_t bufferSize, PubSubMessageType type){
     messageType globalMessageType;
     PubSubMessageType typePubSub;
     int nodeIP[4],IP[4],topic;
+    char updatedMessage[256];
 
-    // If the encoded message already contains topic information, it means this is a propagation of an already encoded message.
-    // In this case, only the sender address needs to be updated before further propagation.
-    if( sscanf(messageBuffer,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",&globalMessageType,&typePubSub,&IP[0],&IP[1],&IP[2],&IP[3]
-            ,&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3], &topic) == 11 ){
+    if (type != PUBSUB_INFO_UPDATE){
+        // If the encoded message already contains topic information, it means this is a propagation of an already encoded message.
+        // In this case, only the sender address needs to be updated before further propagation.
+        if( sscanf(messageBuffer,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",&globalMessageType,&typePubSub,&IP[0],&IP[1],&IP[2],&IP[3]
+                ,&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3], &topic) == 11 ){
 
-        snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",globalMessageType,typePubSub,myIP[0],myIP[1],myIP[2],myIP[3]
-                ,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3], topic);
+            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",globalMessageType,typePubSub,myIP[0],myIP[1],myIP[2],myIP[3]
+                    ,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3], topic);
+
+        }
+    }else{
+
+        // Parse the beginning of the message
+        sscanf(messageBuffer, "%d %d %*d.%*d.%*d.%*d %d.%d.%d.%d",
+               &globalMessageType, &typePubSub,
+               &nodeIP[0], &nodeIP[1], &nodeIP[2], &nodeIP[3]);
+
+        // Find the part after the IPs (the '|' and beyond)
+        char* restOfMessage = strchr(messageBuffer, '|');
+        if (restOfMessage == NULL) return;  // malformed messageBuffer
+
+        // Compose the updated messageBuffer
+        snprintf(updatedMessage, sizeof(updatedMessage), "%d %d %d.%d.%d.%d %d.%d.%d.%d %s",
+                 globalMessageType, typePubSub,
+                 myIP[0],myIP[1],myIP[2],myIP[3],
+                 nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3],
+                 restOfMessage);
+
+        // Copy it back
+        strncpy(messageBuffer, updatedMessage, 256);
 
     }
+
 }
 
 void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType typePubSub, int topic) {
@@ -417,6 +443,18 @@ void middlewareInfluenceRoutingPubSub(char* dataMessage){
         }
     }
 }
+
+void middlewareOnTimerPubSub(){
+    unsigned long currentTime = getCurrentTime();
+    //Periodically send this node's metric to all other nodes in the network
+    if( (currentTime - lastMiddlewareUpdateTime) >= 10000 ) {
+        encodeMiddlewareMessagePubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_INFO_UPDATE, 1);
+        propagateMessage(largeSendBuffer, myIP);
+        LOG(NETWORK,DEBUG,"Sending [MIDDLEWARE] Message: %s\n",smallSendBuffer);
+        lastMiddlewareUpdateTime = currentTime;
+    }
+}
+
 
 void subscribeToTopic(int topic) {
     int i;
