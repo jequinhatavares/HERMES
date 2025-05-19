@@ -45,51 +45,56 @@ void initMiddlewarePubSub(void (*encodeTopicFunction)(char*,size_t,void *),void 
     decodeTopicValue = decodeTopicFunction;
 }
 
-void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
-    PubSubMessageType typePubSub;
+void rewriteSenderIP(char* messageBuffer, size_t bufferSize){
     messageType globalMessageType;
-    int destinationIP[4];
-    int topic;
-    int nodeIP[4],IP[4];
+    PubSubMessageType typePubSub;
+    int nodeIP[4],IP[4],topic;
 
     // If the encoded message already contains topic information, it means this is a propagation of an already encoded message.
     // In this case, only the sender address needs to be updated before further propagation.
     if( sscanf(messageBuffer,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",&globalMessageType,&typePubSub,&IP[0],&IP[1],&IP[2],&IP[3]
             ,&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3], &topic) == 11 ){
 
-        snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",&globalMessageType,&typePubSub,myIP[0],myIP[1],myIP[2],myIP[3]
+        snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",globalMessageType,typePubSub,myIP[0],myIP[1],myIP[2],myIP[3]
                 ,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3], topic);
 
-    }else{ // If the message only contains the type, it indicates that this node should encode its own topic information
-        switch (typePubSub) {
-            case PUBSUB_PUBLISH:
-                break;
-            case PUBSUB_SUBSCRIBE:
-                //Message sent when a one subscribes to a certain topic
-                //13 1 [destination IP] [Subscriber IP] [Topic]
-                snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE,
-                         destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
-                break;
-            case PUBSUB_UNSUBSCRIBE:
-                //Message sent when a one unsubscribes to a certain topic
-                //13 2 [destination IP] [Unsubscriber IP] [Topic]
-                snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE,
-                         destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
-                break;
-            case PUBSUB_ADVERTISE:
-                // Message used to advertise that the node is publishing a new topic
-                //13 3 [sender IP] [Publisher IP] [Published Topic]
-                snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE,
-                         myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
-                break;
-            case PUBSUB_UNADVERTISE:
-                // Message used to advertise that the node is unpublishing a topic
-                //13 4 [sender IP] [Publisher IP] [UnPublished Topic]
-                snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE,
-                         myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
-                break;
-        }
     }
+}
+
+void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType typePubSub, int topic) {
+    int destinationIP[4];
+    int nodeIP[4],IP[4];
+
+    // These messages encode the node's own publish/subscribe information
+    switch (typePubSub) {
+        case PUBSUB_PUBLISH:
+            break;
+        case PUBSUB_SUBSCRIBE:
+            //Message sent when a one subscribes to a certain topic
+            //13 1 [sender IP] [Subscriber IP] [Topic]
+            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE,
+                     myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
+            break;
+        case PUBSUB_UNSUBSCRIBE:
+            //Message sent when a one unsubscribes to a certain topic
+            //13 2 [sender IP] [Unsubscriber IP] [Topic]
+            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE,
+                     myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
+            break;
+        case PUBSUB_ADVERTISE:
+            // Message used to advertise that the node is publishing a new topic
+            //13 3 [sender IP] [Publisher IP] [Published Topic]
+            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE,
+                     myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
+            break;
+        case PUBSUB_UNADVERTISE:
+            // Message used to advertise that the node is unpublishing a topic
+            //13 4 [sender IP] [Publisher IP] [UnPublished Topic]
+            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE,
+                     myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
+            break;
+    }
+
 
 }
 
@@ -153,7 +158,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             break;***/
 
             //Propagate the subscription message in the network
-            encodeMiddlewareMessagePubSub(messageBuffer, sizeof(messageBuffer));
+            rewriteSenderIP(messageBuffer, sizeof(messageBuffer));
             propagateMessage(messageBuffer,IP);
 
         case PUBSUB_UNSUBSCRIBE:
@@ -199,7 +204,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             }***/
 
             //Propagate the deleted subscription message in the network
-            encodeMiddlewareMessagePubSub(messageBuffer, sizeof(messageBuffer));
+            rewriteSenderIP(messageBuffer, sizeof(messageBuffer));
             propagateMessage(messageBuffer,IP);
 
             break;
@@ -238,7 +243,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
 
 
             //Propagate the adverting message in the network
-            encodeMiddlewareMessagePubSub(messageBuffer, sizeof(messageBuffer));
+            rewriteSenderIP(messageBuffer, sizeof(messageBuffer));
             propagateMessage(messageBuffer,IP);
 
 
@@ -280,7 +285,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             }
 
             //Propagate the unadvertised topic message in the network
-            encodeMiddlewareMessagePubSub(messageBuffer, sizeof(messageBuffer));
+            rewriteSenderIP(messageBuffer, sizeof(messageBuffer));
             propagateMessage(messageBuffer,IP);
 
             break;
@@ -383,7 +388,7 @@ void subscribeToTopic(char topic) {
     }
 
     // Announce that i am subscribing to that topic
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer));
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE,topic);
     propagateMessage(smallSendBuffer,myIP);
 
 }
@@ -414,7 +419,7 @@ void advertiseTopic(char topic){
     }
 
     // Advertise to other nodes that I am publishing this topic
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer));
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_ADVERTISE,topic);
     propagateMessage(smallSendBuffer,myIP);
 }
 
