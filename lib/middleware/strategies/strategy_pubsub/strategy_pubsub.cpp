@@ -236,7 +236,6 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
                 tableAdd(pubsubTable,nodeIP,&pbNewInfo);
             }
 
-            //TODO Check if the advertised topic is one i am subscribing and then if so send a subscrive messa to that node
 
             //Propagate the adverting message in the network
             encodeMiddlewareMessagePubSub(messageBuffer, sizeof(messageBuffer));
@@ -382,7 +381,10 @@ void subscribeToTopic(char topic) {
         }
         tableAdd(pubsubTable,myIP,&myInitInfo);
     }
-    //TODO send a message to the network informing them i am subscribing to that topic
+
+    // Announce that i am subscribing to that topic
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer));
+    propagateMessage(smallSendBuffer,myIP);
 
 }
 
@@ -410,7 +412,10 @@ void advertiseTopic(char topic){
         }
         tableAdd(pubsubTable,myIP,&myInitInfo);
     }
-    //TODO send a message advertising the topic
+
+    // Advertise to other nodes that I am publishing this topic
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer));
+    propagateMessage(smallSendBuffer,myIP);
 }
 
 /******************          User Defined functions            **********************/
