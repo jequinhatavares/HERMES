@@ -148,7 +148,7 @@ void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSu
 }
 
 void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
-    char infoPubSub[20];
+    char infoPubSub[30];
     int IP[4],nodeIP[4],topic,i,k,count=0;
     PubSubMessageType type;
     PubSubInfo pbNewInfo,*pbCurrentRecord;
@@ -210,7 +210,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             break;***/
 
             //Propagate the subscription message in the network
-            rewriteSenderIP(messageBuffer, sizeof(messageBuffer));
+            rewriteSenderIP(messageBuffer, sizeof(messageBuffer),PUBSUB_SUBSCRIBE);
             propagateMessage(messageBuffer,IP);
 
         case PUBSUB_UNSUBSCRIBE:
@@ -255,7 +255,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             }***/
 
             //Propagate the deleted subscription message in the network
-            rewriteSenderIP(messageBuffer, sizeof(messageBuffer));
+            rewriteSenderIP(messageBuffer, sizeof(messageBuffer),PUBSUB_UNSUBSCRIBE);
             propagateMessage(messageBuffer,IP);
 
             break;
@@ -293,7 +293,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             }
 
             //Propagate the adverting message in the network
-            rewriteSenderIP(messageBuffer, sizeof(messageBuffer));
+            rewriteSenderIP(messageBuffer, sizeof(messageBuffer),PUBSUB_ADVERTISE);
             propagateMessage(messageBuffer,IP);
 
             break;
@@ -334,7 +334,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             }
 
             //Propagate the unadvertised topic message in the network
-            rewriteSenderIP(messageBuffer, sizeof(messageBuffer));
+            rewriteSenderIP(messageBuffer, sizeof(messageBuffer),PUBSUB_UNADVERTISE);
             propagateMessage(messageBuffer,IP);
 
             break;
@@ -370,6 +370,10 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             }else{
                 tableAdd(pubsubTable,nodeIP,&pbNewInfo);
             }
+
+            //Propagate the unadvertised topic message in the network
+            rewriteSenderIP(messageBuffer, sizeof(messageBuffer),PUBSUB_INFO_UPDATE);
+            propagateMessage(messageBuffer,IP);
 
             break;
         default:
