@@ -24,17 +24,25 @@ TableInfo PSTable = {
         .setKey = setKey,
         .setValue = nullptr,
 };
-TableInfo* publishSubscribeTable = &PSTable;
+TableInfo* pubsubTable = &PSTable;
 
 
 int nodes[TableMaxSize][4];
 
 
+//Function Pointers Initializers
+void (*encodeTopicValue)(char*,size_t,void *) = nullptr;
+void (*decodeTopicValue)(char*,void *) = nullptr;
 
 PubSubInfo valuesPubSub[TableMaxSize];
 
-void initMiddleware(void* ){
+void initMiddlewarePubSub(void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) ){
+    //Initialize the pubsubTable
+    tableInit(pubsubTable, nodes, valuesPubSub, sizeof(int[4]), sizeof(PubSubInfo));
 
+    //Initialize function to encode/decode the topics value
+    encodeTopicValue = encodeTopicFunction;
+    decodeTopicValue = decodeTopicFunction;
 }
 
 void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
@@ -102,12 +110,12 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             sscanf(infoPubSub,"%i.%i.%i.%i %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
             break;
         case PUBSUB_SUBSCRIBE:
-            //Message sent when a one subscribes to a certain topic
-            //13 1 [destination IP]  [Subscriber IP] [Topic]
+            //Message sent when a one node subscribes to a certain topic
+            //13 1 [sender IP]  [Subscriber IP] [Topic]
             sscanf(infoPubSub,"%i.%i.%i.%i %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
 
             if(isIPEqual(myIP,IP)){
-                pbCurrentRecord = (PubSubInfo*) tableRead(publishSubscribeTable,nodeIP);
+                pbCurrentRecord = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
                 if(pbCurrentRecord != nullptr){
                     for (i = 0; i < MAX_TOPICS; i++) {
                         // Save all topics published by the node as-is.
@@ -124,7 +132,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
                             pbNewInfo.subscribedTopics[i] = pbCurrentRecord->subscribedTopics[i];
                         }
                     }
-                    if(!isTableUpdated)tableUpdate(publishSubscribeTable,nodeIP,&pbNewInfo);
+                    if(!isTableUpdated)tableUpdate(pubsubTable,nodeIP,&pbNewInfo);
                 }else{
                     //If the node does not exist in the table, add it with all published and subscribed topics initialized to -1,
                     // except for the announced subscribed topic
@@ -133,24 +141,28 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
                         if(i == 0){pbNewInfo.subscribedTopics[i] = topic;}
                         else{pbNewInfo.subscribedTopics[i] = -1;}
                     }
-                    tableAdd(publishSubscribeTable,nodeIP,&pbNewInfo);
+                    tableAdd(pubsubTable,nodeIP,&pbNewInfo);
                 }
             }
 
             //Forward the message to the next hop toward the destination IP
-            routingTableValue = (routingTableEntry*) findRouteToNode(IP);
+            /***routingTableValue = (routingTableEntry*) findRouteToNode(IP);
             if(routingTableValue != nullptr){
                 sendMessage(routingTableValue->nextHopIP, messageBuffer);
             }
-            break;
+            break;***/
+
+            //Propagate the subscription message in the network
+            encodeMiddlewareMessagePubSub(messageBuffer, sizeof(messageBuffer));
+            propagateMessage(messageBuffer,IP);
 
         case PUBSUB_UNSUBSCRIBE:
             //Message sent when a one unsubscribes to a certain topic
-            //13 2 [destination IP] [Unsubscriber IP] [Topic]
+            //13 2 [sender IP] [Unsubscriber IP] [Topic]
             sscanf(infoPubSub,"%i.%i.%i.%i %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
 
             if(isIPEqual(myIP,IP)) {
-                pbCurrentRecord = (PubSubInfo *) tableRead(publishSubscribeTable, nodeIP);
+                pbCurrentRecord = (PubSubInfo *) tableRead(pubsubTable, nodeIP);
                 if (pbCurrentRecord != nullptr) {
                     for (i = 0; i < MAX_TOPICS; i++) {
                         // Save all topics published by the node as-is.
@@ -170,21 +182,25 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
                         }
 
                     }
-                    if (!isTableUpdated)tableUpdate(publishSubscribeTable, nodeIP, &pbNewInfo);
+                    if (!isTableUpdated)tableUpdate(pubsubTable, nodeIP, &pbNewInfo);
                 } else {
                     //If the node does not exist in the table, add it with all published and subscribed topics initialized to -1
                     for (int i = 0; i < MAX_TOPICS; i++) {
                         pbNewInfo.publishedTopics[i] = -1;
                         pbNewInfo.subscribedTopics[i] = -1;
                     }
-                    tableAdd(publishSubscribeTable, nodeIP, &pbNewInfo);
+                    tableAdd(pubsubTable, nodeIP, &pbNewInfo);
                 }
             }
             //Forward the message to the next hop toward the destination IP
-            routingTableValue = (routingTableEntry*) findRouteToNode(IP);
+            /***routingTableValue = (routingTableEntry*) findRouteToNode(IP);
             if(routingTableValue != nullptr){
                 sendMessage(routingTableValue->nextHopIP, messageBuffer);
-            }
+            }***/
+
+            //Propagate the deleted subscription message in the network
+            encodeMiddlewareMessagePubSub(messageBuffer, sizeof(messageBuffer));
+            propagateMessage(messageBuffer,IP);
 
             break;
         case PUBSUB_ADVERTISE:
@@ -208,7 +224,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
                         pbNewInfo.publishedTopics[i] = pbCurrentRecord->publishedTopics[i];
                     }
                 }
-                if(!isTableUpdated)tableUpdate(publishSubscribeTable,nodeIP,&pbNewInfo);
+                if(!isTableUpdated)tableUpdate(pubsubTable,nodeIP,&pbNewInfo);
             }else{
                 //If the node does not exist in the table, add it with all published and subscribed topics initialized to -1,
                 // except for the announced subscribed topic
@@ -217,11 +233,15 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
                     if(i == 0){pbNewInfo.publishedTopics[i] = topic;}
                     else{pbNewInfo.publishedTopics[i] = -1;}
                 }
-                tableAdd(publishSubscribeTable,nodeIP,&pbNewInfo);
+                tableAdd(pubsubTable,nodeIP,&pbNewInfo);
             }
 
+            //TODO Check if the advertised topic is one i am subscribing and then if so send a subscrive messa to that node
+
+            //Propagate the adverting message in the network
             encodeMiddlewareMessagePubSub(messageBuffer, sizeof(messageBuffer));
             propagateMessage(messageBuffer,IP);
+
 
             break;
 
@@ -230,7 +250,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             //13 4 [sender IP] [Publisher IP] [UnPublished Topic]
             sscanf(infoPubSub,"%i.%i.%i.%i %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
 
-            pbCurrentRecord = (PubSubInfo*) tableRead(publishSubscribeTable,nodeIP);
+            pbCurrentRecord = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
             if(pbCurrentRecord != nullptr){
                 for (i = 0; i < MAX_TOPICS; i++) {
                     // Save all topics published by the node as-is.
@@ -250,16 +270,17 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
                     }
 
                 }
-                if(!isTableUpdated)tableUpdate(publishSubscribeTable,nodeIP,&pbNewInfo);
+                if(!isTableUpdated)tableUpdate(pubsubTable,nodeIP,&pbNewInfo);
             }else{
                 //If the node does not exist in the table, add it with all published and subscribed topics initialized to -1
                 for (int i = 0; i < MAX_TOPICS; i++){
                     pbNewInfo.publishedTopics[i] = -1;
                     pbNewInfo.subscribedTopics[i] = -1;
                 }
-                tableAdd(publishSubscribeTable,nodeIP,&pbNewInfo);
+                tableAdd(pubsubTable,nodeIP,&pbNewInfo);
             }
 
+            //Propagate the unadvertised topic message in the network
             encodeMiddlewareMessagePubSub(messageBuffer, sizeof(messageBuffer));
             propagateMessage(messageBuffer,IP);
 
@@ -282,10 +303,10 @@ void middlewareInfluenceRoutingPubSub(char* dataMessage){
     routingTableEntry *routingTableValue;
 
     // Determine which topic is being published
-    decodeTopic(dataMessage,&topicType);
+    decodeTopicValue(dataMessage,&topicType);
 
     // First, read this node's entry in the table to check my published topics
-    myPubSubInfo = (PubSubInfo*) tableRead(publishSubscribeTable,myIP);
+    myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
     if(myPubSubInfo == nullptr){
         LOG(MESSAGES,ERROR,"ERROR: This node is not present in the Middleware PubSub Table\n");
         return;
@@ -300,15 +321,15 @@ void middlewareInfluenceRoutingPubSub(char* dataMessage){
     if(!publisher) return;
 
     // Go through the table to find which nodes have subscribed to the topic I'm publishing
-    for (i = 0; i < publishSubscribeTable->numberOfItems; i++) {
-        nodeIP = (int*) tableKey(publishSubscribeTable,i);
+    for (i = 0; i < pubsubTable->numberOfItems; i++) {
+        nodeIP = (int*) tableKey(pubsubTable,i);
         if(nodeIP != nullptr){
 
             //Discard my entry in the table
             if(isIPEqual(nodeIP,myIP)){
                 continue;
             }
-            nodePubSubInfo = (PubSubInfo*) tableRead(publishSubscribeTable,nodeIP);
+            nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
 
             if(nodePubSubInfo != nullptr){// Safeguarding against null pointers
                 for (j = 0; j < MAX_TOPICS; ++j) {
@@ -337,8 +358,63 @@ void middlewareInfluenceRoutingPubSub(char* dataMessage){
     }
 }
 
+void subscribeToTopic(char topic) {
+    int i;
+    PubSubInfo *myPubSubInfo, myInitInfo;
+
+    myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
+    if(myPubSubInfo != nullptr){ // Update my entry in the table if it already exists
+        for (i = 0; i < MAX_TOPICS ; i++) {
+            //The topic is already in my list of subscribed topics
+            if(myPubSubInfo->subscribedTopics[i] == topic){
+                return;
+            }
+            //Fill the first available position with the subscribed topic
+            if(myPubSubInfo->subscribedTopics[i] == -1){
+                myPubSubInfo->subscribedTopics[i] = topic;
+            }
+        }
+    }else{ // If my entry doesn't exist, create it
+        for (i = 0; i < MAX_TOPICS; i++) {
+            myInitInfo.publishedTopics[i] = -1;
+            if(i == 0){myInitInfo.subscribedTopics[i] = topic;}
+            else{myInitInfo.subscribedTopics[i] = -1;}
+        }
+        tableAdd(pubsubTable,myIP,&myInitInfo);
+    }
+    //TODO send a message to the network informing them i am subscribing to that topic
+
+}
+
+void advertiseTopic(char topic){
+    int i;
+    PubSubInfo *myPubSubInfo, myInitInfo;
+
+    myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
+    if(myPubSubInfo != nullptr){ // Update my entry in the table if it already exists
+        for (i = 0; i < MAX_TOPICS ; i++) {
+            //The topic is already in my list of subscribed topics
+            if(myPubSubInfo->publishedTopics[i] == topic){
+                return;
+            }
+            //Fill the first available position with the subscribed topic
+            if(myPubSubInfo->publishedTopics[i] == -1){
+                myPubSubInfo->publishedTopics[i] = topic;
+            }
+        }
+    }else{ // If my entry doesn't exist, create it
+        for (i = 0; i < MAX_TOPICS; i++) {
+            myInitInfo.subscribedTopics[i] = -1;
+            if(i == 0){myInitInfo.publishedTopics[i] = topic;}
+            else{myInitInfo.publishedTopics[i] = -1;}
+        }
+        tableAdd(pubsubTable,myIP,&myInitInfo);
+    }
+    //TODO send a message advertising the topic
+}
+
 /******************          User Defined functions            **********************/
-void decodeTopic(char* dataMessage, int* topicType){
+void decodeTopic(char* dataMessage, void* topicType){
     sscanf(dataMessage,"%*i %i", topicType);
 }
 

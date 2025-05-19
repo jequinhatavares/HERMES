@@ -11,8 +11,8 @@
 #define MAX_TOPICS 3
 
 typedef struct PubSubInfo{
-    int publishedTopics[MAX_TOPICS];
-    int subscribedTopics[MAX_TOPICS];
+    int publishedTopics[MAX_TOPICS]; //Topics that each node publishes
+    int subscribedTopics[MAX_TOPICS]; //Topics that the node subscribes
 }PubSubInfo;
 
 typedef enum PubSubMessageType{
