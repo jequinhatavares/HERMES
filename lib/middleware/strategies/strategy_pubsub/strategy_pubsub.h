@@ -21,6 +21,7 @@ typedef enum PubSubMessageType{
     PUBSUB_UNSUBSCRIBE,
     PUBSUB_ADVERTISE,
     PUBSUB_UNADVERTISE,
+    PUBSUB_INFO_UPDATE,
 } PubSubMessageType;
 
 void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType typePubSub, int topic);
@@ -32,9 +33,9 @@ void rewriteSenderIP(char* messageBuffer, size_t bufferSize);
 void printPubSubStruct(TableEntry* Table);
 void decodeTopic(char* dataMessage, int* topicType);
 
-void subscribeToTopic(char topic);
-void unsubscribeToTopic(char topic);
-void advertiseTopic(char topic);
-void unadvertiseTopic(char topic);
+void subscribeToTopic(int topic);
+void unsubscribeToTopic(int topic);
+void advertiseTopic(int topic);
+void unadvertiseTopic(int topic);
 
 #endif //STRATEGY_PUBSUB_H

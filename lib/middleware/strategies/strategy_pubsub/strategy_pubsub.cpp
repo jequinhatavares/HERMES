@@ -62,8 +62,6 @@ void rewriteSenderIP(char* messageBuffer, size_t bufferSize){
 }
 
 void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType typePubSub, int topic) {
-    int destinationIP[4];
-    int nodeIP[4],IP[4];
 
     // These messages encode the node's own publish/subscribe information
     switch (typePubSub) {
@@ -93,6 +91,31 @@ void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSu
             snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE,
                      myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
             break;
+
+        case PUBSUB_INFO_UPDATE:
+            // Message used to advertise all publish-subscribe information of the node
+            //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
+            char tmpMessage1[10],tmpMessage2[10];
+            char tmpMessage3[10] = "",tmpMessage4[10] = "";
+            PubSubInfo *myPubSubInfo;
+
+            myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
+            if(myPubSubInfo != nullptr){
+                snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i | ",MIDDLEWARE_MESSAGE,PUBSUB_INFO_UPDATE,
+                         myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3]);
+
+                for (int i = 0; i < MAX_TOPICS; i++) {
+                    snprintf(tmpMessage1, sizeof(tmpMessage1),"%i ",myPubSubInfo->publishedTopics[i]);
+                    snprintf(tmpMessage2, sizeof(tmpMessage1),"%i ",myPubSubInfo->subscribedTopics[i]);
+
+                    strcat(tmpMessage3,tmpMessage1);
+                    strcat(tmpMessage4,tmpMessage2);
+                }
+                strcat(messageBuffer,tmpMessage3);
+                strcat(messageBuffer,tmpMessage4);
+            }
+
+            break;
     }
 
 
@@ -100,11 +123,14 @@ void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSu
 
 void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
     char infoPubSub[20];
-    int IP[4],nodeIP[4],topic,i,k;
+    int IP[4],nodeIP[4],topic,i,k,count=0;
     PubSubMessageType type;
     PubSubInfo pbNewInfo,*pbCurrentRecord;
     bool isTableUpdated = false;
     routingTableEntry *routingTableValue;
+    char* token, *spaceToken;
+    char* nodeIPPart, *topicsPart;
+
     //MESSAGE_TYPE  PUBSUB_TYPE  [sender/destination IP]  [nodeIP]  topic
     sscanf(messageBuffer,"%*i %i %i.%i.%i.%i %s",&type,&IP[0],&IP[1],&IP[2],&IP[3],infoPubSub);
 
@@ -141,7 +167,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
                 }else{
                     //If the node does not exist in the table, add it with all published and subscribed topics initialized to -1,
                     // except for the announced subscribed topic
-                    for (int i = 0; i < MAX_TOPICS; i++){
+                    for (i = 0; i < MAX_TOPICS; i++){
                         pbNewInfo.publishedTopics[i] = -1;
                         if(i == 0){pbNewInfo.subscribedTopics[i] = topic;}
                         else{pbNewInfo.subscribedTopics[i] = -1;}
@@ -179,7 +205,6 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
                             for (k = i; k < MAX_TOPICS - 1; k++) {
                                 pbNewInfo.subscribedTopics[k] = pbCurrentRecord->subscribedTopics[k + 1];
                             }
-                            //TODO put the last position to -1
                             pbNewInfo.subscribedTopics[MAX_TOPICS - 1] = -1;
 
                             isTableUpdated = true;
@@ -190,7 +215,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
                     if (!isTableUpdated)tableUpdate(pubsubTable, nodeIP, &pbNewInfo);
                 } else {
                     //If the node does not exist in the table, add it with all published and subscribed topics initialized to -1
-                    for (int i = 0; i < MAX_TOPICS; i++) {
+                    for (i = 0; i < MAX_TOPICS; i++) {
                         pbNewInfo.publishedTopics[i] = -1;
                         pbNewInfo.subscribedTopics[i] = -1;
                     }
@@ -233,7 +258,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             }else{
                 //If the node does not exist in the table, add it with all published and subscribed topics initialized to -1,
                 // except for the announced subscribed topic
-                for (int i = 0; i < MAX_TOPICS; i++){
+                for (i = 0; i < MAX_TOPICS; i++){
                     pbNewInfo.subscribedTopics[i] = -1;
                     if(i == 0){pbNewInfo.publishedTopics[i] = topic;}
                     else{pbNewInfo.publishedTopics[i] = -1;}
@@ -241,11 +266,9 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
                 tableAdd(pubsubTable,nodeIP,&pbNewInfo);
             }
 
-
             //Propagate the adverting message in the network
             rewriteSenderIP(messageBuffer, sizeof(messageBuffer));
             propagateMessage(messageBuffer,IP);
-
 
             break;
 
@@ -277,7 +300,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
                 if(!isTableUpdated)tableUpdate(pubsubTable,nodeIP,&pbNewInfo);
             }else{
                 //If the node does not exist in the table, add it with all published and subscribed topics initialized to -1
-                for (int i = 0; i < MAX_TOPICS; i++){
+                for (i = 0; i < MAX_TOPICS; i++){
                     pbNewInfo.publishedTopics[i] = -1;
                     pbNewInfo.subscribedTopics[i] = -1;
                 }
@@ -290,6 +313,39 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
 
             break;
 
+        case PUBSUB_INFO_UPDATE:
+            // Message used to advertise all publish-subscribe information of the node
+            //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
+            nodeIPPart = strtok(infoPubSub, "|");  // First part before the '|'
+            topicsPart = strtok(NULL, "|");           // Second part after the '|'
+
+            if (nodeIPPart != NULL && topicsPart != NULL) {
+                // Parse node IP from nodeIPPart (you may need to skip the message type and sender IP first)
+                int dummy1, dummy2, senderIP[4];
+                sscanf(nodeIPPart, "%d.%d.%d.%d",&nodeIP[0], &nodeIP[1], &nodeIP[2], &nodeIP[3]);
+
+                // Parse the topic lists (published and subscribed)
+                int count = 0;
+                spaceToken = strtok(topicsPart, " ");
+                while (spaceToken != NULL && count < 2 * MAX_TOPICS) {
+                    if (count < MAX_TOPICS) {
+                        pbNewInfo.publishedTopics[count] = atoi(spaceToken);
+                    } else {
+                        pbNewInfo.subscribedTopics[count - MAX_TOPICS] = atoi(spaceToken);
+                    }
+                    count++;
+                    spaceToken = strtok(NULL, " ");
+                }
+            }
+
+            pbCurrentRecord = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
+            if(pbCurrentRecord != nullptr){
+                tableUpdate(pubsubTable,nodeIP,&pbNewInfo);
+            }else{
+                tableAdd(pubsubTable,nodeIP,&pbNewInfo);
+            }
+
+            break;
         default:
             break;
 
@@ -362,7 +418,7 @@ void middlewareInfluenceRoutingPubSub(char* dataMessage){
     }
 }
 
-void subscribeToTopic(char topic) {
+void subscribeToTopic(int topic) {
     int i;
     PubSubInfo *myPubSubInfo, myInitInfo;
 
@@ -393,7 +449,7 @@ void subscribeToTopic(char topic) {
 
 }
 
-void unsubscribeToTopic(char topic){
+void unsubscribeToTopic(int topic){
     int i,k;
     PubSubInfo *myPubSubInfo,myInitInfo;
 
@@ -424,7 +480,7 @@ void unsubscribeToTopic(char topic){
     propagateMessage(smallSendBuffer,myIP);
 }
 
-void advertiseTopic(char topic){
+void advertiseTopic(int topic){
     int i;
     PubSubInfo *myPubSubInfo, myInitInfo;
 
@@ -454,7 +510,7 @@ void advertiseTopic(char topic){
     propagateMessage(smallSendBuffer,myIP);
 }
 
-void unadvertiseTopic(char topic){
+void unadvertiseTopic(int topic){
     int i,k;
     PubSubInfo *myPubSubInfo, myInitInfo;
 
