@@ -29,6 +29,7 @@ void middlewareInfluenceRoutingPubSub(char* dataMessage);
 
 void rewriteSenderIP(char* messageBuffer, size_t bufferSize);
 
+void printPubSubStruct(TableEntry* Table);
 void decodeTopic(char* dataMessage, int* topicType);
 
 void subscribeToTopic(char topic);

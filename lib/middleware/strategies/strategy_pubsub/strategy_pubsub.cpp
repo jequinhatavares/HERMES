@@ -485,6 +485,26 @@ void unadvertiseTopic(char topic){
     encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_UNADVERTISE,topic);
     propagateMessage(smallSendBuffer,myIP);
 }
+
+void printPubSubStruct(TableEntry* Table){
+    LOG(NETWORK,INFO,"Node[%d.%d.%d.%d] → ",
+        ((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3]);
+
+    LOG(NETWORK,INFO,"(Publishes: ");
+    for (int i = 0; i < MAX_TOPICS; ++i) {
+        LOG(NETWORK,INFO,"%d | ",
+            ((PubSubInfo *)Table->value)->publishedTopics[i]);
+    }
+    LOG(NETWORK,INFO,") ");
+
+    LOG(NETWORK,INFO,"(Subscriptions: ");
+    for (int i = 0; i < MAX_TOPICS; ++i) {
+        LOG(NETWORK,INFO,"%d | ",
+            ((PubSubInfo *)Table->value)->subscribedTopics[i]);
+    }
+    LOG(NETWORK,INFO,")\n");
+
+}
 /******************          User Defined functions            **********************/
 void decodeTopic(char* dataMessage, void* topicType){
     sscanf(dataMessage,"%*i %i", topicType);
