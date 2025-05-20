@@ -37,7 +37,8 @@ void (*decodeTopicValue)(char*,void *) = nullptr;
 
 PubSubInfo valuesPubSub[TableMaxSize];
 
-void initMiddlewarePubSub(void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) ){
+void initMiddlewarePubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) ){
+    pubsubTable->setValue = setValueFunction;
     //Initialize the pubsubTable
     tableInit(pubsubTable, nodesPubSub, valuesPubSub, sizeof(int[4]), sizeof(PubSubInfo));
 
@@ -465,7 +466,7 @@ void subscribeToTopic(int topic) {
     PubSubInfo *myPubSubInfo, myInitInfo;
 
     myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
-    if(myPubSubInfo != nullptr){ // Update my entry in the table if it already exists
+   if(myPubSubInfo != nullptr){ // Update my entry in the table if it already exists
         for (i = 0; i < MAX_TOPICS ; i++) {
             //The topic is already in my list of subscribed topics
             if(myPubSubInfo->subscribedTopics[i] == topic){
@@ -474,6 +475,7 @@ void subscribeToTopic(int topic) {
             //Fill the first available position with the subscribed topic
             if(myPubSubInfo->subscribedTopics[i] == -1){
                 myPubSubInfo->subscribedTopics[i] = topic;
+                return;
             }
         }
     }else{ // If my entry doesn't exist, create it
@@ -536,6 +538,7 @@ void advertiseTopic(int topic){
             //Fill the first available position with the subscribed topic
             if(myPubSubInfo->publishedTopics[i] == -1){
                 myPubSubInfo->publishedTopics[i] = topic;
+                return;
             }
         }
     }else{ // If my entry doesn't exist, create it

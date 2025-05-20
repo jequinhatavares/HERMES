@@ -27,7 +27,7 @@ typedef enum PubSubMessageType{
     PUBSUB_INFO_UPDATE,
 } PubSubMessageType;
 
-void initMiddlewarePubSub(void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) );
+void initMiddlewarePubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) );
 void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType typePubSub, int topic);
 void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize);
 void middlewareInfluenceRoutingPubSub(char* dataMessage);
@@ -38,10 +38,12 @@ void rewriteSenderIP(char* messageBuffer, size_t bufferSize, PubSubMessageType t
 void printPubSubStruct(TableEntry* Table);
 void decodeTopic(char* dataMessage, void *topicType);
 void encodeTopic(char*DataMessage,size_t messageSize, void* topic);
+void setPubSubInfo(void* av, void* bv);
 
 void subscribeToTopic(int topic);
 void unsubscribeToTopic(int topic);
 void advertiseTopic(int topic);
 void unadvertiseTopic(int topic);
+
 
 #endif //STRATEGY_PUBSUB_H

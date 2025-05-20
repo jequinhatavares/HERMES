@@ -12,13 +12,45 @@
 
 void test_init_middleware(){
     int IP[4]={1,1,1,1};
-    initMiddlewarePubSub(encodeTopic,decodeTopic);
+    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
     tablePrint(pubsubTable, printPubSubStruct);
 
     tableClean(pubsubTable);
 
 }
+
+void test_add_subscription(){
+    int topic = 1, topic2 = 2;
+
+    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+
+    //printf("MyIP: %i.%i.%i.%i\n", myIP[0],myIP[1],myIP[2],myIP[3]);
+    subscribeToTopic(topic);
+
+    tablePrint(pubsubTable, printPubSubStruct);
+
+    unsubscribeToTopic(topic);
+
+    tablePrint(pubsubTable, printPubSubStruct);
+
+    tableClean(pubsubTable);
+
+    subscribeToTopic(topic);
+    subscribeToTopic(topic2);
+
+    tablePrint(pubsubTable, printPubSubStruct);
+
+    unsubscribeToTopic(topic);
+
+    tablePrint(pubsubTable, printPubSubStruct);
+
+    subscribeToTopic(topic2);
+
+    tablePrint(pubsubTable, printPubSubStruct);
+
+}
+
 
 
 
@@ -29,8 +61,11 @@ void setUp(void){
     enableModule(DEBUG_SERVER);
     enableModule(CLI);
 
-    lastModule = MESSAGES;
+    lastModule = NETWORK;
     currentLogLevel = DEBUG;
+
+    int IP[4]={1,1,1,1};
+    assignIP(myIP,IP);
 }
 
 void tearDown(void){}
@@ -38,6 +73,7 @@ void tearDown(void){}
 int main(int argc, char** argv){
     UNITY_BEGIN();
     RUN_TEST(test_init_middleware);
+    RUN_TEST(test_add_subscription);
 
     UNITY_END();
 }

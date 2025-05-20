@@ -121,11 +121,12 @@ void LOG(LogModules module, LogLevels level, const char* format, ...) {
         return;
     }
 
+    /***
     if(module == STATE_MACHINE) logSimplePrint("[SM] ");
     else if(module == MESSAGES)logSimplePrint("[M] ");
     else if(module == NETWORK)logSimplePrint("[N] ");
     else if(module == DEBUG_SERVER)logSimplePrint("[D] ");
-
+    ***/
     va_list args;
     va_start(args,format); //Initialize argument list
 
