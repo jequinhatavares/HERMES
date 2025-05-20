@@ -14,6 +14,10 @@
 #include "raspberrypi/time_raspberrypi.h"
 #endif
 
+#if defined(NATIVE)
+#include "native/time_native.h"
+#endif
+
 //#if defined(raspberrypi_3b)
 //#include "raspberrypi/wifi_raspberrypi.h"
 //#endif
