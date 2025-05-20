@@ -1,7 +1,7 @@
 #include <unity.h>
 #include <cstdio>
 #include <string.h>
-#include "../lib/middleware/strategies/strategy_inject.h"
+#include "../lib/middleware/strategies/strategy_inject/strategy_inject.h"
 #include "table.h"
 
 //pio test -e native -f "test_middleware" -v

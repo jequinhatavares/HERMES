@@ -27,9 +27,9 @@ TableInfo PSTable = {
 TableInfo* pubsubTable = &PSTable;
 
 
-int nodes[TableMaxSize][4];
+int nodesPubSub[TableMaxSize][4];
 
-unsigned long lastMiddlewareUpdateTime = 0;
+unsigned long lastMiddlewareUpdateTimePubSub = 0;
 
 //Function Pointers Initializers
 void (*encodeTopicValue)(char*,size_t,void *) = nullptr;
@@ -39,7 +39,7 @@ PubSubInfo valuesPubSub[TableMaxSize];
 
 void initMiddlewarePubSub(void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) ){
     //Initialize the pubsubTable
-    tableInit(pubsubTable, nodes, valuesPubSub, sizeof(int[4]), sizeof(PubSubInfo));
+    tableInit(pubsubTable, nodesPubSub, valuesPubSub, sizeof(int[4]), sizeof(PubSubInfo));
 
     //Initialize function to encode/decode the topics value
     encodeTopicValue = encodeTopicFunction;
@@ -451,7 +451,7 @@ void middlewareInfluenceRoutingPubSub(char* dataMessage){
 void middlewareOnTimerPubSub(){
     unsigned long currentTime = getCurrentTime();
     //Periodically send this node's metric to all other nodes in the network
-    if( (currentTime - lastMiddlewareUpdateTime) >= 10000 ) {
+    if( (currentTime - lastMiddlewareUpdateTimePubSub) >= 10000 ) {
         encodeMiddlewareMessagePubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_INFO_UPDATE, 1);
         propagateMessage(largeSendBuffer, myIP);
         LOG(NETWORK,DEBUG,"Sending [MIDDLEWARE] Message: %s\n",smallSendBuffer);
@@ -607,7 +607,9 @@ void printPubSubStruct(TableEntry* Table){
 void decodeTopic(char* dataMessage, void* topicType){
     sscanf(dataMessage,"%*i %i", topicType);
 }
+void encodeTopic(char*DataMessage,size_t messageSize, void* topic) {
 
+}
 void setPubSubInfo(void* av, void* bv){
     PubSubInfo *a = (PubSubInfo*) av;
     PubSubInfo *b = (PubSubInfo*) bv;

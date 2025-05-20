@@ -12,7 +12,7 @@
 #include <snake_queue.h>
 #include <logger.h>
 #include <cstring>
-#include <../middleware/strategies/strategy_inject.h>
+#include <../middleware/strategies/strategy_inject/strategy_inject.h>
 
 
 #define SSID_PREFIX      		"JessicaNode"
