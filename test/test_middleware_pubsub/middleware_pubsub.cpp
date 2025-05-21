@@ -162,12 +162,157 @@ void test_handle_middleware_subscribe_message(){
     advertiseTopic(topic3);
 
     handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
-    tablePrint(pubsubTable, printPubSubStruct);
     nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
-    //TEST_ASSERT(nodePubSubInfo != nullptr);
-    //TEST_ASSERT(containsTopic(nodePubSubInfo->subscribedTopics,topic3));
+    TEST_ASSERT(nodePubSubInfo != nullptr);
+    TEST_ASSERT(containsTopic(nodePubSubInfo->subscribedTopics,topic3));
+
+
+    tableClean(pubsubTable);
 
 }
+
+void test_handle_middleware_unsubscribe_message(){
+    char correctEncodedMsg[50] = "13 5 1.1.1.1 1.1.1.1 | 2 -1 -1 1 0 -1 ";
+    char receivedMiddlewareMessage[50] = "13 1 3.3.3.3 2.2.2.2 2";
+    char receivedMiddlewareMessage2[50] = "13 2 3.3.3.3 2.2.2.2 2";
+    topicTypes topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
+    PubSubInfo *nodePubSubInfo;
+    int nodeIP[4] ={2,2,2,2};
+
+    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+
+    subscribeToTopic(topic);
+    subscribeToTopic(topic2);
+    advertiseTopic(topic3);
+
+    handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+    handleMiddlewareMessagePubSub(receivedMiddlewareMessage2, sizeof(receivedMiddlewareMessage));
+    nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
+    TEST_ASSERT(nodePubSubInfo != nullptr);
+    TEST_ASSERT(!containsTopic(nodePubSubInfo->subscribedTopics,topic3));
+
+
+    tableClean(pubsubTable);
+}
+
+void test_handle_middleware_advertise_message(){
+    char correctEncodedMsg[50] = "13 5 1.1.1.1 1.1.1.1 | 2 -1 -1 1 0 -1 ";
+    char receivedMiddlewareMessage[50] = "13 3 3.3.3.3 2.2.2.2 2";
+    char receivedMiddlewareMessage2[50] = "13 2 3.3.3.3 2.2.2.2 2";
+    topicTypes topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
+    PubSubInfo *nodePubSubInfo;
+    int nodeIP[4] ={2,2,2,2};
+
+    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+
+    subscribeToTopic(topic);
+    subscribeToTopic(topic2);
+    advertiseTopic(topic3);
+
+    handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+    nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
+    TEST_ASSERT(nodePubSubInfo != nullptr);
+    TEST_ASSERT(containsTopic(nodePubSubInfo->publishedTopics,topic3));
+
+    tableClean(pubsubTable);
+}
+
+void test_handle_middleware_unadvertise_message(){
+    char correctEncodedMsg[50] = "13 5 1.1.1.1 1.1.1.1 | 2 -1 -1 1 0 -1 ";
+    char receivedMiddlewareMessage[50] = "13 3 3.3.3.3 2.2.2.2 2";
+    char receivedMiddlewareMessage2[50] = "13 4 3.3.3.3 2.2.2.2 2";
+    topicTypes topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
+    PubSubInfo *nodePubSubInfo;
+    int nodeIP[4] ={2,2,2,2};
+
+    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+
+    subscribeToTopic(topic);
+    subscribeToTopic(topic2);
+    advertiseTopic(topic3);
+
+    handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+    handleMiddlewareMessagePubSub(receivedMiddlewareMessage2, sizeof(receivedMiddlewareMessage));
+
+
+    nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
+    TEST_ASSERT(nodePubSubInfo != nullptr);
+    TEST_ASSERT(!containsTopic(nodePubSubInfo->publishedTopics,topic3));
+
+    tableClean(pubsubTable);
+}
+
+void test_handle_middleware_info_update_message(){
+    //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
+    char receivedMiddlewareMessage[50] = "13 5 3.3.3.3 2.2.2.2 | 2 0 -1 -1 -1 -1";
+    char receivedMiddlewareMessage2[50] = "13 4 3.3.3.3 2.2.2.2 2";
+    topicTypes topic = TEMPERATURE, topic2 = HUMIDITY, topic3 = CAMERA;
+    PubSubInfo *nodePubSubInfo;
+    int nodeIP[4] ={2,2,2,2};
+
+    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+
+    subscribeToTopic(topic);
+    subscribeToTopic(topic2);
+    advertiseTopic(topic3);
+
+    handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+
+    tablePrint(pubsubTable,printPubSubStruct);
+
+    nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
+    TEST_ASSERT(nodePubSubInfo != nullptr);
+    TEST_ASSERT(containsTopic(nodePubSubInfo->publishedTopics,topic));
+    TEST_ASSERT(!containsTopic(nodePubSubInfo->publishedTopics,topic2));
+    TEST_ASSERT(containsTopic(nodePubSubInfo->publishedTopics,topic3));
+    TEST_ASSERT(!containsTopic(nodePubSubInfo->subscribedTopics,topic));
+    TEST_ASSERT(!containsTopic(nodePubSubInfo->subscribedTopics,topic2));
+    TEST_ASSERT(!containsTopic(nodePubSubInfo->subscribedTopics,topic3));/******/
+
+    tableClean(pubsubTable);
+}
+
+
+void test_message_rewriteIP(){
+    char correctEncodedMsg[50] = "13 3 1.1.1.1 2.2.2.2 2";
+    char receivedMiddlewareMessage[50] = "13 3 3.3.3.3 2.2.2.2 2";
+
+    topicTypes topic = HUMIDITY;
+    PubSubInfo *myPubSubInfo;
+
+    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+
+    handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+    printf("Encoded Message: %s\n",receivedMiddlewareMessage);
+
+    TEST_ASSERT(strcmp(receivedMiddlewareMessage,correctEncodedMsg) == 0);
+
+    tableClean(pubsubTable);
+}
+
+void test_message_rewriteIP_info_update_message(){
+    char correctEncodedMsg[50] = "13 5 1.1.1.1 2.2.2.2 | 2 0 -1 -1 -1 -1";
+    char receivedMiddlewareMessage[50] = "13 5 3.3.3.3 2.2.2.2 | 2 0 -1 -1 -1 -1";
+
+    topicTypes topic = HUMIDITY;
+    PubSubInfo *myPubSubInfo;
+
+    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+
+    handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+    printf("Encoded Message: %s\n",receivedMiddlewareMessage);
+
+    TEST_ASSERT(strcmp(receivedMiddlewareMessage,correctEncodedMsg) == 0);
+
+    tableClean(pubsubTable);
+}
+
 
 void setUp(void){
     enableModule(STATE_MACHINE);
@@ -194,6 +339,10 @@ int main(int argc, char** argv){
     RUN_TEST(test_encode_middleware_advertise_message);
     RUN_TEST(test_encode_middleware_info_update_message);
     RUN_TEST(test_handle_middleware_subscribe_message);
-
+    RUN_TEST(test_handle_middleware_unsubscribe_message);
+    RUN_TEST(test_handle_middleware_advertise_message);
+    RUN_TEST(test_handle_middleware_unadvertise_message);
+    RUN_TEST(test_message_rewriteIP);
+    RUN_TEST(test_message_rewriteIP_info_update_message);
     UNITY_END();
 }
