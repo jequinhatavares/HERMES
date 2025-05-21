@@ -21,7 +21,6 @@ void test_init_middleware(){
     tablePrint(pubsubTable, printPubSubStruct);
 
     tableClean(pubsubTable);
-
 }
 
 void test_add_remove_subscription(){
@@ -91,11 +90,84 @@ void test_publishing_topic(){
     advertiseTopic(topic2);
     TEST_ASSERT(containsTopic(myPubSubInfo->publishedTopics,topic2));
 
-
     tableClean(pubsubTable);
 
 }
 
+
+void test_encode_middleware_subscribe_message(){
+    char correctEncodedMsg[50] = "13 1 1.1.1.1 1.1.1.1 1";
+
+    topicTypes topic = HUMIDITY;
+    PubSubInfo *myPubSubInfo;
+
+    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_SUBSCRIBE, topic);
+
+    TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);
+
+    tableClean(pubsubTable);
+}
+
+
+void test_encode_middleware_advertise_message(){
+    char correctEncodedMsg[50] = "13 3 1.1.1.1 1.1.1.1 2";
+
+    topicTypes topic = CAMERA;
+    PubSubInfo *myPubSubInfo;
+
+    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_ADVERTISE, topic);
+
+    TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);/******/
+
+    tableClean(pubsubTable);
+}
+
+void test_encode_middleware_info_update_message(){
+    char correctEncodedMsg[50] = "13 5 1.1.1.1 1.1.1.1 | 2 -1 -1 1 0 -1 ";
+    topicTypes stopic = HUMIDITY, stopic2 = TEMPERATURE, ptopic = CAMERA;
+    PubSubInfo *myPubSubInfo;
+
+    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+
+    subscribeToTopic(stopic);
+    subscribeToTopic(stopic2);
+    advertiseTopic(ptopic);
+
+    myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
+    TEST_ASSERT(myPubSubInfo != nullptr);
+
+    //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_INFO_UPDATE, stopic);
+
+    //printf("Encoded Message: %s\n",smallSendBuffer);
+    TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);/******/
+    tableClean(pubsubTable);
+}
+
+void test_handle_middleware_subscribe_message(){
+    char correctEncodedMsg[50] = "13 5 1.1.1.1 1.1.1.1 | 2 -1 -1 1 0 -1 ";
+    char receivedMiddlewareMessage[50] = "13 1 3.3.3.3 2.2.2.2 2";
+    topicTypes topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
+    PubSubInfo *nodePubSubInfo;
+    int nodeIP[4] ={2,2,2,2};
+
+    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+
+    subscribeToTopic(topic);
+    subscribeToTopic(topic2);
+    advertiseTopic(topic3);
+
+    handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+    tablePrint(pubsubTable, printPubSubStruct);
+    nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
+    //TEST_ASSERT(nodePubSubInfo != nullptr);
+    //TEST_ASSERT(containsTopic(nodePubSubInfo->subscribedTopics,topic3));
+
+}
 
 void setUp(void){
     enableModule(STATE_MACHINE);
@@ -118,6 +190,10 @@ int main(int argc, char** argv){
     RUN_TEST(test_init_middleware);
     RUN_TEST(test_add_remove_subscription);
     RUN_TEST(test_publishing_topic);
+    RUN_TEST(test_encode_middleware_subscribe_message);
+    RUN_TEST(test_encode_middleware_advertise_message);
+    RUN_TEST(test_encode_middleware_info_update_message);
+    RUN_TEST(test_handle_middleware_subscribe_message);
 
     UNITY_END();
 }

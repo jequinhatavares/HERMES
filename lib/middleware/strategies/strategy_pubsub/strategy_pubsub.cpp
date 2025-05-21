@@ -103,19 +103,19 @@ void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSu
         case PUBSUB_UNSUBSCRIBE:
             //Message sent when a one unsubscribes to a certain topic
             //13 2 [sender IP] [Unsubscriber IP] [Topic]
-            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE,
+            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_UNSUBSCRIBE,
                      myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
             break;
         case PUBSUB_ADVERTISE:
             // Message used to advertise that the node is publishing a new topic
             //13 3 [sender IP] [Publisher IP] [Published Topic]
-            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE,
+            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_ADVERTISE,
                      myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
             break;
         case PUBSUB_UNADVERTISE:
             // Message used to advertise that the node is unpublishing a topic
             //13 4 [sender IP] [Publisher IP] [UnPublished Topic]
-            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE,
+            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_UNADVERTISE,
                      myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
             break;
 
@@ -144,8 +144,6 @@ void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSu
 
             break;
     }
-
-
 }
 
 void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
@@ -157,7 +155,6 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
     routingTableEntry *routingTableValue;
     char* token, *spaceToken;
     char* nodeIPPart, *topicsPart;
-
     //MESSAGE_TYPE  PUBSUB_TYPE  [sender/destination IP]  [nodeIP]  topic
     sscanf(messageBuffer,"%*i %i %i.%i.%i.%i %s",&type,&IP[0],&IP[1],&IP[2],&IP[3],infoPubSub);
 
@@ -169,12 +166,13 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             break;
         case PUBSUB_SUBSCRIBE:
             //Message sent when a one node subscribes to a certain topic
-            //13 1 [sender IP]  [Subscriber IP] [Topic]
+            //13 1 [sender IP] [Subscriber IP] [Topic]
             sscanf(infoPubSub,"%i.%i.%i.%i %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
 
             if(isIPEqual(myIP,IP)){
                 pbCurrentRecord = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
                 if(pbCurrentRecord != nullptr){
+                    LOG(MESSAGES,DEBUG,"Update Node\n");
                     for (i = 0; i < MAX_TOPICS; i++) {
                         // Save all topics published by the node as-is.
                         pbNewInfo.publishedTopics[i] = pbCurrentRecord->publishedTopics[i];
@@ -194,6 +192,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
                 }else{
                     //If the node does not exist in the table, add it with all published and subscribed topics initialized to -1,
                     // except for the announced subscribed topic
+                    LOG(MESSAGES,DEBUG,"New Node\n");
                     for (i = 0; i < MAX_TOPICS; i++){
                         pbNewInfo.publishedTopics[i] = -1;
                         if(i == 0){pbNewInfo.subscribedTopics[i] = topic;}
@@ -204,11 +203,11 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             }
 
             //Forward the message to the next hop toward the destination IP
-            /***routingTableValue = (routingTableEntry*) findRouteToNode(IP);
-            if(routingTableValue != nullptr){
-                sendMessage(routingTableValue->nextHopIP, messageBuffer);
-            }
-            break;***/
+            //routingTableValue = (routingTableEntry*) findRouteToNode(IP);
+            //if(routingTableValue != nullptr){
+                //sendMessage(routingTableValue->nextHopIP, messageBuffer);
+            //}
+            //break;
 
             //Propagate the subscription message in the network
             rewriteSenderIP(messageBuffer, sizeof(messageBuffer),PUBSUB_SUBSCRIBE);
@@ -250,10 +249,10 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
                 }
             }
             //Forward the message to the next hop toward the destination IP
-            /***routingTableValue = (routingTableEntry*) findRouteToNode(IP);
-            if(routingTableValue != nullptr){
-                sendMessage(routingTableValue->nextHopIP, messageBuffer);
-            }***/
+            //routingTableValue = (routingTableEntry*) findRouteToNode(IP);
+            //if(routingTableValue != nullptr){
+                //sendMessage(routingTableValue->nextHopIP, messageBuffer);
+            //}
 
             //Propagate the deleted subscription message in the network
             rewriteSenderIP(messageBuffer, sizeof(messageBuffer),PUBSUB_UNSUBSCRIBE);
@@ -380,7 +379,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
         default:
             break;
 
-    }
+    }/******/
 
 }
 
