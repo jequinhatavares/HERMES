@@ -606,6 +606,16 @@ void printPubSubStruct(TableEntry* Table){
     LOG(NETWORK,INFO,")\n");
 
 }
+
+
+bool containsTopic(const int* list, int topic){
+    for (int i = 0; i < MAX_TOPICS; i++) {
+        if(list[i] == topic){
+            return true;
+        }
+    }
+    return false;
+}
 /******************          User Defined functions            **********************/
 void decodeTopic(char* dataMessage, void* topicType){
     sscanf(dataMessage,"%*i %i", topicType);

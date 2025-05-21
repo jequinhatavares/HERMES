@@ -6,7 +6,11 @@
 
 //pio test -e native -f "test_middleware_pubsub" -v
 
-
+typedef enum topicTypes{
+    TEMPERATURE,
+    HUMIDITY,
+    CAMERA,
+}topicTypes;
 
 /*** ****************************** Tests ****************************** ***/
 
@@ -20,38 +24,77 @@ void test_init_middleware(){
 
 }
 
-void test_add_subscription(){
-    int topic = 1, topic2 = 2;
+void test_add_remove_subscription(){
+    topicTypes topic = HUMIDITY, topic2 = CAMERA;
+    PubSubInfo *myPubSubInfo;
+    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    // Subscribe to topic
+    subscribeToTopic(topic);
+
+    myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
+    TEST_ASSERT(myPubSubInfo != nullptr);
+    TEST_ASSERT(containsTopic(myPubSubInfo->subscribedTopics,topic));
+
+    // Unsubscribe to topic
+    unsubscribeToTopic(topic);
+
+    TEST_ASSERT(!containsTopic(myPubSubInfo->subscribedTopics,topic));
+
+    //Subscribe to two topics
+    subscribeToTopic(topic);
+    subscribeToTopic(topic2);
+
+    TEST_ASSERT(containsTopic(myPubSubInfo->subscribedTopics,topic));
+    TEST_ASSERT(containsTopic(myPubSubInfo->subscribedTopics,topic2));
+
+    //Unsubscribe to one topic
+    unsubscribeToTopic(topic);
+
+    TEST_ASSERT(!containsTopic(myPubSubInfo->subscribedTopics,topic));
+
+    //Subscribe again to the same topic to check for duplicates
+    subscribeToTopic(topic2);
+    TEST_ASSERT(containsTopic(myPubSubInfo->subscribedTopics,topic2));
+
+    tableClean(pubsubTable);
+}
+
+void test_publishing_topic(){
+    topicTypes topic = HUMIDITY, topic2 = CAMERA;
+    PubSubInfo *myPubSubInfo;
 
     initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
-    //printf("MyIP: %i.%i.%i.%i\n", myIP[0],myIP[1],myIP[2],myIP[3]);
-    subscribeToTopic(topic);
+    // Subscribe to topic
+    advertiseTopic(topic);
+    myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
 
-    tablePrint(pubsubTable, printPubSubStruct);
+    TEST_ASSERT(myPubSubInfo != nullptr);
+    TEST_ASSERT(containsTopic(myPubSubInfo->publishedTopics,topic));
 
-    unsubscribeToTopic(topic);
+    // Unsubscribe to topic
+    unadvertiseTopic(topic);
+    TEST_ASSERT(!containsTopic(myPubSubInfo->publishedTopics,topic));
 
-    tablePrint(pubsubTable, printPubSubStruct);
+    //Subscribe to two topics
+    advertiseTopic(topic);
+    advertiseTopic(topic2);
+    TEST_ASSERT(containsTopic(myPubSubInfo->publishedTopics,topic));
+    TEST_ASSERT(containsTopic(myPubSubInfo->publishedTopics,topic2));
+
+    //Unsubscribe to one topic
+    unadvertiseTopic(topic);
+    TEST_ASSERT(containsTopic(myPubSubInfo->publishedTopics,topic2));
+    TEST_ASSERT(!containsTopic(myPubSubInfo->publishedTopics,topic));
+
+    //Subscribe again to the same topic to check for duplicates
+    advertiseTopic(topic2);
+    TEST_ASSERT(containsTopic(myPubSubInfo->publishedTopics,topic2));
+
 
     tableClean(pubsubTable);
 
-    subscribeToTopic(topic);
-    subscribeToTopic(topic2);
-
-    tablePrint(pubsubTable, printPubSubStruct);
-
-    unsubscribeToTopic(topic);
-
-    tablePrint(pubsubTable, printPubSubStruct);
-
-    subscribeToTopic(topic2);
-
-    tablePrint(pubsubTable, printPubSubStruct);
-
 }
-
-
 
 
 void setUp(void){
@@ -73,7 +116,8 @@ void tearDown(void){}
 int main(int argc, char** argv){
     UNITY_BEGIN();
     RUN_TEST(test_init_middleware);
-    RUN_TEST(test_add_subscription);
+    RUN_TEST(test_add_remove_subscription);
+    RUN_TEST(test_publishing_topic);
 
     UNITY_END();
 }

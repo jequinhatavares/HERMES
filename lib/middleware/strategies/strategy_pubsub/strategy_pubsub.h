@@ -34,6 +34,7 @@ void middlewareInfluenceRoutingPubSub(char* dataMessage);
 void middlewareOnTimerPubSub();
 
 void rewriteSenderIP(char* messageBuffer, size_t bufferSize, PubSubMessageType type);
+bool containsTopic(const int* list, int topic);
 
 void printPubSubStruct(TableEntry* Table);
 void decodeTopic(char* dataMessage, void *topicType);
