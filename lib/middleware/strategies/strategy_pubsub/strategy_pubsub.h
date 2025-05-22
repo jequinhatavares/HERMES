@@ -8,6 +8,8 @@
 #include "logger.h"
 #include "../../../time_hal/time_hal.h"
 #include "../../../transport_hal/transport_hal.h"
+#include <string.h>
+
 
 #define MAX_TOPICS 3
 
@@ -25,6 +27,7 @@ typedef enum PubSubMessageType{
     PUBSUB_ADVERTISE,
     PUBSUB_UNADVERTISE,
     PUBSUB_INFO_UPDATE,
+    PUBSUB_TABLE_UPDATE,
 } PubSubMessageType;
 
 void initMiddlewarePubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) );

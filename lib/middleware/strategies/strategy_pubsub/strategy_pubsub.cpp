@@ -89,6 +89,8 @@ void rewriteSenderIP(char* messageBuffer, size_t bufferSize, PubSubMessageType t
 }
 
 void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType typePubSub, int topic) {
+    PubSubInfo *nodePubSubInfo;
+    int offset = 0,*nodeIP,i,j;
 
     // These messages encode the node's own publish/subscribe information
     switch (typePubSub) {
@@ -122,26 +124,73 @@ void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSu
         case PUBSUB_INFO_UPDATE:
             // Message used to advertise all publish-subscribe information of the node
             //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
-            char tmpMessage1[10],tmpMessage2[10];
-            char tmpMessage3[10] = "",tmpMessage4[10] = "";
-            PubSubInfo *myPubSubInfo;
-
-            myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
-            if(myPubSubInfo != nullptr){
+            nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
+            /***if(nodePubSubInfo != nullptr){
                 snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i | ",MIDDLEWARE_MESSAGE,PUBSUB_INFO_UPDATE,
                          myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3]);
 
                 for (int i = 0; i < MAX_TOPICS; i++) {
-                    snprintf(tmpMessage1, sizeof(tmpMessage1),"%i ",myPubSubInfo->publishedTopics[i]);
-                    snprintf(tmpMessage2, sizeof(tmpMessage1),"%i ",myPubSubInfo->subscribedTopics[i]);
+                    snprintf(tmpMessage1, sizeof(tmpMessage1),"%i ",nodePubSubInfo->publishedTopics[i]);
+                    snprintf(tmpMessage2, sizeof(tmpMessage1),"%i ",nodePubSubInfo->subscribedTopics[i]);
 
                     strcat(tmpMessage3,tmpMessage1);
                     strcat(tmpMessage4,tmpMessage2);
                 }
                 strcat(messageBuffer,tmpMessage3);
                 strcat(messageBuffer,tmpMessage4);
+            }***/
+            if (nodePubSubInfo != nullptr) {
+                offset = snprintf(messageBuffer, bufferSize, "%i %i %i.%i.%i.%i %i.%i.%i.%i | ",
+                                      MIDDLEWARE_MESSAGE, PUBSUB_INFO_UPDATE,
+                                      myIP[0], myIP[1], myIP[2], myIP[3],
+                                      myIP[0], myIP[1], myIP[2], myIP[3]);
+
+                // Append published topics
+                for (i = 0; i < MAX_TOPICS; i++) {
+                    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%i ", nodePubSubInfo->publishedTopics[i]);
+                }
+
+                // Append subscribed topics
+                for (i = 0; i < MAX_TOPICS; i++) {
+                    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%i ", nodePubSubInfo->subscribedTopics[i]);
+                }
             }
 
+            break;
+
+        case PUBSUB_TABLE_UPDATE:
+            //13 6 [sender IP] |[node IP] [Published Topic List] [Subscribed Topics List] |[node IP] [Published Topic List] [Subscribed Topics List]...
+            offset = snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i |",MIDDLEWARE_MESSAGE,PUBSUB_TABLE_UPDATE,
+                     myIP[0],myIP[1],myIP[2],myIP[3]);
+            for (i = 0; i < pubsubTable->numberOfItems; i++) {
+                nodeIP = (int*) tableKey(pubsubTable,i);
+                PubSubInfo* entry = (PubSubInfo*) tableRead(pubsubTable, nodeIP);
+                if (entry != nullptr) {
+                    // Append node IP
+                    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%i.%i.%i.%i ",
+                                       nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
+
+                    // Append published topics
+                    for(j = 0; j < MAX_TOPICS; j++) {
+                        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%i ", entry->publishedTopics[j]);
+                    }
+
+                    // Append subscribed topics
+                    for(j = 0; j < MAX_TOPICS; j++) {
+                        if(i == pubsubTable->numberOfItems-1 && j == MAX_TOPICS-1){
+                            offset += snprintf(messageBuffer + offset, bufferSize - offset, "%i", entry->subscribedTopics[j]);
+                        }else{
+                            offset += snprintf(messageBuffer + offset, bufferSize - offset, "%i ", entry->subscribedTopics[j]);
+                        }
+                    }
+
+                    if(i != pubsubTable->numberOfItems-1){
+                        // Add another separator to mark end of this node’s entry
+                        offset += snprintf(messageBuffer + offset, bufferSize - offset, "|");
+                    }
+
+                }
+            }
             break;
     }
 }
@@ -149,12 +198,17 @@ void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSu
 void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
     char infoPubSub[30];
     int IP[4],nodeIP[4],topic,i,k,count=0, charsRead = 0;
+    int offset = 0;
     PubSubMessageType type;
     PubSubInfo pbNewInfo,*pbCurrentRecord;
     bool isTableUpdated = false;
     routingTableEntry *routingTableValue;
-    char* token, *spaceToken;
+    char* token, *spaceToken,*entry;
     char* nodeIPPart, *topicsPart;
+    char *saveptr1, *saveptr2;
+    char *outer_saveptr;
+    char *inner_saveptr;
+    const char* ptr;
 
     //MESSAGE_TYPE  PUBSUB_TYPE  [sender/destination IP]  [nodeIP]  topic
     sscanf(messageBuffer,"%*i %i %i.%i.%i.%i %n",&type,&IP[0],&IP[1],&IP[2],&IP[3],&charsRead);
@@ -351,7 +405,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
                 sscanf(nodeIPPart, "%d.%d.%d.%d",&nodeIP[0], &nodeIP[1], &nodeIP[2], &nodeIP[3]);
 
                 // Parse the topic lists (published and subscribed)
-                int count = 0;
+                count = 0;
                 spaceToken = strtok(topicsPart, " ");
                 while (spaceToken != NULL && count < 2 * MAX_TOPICS) {
                     if (count < MAX_TOPICS) {
@@ -376,6 +430,72 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             propagateMessage(messageBuffer,IP);
 
             break;/******/
+
+        case PUBSUB_TABLE_UPDATE:
+            //13 6 [sender IP] |[node IP] [Published Topic List] [Subscribed Topics List] |[node IP] [Published Topic List] [Subscribed Topics List]...
+
+            ptr = infoPubSub;
+            // Skip initial '|' if present
+            if (*ptr == '|') ptr++;
+
+            while (sscanf(ptr + offset, "|%n", &offset) == 0) {
+
+                int topics[2 * MAX_TOPICS];
+                int topicCount = 0;
+
+                if (*ptr + offset == '|') offset++;
+
+                // Parse IP address
+                int ipParsed = sscanf(ptr + offset, "%d.%d.%d.%d%n",
+                                      &nodeIP[0], &nodeIP[1],
+                                      &nodeIP[2], &nodeIP[3], &offset);
+
+                if (ipParsed != 4) {
+                    printf("Failed to parse IP at: %s\n", ptr + offset);
+                    break;
+                }
+                printf("nodeIP: %d.%d.%d.%d\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
+
+                // Parse topics until next '|' or end of string
+                while (topicCount < 2 * MAX_TOPICS) {
+                    int newOffset;
+                    int num;
+
+                    // Try to read a number
+                    if (sscanf(ptr + offset, "%d%n", &num, &newOffset) != 1) {
+                        // No more numbers, check if we hit a '|' or end
+                        if (ptr[offset] == '|' || ptr[offset] == '\0') {
+                            break;
+                        }
+                        // Skip invalid characters
+                        offset++;
+                        continue;
+                    }
+
+                    topics[topicCount++] = num;
+                    offset += newOffset;
+                }
+
+                // Split into published and subscribed topics
+                for (int i = 0; i < topicCount; i++) {
+                    if (i < MAX_TOPICS) {
+                        pbNewInfo.publishedTopics[i] = topics[i];
+                        printf("Parsed Topic:%i\n",pbNewInfo.publishedTopics[i]);
+                    } else if (i < 2 * MAX_TOPICS) {
+                        pbNewInfo.subscribedTopics[i - MAX_TOPICS] = topics[i];
+                        printf("Parsed Topic:%i\n",pbNewInfo.subscribedTopics[i - MAX_TOPICS]);
+                    }
+                }
+
+                // Update or add to table
+                PubSubInfo *current = (PubSubInfo *) tableRead(pubsubTable, nodeIP);
+                if (current != nullptr) {
+                    tableUpdate(pubsubTable, nodeIP, &pbNewInfo);
+                } else {
+                    tableAdd(pubsubTable, nodeIP, &pbNewInfo);
+                }
+            }
+
         default:
             break;
 
