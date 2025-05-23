@@ -32,11 +32,11 @@ void test_init_middleware(){
 
 }
 
-void test_handle_middleware_message(){
+void test_handle_middleware_node_info_message(){
     metricTableEntry metric;
     int mynodeIP[4]={2,2,2,2};
     int nodeIP[4]={1,1,1,1};
-    char middlewareMsg[50] = "13 1.1.1.1 1.1.1.1 1";
+    char middlewareMsg[50] = "13 0 1.1.1.1 1.1.1.1 1";
 
     assignIP(myIP,mynodeIP);
 
@@ -51,30 +51,72 @@ void test_handle_middleware_message(){
     TEST_ASSERT(metricValue->processingCapacity == 1);
 
     tableClean(metricTable);
-
 }
 
-void test_encode_middleware_message(){
+void test_handle_middleware_table_info_message(){
     metricTableEntry metric;
-    int nodeIP[4]={2,2,2,2};
-    char middlewareMsg[50] = " 13 1.1.1.1 1.1.1.1 1", msgBuffer[100];
-    char correctEncodedMsg[50] = "13 2.2.2.2 1.1.1.1 1";
+    int node2IP[4]={2,2,2,2};
+    int node3IP[4]={3,3,3,3};
+    char middlewareMsg[50] = "13 1 1.1.1.1 |1.1.1.1 1 |2.2.2.2 2 |3.3.3.3 3";
+
     initMetricTable(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
 
-    assignIP(myIP,nodeIP);
+    handleMiddlewareMessage(middlewareMsg,sizeof(middlewareMsg));
+
+    tablePrint(metricTable, printMetricStruct);
+
+    metricTableEntry *metricValue = (metricTableEntry*) tableRead(metricTable,myIP);
+    TEST_ASSERT(metricValue != nullptr);
+    TEST_ASSERT(metricValue->processingCapacity == 1);
+
+    metricTableEntry *metricValue2 = (metricTableEntry*) tableRead(metricTable,node2IP);
+    TEST_ASSERT(metricValue2 != nullptr);
+    TEST_ASSERT(metricValue2->processingCapacity == 2);
+
+    metricTableEntry *metricValue3 = (metricTableEntry*) tableRead(metricTable,node3IP);
+    TEST_ASSERT(metricValue3 != nullptr);
+    TEST_ASSERT(metricValue3->processingCapacity == 3);
+
+    tableClean(metricTable);
+}
+
+void test_encode_middleware_node_info_message(){
+    metricTableEntry metric;
+    int nodeIP[4]={2,2,2,2};
+    char middlewareMsg[50] = " 13 0 2.2.2.2 1.1.1.1 1", msgBuffer[100];
+    char correctEncodedMsg[50] = "13 0 1.1.1.1 1.1.1.1 1";
+    initMetricTable(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
+
     metric.processingCapacity = 1;
     updateMiddlewareMetric(&metric,nodeIP);
 
-    encodeMiddlewareMessage(middlewareMsg, sizeof(middlewareMsg));
+    encodeMiddlewareMessage(middlewareMsg, sizeof(middlewareMsg),INJECT_NODE_INFO);
 
-
-    TEST_ASSERT(strcmp(middlewareMsg,correctEncodedMsg) == 0);/******/
+    TEST_ASSERT(strcmp(middlewareMsg,correctEncodedMsg) == 0);
 
     tableClean(metricTable);
-
 }
 
+void test_encode_middleware_table_info_message(){
+    metricTableEntry metric;
+    char middlewareMsg1[50] = " 13 0 2.2.2.2 2.2.2.2 2",middlewareMsg2[50] = " 13 0 2.2.2.2 3.3.3.3 3", msgBuffer[100];
+    char correctEncodedMsg[50] = "13 1 1.1.1.1 |1.1.1.1 1 |2.2.2.2 2 |3.3.3.3 3";
+    initMetricTable(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
 
+    metric.processingCapacity = 1;
+    updateMiddlewareMetric(&metric,myIP);
+
+    handleMiddlewareMessage(middlewareMsg1,sizeof(middlewareMsg1));
+    handleMiddlewareMessage(middlewareMsg2,sizeof(middlewareMsg2));
+
+    encodeMiddlewareMessage(largeSendBuffer, sizeof(largeSendBuffer),INJECT_TABLE_INFO);
+
+    //printf("Encoded message: %s len:%i\n",largeSendBuffer, strlen(largeSendBuffer));
+    //printf("Correct message: %s len:%i\n",correctEncodedMsg, strlen(correctEncodedMsg));
+    TEST_ASSERT(strcmp(largeSendBuffer,correctEncodedMsg) == 0);/******/
+
+    tableClean(metricTable);
+}
 
 void setUp(void){
     enableModule(STATE_MACHINE);
@@ -85,6 +127,10 @@ void setUp(void){
 
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
+
+    int nodeIP[4]={1,1,1,1};
+    assignIP(myIP,nodeIP);
+
 }
 
 void tearDown(void){}
@@ -92,8 +138,9 @@ void tearDown(void){}
 int main(int argc, char** argv){
     UNITY_BEGIN();
     RUN_TEST(test_init_middleware);
-    RUN_TEST(test_handle_middleware_message);
-    RUN_TEST(test_encode_middleware_message);
-
+    RUN_TEST(test_handle_middleware_node_info_message);
+    RUN_TEST(test_handle_middleware_table_info_message);
+    RUN_TEST(test_encode_middleware_node_info_message);
+    RUN_TEST(test_encode_middleware_table_info_message);
     UNITY_END();
 }
