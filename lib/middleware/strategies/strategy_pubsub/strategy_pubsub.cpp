@@ -198,7 +198,6 @@ void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSu
 void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
     char infoPubSub[100];
     int IP[4],nodeIP[4],topic,i,k,count=0, charsRead = 0;
-    int offset = 0,totalOffset = 0;
     PubSubMessageType type;
     PubSubInfo pbNewInfo,*pbCurrentRecord;
     bool isTableUpdated = false;
@@ -206,9 +205,6 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
     char* token, *spaceToken,*entry;
     char* nodeIPPart, *topicsPart;
     char *saveptr1, *saveptr2;
-    char *outer_saveptr;
-    char *inner_saveptr;
-    const char* ptr;
 
     //MESSAGE_TYPE  PUBSUB_TYPE  [sender/destination IP]  [nodeIP]  topic
     sscanf(messageBuffer,"%*i %i %i.%i.%i.%i %n",&type,&IP[0],&IP[1],&IP[2],&IP[3],&charsRead);
@@ -435,81 +431,11 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
 
         case PUBSUB_TABLE_UPDATE:
             //13 6 [sender IP] |[node IP] [Published Topic List] [Subscribed Topics List] |[node IP] [Published Topic List] [Subscribed Topics List]...
-
-            /***ptr = infoPubSub;
-            // Skip initial '|'
-            if (ptr[totalOffset] == '|') totalOffset++;
-            while (ptr[totalOffset] != '\0') {
-
-                int topics[2 * MAX_TOPICS];
-                int topicCount = 0;
-
-                printf("Pointer at: \"%s\"\n", ptr+totalOffset);
-                // Skip separator '|' if present
-                if (ptr[totalOffset] == '|') {
-                    printf("Entered in the skip the pipe\n");
-                    totalOffset++;
-                }
-
-                int localOffset = 0;
-                // Parse IP address
-                int ipParsed = sscanf(ptr + totalOffset, "%d.%d.%d.%d%n",&nodeIP[0], &nodeIP[1],&nodeIP[2], &nodeIP[3], &localOffset);
-
-                if (ipParsed != 4) {
-                    printf("Failed to parse IP at: %s\n", ptr + totalOffset);
-                    break;
-                }
-                printf("nodeIP: %d.%d.%d.%d\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
-                totalOffset += localOffset;
-
-                // Parse topics until next '|' or end of string
-                while (topicCount < 2 * MAX_TOPICS) {
-                    int newOffset = 0;
-                    int num;
-
-                    // Try to read a number
-                    if (sscanf(ptr + totalOffset, "%d%n", &num, &newOffset) != 1) {
-                        // No more numbers, check if we hit a '|' or end
-                        if (ptr[totalOffset] == '|' || ptr[totalOffset] == '\0') {
-                            break;
-                        }
-                        // Skip invalid characters
-                        totalOffset++;
-                        continue;
-                    }
-
-                    topics[topicCount++] = num;
-                    totalOffset += newOffset;
-                }
-
-                // Split into published and subscribed topics
-                for (int i = 0; i < topicCount; i++) {
-                    if (i < MAX_TOPICS) {
-                        pbNewInfo.publishedTopics[i] = topics[i];
-                        printf("Parsed Topic:%i\n",pbNewInfo.publishedTopics[i]);
-                    } else if (i < 2 * MAX_TOPICS) {
-                        pbNewInfo.subscribedTopics[i - MAX_TOPICS] = topics[i];
-                        printf("Parsed Topic:%i\n",pbNewInfo.subscribedTopics[i - MAX_TOPICS]);
-                    }
-                }
-
-                // Update or add to table
-                PubSubInfo *current = (PubSubInfo *) tableRead(pubsubTable, nodeIP);
-                if (current != nullptr) {
-                    tableUpdate(pubsubTable, nodeIP, &pbNewInfo);
-                } else {
-                    tableAdd(pubsubTable, nodeIP, &pbNewInfo);
-                }
-            }***/
-
             entry = strtok_r(infoPubSub, "|", &saveptr1);
-
-            // Skip the first entry (header): "13 6 1.1.1.1"
 
             while (entry != NULL) {
                 // Trim leading spaces
                 while (*entry == ' ') entry++;
-
 
                 // Now parse this entry
                 token = strtok_r(entry, " ", &saveptr2);
@@ -521,27 +447,29 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
 
                 // Parse node IP
                 sscanf(token, "%d.%d.%d.%d", &nodeIP[0], &nodeIP[1], &nodeIP[2], &nodeIP[3]);
-                printf("nodeIP: %d.%d.%d.%d\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
+                //printf("nodeIP: %d.%d.%d.%d\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
 
                 // Parse topic values
                 count = 0;
                 while ((token = strtok_r(NULL, " ", &saveptr2)) != NULL && count < 2 * MAX_TOPICS) {
                     if (count < MAX_TOPICS) {
                         pbNewInfo.publishedTopics[count] = atoi(token);
-                        printf("Parsed Topic:%i\n",pbNewInfo.publishedTopics[count]);
+                        //printf("Parsed Topic:%i\n",pbNewInfo.publishedTopics[count]);
                     } else {
                         pbNewInfo.subscribedTopics[count - MAX_TOPICS] = atoi(token);
-                        printf("Parsed Topic:%i\n",pbNewInfo.subscribedTopics[count- MAX_TOPICS]);
+                        //printf("Parsed Topic:%i\n",pbNewInfo.subscribedTopics[count- MAX_TOPICS]);
                     }
                     count++;
                 }
 
-                // Update or add to the pubsub table
-                PubSubInfo* current = (PubSubInfo*) tableRead(pubsubTable, nodeIP);
-                if (current != nullptr) {
-                    tableUpdate(pubsubTable, nodeIP, &pbNewInfo);
-                } else {
-                    tableAdd(pubsubTable, nodeIP, &pbNewInfo);
+                // Update/Add pubsub table except when its related to this node
+                if(!isIPEqual(nodeIP,myIP)){
+                    PubSubInfo* current = (PubSubInfo*) tableRead(pubsubTable, nodeIP);
+                    if (current != nullptr) {
+                        tableUpdate(pubsubTable, nodeIP, &pbNewInfo);
+                    } else {
+                        tableAdd(pubsubTable, nodeIP, &pbNewInfo);
+                    }
                 }
 
                 // Next entry
@@ -739,7 +667,6 @@ void unadvertiseTopic(int topic){
                 for (k = i; k < MAX_TOPICS - 1; k++) {
                     myPubSubInfo->publishedTopics[k] = myPubSubInfo->publishedTopics[k + 1];
                 }
-                //TODO put the last position to -1
                 myPubSubInfo->publishedTopics[MAX_TOPICS - 1] = -1;
                 break;
             }
