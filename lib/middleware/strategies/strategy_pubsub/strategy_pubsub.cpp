@@ -196,9 +196,9 @@ void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSu
 }
 
 void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
-    char infoPubSub[30];
+    char infoPubSub[100];
     int IP[4],nodeIP[4],topic,i,k,count=0, charsRead = 0;
-    int offset = 0;
+    int offset = 0,totalOffset = 0;
     PubSubMessageType type;
     PubSubInfo pbNewInfo,*pbCurrentRecord;
     bool isTableUpdated = false;
@@ -215,6 +215,8 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
 
     // Copy the rest of the string manually
     strncpy(infoPubSub, messageBuffer + charsRead, sizeof(infoPubSub) - 1);
+
+    printf("InfoPubSub: %s\n",infoPubSub);
 
     switch (type) {
 
@@ -434,46 +436,50 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
         case PUBSUB_TABLE_UPDATE:
             //13 6 [sender IP] |[node IP] [Published Topic List] [Subscribed Topics List] |[node IP] [Published Topic List] [Subscribed Topics List]...
 
-            ptr = infoPubSub;
-            // Skip initial '|' if present
-            if (*ptr == '|') ptr++;
-
-            while (sscanf(ptr + offset, "|%n", &offset) == 0) {
+            /***ptr = infoPubSub;
+            // Skip initial '|'
+            if (ptr[totalOffset] == '|') totalOffset++;
+            while (ptr[totalOffset] != '\0') {
 
                 int topics[2 * MAX_TOPICS];
                 int topicCount = 0;
 
-                if (*ptr + offset == '|') offset++;
+                printf("Pointer at: \"%s\"\n", ptr+totalOffset);
+                // Skip separator '|' if present
+                if (ptr[totalOffset] == '|') {
+                    printf("Entered in the skip the pipe\n");
+                    totalOffset++;
+                }
 
+                int localOffset = 0;
                 // Parse IP address
-                int ipParsed = sscanf(ptr + offset, "%d.%d.%d.%d%n",
-                                      &nodeIP[0], &nodeIP[1],
-                                      &nodeIP[2], &nodeIP[3], &offset);
+                int ipParsed = sscanf(ptr + totalOffset, "%d.%d.%d.%d%n",&nodeIP[0], &nodeIP[1],&nodeIP[2], &nodeIP[3], &localOffset);
 
                 if (ipParsed != 4) {
-                    printf("Failed to parse IP at: %s\n", ptr + offset);
+                    printf("Failed to parse IP at: %s\n", ptr + totalOffset);
                     break;
                 }
                 printf("nodeIP: %d.%d.%d.%d\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
+                totalOffset += localOffset;
 
                 // Parse topics until next '|' or end of string
                 while (topicCount < 2 * MAX_TOPICS) {
-                    int newOffset;
+                    int newOffset = 0;
                     int num;
 
                     // Try to read a number
-                    if (sscanf(ptr + offset, "%d%n", &num, &newOffset) != 1) {
+                    if (sscanf(ptr + totalOffset, "%d%n", &num, &newOffset) != 1) {
                         // No more numbers, check if we hit a '|' or end
-                        if (ptr[offset] == '|' || ptr[offset] == '\0') {
+                        if (ptr[totalOffset] == '|' || ptr[totalOffset] == '\0') {
                             break;
                         }
                         // Skip invalid characters
-                        offset++;
+                        totalOffset++;
                         continue;
                     }
 
                     topics[topicCount++] = num;
-                    offset += newOffset;
+                    totalOffset += newOffset;
                 }
 
                 // Split into published and subscribed topics
@@ -494,6 +500,52 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
                 } else {
                     tableAdd(pubsubTable, nodeIP, &pbNewInfo);
                 }
+            }***/
+
+            entry = strtok_r(infoPubSub, "|", &saveptr1);
+
+            // Skip the first entry (header): "13 6 1.1.1.1"
+
+            while (entry != NULL) {
+                // Trim leading spaces
+                while (*entry == ' ') entry++;
+
+
+                // Now parse this entry
+                token = strtok_r(entry, " ", &saveptr2);
+
+                if (token == NULL) {
+                    entry = strtok_r(NULL, "|", &saveptr1);
+                    continue;
+                }
+
+                // Parse node IP
+                sscanf(token, "%d.%d.%d.%d", &nodeIP[0], &nodeIP[1], &nodeIP[2], &nodeIP[3]);
+                printf("nodeIP: %d.%d.%d.%d\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
+
+                // Parse topic values
+                count = 0;
+                while ((token = strtok_r(NULL, " ", &saveptr2)) != NULL && count < 2 * MAX_TOPICS) {
+                    if (count < MAX_TOPICS) {
+                        pbNewInfo.publishedTopics[count] = atoi(token);
+                        printf("Parsed Topic:%i\n",pbNewInfo.publishedTopics[count]);
+                    } else {
+                        pbNewInfo.subscribedTopics[count - MAX_TOPICS] = atoi(token);
+                        printf("Parsed Topic:%i\n",pbNewInfo.subscribedTopics[count- MAX_TOPICS]);
+                    }
+                    count++;
+                }
+
+                // Update or add to the pubsub table
+                PubSubInfo* current = (PubSubInfo*) tableRead(pubsubTable, nodeIP);
+                if (current != nullptr) {
+                    tableUpdate(pubsubTable, nodeIP, &pbNewInfo);
+                } else {
+                    tableAdd(pubsubTable, nodeIP, &pbNewInfo);
+                }
+
+                // Next entry
+                entry = strtok_r(NULL, "|", &saveptr1);
             }
 
         default:
