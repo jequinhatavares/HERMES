@@ -53,7 +53,7 @@ void rewriteSenderIP(char* messageBuffer, size_t bufferSize, PubSubMessageType t
     int nodeIP[4],IP[4],topic;
     char updatedMessage[256];
 
-    if (type != PUBSUB_INFO_UPDATE){
+    if (type != PUBSUB_NODE_UPDATE){
         // If the encoded message already contains topic information, it means this is a propagation of an already encoded message.
         // In this case, only the sender address needs to be updated before further propagation.
         if( sscanf(messageBuffer,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",&globalMessageType,&typePubSub,&IP[0],&IP[1],&IP[2],&IP[3]
@@ -121,12 +121,12 @@ void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSu
                      myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
             break;
 
-        case PUBSUB_INFO_UPDATE:
+        case PUBSUB_NODE_UPDATE:
             // Message used to advertise all publish-subscribe information of the node
             //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
             nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
             /***if(nodePubSubInfo != nullptr){
-                snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i | ",MIDDLEWARE_MESSAGE,PUBSUB_INFO_UPDATE,
+                snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i | ",MIDDLEWARE_MESSAGE,PUBSUB_NODE_UPDATE,
                          myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3]);
 
                 for (int i = 0; i < MAX_TOPICS; i++) {
@@ -141,7 +141,7 @@ void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSu
             }***/
             if (nodePubSubInfo != nullptr) {
                 offset = snprintf(messageBuffer, bufferSize, "%i %i %i.%i.%i.%i %i.%i.%i.%i | ",
-                                      MIDDLEWARE_MESSAGE, PUBSUB_INFO_UPDATE,
+                                      MIDDLEWARE_MESSAGE, PUBSUB_NODE_UPDATE,
                                       myIP[0], myIP[1], myIP[2], myIP[3],
                                       myIP[0], myIP[1], myIP[2], myIP[3]);
 
@@ -391,7 +391,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
 
             break;
 
-        case PUBSUB_INFO_UPDATE:
+        case PUBSUB_NODE_UPDATE:
             // Message used to advertise all publish-subscribe information of the node
             //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
             nodeIPPart = strtok(infoPubSub, "|");  // First part before the '|'
@@ -424,7 +424,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             }
 
             //Propagate the unadvertised topic message in the network
-            rewriteSenderIP(messageBuffer, bufferSize,PUBSUB_INFO_UPDATE);
+            rewriteSenderIP(messageBuffer, bufferSize,PUBSUB_NODE_UPDATE);
             propagateMessage(messageBuffer,IP);
 
             break;/******/
@@ -552,7 +552,7 @@ void middlewareOnTimerPubSub(){
     unsigned long currentTime = getCurrentTime();
     //Periodically send this node's metric to all other nodes in the network
     if( (currentTime - lastMiddlewareUpdateTimePubSub) >= 10000 ) {
-        encodeMiddlewareMessagePubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_INFO_UPDATE, 1);
+        encodeMiddlewareMessagePubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_NODE_UPDATE, 1);
         propagateMessage(largeSendBuffer, myIP);
         LOG(NETWORK,DEBUG,"Sending [MIDDLEWARE] Message: %s\n",smallSendBuffer);
         lastMiddlewareUpdateTime = currentTime;
@@ -690,14 +690,14 @@ void printPubSubStruct(TableEntry* Table){
         ((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3]);
 
     LOG(NETWORK,INFO,"(Publishes: ");
-    for (int i = 0; i < MAX_TOPICS; ++i) {
+    for(int i = 0; i < MAX_TOPICS; ++i) {
         LOG(NETWORK,INFO,"%d | ",
             ((PubSubInfo *)Table->value)->publishedTopics[i]);
     }
     LOG(NETWORK,INFO,") ");
 
     LOG(NETWORK,INFO,"(Subscriptions: ");
-    for (int i = 0; i < MAX_TOPICS; ++i) {
+    for(int i = 0; i < MAX_TOPICS; ++i) {
         LOG(NETWORK,INFO,"%d | ",
             ((PubSubInfo *)Table->value)->subscribedTopics[i]);
     }

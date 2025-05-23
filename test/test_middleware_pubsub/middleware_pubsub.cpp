@@ -142,7 +142,7 @@ void test_encode_middleware_info_update_message(){
     TEST_ASSERT(myPubSubInfo != nullptr);
 
     //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_INFO_UPDATE, stopic);
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_NODE_UPDATE, stopic);
 
     //printf("Encoded Message: %s\n",smallSendBuffer);
     TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);/******/
