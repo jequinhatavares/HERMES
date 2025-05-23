@@ -1,7 +1,7 @@
 #ifndef STRATEGY_PUBSUB_H
 #define STRATEGY_PUBSUB_H
 
-#include <stdlib.h>
+#include <cstdlib>
 #include "routing.h"
 //#include "../../routing/messages.h"
 #include "messages.h"
@@ -9,6 +9,7 @@
 #include "../../../time_hal/time_hal.h"
 #include "../../../transport_hal/transport_hal.h"
 #include <string.h>
+#include <stdint.h>
 
 
 #define MAX_TOPICS 3
@@ -16,8 +17,8 @@
 extern TableInfo* pubsubTable;
 
 typedef struct PubSubInfo{
-    int publishedTopics[MAX_TOPICS]; //Topics that each node publishes
-    int subscribedTopics[MAX_TOPICS]; //Topics that the node subscribes
+    int8_t publishedTopics[MAX_TOPICS]; //Topics that each node publishes
+    int8_t subscribedTopics[MAX_TOPICS]; //Topics that the node subscribes
 }PubSubInfo;
 
 typedef enum PubSubMessageType{
@@ -37,17 +38,17 @@ void middlewareInfluenceRoutingPubSub(char* dataMessage);
 void middlewareOnTimerPubSub();
 
 void rewriteSenderIP(char* messageBuffer, size_t bufferSize, PubSubMessageType type);
-bool containsTopic(const int* list, int topic);
+bool containsTopic(int8_t * list, int8_t topic);
 
 void printPubSubStruct(TableEntry* Table);
 void decodeTopic(char* dataMessage, void *topicType);
 void encodeTopic(char*DataMessage,size_t messageSize, void* topic);
 void setPubSubInfo(void* av, void* bv);
 
-void subscribeToTopic(int topic);
-void unsubscribeToTopic(int topic);
-void advertiseTopic(int topic);
-void unadvertiseTopic(int topic);
+void subscribeToTopic(int8_t topic);
+void unsubscribeToTopic(int8_t topic);
+void advertiseTopic(int8_t topic);
+void unadvertiseTopic(int8_t topic);
 
 
 #endif //STRATEGY_PUBSUB_H

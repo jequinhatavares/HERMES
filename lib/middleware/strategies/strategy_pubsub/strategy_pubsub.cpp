@@ -560,7 +560,7 @@ void middlewareOnTimerPubSub(){
 }
 
 
-void subscribeToTopic(int topic) {
+void subscribeToTopic(int8_t topic) {
     int i;
     PubSubInfo *myPubSubInfo, myInitInfo;
 
@@ -592,7 +592,7 @@ void subscribeToTopic(int topic) {
 
 }
 
-void unsubscribeToTopic(int topic){
+void unsubscribeToTopic(int8_t topic){
     int i,k;
     PubSubInfo *myPubSubInfo,myInitInfo;
 
@@ -623,7 +623,7 @@ void unsubscribeToTopic(int topic){
     propagateMessage(smallSendBuffer,myIP);
 }
 
-void advertiseTopic(int topic){
+void advertiseTopic(int8_t topic){
     int i;
     PubSubInfo *myPubSubInfo, myInitInfo;
 
@@ -654,7 +654,7 @@ void advertiseTopic(int topic){
     propagateMessage(smallSendBuffer,myIP);
 }
 
-void unadvertiseTopic(int topic){
+void unadvertiseTopic(int8_t topic){
     int i,k;
     PubSubInfo *myPubSubInfo, myInitInfo;
 
@@ -706,7 +706,7 @@ void printPubSubStruct(TableEntry* Table){
 }
 
 
-bool containsTopic(const int* list, int topic){
+bool containsTopic(int8_t * list, int8_t topic){
     for (int i = 0; i < MAX_TOPICS; i++) {
         if(list[i] == topic){
             return true;

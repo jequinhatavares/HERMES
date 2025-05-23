@@ -24,7 +24,7 @@ void test_init_middleware(){
 }
 
 void test_add_remove_subscription(){
-    topicTypes topic = HUMIDITY, topic2 = CAMERA;
+    int8_t topic = HUMIDITY, topic2 = CAMERA;
     PubSubInfo *myPubSubInfo;
     initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
     // Subscribe to topic
@@ -59,7 +59,7 @@ void test_add_remove_subscription(){
 }
 
 void test_publishing_topic(){
-    topicTypes topic = HUMIDITY, topic2 = CAMERA;
+    int8_t topic = HUMIDITY, topic2 = CAMERA;
     PubSubInfo *myPubSubInfo;
 
     initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
@@ -98,7 +98,7 @@ void test_publishing_topic(){
 void test_encode_middleware_subscribe_message(){
     char correctEncodedMsg[50] = "13 1 1.1.1.1 1.1.1.1 1";
 
-    topicTypes topic = HUMIDITY;
+    int8_t topic = HUMIDITY;
     PubSubInfo *myPubSubInfo;
 
     initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
@@ -114,7 +114,7 @@ void test_encode_middleware_subscribe_message(){
 void test_encode_middleware_advertise_message(){
     char correctEncodedMsg[50] = "13 3 1.1.1.1 1.1.1.1 2";
 
-    topicTypes topic = CAMERA;
+    int8_t topic = CAMERA;
     PubSubInfo *myPubSubInfo;
 
     initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
@@ -129,7 +129,7 @@ void test_encode_middleware_advertise_message(){
 void test_encode_middleware_info_update_message(){
     char correctEncodedMsg[50] = "13 5 1.1.1.1 1.1.1.1 | 2 -1 -1 1 0 -1 ";
 
-    topicTypes stopic = HUMIDITY, stopic2 = TEMPERATURE, ptopic = CAMERA;
+    int8_t stopic = HUMIDITY, stopic2 = TEMPERATURE, ptopic = CAMERA;
     PubSubInfo *myPubSubInfo;
 
     initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
@@ -153,7 +153,7 @@ void test_encode_middleware_table_update_message(){
     //13 6 [sender IP] |[node IP] [Published Topic List] [Subscribed Topics List] |[node IP] [Published Topic List] [Subscribed Topics List]...
     char correctEncodedMsg[100] = "13 6 1.1.1.1 |1.1.1.1 2 -1 -1 1 0 -1 |2.2.2.2 -1 -1 -1 2 -1 -1";
     char receivedMiddlewareMessage[50] = "13 1 3.3.3.3 2.2.2.2 2";
-    topicTypes stopic = HUMIDITY, stopic2 = TEMPERATURE, ptopic = CAMERA;
+    int8_t stopic = HUMIDITY, stopic2 = TEMPERATURE, ptopic = CAMERA;
     PubSubInfo *myPubSubInfo;
 
     initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
@@ -179,7 +179,7 @@ void test_encode_middleware_table_update_message(){
 void test_handle_middleware_subscribe_message(){
     char correctEncodedMsg[50] = "13 5 1.1.1.1 1.1.1.1 | 2 -1 -1 1 0 -1 ";
     char receivedMiddlewareMessage[50] = "13 1 3.3.3.3 2.2.2.2 2";
-    topicTypes topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
+    int8_t topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
     PubSubInfo *nodePubSubInfo;
     int nodeIP[4] ={2,2,2,2};
 
@@ -203,7 +203,7 @@ void test_handle_middleware_unsubscribe_message(){
     char correctEncodedMsg[50] = "13 5 1.1.1.1 1.1.1.1 | 2 -1 -1 1 0 -1 ";
     char receivedMiddlewareMessage[50] = "13 1 3.3.3.3 2.2.2.2 2";
     char receivedMiddlewareMessage2[50] = "13 2 3.3.3.3 2.2.2.2 2";
-    topicTypes topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
+    int8_t topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
     PubSubInfo *nodePubSubInfo;
     int nodeIP[4] ={2,2,2,2};
 
@@ -228,7 +228,7 @@ void test_handle_middleware_advertise_message(){
     char correctEncodedMsg[50] = "13 5 1.1.1.1 1.1.1.1 | 2 -1 -1 1 0 -1 ";
     char receivedMiddlewareMessage[50] = "13 3 3.3.3.3 2.2.2.2 2";
     char receivedMiddlewareMessage2[50] = "13 2 3.3.3.3 2.2.2.2 2";
-    topicTypes topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
+    int8_t topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
     PubSubInfo *nodePubSubInfo;
     int nodeIP[4] ={2,2,2,2};
 
@@ -251,7 +251,7 @@ void test_handle_middleware_unadvertise_message(){
     char correctEncodedMsg[50] = "13 5 1.1.1.1 1.1.1.1 | 2 -1 -1 1 0 -1 ";
     char receivedMiddlewareMessage[50] = "13 3 3.3.3.3 2.2.2.2 2";
     char receivedMiddlewareMessage2[50] = "13 4 3.3.3.3 2.2.2.2 2";
-    topicTypes topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
+    int8_t topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
     PubSubInfo *nodePubSubInfo;
     int nodeIP[4] ={2,2,2,2};
 
@@ -277,7 +277,7 @@ void test_handle_middleware_info_update_message(){
     //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
     char receivedMiddlewareMessage[50] = "13 5 3.3.3.3 2.2.2.2 | 2 0 -1 -1 -1 -1";
     char receivedMiddlewareMessage2[50] = "13 4 3.3.3.3 2.2.2.2 2";
-    topicTypes topic = TEMPERATURE, topic2 = HUMIDITY, topic3 = CAMERA;
+    int8_t topic = TEMPERATURE, topic2 = HUMIDITY, topic3 = CAMERA;
     PubSubInfo *nodePubSubInfo;
     int nodeIP[4] ={2,2,2,2};
 
@@ -306,7 +306,7 @@ void test_handle_middleware_info_update_message(){
 void test_handle_middleware_table_update_message(){
     //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
     char receivedMiddlewareMessage[100] = "13 6 1.1.1.1 |1.1.1.1 2 -1 -1 1 0 -1 |2.2.2.2 -1 -1 -1 2 -1 -1";
-    topicTypes topic = TEMPERATURE, topic2 = HUMIDITY, topic3 = CAMERA;
+    int8_t topic = TEMPERATURE, topic2 = HUMIDITY, topic3 = CAMERA;
     PubSubInfo *nodePubSubInfo;
     int nodeIP[4] ={2,2,2,2};
 
@@ -338,7 +338,7 @@ void test_message_rewriteIP(){
     char correctEncodedMsg[50] = "13 3 1.1.1.1 2.2.2.2 2";
     char receivedMiddlewareMessage[50] = "13 3 3.3.3.3 2.2.2.2 2";
 
-    topicTypes topic = HUMIDITY;
+    int8_t topic = HUMIDITY;
     PubSubInfo *myPubSubInfo;
 
     initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
@@ -356,7 +356,7 @@ void test_message_rewriteIP_info_update_message(){
     char correctEncodedMsg[50] = "13 5 1.1.1.1 2.2.2.2 | 2 0 -1 -1 -1 -1";
     char receivedMiddlewareMessage[50] = "13 5 3.3.3.3 2.2.2.2 | 2 0 -1 -1 -1 -1";
 
-    topicTypes topic = HUMIDITY;
+    int8_t topic = HUMIDITY;
     PubSubInfo *myPubSubInfo;
 
     initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
