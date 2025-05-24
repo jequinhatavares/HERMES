@@ -13,7 +13,7 @@
 //#include "transport_hal.h"
 //#include "lifecycle.h"
 #include "logger.h"
-#include "net_viz.h"
+#include "../net_viz/net_viz.h"
 
 typedef struct messageParameters{
     int IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};
