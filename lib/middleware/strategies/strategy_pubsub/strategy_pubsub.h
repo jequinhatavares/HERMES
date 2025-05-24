@@ -10,6 +10,7 @@
 #include "../../../transport_hal/transport_hal.h"
 #include <cstring>
 #include <cstdint>
+#include "../../middleware.h"
 
 
 #define MAX_TOPICS 3
@@ -34,9 +35,9 @@ typedef enum PubSubMessageType{
 void initMiddlewarePubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) );
 void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType typePubSub, int topic);
 void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize);
+void middlewareOnContextPubSub(Context context,int contextIP[4]);
 void middlewareInfluenceRoutingPubSub(char* dataMessage);
 void middlewareOnTimerPubSub();
-void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessageType type);
 
 void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType type);
 bool containsTopic(int8_t * list, int8_t topic);

@@ -356,7 +356,7 @@ State handleMessages(Event event){
 
         case MIDDLEWARE_MESSAGE:
             LOG(MESSAGES,INFO,"Received [Middleware] message: \"%s\"\n", receiveBuffer);
-            handleMiddlewareMessage(receiveBuffer, sizeof(receiveBuffer));
+            handleMiddlewareMessageInject(receiveBuffer, sizeof(receiveBuffer));
             break;
     }
 
@@ -537,7 +537,7 @@ State executeTask(Event event){
     assignIP(parameters.IP2,rootIP);
 
     encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),DATA_MESSAGE,parameters);
-    middlewareInfluenceRouting(largeSendBuffer);
+    middlewareInfluenceRoutingInject(largeSendBuffer);
     return sIdle;
 }
 void handleTimers(){
@@ -563,7 +563,7 @@ void handleTimers(){
         lastRoutingUpdateTime = currentTime;
     }
 
-    middlewareOnTimer();
+    middlewareOnTimerInject();
 
     if( (currentTime-lastApplicationProcessingTime) >=APPLICATION_PROCESSING_INTERVAL){
         requestTaskExecution();

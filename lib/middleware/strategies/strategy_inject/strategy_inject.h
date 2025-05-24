@@ -8,6 +8,7 @@
 #include "logger.h"
 #include "../../../time_hal/time_hal.h"
 #include "../../../transport_hal/transport_hal.h"
+#include "../../middleware.h"
 
 #define MIDDLEWARE_UPDATE_INTERVAL 120000
 extern TableInfo* metricTable;
@@ -27,10 +28,13 @@ extern unsigned long lastMiddlewareUpdateTime;
 void initMetricTable(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
 
 void encodeMyMetric(char* messageBuffer, size_t bufferSize);
-void encodeMiddlewareMessage(char* messageBuffer, size_t bufferSize, InjectMessageType type);
-void handleMiddlewareMessage(char* messageBuffer, size_t bufferSize);
-void middlewareInfluenceRouting(char* dataMessage);
-void middlewareOnTimer();
+void encodeMiddlewareMessageInject(char* messageBuffer, size_t bufferSize, InjectMessageType type);
+void handleMiddlewareMessageInject(char* messageBuffer, size_t bufferSize);
+void middlewareOnContextInject(Context context, int contextIP[4]);
+void middlewareInfluenceRoutingInject(char* dataMessage);
+void middlewareOnTimerInject();
+
+void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessageType type);
 
 void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry);
 void decodeMetricEntry(char* buffer, void *metricEntry);

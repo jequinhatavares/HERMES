@@ -78,7 +78,7 @@ void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessage
     }
 
 }
-void encodeMiddlewareMessage(char* messageBuffer, size_t bufferSize, InjectMessageType type){
+void encodeMiddlewareMessageInject(char* messageBuffer, size_t bufferSize, InjectMessageType type){
     int messageType, senderIP[4],nodeIP[4],metric,offset = 0;
     int *entryIP;
     char tmpBuffer[20], tmpBuffer2[50];
@@ -117,7 +117,7 @@ void encodeMyMetric(char* messageBuffer, size_t bufferSize){
     }
 }
 
-void handleMiddlewareMessage(char* messageBuffer, size_t bufferSize){
+void handleMiddlewareMessageInject(char* messageBuffer, size_t bufferSize){
     char metricBuffer[20];
     int senderIP[4],nodeIP[4];
     void  *emptyEntry = nullptr;
@@ -181,7 +181,21 @@ void handleMiddlewareMessage(char* messageBuffer, size_t bufferSize){
 
 }
 
-void middlewareInfluenceRouting(char* dataMessage){
+void middlewareOnContextInject(Context context,int contextIP[4]){
+    switch (context) {
+        case CONTEXT_JOINED_NETWORK:
+            break;
+        case CONTEXT_CHILD_CONNECTED:
+            encodeMiddlewareMessageInject(largeSendBuffer, sizeof(largeSendBuffer),INJECT_TABLE_INFO);
+            sendMessage(contextIP,largeSendBuffer);
+            break;
+        case CONTEXT_CHILD_DISCONNECTED:
+            break;
+        default:
+            break;
+    }
+}
+void middlewareInfluenceRoutingInject(char* dataMessage){
     void* bestMetric = nullptr, *currentMetric;
     int *IP, bestMetricIP[4], *nextHopIP, originalDestination[4];
     bool findBestMetric=false;
@@ -219,12 +233,12 @@ void middlewareInfluenceRouting(char* dataMessage){
     }
 }
 
-void middlewareOnTimer(){
+void middlewareOnTimerInject(){
     unsigned long currentTime = getCurrentTime();
     //Periodically send this node's metric to all other nodes in the network
     if( (currentTime - lastMiddlewareUpdateTime) >= MIDDLEWARE_UPDATE_INTERVAL ){
         snprintf(smallSendBuffer, sizeof(smallSendBuffer), "%i ",MIDDLEWARE_MESSAGE);
-        encodeMiddlewareMessage(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
+        encodeMiddlewareMessageInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
         propagateMessage(smallSendBuffer,myIP);
         LOG(NETWORK,DEBUG,"Sending [MIDDLEWARE] Message: %s\n",smallSendBuffer);
         lastMiddlewareUpdateTime = currentTime;

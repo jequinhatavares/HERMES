@@ -2,6 +2,11 @@
 #define MIDDLEWARE_H
 
 
+typedef enum Context{
+    CONTEXT_JOINED_NETWORK,
+    CONTEXT_CHILD_CONNECTED,
+    CONTEXT_CHILD_DISCONNECTED,
+}Context;
 
 #endif //MIDDLEWARE_H
 

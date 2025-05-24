@@ -480,7 +480,22 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             break;
 
     }
+}
 
+
+void middlewareOnContextPubSub(Context context,int contextIP[4]){
+    switch (context) {
+        case CONTEXT_JOINED_NETWORK:
+            break;
+        case CONTEXT_CHILD_CONNECTED:
+            encodeMiddlewareMessagePubSub(largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_TABLE_UPDATE,1);
+            sendMessage(contextIP,largeSendBuffer);
+            break;
+        case CONTEXT_CHILD_DISCONNECTED:
+            break;
+        default:
+            break;
+    }
 }
 
 void middlewareInfluenceRoutingPubSub(char* dataMessage){

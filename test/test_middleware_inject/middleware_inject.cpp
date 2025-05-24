@@ -42,7 +42,7 @@ void test_handle_middleware_node_info_message(){
 
     initMetricTable(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
 
-    handleMiddlewareMessage(middlewareMsg,sizeof(middlewareMsg));
+    handleMiddlewareMessageInject(middlewareMsg,sizeof(middlewareMsg));
 
     tablePrint(metricTable, printMetricStruct);
 
@@ -61,7 +61,7 @@ void test_handle_middleware_table_info_message(){
 
     initMetricTable(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
 
-    handleMiddlewareMessage(middlewareMsg,sizeof(middlewareMsg));
+    handleMiddlewareMessageInject(middlewareMsg,sizeof(middlewareMsg));
 
     tablePrint(metricTable, printMetricStruct);
 
@@ -90,7 +90,7 @@ void test_encode_middleware_node_info_message(){
     metric.processingCapacity = 1;
     injectNodeMetric(&metric);
 
-    encodeMiddlewareMessage(middlewareMsg, sizeof(middlewareMsg),INJECT_NODE_INFO);
+    encodeMiddlewareMessageInject(middlewareMsg, sizeof(middlewareMsg),INJECT_NODE_INFO);
 
     TEST_ASSERT(strcmp(middlewareMsg,correctEncodedMsg) == 0);
 
@@ -106,10 +106,10 @@ void test_encode_middleware_table_info_message(){
     metric.processingCapacity = 1;
     injectNodeMetric(&metric);
 
-    handleMiddlewareMessage(middlewareMsg1,sizeof(middlewareMsg1));
-    handleMiddlewareMessage(middlewareMsg2,sizeof(middlewareMsg2));
+    handleMiddlewareMessageInject(middlewareMsg1,sizeof(middlewareMsg1));
+    handleMiddlewareMessageInject(middlewareMsg2,sizeof(middlewareMsg2));
 
-    encodeMiddlewareMessage(largeSendBuffer, sizeof(largeSendBuffer),INJECT_TABLE_INFO);
+    encodeMiddlewareMessageInject(largeSendBuffer, sizeof(largeSendBuffer),INJECT_TABLE_INFO);
 
     //printf("Encoded message: %s len:%i\n",largeSendBuffer, strlen(largeSendBuffer));
     //printf("Correct message: %s len:%i\n",correctEncodedMsg, strlen(correctEncodedMsg));
