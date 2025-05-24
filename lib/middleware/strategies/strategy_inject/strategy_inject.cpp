@@ -188,7 +188,7 @@ void handleMiddlewareMessageInject(char* messageBuffer, size_t bufferSize){
 
 }
 
-void middlewareOnContextInject(Context context,int contextIP[4]){
+void middlewareOnContextInject(int context,int contextIP[4]){
     switch (context) {
         case CONTEXT_JOINED_NETWORK:
             break;

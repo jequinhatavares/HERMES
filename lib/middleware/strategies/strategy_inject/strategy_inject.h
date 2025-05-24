@@ -23,6 +23,7 @@ typedef enum InjectMessageType{
     INJECT_TABLE_INFO,
 } InjectMessageType;
 
+extern Strategy strategyInject;
 
 extern unsigned long lastMiddlewareUpdateTime;
 
@@ -31,7 +32,7 @@ void initMiddlewareInject(void (*setValueFunction)(void*,void*), void *metricStr
 void encodeMyMetric(char* messageBuffer, size_t bufferSize);
 void encodeMiddlewareMessageInject(char* messageBuffer, size_t bufferSize, int type);
 void handleMiddlewareMessageInject(char* messageBuffer, size_t bufferSize);
-void middlewareOnContextInject(Context context, int contextIP[4]);
+void middlewareOnContextInject(int context, int contextIP[4]);
 void middlewareInfluenceRoutingInject(char* dataMessage);
 void middlewareOnTimerInject();
 

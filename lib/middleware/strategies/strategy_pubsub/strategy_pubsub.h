@@ -11,6 +11,8 @@
 #include "../../../time_hal/time_hal.h"
 #include "../../../transport_hal/transport_hal.h"
 #include "../../middleware.h"
+#include "../strategy_interface.h"
+
 
 
 #define MAX_TOPICS 3
@@ -34,11 +36,12 @@ typedef enum PubSubMessageType{
 
 extern int8_t topic;
 
+extern Strategy strategyPubSub;
 
 void initMiddlewarePubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) );
 void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, int typePubSub);
 void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize);
-void middlewareOnContextPubSub(Context context,int contextIP[4]);
+void middlewareOnContextPubSub(int context,int contextIP[4]);
 void middlewareInfluenceRoutingPubSub(char* dataMessage);
 void middlewareOnTimerPubSub();
 

@@ -492,7 +492,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
 }
 
 
-void middlewareOnContextPubSub(Context context,int contextIP[4]){
+void middlewareOnContextPubSub(int context,int contextIP[4]){
     switch (context) {
         case CONTEXT_JOINED_NETWORK:
             break;
