@@ -72,7 +72,7 @@ void setup(){
     Advance(SM, eSuccess);//Init
 
     //Middleware stuff
-    initMetricTable(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
+    initMiddlewareInject(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
     myMetric.processingCapacity = MAC[5];
     injectNodeMetric(&myMetric);
 

@@ -9,6 +9,7 @@
 #include "../../../time_hal/time_hal.h"
 #include "../../../transport_hal/transport_hal.h"
 #include "../../middleware.h"
+#include "../strategy_interface.h"
 
 #define MIDDLEWARE_UPDATE_INTERVAL 120000
 extern TableInfo* metricTable;
@@ -25,10 +26,10 @@ typedef enum InjectMessageType{
 
 extern unsigned long lastMiddlewareUpdateTime;
 
-void initMetricTable(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
+void initMiddlewareInject(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
 
 void encodeMyMetric(char* messageBuffer, size_t bufferSize);
-void encodeMiddlewareMessageInject(char* messageBuffer, size_t bufferSize, InjectMessageType type);
+void encodeMiddlewareMessageInject(char* messageBuffer, size_t bufferSize, int type);
 void handleMiddlewareMessageInject(char* messageBuffer, size_t bufferSize);
 void middlewareOnContextInject(Context context, int contextIP[4]);
 void middlewareInfluenceRoutingInject(char* dataMessage);

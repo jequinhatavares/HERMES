@@ -1,5 +1,12 @@
 #include "strategy_inject.h"
 
+Strategy strategyInject = {
+    .handleMessage = handleMiddlewareMessageInject,
+    .encodeMessage = encodeMiddlewareMessageInject,
+    .influenceRouting = middlewareInfluenceRoutingInject,
+    .onTimer = middlewareOnTimerInject,
+    .onContext = middlewareOnContextInject,
+};
 
 bool isIPEqual(void* a, void* b);
 void setIP(void* av, void* bv);
@@ -42,7 +49,7 @@ void (*decodeMetricValue)(char*,void *) = nullptr;
 
 
 
-void initMetricTable(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)) {
+void initMiddlewareInject(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)) {
     metricTable->setValue = setValueFunction;
     tableInit(metricTable, nodes, metricStruct, sizeof(int[4]), metricStructSize);
 
@@ -78,7 +85,7 @@ void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessage
     }
 
 }
-void encodeMiddlewareMessageInject(char* messageBuffer, size_t bufferSize, InjectMessageType type){
+void encodeMiddlewareMessageInject(char* messageBuffer, size_t bufferSize, int type){
     int messageType, senderIP[4],nodeIP[4],metric,offset = 0;
     int *entryIP;
     char tmpBuffer[20], tmpBuffer2[50];
