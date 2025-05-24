@@ -1,5 +1,12 @@
 #include "strategy_pubsub.h"
 
+Strategy strategyPubSub = {
+        .handleMessage = handleMiddlewareMessagePubSub,
+        .encodeMessage = encodeMiddlewareMessagePubSub,
+        .influenceRouting = middlewareInfluenceRoutingPubSub,
+        .onTimer = middlewareOnTimerPubSub,
+        .onContext = middlewareOnContextPubSub,
+};
 
 /***
  * Middleware Publish Subscribe table
@@ -36,6 +43,8 @@ void (*encodeTopicValue)(char*,size_t,void *) = nullptr;
 void (*decodeTopicValue)(char*,void *) = nullptr;
 
 PubSubInfo valuesPubSub[TableMaxSize];
+
+int8_t topic;
 
 void initMiddlewarePubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) ){
     pubsubTable->setValue = setValueFunction;
@@ -88,7 +97,7 @@ void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, PubSubMessage
 
 }
 
-void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType typePubSub, int topic) {
+void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, int typePubSub) {
     PubSubInfo *nodePubSubInfo;
     int offset = 0,*nodeIP,i,j;
 
@@ -488,7 +497,7 @@ void middlewareOnContextPubSub(Context context,int contextIP[4]){
         case CONTEXT_JOINED_NETWORK:
             break;
         case CONTEXT_CHILD_CONNECTED:
-            encodeMiddlewareMessagePubSub(largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_TABLE_UPDATE,1);
+            encodeMiddlewareMessagePubSub(largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_TABLE_UPDATE);
             sendMessage(contextIP,largeSendBuffer);
             break;
         case CONTEXT_CHILD_DISCONNECTED:
@@ -567,7 +576,7 @@ void middlewareOnTimerPubSub(){
     unsigned long currentTime = getCurrentTime();
     //Periodically send this node's metric to all other nodes in the network
     if( (currentTime - lastMiddlewareUpdateTimePubSub) >= 10000 ) {
-        encodeMiddlewareMessagePubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_NODE_UPDATE, 1);
+        encodeMiddlewareMessagePubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_NODE_UPDATE);
         propagateMessage(largeSendBuffer, myIP);
         LOG(NETWORK,DEBUG,"Sending [MIDDLEWARE] Message: %s\n",smallSendBuffer);
         lastMiddlewareUpdateTime = currentTime;
@@ -575,7 +584,7 @@ void middlewareOnTimerPubSub(){
 }
 
 
-void subscribeToTopic(int8_t topic) {
+void subscribeToTopic(int8_t subTopic) {
     int i;
     PubSubInfo *myPubSubInfo, myInitInfo;
 
@@ -583,31 +592,32 @@ void subscribeToTopic(int8_t topic) {
    if(myPubSubInfo != nullptr){ // Update my entry in the table if it already exists
         for (i = 0; i < MAX_TOPICS ; i++) {
             //The topic is already in my list of subscribed topics
-            if(myPubSubInfo->subscribedTopics[i] == topic){
+            if(myPubSubInfo->subscribedTopics[i] == subTopic){
                 return;
             }
             //Fill the first available position with the subscribed topic
             if(myPubSubInfo->subscribedTopics[i] == -1){
-                myPubSubInfo->subscribedTopics[i] = topic;
+                myPubSubInfo->subscribedTopics[i] = subTopic;
                 return;
             }
         }
     }else{ // If my entry doesn't exist, create it
         for (i = 0; i < MAX_TOPICS; i++) {
             myInitInfo.publishedTopics[i] = -1;
-            if(i == 0){myInitInfo.subscribedTopics[i] = topic;}
+            if(i == 0){myInitInfo.subscribedTopics[i] = subTopic;}
             else{myInitInfo.subscribedTopics[i] = -1;}
         }
         tableAdd(pubsubTable,myIP,&myInitInfo);
     }
 
     // Announce that i am subscribing to that topic
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE,topic);
+    topic = subTopic;
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE);
     propagateMessage(smallSendBuffer,myIP);
 
 }
 
-void unsubscribeToTopic(int8_t topic){
+void unsubscribeToTopic(int8_t subTopic){
     int i,k;
     PubSubInfo *myPubSubInfo,myInitInfo;
 
@@ -615,7 +625,7 @@ void unsubscribeToTopic(int8_t topic){
     if(myPubSubInfo != nullptr){ // Update my entry in the table if it already exists
         for (i = 0; i < MAX_TOPICS ; i++) {
             //If the topic is found in the subscribed topics list, unsubscribe
-            if (myPubSubInfo->subscribedTopics[i] == topic) {
+            if (myPubSubInfo->subscribedTopics[i] == subTopic) {
                 // Remove the subscription by shifting all subsequent entries one position forward to overwrite the target
                 for (k = i; k < MAX_TOPICS - 1; k++) {
                     myPubSubInfo->subscribedTopics[k] = myPubSubInfo->subscribedTopics[k + 1];
@@ -634,11 +644,12 @@ void unsubscribeToTopic(int8_t topic){
     }
 
     // Announce that i am subscribing to that topic
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE,topic);
+    topic = subTopic;
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE);
     propagateMessage(smallSendBuffer,myIP);
 }
 
-void advertiseTopic(int8_t topic){
+void advertiseTopic(int8_t pubTopic){
     int i;
     PubSubInfo *myPubSubInfo, myInitInfo;
 
@@ -646,30 +657,31 @@ void advertiseTopic(int8_t topic){
     if(myPubSubInfo != nullptr){ // Update my entry in the table if it already exists
         for (i = 0; i < MAX_TOPICS ; i++) {
             //The topic is already in my list of subscribed topics
-            if(myPubSubInfo->publishedTopics[i] == topic){
+            if(myPubSubInfo->publishedTopics[i] == pubTopic){
                 return;
             }
             //Fill the first available position with the subscribed topic
             if(myPubSubInfo->publishedTopics[i] == -1){
-                myPubSubInfo->publishedTopics[i] = topic;
+                myPubSubInfo->publishedTopics[i] = pubTopic;
                 return;
             }
         }
     }else{ // If my entry doesn't exist, create it
         for (i = 0; i < MAX_TOPICS; i++) {
             myInitInfo.subscribedTopics[i] = -1;
-            if(i == 0){myInitInfo.publishedTopics[i] = topic;}
+            if(i == 0){myInitInfo.publishedTopics[i] = pubTopic;}
             else{myInitInfo.publishedTopics[i] = -1;}
         }
         tableAdd(pubsubTable,myIP,&myInitInfo);
     }
 
     // Advertise to other nodes that I am publishing this topic
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_ADVERTISE,topic);
+    topic = pubTopic;
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_ADVERTISE);
     propagateMessage(smallSendBuffer,myIP);
 }
 
-void unadvertiseTopic(int8_t topic){
+void unadvertiseTopic(int8_t pubTopic){
     int i,k;
     PubSubInfo *myPubSubInfo, myInitInfo;
 
@@ -677,7 +689,7 @@ void unadvertiseTopic(int8_t topic){
     if(myPubSubInfo != nullptr){ // Update my entry in the table if it already exists
         for (i = 0; i < MAX_TOPICS ; i++) {
             //If the topic is found in the subscribed topics list, unsubscribe
-            if (myPubSubInfo->publishedTopics[i] == topic) {
+            if (myPubSubInfo->publishedTopics[i] == pubTopic) {
                 // Remove the subscription by shifting all subsequent entries one position forward to overwrite the target
                 for (k = i; k < MAX_TOPICS - 1; k++) {
                     myPubSubInfo->publishedTopics[k] = myPubSubInfo->publishedTopics[k + 1];
@@ -689,14 +701,15 @@ void unadvertiseTopic(int8_t topic){
     }else{ // If my entry doesn't exist, create it
         for (i = 0; i < MAX_TOPICS; i++) {
             myInitInfo.subscribedTopics[i] = -1;
-            if(i == 0){myInitInfo.publishedTopics[i] = topic;}
+            if(i == 0){myInitInfo.publishedTopics[i] = pubTopic;}
             else{myInitInfo.publishedTopics[i] = -1;}
         }
         tableAdd(pubsubTable,myIP,&myInitInfo);
     }
 
     // Advertise to other nodes that I am publishing this topic
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_UNADVERTISE,topic);
+    topic = pubTopic;
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_UNADVERTISE);
     propagateMessage(smallSendBuffer,myIP);
 }
 

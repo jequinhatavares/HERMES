@@ -59,26 +59,26 @@ void test_add_remove_subscription(){
 }
 
 void test_publishing_topic(){
-    int8_t topic = HUMIDITY, topic2 = CAMERA;
+    int8_t topic1 = HUMIDITY, topic2 = CAMERA;
     PubSubInfo *myPubSubInfo;
 
     initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
     // Subscribe to topic
-    advertiseTopic(topic);
+    advertiseTopic(topic1);
     myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
 
     TEST_ASSERT(myPubSubInfo != nullptr);
-    TEST_ASSERT(containsTopic(myPubSubInfo->publishedTopics,topic));
+    TEST_ASSERT(containsTopic(myPubSubInfo->publishedTopics,topic1));
 
     // Unsubscribe to topic
     unadvertiseTopic(topic);
-    TEST_ASSERT(!containsTopic(myPubSubInfo->publishedTopics,topic));
+    TEST_ASSERT(!containsTopic(myPubSubInfo->publishedTopics,topic1));
 
     //Subscribe to two topics
     advertiseTopic(topic);
     advertiseTopic(topic2);
-    TEST_ASSERT(containsTopic(myPubSubInfo->publishedTopics,topic));
+    TEST_ASSERT(containsTopic(myPubSubInfo->publishedTopics,topic1));
     TEST_ASSERT(containsTopic(myPubSubInfo->publishedTopics,topic2));
 
     //Unsubscribe to one topic
@@ -98,12 +98,13 @@ void test_publishing_topic(){
 void test_encode_middleware_subscribe_message(){
     char correctEncodedMsg[50] = "13 1 1.1.1.1 1.1.1.1 1";
 
-    int8_t topic = HUMIDITY;
+    int8_t subtopic = HUMIDITY;
     PubSubInfo *myPubSubInfo;
 
     initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_SUBSCRIBE, topic);
+    topic = subtopic;
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_SUBSCRIBE);
 
     TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);
 
@@ -114,12 +115,13 @@ void test_encode_middleware_subscribe_message(){
 void test_encode_middleware_advertise_message(){
     char correctEncodedMsg[50] = "13 3 1.1.1.1 1.1.1.1 2";
 
-    int8_t topic = CAMERA;
+    int8_t pubtopic = CAMERA;
     PubSubInfo *myPubSubInfo;
 
     initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_ADVERTISE, topic);
+    topic = pubtopic;
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_ADVERTISE);
 
     TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);/******/
 
@@ -142,7 +144,7 @@ void test_encode_middleware_info_update_message(){
     TEST_ASSERT(myPubSubInfo != nullptr);
 
     //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_NODE_UPDATE, stopic);
+    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_NODE_UPDATE);
 
     //printf("Encoded Message: %s\n",smallSendBuffer);
     TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);/******/
@@ -168,7 +170,7 @@ void test_encode_middleware_table_update_message(){
     TEST_ASSERT(myPubSubInfo != nullptr);
 
     //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
-    encodeMiddlewareMessagePubSub(largeSendBuffer, sizeof(largeSendBuffer) ,PUBSUB_TABLE_UPDATE, stopic);
+    encodeMiddlewareMessagePubSub(largeSendBuffer, sizeof(largeSendBuffer) ,PUBSUB_TABLE_UPDATE);
 
     //printf("Encoded Message: %s\n",correctEncodedMsg);
     //printf("Encoded Message: %s\n",largeSendBuffer);
