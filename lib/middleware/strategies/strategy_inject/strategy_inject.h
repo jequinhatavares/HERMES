@@ -25,7 +25,7 @@ typedef enum InjectMessageType{
 extern unsigned long lastMiddlewareUpdateTime;
 
 void initMetricTable(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
-void updateMiddlewareMetric(void* metricStruct, void * nodeIP);
+
 void encodeMyMetric(char* messageBuffer, size_t bufferSize);
 void encodeMiddlewareMessage(char* messageBuffer, size_t bufferSize, InjectMessageType type);
 void handleMiddlewareMessage(char* messageBuffer, size_t bufferSize);

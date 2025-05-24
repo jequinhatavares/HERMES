@@ -21,7 +21,7 @@ void test_init_middleware(){
     initMetricTable(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
 
     metric.processingCapacity = 1;
-    updateMiddlewareMetric(&metric,IP);
+    injectNodeMetric(&metric);
 
     tablePrint(metricTable, printMetricStruct);
 
@@ -88,7 +88,7 @@ void test_encode_middleware_node_info_message(){
     initMetricTable(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
 
     metric.processingCapacity = 1;
-    updateMiddlewareMetric(&metric,nodeIP);
+    injectNodeMetric(&metric);
 
     encodeMiddlewareMessage(middlewareMsg, sizeof(middlewareMsg),INJECT_NODE_INFO);
 
@@ -104,7 +104,7 @@ void test_encode_middleware_table_info_message(){
     initMetricTable(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
 
     metric.processingCapacity = 1;
-    updateMiddlewareMetric(&metric,myIP);
+    injectNodeMetric(&metric);
 
     handleMiddlewareMessage(middlewareMsg1,sizeof(middlewareMsg1));
     handleMiddlewareMessage(middlewareMsg2,sizeof(middlewareMsg2));

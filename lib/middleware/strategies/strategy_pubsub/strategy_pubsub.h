@@ -8,8 +8,8 @@
 #include "logger.h"
 #include "../../../time_hal/time_hal.h"
 #include "../../../transport_hal/transport_hal.h"
-#include <string.h>
-#include <stdint.h>
+#include <cstring>
+#include <cstdint>
 
 
 #define MAX_TOPICS 3
@@ -36,8 +36,9 @@ void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, PubSu
 void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize);
 void middlewareInfluenceRoutingPubSub(char* dataMessage);
 void middlewareOnTimerPubSub();
+void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessageType type);
 
-void rewriteSenderIP(char* messageBuffer, size_t bufferSize, PubSubMessageType type);
+void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType type);
 bool containsTopic(int8_t * list, int8_t topic);
 
 void printPubSubStruct(TableEntry* Table);

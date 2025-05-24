@@ -51,19 +51,33 @@ void initMetricTable(void (*setValueFunction)(void*,void*), void *metricStruct, 
 
 }
 
-void updateMiddlewareMetric(void* metricStruct, void* nodeIP){
-    int tableIndex = tableFind(metricTable,nodeIP);
-    if(tableIndex == -1){ //The node is not yet in the table
-        tableAdd(metricTable, nodeIP, metricStruct);
+
+void injectNodeMetric(void* metric){
+    void*tableEntry = tableRead(metricTable,myIP);
+    if(tableEntry == nullptr){ //The node is not yet in the table
+        tableAdd(metricTable, myIP, metric);
     }else{ //The node is already present in the table
-        tableUpdate(metricTable, nodeIP, metricStruct);
+        tableUpdate(metricTable, myIP, metric);
     }
 }
 
-void injectNodeMetric(void* metric){
-   updateMiddlewareMetric(metric, myIP);
-}
+void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessageType type) {
+    int messageType, senderIP[4],nodeIP[4],metric;
+    InjectMessageType injectType;
 
+    if(type == INJECT_NODE_INFO){
+        // If the encoded message already contains metric information, it means this is a propagation of an already encoded message.
+        // In this case, only the sender address needs to be updated before further propagation.
+        if( sscanf(messageBuffer,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",&messageType,&injectType,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]
+                ,&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3], &metric) == 11 ){
+
+            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",messageType,injectType,myIP[0],myIP[1],myIP[2],myIP[3]
+                    ,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3], metric);
+
+        }
+    }
+
+}
 void encodeMiddlewareMessage(char* messageBuffer, size_t bufferSize, InjectMessageType type){
     int messageType, senderIP[4],nodeIP[4],metric,offset = 0;
     int *entryIP;
@@ -71,34 +85,24 @@ void encodeMiddlewareMessage(char* messageBuffer, size_t bufferSize, InjectMessa
     void *metricValue;
     InjectMessageType injectType;
 
-    // If the encoded message already contains metric information, it means this is a propagation of an already encoded message.
-    // In this case, only the sender address needs to be updated before further propagation.
-    if( sscanf(messageBuffer,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",&messageType,&injectType,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]
-            ,&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3], &metric) == 11 ){
+    if(type == INJECT_NODE_INFO){
+        //MESSAGE_TYPE INJECT_NODE_INFO [sender IP] [nodeIP] metric
+        encodeMyMetric(tmpBuffer, sizeof(tmpBuffer));
+        snprintf(messageBuffer, bufferSize,"%i %i %i.%i.%i.%i %s",MIDDLEWARE_MESSAGE,INJECT_NODE_INFO,myIP[0],myIP[1],myIP[2],myIP[3],tmpBuffer);
+    }else{//INJECT_TABLE_INFO
+        //MESSAGE_TYPE INJECT_TABLE_INFO [sender IP] |[nodeIP] metric |[nodeIP] metric |...
+        offset = snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,INJECT_TABLE_INFO,myIP[0],myIP[1],myIP[2],myIP[3]);
 
-        snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",messageType,injectType,myIP[0],myIP[1],myIP[2],myIP[3]
-                ,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3], metric);
-
-    }else { // If the message only contains the type, it indicates that this node should encode its own metric information
-
-        if(type == INJECT_NODE_INFO){
-            //MESSAGE_TYPE INJECT_TYPE [sender IP] [nodeIP] metric
-            encodeMyMetric(tmpBuffer, sizeof(tmpBuffer));
-            snprintf(messageBuffer, bufferSize,"%i %i %i.%i.%i.%i %s",MIDDLEWARE_MESSAGE,INJECT_NODE_INFO,myIP[0],myIP[1],myIP[2],myIP[3],tmpBuffer);
-        }else{
-            //MESSAGE_TYPE INJECT_TYPE [sender IP] |[nodeIP] metric |[nodeIP] metric |...
-            offset = snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,INJECT_TABLE_INFO,myIP[0],myIP[1],myIP[2],myIP[3]);
-
-            for (int i = 0; i < metricTable->numberOfItems; i++) {
-                entryIP = (int*)tableKey(metricTable,i);
-                metricValue = tableRead(metricTable,entryIP);
-                if(metricValue != nullptr){
-                    encodeMetricValue(tmpBuffer, sizeof(tmpBuffer),metricValue);
-                    offset += snprintf(messageBuffer + offset, bufferSize - offset," |%i.%i.%i.%i %s",entryIP[0],entryIP[1],entryIP[2],entryIP[3],tmpBuffer);
-                }
+        for (int i = 0; i < metricTable->numberOfItems; i++) {
+            entryIP = (int*)tableKey(metricTable,i);
+            metricValue = tableRead(metricTable,entryIP);
+            if(metricValue != nullptr){
+                encodeMetricValue(tmpBuffer, sizeof(tmpBuffer),metricValue);
+                offset += snprintf(messageBuffer + offset, bufferSize - offset," |%i.%i.%i.%i %s",entryIP[0],entryIP[1],entryIP[2],entryIP[3],tmpBuffer);
             }
         }
     }
+
 }
 
 void encodeMyMetric(char* messageBuffer, size_t bufferSize){
@@ -146,7 +150,7 @@ void handleMiddlewareMessage(char* messageBuffer, size_t bufferSize){
         tablePrint(metricTable,printMetricStruct);
 
         //Encode this node IP as the sender IP and propagate the message
-        encodeMiddlewareMessage(messageBuffer, bufferSize,INJECT_NODE_INFO);
+        rewriteSenderIPInject(messageBuffer, bufferSize,INJECT_NODE_INFO);
         propagateMessage(messageBuffer,senderIP);
 
     }else if(injectType == INJECT_TABLE_INFO){

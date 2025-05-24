@@ -47,7 +47,7 @@ void initMiddlewarePubSub(void (*setValueFunction)(void*,void *),void (*encodeTo
     decodeTopicValue = decodeTopicFunction;
 }
 
-void rewriteSenderIP(char* messageBuffer, size_t bufferSize, PubSubMessageType type){
+void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType type){
     messageType globalMessageType;
     PubSubMessageType typePubSub;
     int nodeIP[4],IP[4],topic;
@@ -264,7 +264,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
 
 
             //Propagate the subscription message in the network
-            rewriteSenderIP(messageBuffer, bufferSize,PUBSUB_SUBSCRIBE);
+            rewriteSenderIPPubSub(messageBuffer, bufferSize,PUBSUB_SUBSCRIBE);
             propagateMessage(messageBuffer,IP);
             break;
 
@@ -308,7 +308,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             //}
 
             //Propagate the deleted subscription message in the network
-            rewriteSenderIP(messageBuffer, bufferSize,PUBSUB_UNSUBSCRIBE);
+            rewriteSenderIPPubSub(messageBuffer, bufferSize,PUBSUB_UNSUBSCRIBE);
             propagateMessage(messageBuffer,IP);
 
             break;
@@ -346,7 +346,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             }
 
             //Propagate the adverting message in the network
-            rewriteSenderIP(messageBuffer, bufferSize,PUBSUB_ADVERTISE);
+            rewriteSenderIPPubSub(messageBuffer, bufferSize,PUBSUB_ADVERTISE);
             propagateMessage(messageBuffer,IP);
 
             break;
@@ -386,7 +386,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             }
 
             //Propagate the unadvertised topic message in the network
-            rewriteSenderIP(messageBuffer, bufferSize,PUBSUB_UNADVERTISE);
+            rewriteSenderIPPubSub(messageBuffer, bufferSize,PUBSUB_UNADVERTISE);
             propagateMessage(messageBuffer,IP);
 
             break;
@@ -424,7 +424,7 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
             }
 
             //Propagate the unadvertised topic message in the network
-            rewriteSenderIP(messageBuffer, bufferSize,PUBSUB_NODE_UPDATE);
+            rewriteSenderIPPubSub(messageBuffer, bufferSize,PUBSUB_NODE_UPDATE);
             propagateMessage(messageBuffer,IP);
 
             break;/******/
