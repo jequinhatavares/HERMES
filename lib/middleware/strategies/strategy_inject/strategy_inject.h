@@ -23,6 +23,11 @@ typedef enum InjectMessageType{
     INJECT_TABLE_INFO,
 } InjectMessageType;
 
+// Inject strategy API
+typedef struct InjectAPI{
+    void (*injectNodeMetric)(void* metric);
+} InjectAPI;
+
 extern Strategy strategyInject;
 
 extern unsigned long lastMiddlewareUpdateTime;
@@ -36,6 +41,7 @@ void middlewareOnContextInject(int context, int contextIP[4]);
 void middlewareInfluenceRoutingInject(char* dataMessage);
 void middlewareOnTimerInject();
 
+void* getContextInject();
 void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessageType type);
 
 void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry);

@@ -34,6 +34,14 @@ typedef enum PubSubMessageType{
     PUBSUB_TABLE_UPDATE,
 } PubSubMessageType;
 
+// PubSub strategy API
+typedef struct PubSubAPI{
+    void (*subscribeToTopic)(int8_t topic);
+    void (*unsubscribeToTopic)(int8_t topic);
+    void (*advertiseTopic)(int8_t topic);
+    void (*unadvertiseTopic)(int8_t topic);
+} PubSubAPI;
+
 extern int8_t topic;
 
 extern Strategy strategyPubSub;
@@ -49,6 +57,7 @@ void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, PubSubMessage
 bool containsTopic(int8_t * list, int8_t topic);
 
 void printPubSubStruct(TableEntry* Table);
+void* getContextPubSub();
 void decodeTopic(char* dataMessage, void *topicType);
 void encodeTopic(char*DataMessage,size_t messageSize, void* topic);
 void setPubSubInfo(void* av, void* bv);

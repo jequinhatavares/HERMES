@@ -10,7 +10,7 @@ typedef struct Strategy{
     void (*influenceRouting)(char *dataMessage);
     void (*onTimer)(void);
     void (*onContext)(int context, int contextIP[4]);
-    //void *(*getContext)(void); // strategy-specific API
+    void *(*getContext)(void); // strategy-specific functions
 } Strategy;
 
 

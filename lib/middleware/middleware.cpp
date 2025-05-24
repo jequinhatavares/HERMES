@@ -58,3 +58,11 @@ void middlewareEncodeMessage(char* messageBuffer, size_t bufferSize, int type){
     }
     activeStrategy->encodeMessage(messageBuffer,bufferSize,type);
 }
+
+void middlewareGetStrategyContext(){
+    if(activeStrategy == nullptr){
+        LOG(NETWORK,ERROR,"ERROR: Cannot get strategy context without a strategy selected.\n");
+        return;
+    }
+    activeStrategy->getContext();
+}

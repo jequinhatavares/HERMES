@@ -6,6 +6,15 @@ Strategy strategyPubSub = {
         .influenceRouting = middlewareInfluenceRoutingPubSub,
         .onTimer = middlewareOnTimerPubSub,
         .onContext = middlewareOnContextPubSub,
+        .getContext = getContextPubSub,
+
+};
+
+PubSubAPI pubsubAPI ={
+        .subscribeToTopic = subscribeToTopic,
+        .unsubscribeToTopic = unsubscribeToTopic ,
+        .advertiseTopic = advertiseTopic,
+        .unadvertiseTopic = unadvertiseTopic,
 };
 
 /***
@@ -733,7 +742,6 @@ void printPubSubStruct(TableEntry* Table){
 
 }
 
-
 bool containsTopic(int8_t * list, int8_t topic){
     for (int i = 0; i < MAX_TOPICS; i++) {
         if(list[i] == topic){
@@ -742,6 +750,11 @@ bool containsTopic(int8_t * list, int8_t topic){
     }
     return false;
 }
+
+void* getContextPubSub(){
+    return &pubsubAPI;
+}
+
 /******************          User Defined functions            **********************/
 void decodeTopic(char* dataMessage, void* topicType){
     sscanf(dataMessage,"%*i %i", topicType);

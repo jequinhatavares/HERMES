@@ -6,9 +6,15 @@ Strategy strategyInject = {
     .influenceRouting = middlewareInfluenceRoutingInject,
     .onTimer = middlewareOnTimerInject,
     .onContext = middlewareOnContextInject,
+    .getContext = getContextInject,
 };
 
-bool isIPEqual(void* a, void* b);
+
+InjectAPI injectAPI ={
+        .injectNodeMetric = injectNodeMetric,
+};
+
+
 void setIP(void* av, void* bv);
 
 
@@ -252,6 +258,9 @@ void middlewareOnTimerInject(){
     }
 }
 
+void* getContextInject(){
+    return &injectAPI;
+}
 
 void setIP(void* av, void* bv){
     int* a = (int*) av;
