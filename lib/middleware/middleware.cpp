@@ -1,17 +1,21 @@
 #include "middleware.h"
 
 Strategy *activeStrategy = nullptr;
+StrategyType activeStrategyType = STRATEGY_NONE;
 
 void middlewareSelectStrategy(StrategyType strategyType){
     switch (strategyType) {
         case STRATEGY_INJECT:
             activeStrategy = &strategyInject;
+            activeStrategyType = STRATEGY_INJECT;
             break;
         case STRATEGY_PUBSUB:
             activeStrategy = &strategyPubSub;
+            activeStrategyType = STRATEGY_PUBSUB;
             break;
 
         case STRATEGY_NONE:
+            activeStrategyType = STRATEGY_NONE;
             break;
 
         default:

@@ -46,7 +46,7 @@ TableInfo MTable = {
         .setKey = setKey,
         .setValue = nullptr,
 };
-TableInfo* metricTable = &MTable;
+TableInfo* metricsTable = &MTable;
 int nodes[TableMaxSize][4];
 
 //Function Pointers Initializers
@@ -56,8 +56,8 @@ void (*decodeMetricValue)(char*,void *) = nullptr;
 
 
 void initStrategyInject(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)) {
-    metricTable->setValue = setValueFunction;
-    tableInit(metricTable, nodes, metricStruct, sizeof(int[4]), metricStructSize);
+    metricsTable->setValue = setValueFunction;
+    tableInit(metricsTable, nodes, metricStruct, sizeof(int[4]), metricStructSize);
 
     encodeMetricValue = encodeMetricFunction;
     decodeMetricValue = decodeMetricFunction;
@@ -66,11 +66,11 @@ void initStrategyInject(void (*setValueFunction)(void*,void*), void *metricStruc
 
 
 void injectNodeMetric(void* metric){
-    void*tableEntry = tableRead(metricTable,myIP);
+    void*tableEntry = tableRead(metricsTable,myIP);
     if(tableEntry == nullptr){ //The node is not yet in the table
-        tableAdd(metricTable, myIP, metric);
+        tableAdd(metricsTable, myIP, metric);
     }else{ //The node is already present in the table
-        tableUpdate(metricTable, myIP, metric);
+        tableUpdate(metricsTable, myIP, metric);
     }
 }
 
@@ -106,9 +106,9 @@ void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int typ
         //MESSAGE_TYPE INJECT_TABLE_INFO [sender IP] |[nodeIP] metric |[nodeIP] metric |...
         offset = snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,INJECT_TABLE_INFO,myIP[0],myIP[1],myIP[2],myIP[3]);
 
-        for (int i = 0; i < metricTable->numberOfItems; i++) {
-            entryIP = (int*)tableKey(metricTable,i);
-            metricValue = tableRead(metricTable,entryIP);
+        for (int i = 0; i < metricsTable->numberOfItems; i++) {
+            entryIP = (int*)tableKey(metricsTable,i);
+            metricValue = tableRead(metricsTable,entryIP);
             if(metricValue != nullptr){
                 encodeMetricValue(tmpBuffer, sizeof(tmpBuffer),metricValue);
                 offset += snprintf(messageBuffer + offset, bufferSize - offset," |%i.%i.%i.%i %s",entryIP[0],entryIP[1],entryIP[2],entryIP[3],tmpBuffer);
@@ -123,7 +123,7 @@ void encodeMyMetric(char* messageBuffer, size_t bufferSize){
 
     snprintf(messageBuffer,bufferSize,"%i.%i.%i.%i ", myIP[0],myIP[1],myIP[2],myIP[3]);
 
-    void* metricValue = tableRead(metricTable, myIP);
+    void* metricValue = tableRead(metricsTable, myIP);
     if(metricValue != nullptr){
         encodeMetricValue(tmpBuffer, sizeof(tmpBuffer),metricValue);
         strcat(messageBuffer, tmpBuffer);
@@ -145,22 +145,22 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
                &nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],metricBuffer);
 
         // Check if the nodeIP already exists in the middleware metrics table
-        void *metricValue = tableRead(metricTable,nodeIP);
+        void *metricValue = tableRead(metricsTable,nodeIP);
         if(metricValue != nullptr){// If the nodeIP is already in the table update the corresponding metric value
             decodeMetricValue(metricBuffer,metricValue);
-            tableUpdate(metricTable,nodeIP,metricValue);
+            tableUpdate(metricsTable,nodeIP,metricValue);
         }else{
             /*** If it is a new node, add the nodeIP to the table as a key with a corresponding dummy metric value (nullptr).
             This ensures that when the key is searched later, the function returns a pointer to a user-allocated struct.
             We cannot store the actual metric here because its structure is abstract and unknown to this layer.***/
-            tableAdd(metricTable,nodeIP,emptyEntry);
-            metricValue = tableRead(metricTable,nodeIP);
+            tableAdd(metricsTable,nodeIP,emptyEntry);
+            metricValue = tableRead(metricsTable,nodeIP);
             decodeMetricValue(metricBuffer,metricValue);
-            tableUpdate(metricTable,nodeIP,metricValue);
+            tableUpdate(metricsTable,nodeIP,metricValue);
         }
         //Print the updated table
         LOG(MESSAGES,INFO,"Updated Middleware Table\n");
-        tablePrint(metricTable,printMetricStruct);
+        tablePrint(metricsTable,printMetricStruct);
 
         //Encode this node IP as the sender IP and propagate the message
         rewriteSenderIPInject(messageBuffer, bufferSize,INJECT_NODE_INFO);
@@ -174,18 +174,18 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
         while (token != NULL) {
             sscanf(token,"%d.%d.%d.%d %s",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],metricBuffer);
             // Check if the nodeIP already exists in the middleware metrics table
-            void *metricValue = tableRead(metricTable,nodeIP);
+            void *metricValue = tableRead(metricsTable,nodeIP);
             if(metricValue != nullptr){// If the nodeIP is already in the table update the corresponding metric value
                 decodeMetricValue(metricBuffer,metricValue);
-                tableUpdate(metricTable,nodeIP,metricValue);
+                tableUpdate(metricsTable,nodeIP,metricValue);
             }else{
                 /*** If it is a new node, add the nodeIP to the table as a key with a corresponding dummy metric value (nullptr).
                 This ensures that when the key is searched later, the function returns a pointer to a user-allocated struct.
                 We cannot store the actual metric here because its structure is abstract and unknown to this layer.***/
-                tableAdd(metricTable,nodeIP,emptyEntry);
-                metricValue = tableRead(metricTable,nodeIP);
+                tableAdd(metricsTable,nodeIP,emptyEntry);
+                metricValue = tableRead(metricsTable,nodeIP);
                 decodeMetricValue(metricBuffer,metricValue);
-                tableUpdate(metricTable,nodeIP,metricValue);
+                tableUpdate(metricsTable,nodeIP,metricValue);
             }
             token = strtok(NULL, "|");
         }
@@ -214,10 +214,10 @@ void influenceRoutingStrategyInject(char* dataMessage){
     bool findBestMetric=false;
     messageParameters params;
 
-    for (int i = 0; i < metricTable->numberOfItems ; i++) {
-        IP = (int*) tableKey(metricTable,i);
+    for (int i = 0; i < metricsTable->numberOfItems ; i++) {
+        IP = (int*) tableKey(metricsTable,i);
         if(isIPEqual(IP,myIP)) continue;//Skip my IP
-        currentMetric = tableRead(metricTable,IP);
+        currentMetric = tableRead(metricsTable,IP);
         if(compareMetrics(bestMetric,currentMetric) == 2){
             bestMetric = currentMetric;
             assignIP(bestMetricIP,IP);

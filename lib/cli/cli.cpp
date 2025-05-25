@@ -15,9 +15,10 @@ void showMenu() {
     LOG(CLI,INFO,"[1] Send a new message\n");
     LOG(CLI,INFO,"[2] Print Routing Table\n");
     LOG(CLI,INFO,"[3] Print Children Table\n");
-    LOG(CLI,INFO,"[4] Print Root Node\n");
-    LOG(CLI,INFO,"[5] Force the node to disconnect from its current parent\n");
-    LOG(CLI,INFO,"[6] Exit program\n");
+    LOG(CLI,INFO,"[4] Print Middleware Table\n");
+    LOG(CLI,INFO,"[5] Print Root Node\n");
+    LOG(CLI,INFO,"[6] Force the node to disconnect from its current parent\n");
+    LOG(CLI,INFO,"[7] Exit program\n");
     LOG(CLI,INFO,"======================================================================\n");
     LOG(CLI,INFO,"> ");
 
@@ -99,7 +100,7 @@ void cliInteraction(){
 
         showMenu();
 
-        while (choice != 6) {
+        while (choice != 7) {
 
             while (Serial.available() == 0) {} // Wait for user input
             choice  = Serial.parseInt();
@@ -130,8 +131,19 @@ void cliInteraction(){
                     parentDisconnectCallback();
                     break;
 
-
                 case 6:
+                    if(activeStrategyType == STRATEGY_NONE){
+
+                    }else if(activeStrategyType == STRATEGY_INJECT){
+                        LOG(CLI,INFO,"---------------------------- Middleware Metrics Table ----------------------------\n");
+                        tablePrint(metricsTable,printMetricStruct);
+                    }else if(activeStrategyType == STRATEGY_PUBSUB){
+                        LOG(CLI,INFO,"---------------------------- Middleware PubSub Table ----------------------------\n");
+                        tablePrint(pubsubTable,printPubSubStruct);
+                    }
+                    break;
+
+                case 7:
                     LOG(CLI,INFO,"Exiting...\n");
                     break;
 

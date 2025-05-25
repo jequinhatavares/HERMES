@@ -23,12 +23,12 @@ void test_init_middleware(){
     metric.processingCapacity = 1;
     injectNodeMetric(&metric);
 
-    tablePrint(metricTable, printMetricStruct);
+    tablePrint(metricsTable, printMetricStruct);
 
-    metricTableEntry *metricValue = (metricTableEntry*) tableRead(metricTable,IP);
+    metricTableEntry *metricValue = (metricTableEntry*) tableRead(metricsTable,IP);
     TEST_ASSERT(metricValue != nullptr);
 
-    tableClean(metricTable);
+    tableClean(metricsTable);
 
 }
 
@@ -44,13 +44,13 @@ void test_handle_middleware_node_info_message(){
 
     handleMessageStrategyInject(middlewareMsg,sizeof(middlewareMsg));
 
-    tablePrint(metricTable, printMetricStruct);
+    tablePrint(metricsTable, printMetricStruct);
 
-    metricTableEntry *metricValue = (metricTableEntry*) tableRead(metricTable,nodeIP);
+    metricTableEntry *metricValue = (metricTableEntry*) tableRead(metricsTable,nodeIP);
     TEST_ASSERT(metricValue != nullptr);
     TEST_ASSERT(metricValue->processingCapacity == 1);
 
-    tableClean(metricTable);
+    tableClean(metricsTable);
 }
 
 void test_handle_middleware_table_info_message(){
@@ -63,21 +63,21 @@ void test_handle_middleware_table_info_message(){
 
     handleMessageStrategyInject(middlewareMsg,sizeof(middlewareMsg));
 
-    tablePrint(metricTable, printMetricStruct);
+    tablePrint(metricsTable, printMetricStruct);
 
-    metricTableEntry *metricValue = (metricTableEntry*) tableRead(metricTable,myIP);
+    metricTableEntry *metricValue = (metricTableEntry*) tableRead(metricsTable,myIP);
     TEST_ASSERT(metricValue != nullptr);
     TEST_ASSERT(metricValue->processingCapacity == 1);
 
-    metricTableEntry *metricValue2 = (metricTableEntry*) tableRead(metricTable,node2IP);
+    metricTableEntry *metricValue2 = (metricTableEntry*) tableRead(metricsTable,node2IP);
     TEST_ASSERT(metricValue2 != nullptr);
     TEST_ASSERT(metricValue2->processingCapacity == 2);
 
-    metricTableEntry *metricValue3 = (metricTableEntry*) tableRead(metricTable,node3IP);
+    metricTableEntry *metricValue3 = (metricTableEntry*) tableRead(metricsTable,node3IP);
     TEST_ASSERT(metricValue3 != nullptr);
     TEST_ASSERT(metricValue3->processingCapacity == 3);
 
-    tableClean(metricTable);
+    tableClean(metricsTable);
 }
 
 void test_encode_middleware_node_info_message(){
@@ -94,7 +94,7 @@ void test_encode_middleware_node_info_message(){
 
     TEST_ASSERT(strcmp(middlewareMsg,correctEncodedMsg) == 0);
 
-    tableClean(metricTable);
+    tableClean(metricsTable);
 }
 
 void test_encode_middleware_table_info_message(){
@@ -115,7 +115,7 @@ void test_encode_middleware_table_info_message(){
     //printf("Correct message: %s len:%i\n",correctEncodedMsg, strlen(correctEncodedMsg));
     TEST_ASSERT(strcmp(largeSendBuffer,correctEncodedMsg) == 0);/******/
 
-    tableClean(metricTable);
+    tableClean(metricsTable);
 }
 
 void setUp(void){

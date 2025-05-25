@@ -11,7 +11,7 @@
 //#include "../../routing/messages.h"
 
 #define MIDDLEWARE_UPDATE_INTERVAL 120000
-extern TableInfo* metricTable;
+extern TableInfo* metricsTable;
 
 struct metricTableEntry{
     int processingCapacity;
