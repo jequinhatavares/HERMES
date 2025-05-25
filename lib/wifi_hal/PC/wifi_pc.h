@@ -1,8 +1,8 @@
-//
-// Created by ELITEBOOK on 02/01/2025.
-//
+#ifndef WIFI_PC_H
+#define WIFI_PC_H
+#if defined(NATIVE)
 
-#ifndef WIFIROUTING_WIFI_PC_H
-#define WIFIROUTING_WIFI_PC_H
+#include "../wifi_interface.h"
 
-#endif //WIFIROUTING_WIFI_PC_H
+#endif
+#endif //WIFI_PC_H

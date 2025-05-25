@@ -15,6 +15,11 @@
     #include "raspberrypi/wifi_raspberrypi.h"
 #endif
 
+#if defined(NATIVE)
+    #include "PC/wifi_pc.h"
+#endif
+
+
 //#if defined(raspberrypi_3b)
     //#include "raspberrypi/wifi_raspberrypi.h"
 //#endif
