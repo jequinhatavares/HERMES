@@ -10,7 +10,6 @@
 #include "logger.h"
 #include "../../../time_hal/time_hal.h"
 #include "../../../transport_hal/transport_hal.h"
-#include "../../middleware.h"
 #include "../strategy_interface.h"
 
 
@@ -35,12 +34,12 @@ typedef enum PubSubMessageType{
 } PubSubMessageType;
 
 // PubSub strategy API
-typedef struct PubSubAPI{
+typedef struct PubSubContext{
     void (*subscribeToTopic)(int8_t topic);
     void (*unsubscribeToTopic)(int8_t topic);
     void (*advertiseTopic)(int8_t topic);
     void (*unadvertiseTopic)(int8_t topic);
-} PubSubAPI;
+} PubSubContext;
 
 extern int8_t topic;
 
@@ -49,7 +48,7 @@ extern Strategy strategyPubSub;
 void initMiddlewarePubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) );
 void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, int typePubSub);
 void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize);
-void middlewareOnContextPubSub(int context,int contextIP[4]);
+void middlewareOnNetworkEventPubSub(int context,int contextIP[4]);
 void middlewareInfluenceRoutingPubSub(char* dataMessage);
 void middlewareOnTimerPubSub();
 

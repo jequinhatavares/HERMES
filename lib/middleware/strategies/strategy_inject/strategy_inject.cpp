@@ -10,7 +10,7 @@ Strategy strategyInject = {
 };
 
 
-InjectAPI injectAPI ={
+InjectContext injectContext ={
         .injectNodeMetric = injectNodeMetric,
 };
 
@@ -196,13 +196,13 @@ void handleMiddlewareMessageInject(char* messageBuffer, size_t bufferSize){
 
 void middlewareOnContextInject(int context,int contextIP[4]){
     switch (context) {
-        case CONTEXT_JOINED_NETWORK:
+        case NETEVENT_JOINED_NETWORK:
             break;
-        case CONTEXT_CHILD_CONNECTED:
+        case NETEVENT_CHILD_CONNECTED:
             encodeMiddlewareMessageInject(largeSendBuffer, sizeof(largeSendBuffer),INJECT_TABLE_INFO);
             sendMessage(contextIP,largeSendBuffer);
             break;
-        case CONTEXT_CHILD_DISCONNECTED:
+        case NETEVENT_CHILD_DISCONNECTED:
             break;
         default:
             break;
@@ -259,7 +259,7 @@ void middlewareOnTimerInject(){
 }
 
 void* getContextInject(){
-    return &injectAPI;
+    return &injectContext;
 }
 
 void setIP(void* av, void* bv){

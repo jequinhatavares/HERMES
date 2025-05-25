@@ -8,7 +8,6 @@
 #include "logger.h"
 #include "../../../time_hal/time_hal.h"
 #include "../../../transport_hal/transport_hal.h"
-#include "../../middleware.h"
 #include "../strategy_interface.h"
 
 #define MIDDLEWARE_UPDATE_INTERVAL 120000
@@ -24,9 +23,9 @@ typedef enum InjectMessageType{
 } InjectMessageType;
 
 // Inject strategy API
-typedef struct InjectAPI{
+typedef struct InjectContext{
     void (*injectNodeMetric)(void* metric);
-} InjectAPI;
+} InjectContext;
 
 extern Strategy strategyInject;
 

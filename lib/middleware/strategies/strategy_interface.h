@@ -14,5 +14,10 @@ typedef struct Strategy{
 } Strategy;
 
 
+typedef enum NetworkEvent {
+    NETEVENT_JOINED_NETWORK,
+    NETEVENT_CHILD_CONNECTED,
+    NETEVENT_CHILD_DISCONNECTED,
+}NetworkEvent ;
 
 #endif //STRATEGY_INTERFACE_H

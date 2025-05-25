@@ -5,12 +5,12 @@ Strategy strategyPubSub = {
         .encodeMessage = encodeMiddlewareMessagePubSub,
         .influenceRouting = middlewareInfluenceRoutingPubSub,
         .onTimer = middlewareOnTimerPubSub,
-        .onContext = middlewareOnContextPubSub,
+        .onContext = middlewareOnNetworkEventPubSub,
         .getContext = getContextPubSub,
 
 };
 
-PubSubAPI pubsubAPI ={
+PubSubContext pubsubContext ={
         .subscribeToTopic = subscribeToTopic,
         .unsubscribeToTopic = unsubscribeToTopic ,
         .advertiseTopic = advertiseTopic,
@@ -501,15 +501,15 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
 }
 
 
-void middlewareOnContextPubSub(int context,int contextIP[4]){
+void middlewareOnNetworkEventPubSub(int context,int contextIP[4]){
     switch (context) {
-        case CONTEXT_JOINED_NETWORK:
+        case NETEVENT_JOINED_NETWORK:
             break;
-        case CONTEXT_CHILD_CONNECTED:
+        case NETEVENT_CHILD_CONNECTED:
             encodeMiddlewareMessagePubSub(largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_TABLE_UPDATE);
             sendMessage(contextIP,largeSendBuffer);
             break;
-        case CONTEXT_CHILD_DISCONNECTED:
+        case NETEVENT_CHILD_DISCONNECTED:
             break;
         default:
             break;
@@ -752,7 +752,7 @@ bool containsTopic(int8_t * list, int8_t topic){
 }
 
 void* getContextPubSub(){
-    return &pubsubAPI;
+    return &pubsubContext;
 }
 
 /******************          User Defined functions            **********************/

@@ -6,11 +6,6 @@
 #include "strategies/strategy_pubsub/strategy_pubsub.h"
 #include <logger.h>
 
-typedef enum Context{
-    CONTEXT_JOINED_NETWORK,
-    CONTEXT_CHILD_CONNECTED,
-    CONTEXT_CHILD_DISCONNECTED,
-}Context;
 
 typedef enum StrategyType{
     STRATEGY_INJECT,
@@ -25,6 +20,9 @@ void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopi
 void middlewareInfluenceRouting(char* dataMessage);
 void middlewareHandleMessage(char* messageBuffer, size_t bufferSize);
 void middlewareEncodeMessage(char* messageBuffer, size_t bufferSize, int type);
+void middlewareOnTimer();
+void* middlewareGetStrategyContext();
+
 
 #endif //MIDDLEWARE_H
 

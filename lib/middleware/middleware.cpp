@@ -59,10 +59,18 @@ void middlewareEncodeMessage(char* messageBuffer, size_t bufferSize, int type){
     activeStrategy->encodeMessage(messageBuffer,bufferSize,type);
 }
 
-void middlewareGetStrategyContext(){
+void middlewareOnTimer(){
     if(activeStrategy == nullptr){
-        LOG(NETWORK,ERROR,"ERROR: Cannot get strategy context without a strategy selected.\n");
+        LOG(NETWORK,ERROR,"ERROR: Cannot perform middleware periodic tasks, no active strategy selected.\n");
         return;
     }
-    activeStrategy->getContext();
+    activeStrategy->onTimer();
+}
+
+void* middlewareGetStrategyContext(){
+    if(activeStrategy == nullptr){
+        LOG(NETWORK,ERROR,"ERROR: Cannot get strategy context without a strategy selected.\n");
+        return nullptr;
+    }
+    return activeStrategy->getContext();
 }
