@@ -300,7 +300,7 @@ State idle(Event event){
 
 State handleMessages(Event event){
     LOG(STATE_MACHINE,INFO,"Handle Messages State\n");
-    int messageType;
+    int messageType,childIP[4];
 
     sscanf(receiveBuffer, "%d", &messageType);
     if(!isMessageValid(messageType, receiveBuffer)){
@@ -316,6 +316,8 @@ State handleMessages(Event event){
         case CHILD_REGISTRATION_REQUEST:
             LOG(MESSAGES,INFO,"Received [Child Registration Request] message: \"%s\"\n", receiveBuffer);
             handleChildRegistrationRequest(receiveBuffer);
+            sscanf(receiveBuffer,"%*d %d.%d.%d.%d",&childIP[0],&childIP[1],&childIP[2],&childIP[3]);
+            middlewareOnNetworkEventCallback(1,childIP);
             break;
 
         case FULL_ROUTING_TABLE_UPDATE:

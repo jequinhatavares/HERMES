@@ -6,6 +6,7 @@
 #include "cli.h"
 #include "logger.h"
 #include "../lib/middleware/strategies/strategy_inject/strategy_inject.h"
+#include "middleware.h"
 
 //#include "../lib/wifi_hal/wifi_hal.h"
 //#include "../lib/transport_hal/esp32/udp_esp32.h"
@@ -72,10 +73,13 @@ void setup(){
 
     Advance(SM, eSuccess);//Init
 
-    //Middleware stuff
-    initMiddlewareInject(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
+    //Select and initialize the middleware strategy
+    middlewareSelectStrategy(STRATEGY_INJECT);
+    initMiddlewareStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
+    //Inject node metric
+    InjectContext *context = (InjectContext*) middlewareGetStrategyContext();
     myMetric.processingCapacity = MAC[5];
-    injectNodeMetric(&myMetric);
+    context->injectNodeMetric(&myMetric);
 
     if(!iamRoot){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Search APs
@@ -83,7 +87,6 @@ void setup(){
     }
 
     //startWifiAP(ssid,PASS, localIP, gateway, subnet);
-
     changeWifiMode(3);
     //LOG(NETWORK,INFO,"My SoftAP IP: %s\nMy STA IP %s\nGateway IP: %s\n", getMyAPIP().toString().c_str(), getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
 }

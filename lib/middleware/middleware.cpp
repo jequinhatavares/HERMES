@@ -26,16 +26,16 @@ void initCallbacks(){
     middlewareOnNetworkEventCallback = middlewareOnNetworkEvent;
 }
 
-void initStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)){
+void initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)){
     if(activeStrategy == nullptr){
         LOG(NETWORK,ERROR,"ERROR: Initialization attempted without a selected strategy\n");
         return;
     }
-    initMiddlewareInject(setValueFunction,metricStruct,metricStructSize,encodeMetricFunction,decodeMetricFunction);
+    initStrategyInject(setValueFunction,metricStruct,metricStructSize,encodeMetricFunction,decodeMetricFunction);
     initCallbacks();
 }
 
-void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *)){
+void initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *)){
     if(activeStrategy == nullptr){
         LOG(NETWORK,ERROR,"ERROR: Initialization attempted without a selected strategy\n");
         return;

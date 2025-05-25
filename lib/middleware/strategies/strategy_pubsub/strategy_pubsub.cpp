@@ -501,13 +501,13 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
 }
 
 
-void onNetworkEventStrategyPubSub(int context,int contextIP[4]){
-    switch (context) {
+void onNetworkEventStrategyPubSub(int networkEvent, int involvedIP[4]){
+    switch (networkEvent) {
         case NETEVENT_JOINED_NETWORK:
             break;
         case NETEVENT_CHILD_CONNECTED:
             encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_TABLE_UPDATE);
-            sendMessage(contextIP,largeSendBuffer);
+            sendMessage(involvedIP,largeSendBuffer);
             break;
         case NETEVENT_CHILD_DISCONNECTED:
             break;

@@ -29,14 +29,14 @@ typedef struct InjectContext{
 
 extern Strategy strategyInject;
 
-extern unsigned long lastMiddlewareUpdateTimePubSub;
+extern unsigned long lastMiddlewareUpdateTimeInject;
 
-void initMiddlewareInject(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
+void initStrategyInject(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
 
 void encodeMessageInject(char* messageBuffer, size_t bufferSize, int type);
 void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int type);
 void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize);
-void onNetworkEventStrategyInject(int context, int contextIP[4]);
+void onNetworkEventStrategyInject(int networkEvent, int involvedIP[4]);
 void influenceRoutingStrategyInject(char* dataMessage);
 void onTimerStrategyInject();
 void* getContextStrategyInject();
