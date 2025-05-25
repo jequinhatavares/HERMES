@@ -16,7 +16,7 @@ typedef enum topicTypes{
 
 void test_init_middleware(){
     int IP[4]={1,1,1,1};
-    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
     tablePrint(pubsubTable, printPubSubStruct);
 
@@ -26,7 +26,7 @@ void test_init_middleware(){
 void test_add_remove_subscription(){
     int8_t topic = HUMIDITY, topic2 = CAMERA;
     PubSubInfo *myPubSubInfo;
-    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
     // Subscribe to topic
     subscribeToTopic(topic);
 
@@ -62,7 +62,7 @@ void test_publishing_topic(){
     int8_t topic1 = HUMIDITY, topic2 = CAMERA;
     PubSubInfo *myPubSubInfo;
 
-    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
     // Subscribe to topic
     advertiseTopic(topic1);
@@ -101,10 +101,10 @@ void test_encode_middleware_subscribe_message(){
     int8_t subtopic = HUMIDITY;
     PubSubInfo *myPubSubInfo;
 
-    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
     topic = subtopic;
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_SUBSCRIBE);
+    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_SUBSCRIBE);
 
     TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);
 
@@ -118,10 +118,10 @@ void test_encode_middleware_advertise_message(){
     int8_t pubtopic = CAMERA;
     PubSubInfo *myPubSubInfo;
 
-    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
     topic = pubtopic;
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_ADVERTISE);
+    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_ADVERTISE);
 
     TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);/******/
 
@@ -134,7 +134,7 @@ void test_encode_middleware_info_update_message(){
     int8_t stopic = HUMIDITY, stopic2 = TEMPERATURE, ptopic = CAMERA;
     PubSubInfo *myPubSubInfo;
 
-    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
     subscribeToTopic(stopic);
     subscribeToTopic(stopic2);
@@ -144,7 +144,7 @@ void test_encode_middleware_info_update_message(){
     TEST_ASSERT(myPubSubInfo != nullptr);
 
     //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_NODE_UPDATE);
+    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_NODE_UPDATE);
 
     //printf("Encoded Message: %s\n",smallSendBuffer);
     TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);/******/
@@ -158,19 +158,19 @@ void test_encode_middleware_table_update_message(){
     int8_t stopic = HUMIDITY, stopic2 = TEMPERATURE, ptopic = CAMERA;
     PubSubInfo *myPubSubInfo;
 
-    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
     subscribeToTopic(stopic);
     subscribeToTopic(stopic2);
     advertiseTopic(ptopic);
 
-    handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
 
     myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
     TEST_ASSERT(myPubSubInfo != nullptr);
 
     //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
-    encodeMiddlewareMessagePubSub(largeSendBuffer, sizeof(largeSendBuffer) ,PUBSUB_TABLE_UPDATE);
+    encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer) ,PUBSUB_TABLE_UPDATE);
 
     //printf("Encoded Message: %s\n",correctEncodedMsg);
     //printf("Encoded Message: %s\n",largeSendBuffer);
@@ -185,13 +185,13 @@ void test_handle_middleware_subscribe_message(){
     PubSubInfo *nodePubSubInfo;
     int nodeIP[4] ={2,2,2,2};
 
-    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
     subscribeToTopic(topic);
     subscribeToTopic(topic2);
     advertiseTopic(topic3);
 
-    handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
     nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
     TEST_ASSERT(nodePubSubInfo != nullptr);
     TEST_ASSERT(containsTopic(nodePubSubInfo->subscribedTopics,topic3));
@@ -209,15 +209,15 @@ void test_handle_middleware_unsubscribe_message(){
     PubSubInfo *nodePubSubInfo;
     int nodeIP[4] ={2,2,2,2};
 
-    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
     subscribeToTopic(topic);
     subscribeToTopic(topic2);
     advertiseTopic(topic3);
 
-    handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
 
-    handleMiddlewareMessagePubSub(receivedMiddlewareMessage2, sizeof(receivedMiddlewareMessage));
+    handleMessageStrategyPubSub(receivedMiddlewareMessage2, sizeof(receivedMiddlewareMessage));
     nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
     TEST_ASSERT(nodePubSubInfo != nullptr);
     TEST_ASSERT(!containsTopic(nodePubSubInfo->subscribedTopics,topic3));
@@ -234,13 +234,13 @@ void test_handle_middleware_advertise_message(){
     PubSubInfo *nodePubSubInfo;
     int nodeIP[4] ={2,2,2,2};
 
-    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
     subscribeToTopic(topic);
     subscribeToTopic(topic2);
     advertiseTopic(topic3);
 
-    handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
 
     nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
     TEST_ASSERT(nodePubSubInfo != nullptr);
@@ -257,15 +257,15 @@ void test_handle_middleware_unadvertise_message(){
     PubSubInfo *nodePubSubInfo;
     int nodeIP[4] ={2,2,2,2};
 
-    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
     subscribeToTopic(topic);
     subscribeToTopic(topic2);
     advertiseTopic(topic3);
 
-    handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
 
-    handleMiddlewareMessagePubSub(receivedMiddlewareMessage2, sizeof(receivedMiddlewareMessage));
+    handleMessageStrategyPubSub(receivedMiddlewareMessage2, sizeof(receivedMiddlewareMessage));
 
 
     nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
@@ -283,13 +283,13 @@ void test_handle_middleware_info_update_message(){
     PubSubInfo *nodePubSubInfo;
     int nodeIP[4] ={2,2,2,2};
 
-    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
     subscribeToTopic(topic);
     subscribeToTopic(topic2);
     advertiseTopic(topic3);
 
-    handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
 
 
     //tablePrint(pubsubTable,printPubSubStruct);
@@ -312,13 +312,13 @@ void test_handle_middleware_table_update_message(){
     PubSubInfo *nodePubSubInfo;
     int nodeIP[4] ={2,2,2,2};
 
-    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
     subscribeToTopic(topic);
     subscribeToTopic(topic2);
     advertiseTopic(topic3);
 
-    handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
 
 
     tablePrint(pubsubTable,printPubSubStruct);
@@ -343,9 +343,9 @@ void test_message_rewriteIP(){
     int8_t topic = HUMIDITY;
     PubSubInfo *myPubSubInfo;
 
-    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
-    handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
 
     //printf("Encoded Message: %s\n",receivedMiddlewareMessage);
 
@@ -361,9 +361,9 @@ void test_message_rewriteIP_info_update_message(){
     int8_t topic = HUMIDITY;
     PubSubInfo *myPubSubInfo;
 
-    initMiddlewarePubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
-    handleMiddlewareMessagePubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
 
     //printf("Encoded Message: %s\n",receivedMiddlewareMessage);
 

@@ -33,14 +33,17 @@ extern unsigned long lastMiddlewareUpdateTime;
 
 void initMiddlewareInject(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
 
-void encodeMyMetric(char* messageBuffer, size_t bufferSize);
-void encodeMiddlewareMessageInject(char* messageBuffer, size_t bufferSize, int type);
-void handleMiddlewareMessageInject(char* messageBuffer, size_t bufferSize);
-void middlewareOnContextInject(int context, int contextIP[4]);
-void middlewareInfluenceRoutingInject(char* dataMessage);
-void middlewareOnTimerInject();
+void encodeMessageInject(char* messageBuffer, size_t bufferSize, int type);
+void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int type);
+void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize);
+void onNetworkEventStrategyInject(int context, int contextIP[4]);
+void influenceRoutingStrategyInject(char* dataMessage);
+void onTimerStrategyInject();
+void* getContextStrategyInject();
 
-void* getContextInject();
+void injectNodeMetric(void* metric);
+
+void encodeMyMetric(char* messageBuffer, size_t bufferSize);
 void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessageType type);
 
 void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry);
@@ -48,7 +51,6 @@ void decodeMetricEntry(char* buffer, void *metricEntry);
 void printMetricStruct(TableEntry* Table);
 void setMetricValue(void* av, void*bv);
 int compareMetrics(void *metricAv,void*metricBv);
-void injectNodeMetric(void* metric);
 
 void setIP(void* av, void* bv);
 

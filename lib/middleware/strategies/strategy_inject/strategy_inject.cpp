@@ -1,12 +1,12 @@
 #include "strategy_inject.h"
 
 Strategy strategyInject = {
-    .handleMessage = handleMiddlewareMessageInject,
-    .encodeMessage = encodeMiddlewareMessageInject,
-    .influenceRouting = middlewareInfluenceRoutingInject,
-    .onTimer = middlewareOnTimerInject,
-    .onContext = middlewareOnContextInject,
-    .getContext = getContextInject,
+    .handleMessage = handleMessageStrategyInject,
+    .encodeMessage = encodeMessageStrategyInject,
+    .influenceRouting = influenceRoutingStrategyInject,
+    .onTimer = onTimerStrategyInject,
+    .onContext = onNetworkEventStrategyInject,
+    .getContext = getContextStrategyInject,
 };
 
 
@@ -91,7 +91,7 @@ void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessage
     }
 
 }
-void encodeMiddlewareMessageInject(char* messageBuffer, size_t bufferSize, int type){
+void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int type){
     int messageType, senderIP[4],nodeIP[4],metric,offset = 0;
     int *entryIP;
     char tmpBuffer[20], tmpBuffer2[50];
@@ -130,7 +130,7 @@ void encodeMyMetric(char* messageBuffer, size_t bufferSize){
     }
 }
 
-void handleMiddlewareMessageInject(char* messageBuffer, size_t bufferSize){
+void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
     char metricBuffer[20];
     int senderIP[4],nodeIP[4];
     void  *emptyEntry = nullptr;
@@ -194,12 +194,12 @@ void handleMiddlewareMessageInject(char* messageBuffer, size_t bufferSize){
 
 }
 
-void middlewareOnContextInject(int context,int contextIP[4]){
+void onNetworkEventStrategyInject(int context,int contextIP[4]){
     switch (context) {
         case NETEVENT_JOINED_NETWORK:
             break;
         case NETEVENT_CHILD_CONNECTED:
-            encodeMiddlewareMessageInject(largeSendBuffer, sizeof(largeSendBuffer),INJECT_TABLE_INFO);
+            encodeMessageStrategyInject(largeSendBuffer, sizeof(largeSendBuffer),INJECT_TABLE_INFO);
             sendMessage(contextIP,largeSendBuffer);
             break;
         case NETEVENT_CHILD_DISCONNECTED:
@@ -208,7 +208,7 @@ void middlewareOnContextInject(int context,int contextIP[4]){
             break;
     }
 }
-void middlewareInfluenceRoutingInject(char* dataMessage){
+void influenceRoutingStrategyInject(char* dataMessage){
     void* bestMetric = nullptr, *currentMetric;
     int *IP, bestMetricIP[4], *nextHopIP, originalDestination[4];
     bool findBestMetric=false;
@@ -246,19 +246,19 @@ void middlewareInfluenceRoutingInject(char* dataMessage){
     }
 }
 
-void middlewareOnTimerInject(){
+void onTimerStrategyInject(){
     unsigned long currentTime = getCurrentTime();
     //Periodically send this node's metric to all other nodes in the network
     if( (currentTime - lastMiddlewareUpdateTime) >= MIDDLEWARE_UPDATE_INTERVAL ){
         snprintf(smallSendBuffer, sizeof(smallSendBuffer), "%i ",MIDDLEWARE_MESSAGE);
-        encodeMiddlewareMessageInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
+        encodeMessageStrategyInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
         propagateMessage(smallSendBuffer,myIP);
         LOG(NETWORK,DEBUG,"Sending [MIDDLEWARE] Message: %s\n",smallSendBuffer);
         lastMiddlewareUpdateTime = currentTime;
     }
 }
 
-void* getContextInject(){
+void* getContextStrategyInject(){
     return &injectContext;
 }
 

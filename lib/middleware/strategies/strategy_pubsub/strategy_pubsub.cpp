@@ -1,12 +1,12 @@
 #include "strategy_pubsub.h"
 
 Strategy strategyPubSub = {
-        .handleMessage = handleMiddlewareMessagePubSub,
-        .encodeMessage = encodeMiddlewareMessagePubSub,
-        .influenceRouting = middlewareInfluenceRoutingPubSub,
-        .onTimer = middlewareOnTimerPubSub,
-        .onContext = middlewareOnNetworkEventPubSub,
-        .getContext = getContextPubSub,
+        .handleMessage = handleMessageStrategyPubSub,
+        .encodeMessage = encodeMessageStrategyPubSub,
+        .influenceRouting = influenceRoutingStrategyPubSub,
+        .onTimer = onTimerStrategyPubSub,
+        .onContext = onNetworkEventStrategyPubSub,
+        .getContext = getContextStrategyPubSub,
 
 };
 
@@ -55,7 +55,7 @@ PubSubInfo valuesPubSub[TableMaxSize];
 
 int8_t topic;
 
-void initMiddlewarePubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) ){
+void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) ){
     pubsubTable->setValue = setValueFunction;
     //Initialize the pubsubTable
     tableInit(pubsubTable, nodesPubSub, valuesPubSub, sizeof(int[4]), sizeof(PubSubInfo));
@@ -106,7 +106,7 @@ void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, PubSubMessage
 
 }
 
-void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, int typePubSub) {
+void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typePubSub) {
     PubSubInfo *nodePubSubInfo;
     int offset = 0,*nodeIP,i,j;
 
@@ -213,7 +213,7 @@ void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, int t
     }
 }
 
-void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
+void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
     char infoPubSub[100];
     int IP[4],nodeIP[4],topic,i,k,count=0, charsRead = 0;
     PubSubMessageType type;
@@ -501,12 +501,12 @@ void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize) {
 }
 
 
-void middlewareOnNetworkEventPubSub(int context,int contextIP[4]){
+void onNetworkEventStrategyPubSub(int context,int contextIP[4]){
     switch (context) {
         case NETEVENT_JOINED_NETWORK:
             break;
         case NETEVENT_CHILD_CONNECTED:
-            encodeMiddlewareMessagePubSub(largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_TABLE_UPDATE);
+            encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_TABLE_UPDATE);
             sendMessage(contextIP,largeSendBuffer);
             break;
         case NETEVENT_CHILD_DISCONNECTED:
@@ -516,7 +516,7 @@ void middlewareOnNetworkEventPubSub(int context,int contextIP[4]){
     }
 }
 
-void middlewareInfluenceRoutingPubSub(char* dataMessage){
+void influenceRoutingStrategyPubSub(char* dataMessage){
     int i,j;
     PubSubInfo *myPubSubInfo, *nodePubSubInfo;
     int *nodeIP;
@@ -581,11 +581,11 @@ void middlewareInfluenceRoutingPubSub(char* dataMessage){
     }
 }
 
-void middlewareOnTimerPubSub(){
+void onTimerStrategyPubSub(){
     unsigned long currentTime = getCurrentTime();
     //Periodically send this node's metric to all other nodes in the network
     if( (currentTime - lastMiddlewareUpdateTimePubSub) >= 10000 ) {
-        encodeMiddlewareMessagePubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_NODE_UPDATE);
+        encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_NODE_UPDATE);
         propagateMessage(largeSendBuffer, myIP);
         LOG(NETWORK,DEBUG,"Sending [MIDDLEWARE] Message: %s\n",smallSendBuffer);
         lastMiddlewareUpdateTime = currentTime;
@@ -621,7 +621,7 @@ void subscribeToTopic(int8_t subTopic) {
 
     // Announce that i am subscribing to that topic
     topic = subTopic;
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE);
+    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE);
     propagateMessage(smallSendBuffer,myIP);
 
 }
@@ -654,7 +654,7 @@ void unsubscribeToTopic(int8_t subTopic){
 
     // Announce that i am subscribing to that topic
     topic = subTopic;
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE);
+    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE);
     propagateMessage(smallSendBuffer,myIP);
 }
 
@@ -686,7 +686,7 @@ void advertiseTopic(int8_t pubTopic){
 
     // Advertise to other nodes that I am publishing this topic
     topic = pubTopic;
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_ADVERTISE);
+    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_ADVERTISE);
     propagateMessage(smallSendBuffer,myIP);
 }
 
@@ -718,7 +718,7 @@ void unadvertiseTopic(int8_t pubTopic){
 
     // Advertise to other nodes that I am publishing this topic
     topic = pubTopic;
-    encodeMiddlewareMessagePubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_UNADVERTISE);
+    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_UNADVERTISE);
     propagateMessage(smallSendBuffer,myIP);
 }
 
@@ -751,7 +751,7 @@ bool containsTopic(int8_t * list, int8_t topic){
     return false;
 }
 
-void* getContextPubSub(){
+void* getContextStrategyPubSub(){
     return &pubsubContext;
 }
 

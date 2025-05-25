@@ -45,21 +45,21 @@ extern int8_t topic;
 
 extern Strategy strategyPubSub;
 
-void initMiddlewarePubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) );
-void encodeMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize, int typePubSub);
-void handleMiddlewareMessagePubSub(char* messageBuffer, size_t bufferSize);
-void middlewareOnNetworkEventPubSub(int context,int contextIP[4]);
-void middlewareInfluenceRoutingPubSub(char* dataMessage);
-void middlewareOnTimerPubSub();
+void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) );
+void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typePubSub);
+void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize);
+void onNetworkEventStrategyPubSub(int context,int contextIP[4]);
+void influenceRoutingStrategyPubSub(char* dataMessage);
+void onTimerStrategyPubSub();
+void* getContextStrategyPubSub();
 
 void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType type);
 bool containsTopic(int8_t * list, int8_t topic);
+void setPubSubInfo(void* av, void* bv);
 
 void printPubSubStruct(TableEntry* Table);
-void* getContextPubSub();
 void decodeTopic(char* dataMessage, void *topicType);
 void encodeTopic(char*DataMessage,size_t messageSize, void* topic);
-void setPubSubInfo(void* av, void* bv);
 
 void subscribeToTopic(int8_t topic);
 void unsubscribeToTopic(int8_t topic);

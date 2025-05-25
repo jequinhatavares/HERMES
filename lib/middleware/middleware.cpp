@@ -32,7 +32,7 @@ void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopi
         LOG(NETWORK,ERROR,"ERROR: Initialization attempted without a selected strategy\n");
         return;
     }
-    initMiddlewarePubSub(setValueFunction,encodeTopicFunction,decodeTopicFunction);
+    initStrategyPubSub(setValueFunction,encodeTopicFunction,decodeTopicFunction);
 }
 
 void middlewareInfluenceRouting(char* dataMessage){
