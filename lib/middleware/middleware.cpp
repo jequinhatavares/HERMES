@@ -19,12 +19,20 @@ void middlewareSelectStrategy(StrategyType strategyType){
     }
 }
 
+void initCallbacks(){
+    middlewareOnTimerCallback = middlewareOnTimer;
+    middlewareHandleMessageCallback = middlewareHandleMessage;
+    middlewareInfluenceRoutingCallback = middlewareInfluenceRouting;
+    middlewareOnNetworkEventCallback = middlewareOnNetworkEvent;
+}
+
 void initStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)){
     if(activeStrategy == nullptr){
         LOG(NETWORK,ERROR,"ERROR: Initialization attempted without a selected strategy\n");
         return;
     }
     initMiddlewareInject(setValueFunction,metricStruct,metricStructSize,encodeMetricFunction,decodeMetricFunction);
+    initCallbacks();
 }
 
 void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *)){
@@ -33,6 +41,7 @@ void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopi
         return;
     }
     initStrategyPubSub(setValueFunction,encodeTopicFunction,decodeTopicFunction);
+    initCallbacks();
 }
 
 void middlewareInfluenceRouting(char* dataMessage){
@@ -65,6 +74,14 @@ void middlewareOnTimer(){
         return;
     }
     activeStrategy->onTimer();
+}
+
+void middlewareOnNetworkEvent(int networkEvent, int involvedIP[4]){
+    if(activeStrategy == nullptr){
+        LOG(NETWORK,ERROR,"ERROR: Cannot perform middleware periodic tasks, no active strategy selected.\n");
+        return;
+    }
+    activeStrategy->onNetworkEvent(networkEvent, involvedIP);
 }
 
 void* middlewareGetStrategyContext(){

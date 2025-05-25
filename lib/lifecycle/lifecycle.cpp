@@ -5,11 +5,15 @@ int gateway[4];
 int subnet[4];
 int dns[4];
 
-
 int consecutiveSearchCount = 0;
 bool lostParent = false;
 
 unsigned long lastApplicationProcessingTime = 0;
+
+void (*middlewareOnTimerCallback)() = nullptr;
+void (*middlewareHandleMessageCallback)(char*,size_t) = nullptr;
+void (*middlewareInfluenceRoutingCallback)(char*) = nullptr;
+void (*middlewareOnNetworkEventCallback)(int,int*) = nullptr;
 
 StateMachine SM_ = {
         .current_state = sInit,
@@ -296,7 +300,7 @@ State idle(Event event){
 
 State handleMessages(Event event){
     LOG(STATE_MACHINE,INFO,"Handle Messages State\n");
-    int messageType, flag = 0;
+    int messageType;
 
     sscanf(receiveBuffer, "%d", &messageType);
     if(!isMessageValid(messageType, receiveBuffer)){
@@ -312,7 +316,6 @@ State handleMessages(Event event){
         case CHILD_REGISTRATION_REQUEST:
             LOG(MESSAGES,INFO,"Received [Child Registration Request] message: \"%s\"\n", receiveBuffer);
             handleChildRegistrationRequest(receiveBuffer);
-            flag = 1;
             break;
 
         case FULL_ROUTING_TABLE_UPDATE:
@@ -356,7 +359,7 @@ State handleMessages(Event event){
 
         case MIDDLEWARE_MESSAGE:
             LOG(MESSAGES,INFO,"Received [Middleware] message: \"%s\"\n", receiveBuffer);
-            handleMessageStrategyInject(receiveBuffer, sizeof(receiveBuffer));
+            middlewareHandleMessageCallback(receiveBuffer, sizeof(receiveBuffer));
             break;
     }
 
@@ -537,7 +540,7 @@ State executeTask(Event event){
     assignIP(parameters.IP2,rootIP);
 
     encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),DATA_MESSAGE,parameters);
-    influenceRoutingStrategyInject(largeSendBuffer);
+    middlewareInfluenceRoutingCallback(largeSendBuffer);
     return sIdle;
 }
 void handleTimers(){
@@ -563,7 +566,7 @@ void handleTimers(){
         lastRoutingUpdateTime = currentTime;
     }
 
-    onTimerStrategyInject();
+    middlewareOnTimerCallback();
 
     if( (currentTime-lastApplicationProcessingTime) >=APPLICATION_PROCESSING_INTERVAL){
         requestTaskExecution();

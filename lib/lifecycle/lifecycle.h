@@ -12,8 +12,12 @@
 #include <snake_queue.h>
 #include <logger.h>
 #include <cstring>
-#include <../middleware/strategies/strategy_inject/strategy_inject.h>
+//#include <../middleware/strategies/strategy_inject/strategy_inject.h>
 
+extern void (*middlewareOnTimerCallback)();
+extern void (*middlewareHandleMessageCallback)(char*,size_t);
+extern void (*middlewareInfluenceRoutingCallback)(char*);
+extern void (*middlewareOnNetworkEventCallback)(int,int*);
 
 #define SSID_PREFIX      		"JessicaNode"
 #define PASS     		        "123456789"

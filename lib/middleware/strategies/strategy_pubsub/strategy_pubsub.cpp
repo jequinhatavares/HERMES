@@ -5,7 +5,7 @@ Strategy strategyPubSub = {
         .encodeMessage = encodeMessageStrategyPubSub,
         .influenceRouting = influenceRoutingStrategyPubSub,
         .onTimer = onTimerStrategyPubSub,
-        .onContext = onNetworkEventStrategyPubSub,
+        .onNetworkEvent = onNetworkEventStrategyPubSub,
         .getContext = getContextStrategyPubSub,
 
 };
@@ -588,7 +588,7 @@ void onTimerStrategyPubSub(){
         encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_NODE_UPDATE);
         propagateMessage(largeSendBuffer, myIP);
         LOG(NETWORK,DEBUG,"Sending [MIDDLEWARE] Message: %s\n",smallSendBuffer);
-        lastMiddlewareUpdateTime = currentTime;
+        lastMiddlewareUpdateTimePubSub = currentTime;
     }
 }
 

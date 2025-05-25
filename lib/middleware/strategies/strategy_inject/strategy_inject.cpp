@@ -5,7 +5,7 @@ Strategy strategyInject = {
     .encodeMessage = encodeMessageStrategyInject,
     .influenceRouting = influenceRoutingStrategyInject,
     .onTimer = onTimerStrategyInject,
-    .onContext = onNetworkEventStrategyInject,
+    .onNetworkEvent = onNetworkEventStrategyInject,
     .getContext = getContextStrategyInject,
 };
 
@@ -18,7 +18,7 @@ InjectContext injectContext ={
 void setIP(void* av, void* bv);
 
 
-unsigned long lastMiddlewareUpdateTime = 0;
+unsigned long lastMiddlewareUpdateTimePubSub = 0;
 
 
 //void (*setValue)(void*,void*) = nullptr;
@@ -249,12 +249,12 @@ void influenceRoutingStrategyInject(char* dataMessage){
 void onTimerStrategyInject(){
     unsigned long currentTime = getCurrentTime();
     //Periodically send this node's metric to all other nodes in the network
-    if( (currentTime - lastMiddlewareUpdateTime) >= MIDDLEWARE_UPDATE_INTERVAL ){
+    if( (currentTime - lastMiddlewareUpdateTimePubSub) >= MIDDLEWARE_UPDATE_INTERVAL ){
         snprintf(smallSendBuffer, sizeof(smallSendBuffer), "%i ",MIDDLEWARE_MESSAGE);
         encodeMessageStrategyInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
         propagateMessage(smallSendBuffer,myIP);
         LOG(NETWORK,DEBUG,"Sending [MIDDLEWARE] Message: %s\n",smallSendBuffer);
-        lastMiddlewareUpdateTime = currentTime;
+        lastMiddlewareUpdateTimePubSub = currentTime;
     }
 }
 

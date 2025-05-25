@@ -5,6 +5,7 @@
 #include "strategies/strategy_inject/strategy_inject.h"
 #include "strategies/strategy_pubsub/strategy_pubsub.h"
 #include <logger.h>
+#include <lifecycle.h>
 
 
 typedef enum StrategyType{
@@ -21,6 +22,7 @@ void middlewareInfluenceRouting(char* dataMessage);
 void middlewareHandleMessage(char* messageBuffer, size_t bufferSize);
 void middlewareEncodeMessage(char* messageBuffer, size_t bufferSize, int type);
 void middlewareOnTimer();
+void middlewareOnNetworkEvent(int networkEvent, int involvedIP[4]);
 void* middlewareGetStrategyContext();
 
 
