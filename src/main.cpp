@@ -42,6 +42,7 @@ void setup(){
     enableModule(NETWORK);
     enableModule(DEBUG_SERVER);
     enableModule(CLI);
+    enableModule(MIDDLEWARE);
 
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;

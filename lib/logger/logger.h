@@ -20,6 +20,7 @@ typedef enum LogModules {
     STATE_MACHINE, //2
     CLI, //3
     DEBUG_SERVER, //4
+    MIDDLEWARE, //5
 }LogModules;
 
 typedef enum LogLevels{
