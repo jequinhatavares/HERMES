@@ -67,5 +67,6 @@ void handleDebugMessage2(char* msg, int* nextHopIP);
 
 void propagateMessage(char* message, int* sourceIP);
 void encodeTunneledMessage(char* encodedMessage,size_t encodedMessageSize,int sourceIP[4], int destinationIP[4], char* encapsulatedMessage);
+bool isMessageTunneled(char* dataMessage);
 
 #endif //MESSAGES_H

@@ -694,5 +694,11 @@ void encodeTunneledMessage(char* encodedMessage,size_t encodedMessageSize,int so
     encodeMessage(encodedMessage, encodedMessageSize,DATA_MESSAGE,params);
 }
 
+bool isMessageTunneled(char* dataMessage){
+    messageType type;
+    //int sourceIP[4],originalDestinationIP[4];
+    return( sscanf(dataMessage,"%d %*d.%*d.%*d.%*d %*d.%*d.%*d.%*d %d %*d.%*d.%*d.%*d %*d.%*d.%*d.%*d",&type,&type) ==2 );
+}
+
 
 
