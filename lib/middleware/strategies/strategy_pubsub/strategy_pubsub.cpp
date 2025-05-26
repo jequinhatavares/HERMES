@@ -529,10 +529,13 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
     int8_t topicType;
     bool publisher = false;
     messageParameters parameters;
-    routingTableEntry *routingTableValue;
+    int *nextHopIP, nChars = 0;
     char payload[100];
 
-    sscanf(dataMessage, "%*d %*d.%*d.%*d.%*d %*d.%*d.%*d.%*d %99s",payload);
+    sscanf(dataMessage, "%*d %*d.%*d.%*d.%*d %*d.%*d.%*d.%*d %n",&nChars);
+
+    // Copy the rest of the string manually
+    strncpy(payload, dataMessage + nChars, sizeof(payload) - 1);
 
     LOG(MIDDLEWARE,DEBUG,"%s\n",payload);
 
@@ -576,15 +579,15 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
 
                     // Encode the DATA_MESSAGE to send to the subscriber
                     assignIP(parameters.IP1,myIP);
-                    assignIP(parameters.IP1,nodeIP);
-                    strncpy(parameters.payload,dataMessage, sizeof(parameters.payload));
+                    assignIP(parameters.IP2,nodeIP);
+                    strncpy(parameters.payload,payload, sizeof(parameters.payload));
                     encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),DATA_MESSAGE,parameters);
 
                     // Send the published topic to the subscriber node
-                    routingTableValue = (routingTableEntry*) findRouteToNode(nodeIP);
-                    if(routingTableValue != nullptr){
-                        sendMessage(routingTableValue->nextHopIP,largeSendBuffer);
-                        LOG(NETWORK,ERROR,"Sending [DATA] message: %s to %i.%i.%i.%i nextHop: %i.%i.%i.%i\n",largeSendBuffer,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],routingTableValue->nextHopIP[0],routingTableValue->nextHopIP[1],routingTableValue->nextHopIP[2],routingTableValue->nextHopIP[3]);
+                    nextHopIP = (int*) findRouteToNode(nodeIP);
+                    if(nextHopIP != nullptr){
+                        sendMessage(nextHopIP,largeSendBuffer);
+                        LOG(NETWORK,ERROR,"Sending [DATA] message: %s to %i.%i.%i.%i nextHop: %i.%i.%i.%i\n",largeSendBuffer,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3]);
                     }else{
                         LOG(NETWORK,ERROR,"ERROR: Unable to find a path to the node in the routing table\n");
                     }
