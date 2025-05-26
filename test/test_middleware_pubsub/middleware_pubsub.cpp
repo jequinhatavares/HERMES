@@ -6,11 +6,6 @@
 
 //pio test -e native -f "test_middleware_pubsub" -v
 
-typedef enum topicTypes{
-    TEMPERATURE,
-    HUMIDITY,
-    CAMERA,
-}topicTypes;
 
 /*** ****************************** Tests ****************************** ***/
 
@@ -372,6 +367,15 @@ void test_message_rewriteIP_info_update_message(){
     tableClean(pubsubTable);
 }
 
+void test_decode_topic(){
+    char topicMsg[50] = "TEMPERATURE";
+    int stopic = 0;
+
+    decodeTopic(topicMsg,&stopic);
+    printf("Topic: %i\n",stopic);
+    TEST_ASSERT(stopic == 0);
+}
+
 
 void setUp(void){
     enableModule(STATE_MACHINE);
@@ -405,5 +409,6 @@ int main(int argc, char** argv){
     RUN_TEST(test_handle_middleware_table_update_message);
     RUN_TEST(test_message_rewriteIP);
     RUN_TEST(test_message_rewriteIP_info_update_message);
+    RUN_TEST(test_decode_topic);
     UNITY_END();
 }

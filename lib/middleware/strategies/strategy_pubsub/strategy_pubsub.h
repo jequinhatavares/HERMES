@@ -12,7 +12,11 @@
 #include "../../../transport_hal/transport_hal.h"
 #include "../strategy_interface.h"
 
-
+typedef enum topicTypes{
+    TEMPERATURE,
+    HUMIDITY,
+    CAMERA,
+}topicTypes;
 
 #define MAX_TOPICS 3
 
@@ -45,7 +49,7 @@ extern int8_t topic;
 
 extern Strategy strategyPubSub;
 
-void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) );
+void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int*) );
 void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typePubSub);
 void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize);
 void onNetworkEventStrategyPubSub(int networkEvent, int involvedIP[4]);
@@ -58,7 +62,7 @@ bool containsTopic(int8_t * list, int8_t topic);
 void setPubSubInfo(void* av, void* bv);
 
 void printPubSubStruct(TableEntry* Table);
-void decodeTopic(char* dataMessage, void *topicType);
+void decodeTopic(char* dataMessage, int* topicType);
 void encodeTopic(char*DataMessage,size_t messageSize, void* topic);
 
 void subscribeToTopic(int8_t topic);

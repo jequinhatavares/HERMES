@@ -49,13 +49,13 @@ unsigned long lastMiddlewareUpdateTimePubSub = 0;
 
 //Function Pointers Initializers
 void (*encodeTopicValue)(char*,size_t,void *) = nullptr;
-void (*decodeTopicValue)(char*,void *) = nullptr;
+void (*decodeTopicValue)(char*,int*) = nullptr;
 
 PubSubInfo valuesPubSub[TableMaxSize];
 
 int8_t topic;
 
-void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *) ){
+void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int*) ){
     pubsubTable->setValue = setValueFunction;
     //Initialize the pubsubTable
     tableInit(pubsubTable, nodesPubSub, valuesPubSub, sizeof(int[4]), sizeof(PubSubInfo));
@@ -529,9 +529,14 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
     bool publisher = false;
     messageParameters parameters;
     routingTableEntry *routingTableValue;
+    char payload[100];
+
+    sscanf(dataMessage, "%*d %*d.%*d.%*d.%*d %*d.%*d.%*d.%*d %99s",payload);
+
+    LOG(MIDDLEWARE,DEBUG,"%s\n",payload);
 
     // Determine which topic is being published
-    decodeTopicValue(dataMessage,&topicType);
+    decodeTopicValue(payload,&topicType);
 
     // First, read this node's entry in the table to check my published topics
     myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
@@ -767,8 +772,17 @@ void* getContextStrategyPubSub(){
 }
 
 /******************          User Defined functions            **********************/
-void decodeTopic(char* dataMessage, void* topicType){
-    sscanf(dataMessage,"%*i %i", topicType);
+void decodeTopic(char* dataMessage, int* topicType){
+    topicTypes type;
+    char topicString[20];
+    sscanf(dataMessage,"%s", &topicString);
+    if(strcmp(topicString,"TEMPERATURE") == 0){
+        *topicType = TEMPERATURE;
+    }else if(strcmp(topicString,"HUMIDITY") == 0){
+        *topicType = HUMIDITY;
+    }else if(strcmp(topicString,"CAMERA") == 0){
+        *topicType = CAMERA;
+    }
 }
 void encodeTopic(char*DataMessage,size_t messageSize, void* topic) {
 

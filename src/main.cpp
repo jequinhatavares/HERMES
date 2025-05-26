@@ -15,11 +15,7 @@
 //227:96:230:135 root
 //227:96:237:119
 
-typedef enum topicTypes{
-    TEMPERATURE,
-    HUMIDITY,
-    CAMERA,
-}topicTypes;
+
 
 metricTableEntry metrics[TableMaxSize];
 

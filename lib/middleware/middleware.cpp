@@ -39,7 +39,7 @@ void initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,vo
     initCallbacks();
 }
 
-void initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,void *)){
+void initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int*)){
     if(activeStrategy == nullptr){
         LOG(NETWORK,ERROR,"ERROR: Initialization attempted without a selected strategy\n");
         return;
