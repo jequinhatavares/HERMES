@@ -122,16 +122,6 @@ void cliInteraction(){
                     break;
 
                 case 4:
-                    LOG(CLI,INFO,"Root Node IP: %i.%i.%i.%i\n", rootIP[0], rootIP[1],rootIP[2],rootIP[3]);
-                    break;
-
-                case 5:
-                    LOG(CLI,INFO,"Disconnecting from parent...\n");
-                    disconnectFromAP();
-                    parentDisconnectCallback();
-                    break;
-
-                case 6:
                     if(activeStrategyType == STRATEGY_NONE){
 
                     }else if(activeStrategyType == STRATEGY_INJECT){
@@ -142,6 +132,18 @@ void cliInteraction(){
                         tablePrint(pubsubTable,printPubSubStruct);
                     }
                     break;
+
+
+                case 5:
+                    LOG(CLI,INFO,"Root Node IP: %i.%i.%i.%i\n", rootIP[0], rootIP[1],rootIP[2],rootIP[3]);
+                    break;
+
+                case 6:
+                    LOG(CLI,INFO,"Disconnecting from parent...\n");
+                    disconnectFromAP();
+                    parentDisconnectCallback();
+                    break;
+
 
                 case 7:
                     LOG(CLI,INFO,"Exiting...\n");
