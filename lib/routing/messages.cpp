@@ -550,8 +550,8 @@ void handleDataMessage(char *msg){
         if(isTunneled)LOG(MESSAGES,INFO,"Tunneled Message arrived\n");
 
         //Send ACK Message back to the source of the message
-        assignIP(parameters.IP1,sourceIP);
-        assignIP(parameters.IP2,destinationIP);
+        assignIP(parameters.IP1,myIP);
+        assignIP(parameters.IP2,sourceIP);
         encodeMessage(smallSendBuffer, sizeof(smallSendBuffer),ACK_MESSAGE, parameters);
 
         nextHopPtr = findRouteToNode(sourceIP);

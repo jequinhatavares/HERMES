@@ -566,7 +566,6 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
     for (i = 0; i < pubsubTable->numberOfItems; i++) {
         nodeIP = (int*) tableKey(pubsubTable,i);
         if(nodeIP != nullptr){
-            LOG(MIDDLEWARE,DEBUG,"Node: %i.%i.%i.%i\n", nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
             //Discard my entry in the table
             if(isIPEqual(nodeIP,myIP)){
                 continue;
@@ -575,7 +574,6 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
             if(nodePubSubInfo != nullptr){// Safeguarding against null pointers
                 // For each entry in the table, check if any of its subscribed topics match the topic I'm publishing
                 if(containsTopic(nodePubSubInfo->subscribedTopics,topicType)){
-                    LOG(MIDDLEWARE,DEBUG,"Node: %i.%i.%i.%i is subscriber to this topic\n", nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
 
                     // Encode the DATA_MESSAGE to send to the subscriber
                     assignIP(parameters.IP1,myIP);
@@ -587,7 +585,7 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
                     nextHopIP = (int*) findRouteToNode(nodeIP);
                     if(nextHopIP != nullptr){
                         sendMessage(nextHopIP,largeSendBuffer);
-                        LOG(NETWORK,ERROR,"Sending [DATA] message: %s to %i.%i.%i.%i nextHop: %i.%i.%i.%i\n",largeSendBuffer,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3]);
+                        LOG(NETWORK,ERROR,"Sending [DATA] message: %s to %i.%i.%i.%i\n",largeSendBuffer,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
                     }else{
                         LOG(NETWORK,ERROR,"ERROR: Unable to find a path to the node in the routing table\n");
                     }

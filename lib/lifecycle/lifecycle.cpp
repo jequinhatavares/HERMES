@@ -192,7 +192,7 @@ State joinNetwork(Event event){
             //Wait for the parent to respond
             startTime = getCurrentTime();
             currentTime = startTime;
-            while(((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=3000)){
+            while( ((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=3000) ){
                 currentTime = getCurrentTime();
             }
 
