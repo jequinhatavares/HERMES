@@ -369,7 +369,7 @@ void test_message_rewriteIP_info_update_message(){
 
 void test_decode_topic(){
     char topicMsg[50] = "TEMPERATURE";
-    int stopic = 0;
+    int8_t stopic = 0;
 
     decodeTopic(topicMsg,&stopic);
     printf("Topic: %i\n",stopic);

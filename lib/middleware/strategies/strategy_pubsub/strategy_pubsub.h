@@ -49,7 +49,7 @@ extern int8_t topic;
 
 extern Strategy strategyPubSub;
 
-void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int*) );
+void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *) );
 void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typePubSub);
 void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize);
 void onNetworkEventStrategyPubSub(int networkEvent, int involvedIP[4]);
@@ -62,7 +62,7 @@ bool containsTopic(int8_t * list, int8_t topic);
 void setPubSubInfo(void* av, void* bv);
 
 void printPubSubStruct(TableEntry* Table);
-void decodeTopic(char* dataMessage, int* topicType);
+void decodeTopic(char* dataMessage, int8_t * topicType);
 void encodeTopic(char*DataMessage,size_t messageSize, void* topic);
 
 void subscribeToTopic(int8_t topic);

@@ -49,13 +49,13 @@ unsigned long lastMiddlewareUpdateTimePubSub = 0;
 
 //Function Pointers Initializers
 void (*encodeTopicValue)(char*,size_t,void *) = nullptr;
-void (*decodeTopicValue)(char*,int*) = nullptr;
+void (*decodeTopicValue)(char*,int8_t *) = nullptr;
 
 PubSubInfo valuesPubSub[TableMaxSize];
 
 int8_t topic;
 
-void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int*) ){
+void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *) ){
     pubsubTable->setValue = setValueFunction;
     //Initialize the pubsubTable
     tableInit(pubsubTable, nodesPubSub, valuesPubSub, sizeof(int[4]), sizeof(PubSubInfo));
@@ -448,6 +448,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             break;/******/
 
         case PUBSUB_TABLE_UPDATE:
+            //Buffer max size = 22 + 30*N
             //13 6 [sender IP] |[node IP] [Published Topic List] [Subscribed Topics List] |[node IP] [Published Topic List] [Subscribed Topics List]...
             entry = strtok_r(infoPubSub, "|", &saveptr1);
 
@@ -525,7 +526,7 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
     int i,j;
     PubSubInfo *myPubSubInfo, *nodePubSubInfo;
     int *nodeIP;
-    int topicType;
+    int8_t topicType;
     bool publisher = false;
     messageParameters parameters;
     routingTableEntry *routingTableValue;
@@ -562,34 +563,31 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
     for (i = 0; i < pubsubTable->numberOfItems; i++) {
         nodeIP = (int*) tableKey(pubsubTable,i);
         if(nodeIP != nullptr){
-
+            LOG(MIDDLEWARE,DEBUG,"Node: %i.%i.%i.%i\n", nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
             //Discard my entry in the table
             if(isIPEqual(nodeIP,myIP)){
                 continue;
             }
             nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
-
             if(nodePubSubInfo != nullptr){// Safeguarding against null pointers
-                for (j = 0; j < MAX_TOPICS; ++j) {
-                    // For each entry in the table, check if any of its subscribed topics match the topic I'm publishing
-                    if(nodePubSubInfo->subscribedTopics[i] == topicType ){
-                        LOG(MIDDLEWARE,DEBUG,"Node: %i.%i.%i.%i is subscriber to this topic\n", nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
+                // For each entry in the table, check if any of its subscribed topics match the topic I'm publishing
+                if(containsTopic(nodePubSubInfo->subscribedTopics,topicType)){
+                    LOG(MIDDLEWARE,DEBUG,"Node: %i.%i.%i.%i is subscriber to this topic\n", nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
 
-                        // Encode the DATA_MESSAGE to send to the subscriber
-                        assignIP(parameters.IP1,myIP);
-                        assignIP(parameters.IP1,nodeIP);
-                        strncpy(parameters.payload,dataMessage, sizeof(parameters.payload));
-                        encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),DATA_MESSAGE,parameters);
+                    // Encode the DATA_MESSAGE to send to the subscriber
+                    assignIP(parameters.IP1,myIP);
+                    assignIP(parameters.IP1,nodeIP);
+                    strncpy(parameters.payload,dataMessage, sizeof(parameters.payload));
+                    encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),DATA_MESSAGE,parameters);
 
-                        // Send the published topic to the subscriber node
-                        routingTableValue = (routingTableEntry*) findRouteToNode(nodeIP);
-                        if(routingTableValue != nullptr){
-                            sendMessage(routingTableValue->nextHopIP,largeSendBuffer);
-                        }else{
-                            LOG(NETWORK,ERROR,"ERROR: Unable to find a path to the node in the routing table\n");
-                        }
+                    // Send the published topic to the subscriber node
+                    routingTableValue = (routingTableEntry*) findRouteToNode(nodeIP);
+                    if(routingTableValue != nullptr){
+                        sendMessage(routingTableValue->nextHopIP,largeSendBuffer);
+                        LOG(NETWORK,ERROR,"Sending [DATA] message: %s to %i.%i.%i.%i nextHop: %i.%i.%i.%i\n",largeSendBuffer,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],routingTableValue->nextHopIP[0],routingTableValue->nextHopIP[1],routingTableValue->nextHopIP[2],routingTableValue->nextHopIP[3]);
+                    }else{
+                        LOG(NETWORK,ERROR,"ERROR: Unable to find a path to the node in the routing table\n");
                     }
-
                 }
             }
 
@@ -772,7 +770,7 @@ void* getContextStrategyPubSub(){
 }
 
 /******************          User Defined functions            **********************/
-void decodeTopic(char* dataMessage, int* topicType){
+void decodeTopic(char* dataMessage, int8_t * topicType){
     topicTypes type;
     char topicString[20];
     sscanf(dataMessage,"%s", &topicString);

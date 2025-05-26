@@ -341,9 +341,8 @@ void handleChildRegistrationRequest(char * msg){
 
     //Send my routing table to my child
     //LOG(MESSAGES,INFO,"Sending my routing Table to child:");
-    LOG(MESSAGES, INFO, "Sending [Full Routing Update] to: %d.%d.%d.%d\n",childAPIP[0], childAPIP[1], childAPIP[2], childAPIP[3]);
     encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),FULL_ROUTING_TABLE_UPDATE,parameters);
-    LOG(MESSAGES,INFO,"Message: %s\n",largeSendBuffer);
+    LOG(MESSAGES, INFO, "Sending [Full Routing Update]:%s to: %d.%d.%d.%d\n",largeSendBuffer,childAPIP[0], childAPIP[1], childAPIP[2], childAPIP[3]);
     sendMessage(childSTAIP,largeSendBuffer);
 
     //Propagate the new node information trough the network
@@ -402,7 +401,7 @@ void handleFullRoutingTableUpdate(char * msg){
 
     if (isRoutingTableChanged){
         parameters.nrOfNodes = nrOfChanges;
-        LOG(NETWORK,INFO, "Routing Information has changed->propagate new info\n");
+        LOG(NETWORK,INFO, "Routing Information has changed-> Propagate new info\n");
         //Propagate the routing table update information trough the network
         encodeMessage(largeSendBuffer,sizeof(largeSendBuffer), PARTIAL_ROUTING_TABLE_UPDATE, parameters);
         propagateMessage(largeSendBuffer, sourceIP);
