@@ -542,7 +542,7 @@ State executeTask(Event event){
     // The user defines a callback function in the application layer, which is invoked here to perform the desired operation.
     int data = 5;
 
-    snprintf(parameters.payload, sizeof(parameters.payload),"DATA:%i",data);
+    snprintf(parameters.payload, sizeof(parameters.payload),"TEMPERATURE %i",data);
     assignIP(parameters.IP1,myIP);
     assignIP(parameters.IP2,rootIP);
 

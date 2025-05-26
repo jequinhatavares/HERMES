@@ -200,12 +200,12 @@ void onNetworkEventStrategyInject(int networkEvent, int involvedIP[4]){
         case NETEVENT_JOINED_NETWORK:
             encodeMessageStrategyInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
             sendMessage(involvedIP,smallSendBuffer);
-            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/NODE_INFO] message: \"%s\" to: %i.%i.%i.%i\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_NODE_INFO] message: \"%s\" to: %i.%i.%i.%i\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
             break;
         case NETEVENT_CHILD_CONNECTED:
             encodeMessageStrategyInject(largeSendBuffer, sizeof(largeSendBuffer),INJECT_TABLE_INFO);
             sendMessage(involvedIP,largeSendBuffer);
-            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/TABLE_INFO] message: \"%s\" to: %i.%i.%i.%i\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_TABLE_INFO] message: \"%s\" to: %i.%i.%i.%i\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
             break;
         case NETEVENT_CHILD_DISCONNECTED:
             break;
@@ -271,7 +271,7 @@ void onTimerStrategyInject(){
     if( (currentTime - lastMiddlewareUpdateTimeInject) >= MIDDLEWARE_UPDATE_INTERVAL ){
         snprintf(smallSendBuffer, sizeof(smallSendBuffer), "%i ",MIDDLEWARE_MESSAGE);
         encodeMessageStrategyInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
-        LOG(NETWORK,DEBUG,"Sending [MIDDLEWARE/NODE_INFO] Message: %s\n",smallSendBuffer);
+        LOG(NETWORK,DEBUG,"Sending periodic [MIDDLEWARE/INJECT_NODE_INFO] Message: %s\n",smallSendBuffer);
         propagateMessage(smallSendBuffer,myIP);
         lastMiddlewareUpdateTimeInject = currentTime;
     }

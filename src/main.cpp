@@ -6,6 +6,7 @@
 #include "cli.h"
 #include "logger.h"
 #include "../lib/middleware/strategies/strategy_inject/strategy_inject.h"
+#include "../lib/middleware/strategies/strategy_pubsub/strategy_pubsub.h"
 #include "middleware.h"
 
 //#include "../lib/wifi_hal/wifi_hal.h"
@@ -14,6 +15,11 @@
 //227:96:230:135 root
 //227:96:237:119
 
+typedef enum topicTypes{
+    TEMPERATURE,
+    HUMIDITY,
+    CAMERA,
+}topicTypes;
 
 metricTableEntry metrics[TableMaxSize];
 
@@ -74,12 +80,27 @@ void setup(){
     Advance(SM, eSuccess);//Init
 
     //Select and initialize the middleware strategy
-    middlewareSelectStrategy(STRATEGY_INJECT);
-    initMiddlewareStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
-    //Inject node metric
-    InjectContext *context = (InjectContext*) middlewareGetStrategyContext();
-    myMetric.processingCapacity = MAC[5];
-    context->injectNodeMetric(&myMetric);
+    //middlewareSelectStrategy(STRATEGY_INJECT);
+    //initMiddlewareStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
+    //InjectContext *context = (InjectContext*) middlewareGetStrategyContext();
+    //myMetric.processingCapacity = MAC[5];
+    //context->injectNodeMetric(&myMetric);
+
+    middlewareSelectStrategy(STRATEGY_PUBSUB);
+    initMiddlewareStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    //advertise and subscribe to topics
+    PubSubContext *context = (PubSubContext*) middlewareGetStrategyContext();
+    if(MAC[5] == 135){
+        context->subscribeToTopic(TEMPERATURE);
+        context->advertiseTopic(HUMIDITY);
+    }else if(MAC[5] == 12){
+        context->subscribeToTopic(HUMIDITY);
+        context->advertiseTopic(TEMPERATURE);
+    }else if(MAC[5] == 252){
+        context->subscribeToTopic(HUMIDITY);
+        context->advertiseTopic(CAMERA);
+    }
+
 
     if(!iamRoot){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Search APs

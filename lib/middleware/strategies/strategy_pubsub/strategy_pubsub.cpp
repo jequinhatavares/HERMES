@@ -141,7 +141,7 @@ void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typ
 
         case PUBSUB_NODE_UPDATE:
             // Message used to advertise all publish-subscribe information of the node
-            //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
+            //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List] //maxsize:48+1
             nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
             /***if(nodePubSubInfo != nullptr){
                 snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i | ",MIDDLEWARE_MESSAGE,PUBSUB_NODE_UPDATE,
@@ -230,7 +230,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
     // Copy the rest of the string manually
     strncpy(infoPubSub, messageBuffer + charsRead, sizeof(infoPubSub) - 1);
 
-    printf("InfoPubSub: %s\n",infoPubSub);
+    //printf("InfoPubSub: %s\n",infoPubSub);
 
     switch (type) {
 
@@ -504,10 +504,15 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
 void onNetworkEventStrategyPubSub(int networkEvent, int involvedIP[4]){
     switch (networkEvent) {
         case NETEVENT_JOINED_NETWORK:
+            encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_NODE_UPDATE);
+            sendMessage(involvedIP,smallSendBuffer);
+            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/PUBSUB_NODE_INFO] message: \"%s\" to: %i.%i.%i.%i\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+
             break;
         case NETEVENT_CHILD_CONNECTED:
             encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_TABLE_UPDATE);
             sendMessage(involvedIP,largeSendBuffer);
+            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/PUBSUB_TABLE_INFO] message: \"%s\" to: %i.%i.%i.%i\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
             break;
         case NETEVENT_CHILD_DISCONNECTED:
             break;
@@ -541,7 +546,12 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
             publisher = true;
         }
     }
-    if(!publisher) return;
+    if(!publisher){
+        LOG(MIDDLEWARE,DEBUG,"This node is not publisher of the topic: %i\n",topicType);
+        return;
+    }else{
+        LOG(MIDDLEWARE,DEBUG,"This node publishes the topic: %i\n",topicType);
+    }
 
     // Go through the table to find which nodes have subscribed to the topic I'm publishing
     for (i = 0; i < pubsubTable->numberOfItems; i++) {
@@ -558,6 +568,7 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
                 for (j = 0; j < MAX_TOPICS; ++j) {
                     // For each entry in the table, check if any of its subscribed topics match the topic I'm publishing
                     if(nodePubSubInfo->subscribedTopics[i] == topicType ){
+                        LOG(MIDDLEWARE,DEBUG,"Node: %i.%i.%i.%i is subscriber to this topic\n", nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
 
                         // Encode the DATA_MESSAGE to send to the subscriber
                         assignIP(parameters.IP1,myIP);
@@ -585,10 +596,10 @@ void onTimerStrategyPubSub(){
     unsigned long currentTime = getCurrentTime();
     //Periodically send this node's metric to all other nodes in the network
     if( (currentTime - lastMiddlewareUpdateTimePubSub) >= 10000 ) {
-        encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_NODE_UPDATE);
+        /***encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_NODE_UPDATE);
         propagateMessage(largeSendBuffer, myIP);
-        LOG(NETWORK,DEBUG,"Sending [MIDDLEWARE] Message: %s\n",smallSendBuffer);
-        lastMiddlewareUpdateTimePubSub = currentTime;
+        LOG(NETWORK,DEBUG,"Sending periodic [MIDDLEWARE/PUBSUB_NODE_INFO] Message: %s\n",largeSendBuffer);
+        lastMiddlewareUpdateTimePubSub = currentTime;***/
     }
 }
 
