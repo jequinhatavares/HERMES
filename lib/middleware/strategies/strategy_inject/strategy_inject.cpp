@@ -102,7 +102,8 @@ void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int typ
         //MESSAGE_TYPE INJECT_NODE_INFO [sender IP] [nodeIP] metric
         encodeMyMetric(tmpBuffer, sizeof(tmpBuffer));
         snprintf(messageBuffer, bufferSize,"%i %i %i.%i.%i.%i %s",MIDDLEWARE_MESSAGE,INJECT_NODE_INFO,myIP[0],myIP[1],myIP[2],myIP[3],tmpBuffer);
-    }else{//INJECT_TABLE_INFO
+
+    }else if(type == INJECT_TABLE_INFO){//INJECT_TABLE_INFO
         //MESSAGE_TYPE INJECT_TABLE_INFO [sender IP] |[nodeIP] metric |[nodeIP] metric |...
         offset = snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,INJECT_TABLE_INFO,myIP[0],myIP[1],myIP[2],myIP[3]);
 
@@ -201,6 +202,7 @@ void onNetworkEventStrategyInject(int networkEvent, int involvedIP[4]){
         case NETEVENT_CHILD_CONNECTED:
             encodeMessageStrategyInject(largeSendBuffer, sizeof(largeSendBuffer),INJECT_TABLE_INFO);
             sendMessage(involvedIP,largeSendBuffer);
+            LOG(MESSAGES,INFO,"Sending [Middleware] message: \"%s\" to: %i.%i.%i.%i\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
             break;
         case NETEVENT_CHILD_DISCONNECTED:
             break;

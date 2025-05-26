@@ -98,6 +98,9 @@ State initNode(Event event){
 
     lastRoutingUpdateTime = getCurrentTime();
 
+    hasParent = false;
+
+
     if (!iamRoot){
         insertFirst(stateMachineEngine, eSuccess);
         return sSearch;
@@ -105,7 +108,6 @@ State initNode(Event event){
         rootHopDistance = 0;
         assignIP(parent, invalidIP);
         assignIP(rootIP,myIP);
-        hasParent = false;
         reportNewNodeToViz(myIP,invalidIP);
 
         return sIdle;
@@ -265,10 +267,6 @@ State joinNetwork(Event event){
             lastRoutingUpdateTime = getCurrentTime();
         }
 
-        encodeMessage(smallSendBuffer, sizeof(smallSendBuffer),MIDDLEWARE_MESSAGE,params);
-        sendMessage(parent, smallSendBuffer);
-        LOG(MESSAGES,INFO,"Sending [MIDDLEWARE_MESSAGE]: %s\n",smallSendBuffer);
-
     }
 
     reachableNetworks.len = 0 ;
@@ -372,7 +370,10 @@ State parentRecovery(Event event){
     int* STAIP= nullptr;
     messageParameters parameters;
 
+    if(iamRoot) return sIdle;
+
     LOG(STATE_MACHINE,INFO,"Parent Recovery State\n");
+
 
     // Disconnect permanently from the current parent to stop disconnection events and enable connection to a new one
     LOG(NETWORK,INFO,"Disconnecting permanently from parent node\n");
@@ -531,8 +532,8 @@ State forceRestart(Event event){
 }
 
 State executeTask(Event event){
-    LOG(STATE_MACHINE,INFO,"Execute Task State\n");
     messageParameters parameters;
+    LOG(STATE_MACHINE,INFO,"Execute Task State\n");
     // In this state, an application-specific task will be executed.
     // The user defines a callback function in the application layer, which is invoked here to perform the desired operation.
     int data = 5;
@@ -543,6 +544,9 @@ State executeTask(Event event){
 
     encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),DATA_MESSAGE,parameters);
     middlewareInfluenceRoutingCallback(largeSendBuffer);
+
+    LOG(MESSAGES,INFO,"");
+
     return sIdle;
 }
 void handleTimers(){
