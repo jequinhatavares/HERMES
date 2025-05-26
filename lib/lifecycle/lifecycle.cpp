@@ -545,7 +545,6 @@ State executeTask(Event event){
     encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),DATA_MESSAGE,parameters);
     middlewareInfluenceRoutingCallback(largeSendBuffer);
 
-    LOG(MESSAGES,INFO,"");
 
     return sIdle;
 }

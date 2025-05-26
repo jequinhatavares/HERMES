@@ -216,6 +216,7 @@ void influenceRoutingStrategyInject(char* dataMessage){
     bool findBestMetric=false;
     messageParameters params;
 
+    // In the metricsTable, find the node with the best metric using the user-provided comparison function
     for (int i = 0; i < metricsTable->numberOfItems ; i++) {
         IP = (int*) tableKey(metricsTable,i);
         if(isIPEqual(IP,myIP)) continue;//Skip my IP
@@ -231,7 +232,19 @@ void influenceRoutingStrategyInject(char* dataMessage){
     sscanf(dataMessage, "%*d %*d.%*d.%*d.%*d %d.%d.%d.%d",&originalDestination[0],&originalDestination[1],&originalDestination[2],&originalDestination[3]);
 
     // If the best-metric IP address matches the message's original destination, tunneling is not required
-    if(isIPEqual(originalDestination,bestMetricIP)) return;
+    if(isIPEqual(originalDestination,bestMetricIP)){
+        //Send the message to the original destination
+        nextHopIP = (int*) findRouteToNode(originalDestination);
+        if(nextHopIP != nullptr){
+            LOG(MESSAGES,INFO,"Encoded message: %s\n",dataMessage);
+            sendMessage(nextHopIP, dataMessage);
+            LOG(MESSAGES,INFO,"Sending [DATA] message: \"%s\" to: %i.i.%i.%i\n",dataMessage,originalDestination[0],originalDestination[1],originalDestination[2],originalDestination[3]);
+
+        }else{
+            LOG(NETWORK,ERROR,"ERROR: Trying to send message to: %i.%i.%i.%i but did not find path to node\n",bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
+        }
+        return;
+    }
 
     // If no best metric is determined, exit without influencing the routing layer
     if(!findBestMetric) return;
@@ -241,7 +254,7 @@ void influenceRoutingStrategyInject(char* dataMessage){
     encodeTunneledMessage(largeSendBuffer,sizeof(largeSendBuffer), myIP,bestMetricIP,dataMessage);
     nextHopIP = (int*) findRouteToNode(bestMetricIP);
     if(nextHopIP != nullptr){
-        LOG(MESSAGES,INFO,"Encoded tunneled message: %s\n",largeSendBuffer);
+        LOG(MESSAGES,INFO,"Sending tunneled [DATA] message: \"%s\" to: %i.i.%i.%i\n",dataMessage,bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
         sendMessage(nextHopIP, largeSendBuffer);
     }else{
         LOG(NETWORK,ERROR,"ERROR: Trying to send message to: %i.%i.%i.%i but did not find path to node\n",bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
