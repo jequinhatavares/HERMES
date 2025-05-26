@@ -198,11 +198,14 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
 void onNetworkEventStrategyInject(int networkEvent, int involvedIP[4]){
     switch (networkEvent) {
         case NETEVENT_JOINED_NETWORK:
+            encodeMessageStrategyInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
+            sendMessage(involvedIP,smallSendBuffer);
+            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/NODE_INFO] message: \"%s\" to: %i.%i.%i.%i\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
             break;
         case NETEVENT_CHILD_CONNECTED:
             encodeMessageStrategyInject(largeSendBuffer, sizeof(largeSendBuffer),INJECT_TABLE_INFO);
             sendMessage(involvedIP,largeSendBuffer);
-            LOG(MESSAGES,INFO,"Sending [Middleware] message: \"%s\" to: %i.%i.%i.%i\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/TABLE_INFO] message: \"%s\" to: %i.%i.%i.%i\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
             break;
         case NETEVENT_CHILD_DISCONNECTED:
             break;
@@ -254,7 +257,7 @@ void influenceRoutingStrategyInject(char* dataMessage){
     encodeTunneledMessage(largeSendBuffer,sizeof(largeSendBuffer), myIP,bestMetricIP,dataMessage);
     nextHopIP = (int*) findRouteToNode(bestMetricIP);
     if(nextHopIP != nullptr){
-        LOG(MESSAGES,INFO,"Sending tunneled [DATA] message: \"%s\" to: %i.i.%i.%i\n",dataMessage,bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
+        LOG(MESSAGES,INFO,"Sending tunneled [DATA] message: \"%s\" to: %i.%i.%i.%i\n",dataMessage,bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
         sendMessage(nextHopIP, largeSendBuffer);
     }else{
         LOG(NETWORK,ERROR,"ERROR: Trying to send message to: %i.%i.%i.%i but did not find path to node\n",bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
@@ -263,12 +266,13 @@ void influenceRoutingStrategyInject(char* dataMessage){
 
 void onTimerStrategyInject(){
     unsigned long currentTime = getCurrentTime();
+
     //Periodically send this node's metric to all other nodes in the network
     if( (currentTime - lastMiddlewareUpdateTimeInject) >= MIDDLEWARE_UPDATE_INTERVAL ){
         snprintf(smallSendBuffer, sizeof(smallSendBuffer), "%i ",MIDDLEWARE_MESSAGE);
         encodeMessageStrategyInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
+        LOG(NETWORK,DEBUG,"Sending [MIDDLEWARE/NODE_INFO] Message: %s\n",smallSendBuffer);
         propagateMessage(smallSendBuffer,myIP);
-        LOG(NETWORK,DEBUG,"Sending [MIDDLEWARE] Message: %s\n",smallSendBuffer);
         lastMiddlewareUpdateTimeInject = currentTime;
     }
 }

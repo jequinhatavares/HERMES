@@ -33,7 +33,7 @@ extern int rootIP[4];
 extern int mySequenceNumber;
 
 extern unsigned long lastRoutingUpdateTime;
-#define ROUTING_UPDATE_INTERVAL 60000
+#define ROUTING_UPDATE_INTERVAL 180000
 //extern int debugServerIP[4];
 
 bool isIPEqual(void* a, void* b);

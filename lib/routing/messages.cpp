@@ -351,6 +351,7 @@ void handleChildRegistrationRequest(char * msg){
     parameters.nrOfNodes = 1;
 
     encodeMessage(smallSendBuffer,sizeof(smallSendBuffer), PARTIAL_ROUTING_TABLE_UPDATE, parameters);
+    LOG(MESSAGES,INFO,"Sending [PARTIAL ROUTING TABLE UPDATE] message: \"%s\"\n", smallSendBuffer);
     propagateMessage(smallSendBuffer, childAPIP);
     //Sending new node information to the DEBUG visualization program, if enabled
     reportNewNodeToViz(childAPIP, myIP);
@@ -460,9 +461,6 @@ void handlePartialRoutingUpdate(char *msg){
         routingTableEntry*nodeEntry = (routingTableEntry*) findNode(routingTable,nodeIP);
         if(nodeEntry != nullptr){
             //Propagate the routing table update information trough the network
-            assignIP(parameters.IP1,nodeIP);
-            parameters.hopDistance = nodeEntry->hopDistance;
-            parameters.sequenceNumber = sequenceNumber;
             encodeMessage(largeSendBuffer,sizeof(largeSendBuffer), PARTIAL_ROUTING_TABLE_UPDATE, parameters);
             propagateMessage(largeSendBuffer, senderIP);
         }else{
@@ -526,6 +524,7 @@ void handleDataMessage(char *msg){
     int sourceIP[4], destinationIP[4], nextHopIP[4];
     int *nextHopPtr = nullptr;
     char payload[200];
+    bool isTunneled = false;
     messageParameters parameters;
 
     sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %199s",&type, &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
@@ -548,6 +547,8 @@ void handleDataMessage(char *msg){
     }else{// If the message is for this node, process it and send an ACK back to the source
 
         //TODO process the message
+        isTunneled = isMessageTunneled(msg);
+        if(isTunneled)LOG(MESSAGES,INFO,"Tunneled Message arrived\n");
 
         //Send ACK Message back to the source of the message
         assignIP(parameters.IP1,sourceIP);
@@ -665,7 +666,7 @@ void propagateMessage(char* message, int* sourceIP){
     //Send the message to my parent only if it exists and is reachable
     if(parentRoutingEntry != nullptr){
         if(!isIPEqual(sourceIP, parent) && parentRoutingEntry->hopDistance != -1){
-            LOG(MESSAGES, DEBUG, "Propagating Message to parent: %i.%i.%i.%i\n", parent[0],parent[1],parent[2],parent[3]);
+            LOG(MESSAGES, DEBUG, "Propagating Message to parent: %i.%i.%i.%i\n",parent[0],parent[1],parent[2],parent[3]);
             sendMessage(parent, message);
         }
     }
