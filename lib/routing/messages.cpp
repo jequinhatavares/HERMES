@@ -700,5 +700,39 @@ bool isMessageTunneled(char* dataMessage){
     return( sscanf(dataMessage,"%d %*d.%*d.%*d.%*d %*d.%*d.%*d.%*d %d %*d.%*d.%*d.%*d %*d.%*d.%*d.%*d",&type,&type) ==2 );
 }
 
+bool waitForMessage(messageType type, int senderIP[4], unsigned long timeOut){
+    int packetSize, receivedSenderIP[4];
+    messageType receivedType;
+    bool isExpectedMessage = false;
+    //Wait for the parent to respond
+    unsigned long startTime = getCurrentTime();
+    unsigned long currentTime = startTime;
+    while( ((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=timeOut) && !isExpectedMessage ){
+        currentTime = getCurrentTime();
+        if(packetSize>0){
+            sscanf(receiveBuffer, "%d",&receivedType);
+            if(receivedType != type){
+                getSenderIP(receiveBuffer, receivedType,receivedSenderIP);
+                if(isIPEqual(senderIP,receivedSenderIP)){
+                    isExpectedMessage = true;
+                }
+            }
+        }
+    }
+    return isExpectedMessage;
+}
+
+void getSenderIP(char* messageBuffer, messageType type, int senderIP[4]){
+    switch (type) {
+        case PARENT_INFO_RESPONSE:
+            sscanf(messageBuffer, "%*d %d.%d.%d.%d",&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
+            break;
+        case FULL_ROUTING_TABLE_UPDATE:
+            sscanf(messageBuffer, "%*d %d.%d.%d.%d",&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
+            break;
+        default:
+            break;
+    }
+}
 
 

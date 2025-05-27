@@ -7,6 +7,7 @@
 //#include "strategy.h"
 //#include <wifi_hal.h>
 #include <transport_hal.h>
+#include <time_hal.h>
 //#include <../middleware/strategies/strategy_inject/strategy_inject.h>
 //#include "../wifi_hal/wifi_hal.h"
 //#include <../transport_hal/transport_hal.h>
@@ -68,5 +69,7 @@ void handleDebugMessage2(char* msg, int* nextHopIP);
 void propagateMessage(char* message, int* sourceIP);
 void encodeTunneledMessage(char* encodedMessage,size_t encodedMessageSize,int sourceIP[4], int destinationIP[4], char* encapsulatedMessage);
 bool isMessageTunneled(char* dataMessage);
+bool waitForMessage(messageType type, int senderIP[4], unsigned long timeOut);
+void getSenderIP(char* messageBuffer, messageType type, int senderIP[4]);
 
 #endif //MESSAGES_H
