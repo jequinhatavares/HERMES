@@ -54,7 +54,18 @@ void (*encodeMetricValue)(char*,size_t,void *) = nullptr;
 void (*decodeMetricValue)(char*,void *) = nullptr;
 
 
-
+/**
+ * initStrategyInject
+ * Initializes the Inject strategy by setting up function pointers and preparing the metrics table.
+ *
+ * @param setValueFunction - Function pointer to set a value in the metrics table.
+ * @param metricStruct - Pointer to the memory where the metric structure values are stored.
+ * @param metricStructSize - Size of the metric structure in bytes.
+ * @param encodeMetricFunction - Function pointer to encode metric values into a buffer.
+ * @param decodeMetricFunction - Function pointer to decode metric values from a buffer.
+ *
+ * @return void
+ */
 void initStrategyInject(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)) {
     metricsTable->setValue = setValueFunction;
     tableInit(metricsTable, nodes, metricStruct, sizeof(int[4]), metricStructSize);
@@ -64,7 +75,13 @@ void initStrategyInject(void (*setValueFunction)(void*,void*), void *metricStruc
 
 }
 
-
+/**
+ * injectNodeMetric
+ * Inserts/updates the metric data for this node.
+ *
+ * @param metric - Pointer to the metric data to be injected or updated.
+ * @return void
+ */
 void injectNodeMetric(void* metric){
     void*tableEntry = tableRead(metricsTable,myIP);
     if(tableEntry == nullptr){ //The node is not yet in the table
@@ -74,6 +91,17 @@ void injectNodeMetric(void* metric){
     }
 }
 
+/**
+ * rewriteSenderIPInject
+ * Updates the sender IP address of a message buffer before further propagation.
+ *
+ *
+ * @param messageBuffer - Pointer to the buffer containing the encoded message.
+ * @param bufferSize - Size of the message buffer in bytes.
+ * @param type - The type of Inject message being processed.
+ *
+ * @return void
+ */
 void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessageType type) {
     int messageType, senderIP[4],nodeIP[4],metric;
     InjectMessageType injectType;
@@ -91,6 +119,18 @@ void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessage
     }
 
 }
+
+/**
+ * encodeMessageStrategyInject
+ * Encodes strategy Inject messages of a given type.
+ *
+ *
+ * @param messageBuffer - Pointer to the buffer where the encoded message will be written.
+ * @param bufferSize - Size of the message buffer in bytes.
+ * @param type - The Inject message type to be encoded (e.g., INJECT_NODE_INFO or INJECT_TABLE_INFO).
+ *
+ * @return void
+ */
 void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int type){
     int messageType, senderIP[4],nodeIP[4],metric,offset = 0;
     int *entryIP;
@@ -119,6 +159,13 @@ void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int typ
 
 }
 
+/**
+ * encodeMyMetric
+ * Encodes the current node's IP address and its corresponding metric into the provided message buffer.
+ *
+ * @param messageBuffer - Pointer to the buffer where the encoded message will be written.
+ * @param bufferSize - Size of the message buffer in bytes.
+ */
 void encodeMyMetric(char* messageBuffer, size_t bufferSize){
     char tmpBuffer[20];
 
@@ -131,6 +178,16 @@ void encodeMyMetric(char* messageBuffer, size_t bufferSize){
     }
 }
 
+/**
+ * handleMessageStrategyInject
+ * Handles strategy Inject messages based on their type
+ *
+ *
+ * @param messageBuffer - Pointer to the buffer containing the received message.
+ * @param bufferSize - Size of the message buffer in bytes.
+ *
+ * @return void
+ */
 void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
     char metricBuffer[20];
     int senderIP[4],nodeIP[4];
@@ -195,6 +252,15 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
 
 }
 
+/**
+ * onNetworkEventStrategyInject
+ * This function is triggered in response to specific events reported by the network layer
+ *
+ * @param networkEvent - The network event type that triggered this handler.
+ * @param involvedIP - The IP address involved in the network event.
+ *
+ * @return void
+ */
 void onNetworkEventStrategyInject(int networkEvent, int involvedIP[4]){
     switch (networkEvent) {
         case NETEVENT_JOINED_NETWORK:
@@ -213,6 +279,19 @@ void onNetworkEventStrategyInject(int networkEvent, int involvedIP[4]){
             break;
     }
 }
+
+/**
+ * influenceRoutingStrategyInject
+ * Influences the next hop of a data message. When called, this function selects the next hop as the node with the best metric, using the user-provided comparison function.
+ * If the best metric node matches the original destination, it sends the message directly.
+ * Otherwise, the original message is tunneled inside another data message directed to the best metric node.
+ *
+ * Example of a encapsulated message:
+ * 11 [my IP] [best metric IP] [message payload: 11 [source IP] [original destination IP] [actual payload]]
+ *
+ * @param dataMessage - The original data message.
+ * @return void
+ */
 void influenceRoutingStrategyInject(char* dataMessage){
     void* bestMetric = nullptr, *currentMetric;
     int *IP, bestMetricIP[4], *nextHopIP, originalDestination[4];
@@ -264,6 +343,13 @@ void influenceRoutingStrategyInject(char* dataMessage){
     }
 }
 
+
+/**
+ * onTimerStrategyInject
+ * Periodically sends this node's metric information to all other nodes in the network.
+ *
+ * @return void
+ */
 void onTimerStrategyInject(){
     unsigned long currentTime = getCurrentTime();
 
@@ -276,7 +362,12 @@ void onTimerStrategyInject(){
         lastMiddlewareUpdateTimeInject = currentTime;
     }
 }
-
+/**
+ * getContextStrategyInject
+ * Retrieves the functions related to the strategy Inject
+ *
+ * @return void* - pointer to the struct that contains pointers to the context functions
+ */
 void* getContextStrategyInject(){
     return &injectContext;
 }
