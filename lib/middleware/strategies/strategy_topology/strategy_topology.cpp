@@ -30,7 +30,42 @@ void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int t
     }
 }
 void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
+    TopologyMessageType type;
+    int destinationNodeIP[4],*nextHopIP,newParent[4], nChars = 0,IP[4];
+    //Extract Inject Message Types
+    sscanf(messageBuffer,"%*i %i",&type);
 
+    if(type == TOP_PARENT_LIST_ADVERTISEMENT){
+        sscanf(messageBuffer,"%*d %*d %d.%d.%d.%d %n",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3],&nChars);
+        // Check if i am the final destination of the message
+        if(isIPEqual(destinationNodeIP,myIP)){
+            char* token = strtok(messageBuffer+nChars, " ");
+            while (token != NULL) {
+                sscanf(token,"%d.%d.%d.%d",&IP[0],&IP[1],&IP[2],&IP[3]);
+                // Check if the nodeIP already exists in the middleware metrics table
+
+                token = strtok(NULL, " ");
+            }
+        }else{ // If not, forward the message to the nextHop to the destination
+            nextHopIP = findRouteToNode(destinationNodeIP);
+            if (nextHopIP != nullptr){
+                sendMessage(nextHopIP,messageBuffer);
+            }
+        }
+    }else if(type == TOP_PARENT_REASSIGNMENT_COMMAND){
+        sscanf(messageBuffer,"%*d %*d %d.%d.%d.%d",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3]);
+        // Check if i am the final destination of the message
+        if(isIPEqual(destinationNodeIP,myIP)){
+            sscanf(messageBuffer,"%*d %*d %*d.%*d.%*d.%*d %d.%d.%d.%d",&newParent[0],&newParent[1],&newParent[2],&newParent[3]);
+            //Change parent to the assigned one
+            //TODO Change parent Function
+        }else{ // If not, forward the message to the nextHop to the destination
+            nextHopIP = findRouteToNode(destinationNodeIP);
+            if (nextHopIP != nullptr){
+                sendMessage(nextHopIP,messageBuffer);
+            }
+        }
+    }
 }
 void onNetworkEventStrategyTopology(int networkEvent, int involvedIP[4]){
 
