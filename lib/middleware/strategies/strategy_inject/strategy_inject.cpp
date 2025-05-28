@@ -117,7 +117,6 @@ void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessage
 
         }
     }
-
 }
 
 /**

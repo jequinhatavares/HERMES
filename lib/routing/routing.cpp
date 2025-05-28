@@ -450,3 +450,10 @@ void updateMySequenceNumber(int newSequenceNumber){
         tableUpdate(routingTable, myIP, &updatedEntry);
     }
 }
+
+void getIPFromMAC(int * MAC, int* IP){
+    IP[0] = MAC[5];
+    IP[1] = MAC[4];
+    IP[2] = MAC[3];
+    IP[3] = 1;
+}

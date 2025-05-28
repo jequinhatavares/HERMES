@@ -73,6 +73,5 @@ extern bool lostParent;
 void parseMAC(const char* macStr, int* macArray);
 void setIPs(const int* MAC);
 void handleTimers();
-void getIPFromMAC(int * MAC, int* IP);
 #endif //LIFECYCLE_H
 

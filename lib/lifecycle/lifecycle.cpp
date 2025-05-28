@@ -269,8 +269,6 @@ State joinNetwork(Event event){
 
         middlewareOnNetworkEventCallback(0,parent);
 
-
-
     }
 
     reachableNetworks.len = 0 ;
@@ -623,9 +621,3 @@ void setIPs(const int* MAC){
     subnet[2] = 255;subnet[3] =0;
 }
 
-void getIPFromMAC(int * MAC, int* IP){
-    IP[0] = MAC[5];
-    IP[1] = MAC[4];
-    IP[2] = MAC[3];
-    IP[3] = 1;
-}

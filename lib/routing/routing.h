@@ -51,5 +51,6 @@ void updateChildrenTable(int APIP[4], int STAIP[4]);
 parentInfo chooseParent(parentInfo* possibleParents, int n);
 bool inMySubnet(int* nodeIP);
 void updateMySequenceNumber(int newSequenceNumber);
+void getIPFromMAC(int * MAC, int* IP);
 
 #endif //ROUTING_H
