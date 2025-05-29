@@ -1,6 +1,6 @@
 #include "strategy_topology.h"
 
-int nodeIP[4];
+int orphanIP[4];
 int newParentIP[4];
 
 unsigned long lastMiddlewareUpdateTimeTopology;
@@ -35,7 +35,7 @@ void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int t
 
     }else if(typeTopology == TOP_PARENT_REASSIGNMENT_COMMAND){
         //MESSAGE_TYPE TOP_PARENT_REASSIGNMENT_COMMAND [nodeIP] [parentIP]
-        snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,TOP_PARENT_REASSIGNMENT_COMMAND,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],
+        snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,TOP_PARENT_REASSIGNMENT_COMMAND,orphanIP[0],orphanIP[1],orphanIP[2],orphanIP[3],
                  newParentIP[0],newParentIP[1],newParentIP[2],newParentIP[3]);
     }
 }

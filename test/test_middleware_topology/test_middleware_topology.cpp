@@ -28,6 +28,21 @@ void test_encode_inject_parent_list_advertisement(){
     TEST_ASSERT(strcmp(largeSendBuffer,correctEncodedMsg) == 0);
 }
 
+void test_encode_inject_parent_reassignment_command_advertisement(){
+    char correctEncodedMsg[100] = "13 1 2.2.2.2 5.5.5.5";
+    int IP1[4] = {2,2,2,2},IP2[4] = {5,5,5,5};
+
+    assignIP(orphanIP,IP1);
+    assignIP(newParentIP,IP2);
+
+    encodeMessageStrategyTopology(largeSendBuffer, sizeof(largeSendBuffer), TOP_PARENT_REASSIGNMENT_COMMAND);
+
+    printf("Encoded message: %s\n", correctEncodedMsg);
+    printf("Encoded message: %s\n", largeSendBuffer);
+
+    TEST_ASSERT(strcmp(largeSendBuffer,correctEncodedMsg) == 0);
+}
+
 void setUp(void){
     enableModule(STATE_MACHINE);
     enableModule(MESSAGES);
@@ -51,5 +66,6 @@ void tearDown(void){}
 int main(int argc, char** argv){
     UNITY_BEGIN();
     RUN_TEST(test_encode_inject_parent_list_advertisement);
+    RUN_TEST(test_encode_inject_parent_reassignment_command_advertisement);
     UNITY_END();
 }

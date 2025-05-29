@@ -13,6 +13,10 @@
 #include "../strategy_interface.h"
 
 
+
+extern int orphanIP[4];
+extern int newParentIP[4];
+
 typedef enum TopologyMessageType{
     TOP_PARENT_LIST_ADVERTISEMENT,//0
     TOP_PARENT_REASSIGNMENT_COMMAND, //1
