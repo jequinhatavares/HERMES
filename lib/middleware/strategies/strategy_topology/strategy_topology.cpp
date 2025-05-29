@@ -3,9 +3,19 @@
 int nodeIP[4];
 int newParentIP[4];
 
-void initStrategyTopology(){
+unsigned long lastMiddlewareUpdateTimeTopology;
 
+
+//Function Pointers Initializers
+void (*encodeTopicValue)(char*,size_t,void *) = nullptr;
+void (*decodeTopicValue)(char*,int8_t *) = nullptr;
+
+void (*chooseParentFunction)(int*) = nullptr;
+
+void initStrategyTopology(void (*chooseParentFunctionPointer)(int*)){
+        chooseParentFunction = chooseParentFunctionPointer;
 }
+
 void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int typeTopology){
     int nodeIP[4],MAC[6];
     int offset = 0;
@@ -20,7 +30,7 @@ void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int t
             sscanf(reachableNetworks.item[i], "JessicaNode%i:%i:%i:%i:%i:%i",&MAC[0],&MAC[1],&MAC[2],&MAC[3],&MAC[4],&MAC[5]);
             getIPFromMAC(MAC, nodeIP);
 
-            offset += snprintf(messageBuffer + offset, bufferSize - offset,"%i.%i.%i.%i",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
+            offset += snprintf(messageBuffer + offset, bufferSize - offset," %i.%i.%i.%i",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
         }
 
     }else if(typeTopology == TOP_PARENT_REASSIGNMENT_COMMAND){
@@ -32,6 +42,7 @@ void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int t
 void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
     TopologyMessageType type;
     int destinationNodeIP[4],*nextHopIP,newParent[4], nChars = 0,IP[4];
+    int possibleParents[TableMaxSize][4],i=0;
     //Extract Inject Message Types
     sscanf(messageBuffer,"%*i %i",&type);
 
@@ -43,8 +54,9 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
             while (token != NULL) {
                 sscanf(token,"%d.%d.%d.%d",&IP[0],&IP[1],&IP[2],&IP[3]);
                 // Check if the nodeIP already exists in the middleware metrics table
-
+                assignIP(possibleParents[i],IP);
                 token = strtok(NULL, " ");
+                i++;
             }
         }else{ // If not, forward the message to the nextHop to the destination
             nextHopIP = findRouteToNode(destinationNodeIP);
@@ -74,7 +86,14 @@ void influenceRoutingStrategyTopology(char* dataMessage){
 
 }
 void onTimerStrategyTopology(){
-
+    unsigned long currentTime = getCurrentTime();
+    //Periodically send this node's metric to all other nodes in the network
+    if( (currentTime - lastMiddlewareUpdateTimeTopology) >= 10000 ) {
+        /***encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_NODE_UPDATE);
+        propagateMessage(largeSendBuffer, myIP);
+        LOG(NETWORK,DEBUG,"Sending periodic [MIDDLEWARE/PUBSUB_NODE_INFO] Message: %s\n",largeSendBuffer);
+        lastMiddlewareUpdateTimeTopology = currentTime;***/
+    }
 }
 void* getContextStrategyTopology(){
     return nullptr;

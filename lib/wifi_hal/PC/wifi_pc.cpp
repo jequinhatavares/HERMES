@@ -20,8 +20,7 @@ bool (*isChildRegisteredCallback)(int*) = nullptr;
  */
 void initWifiEventHandlers(){}
 
-const char* getWifiStatus(int Status){}
-
+const char* getWifiStatus(int Status){return "";}
 
 void startWifiSTA(int* localIP, int* gateway, int* subnet, int* dns){}
 
@@ -35,7 +34,7 @@ void stopWifiAP(){}
 
 void disconnectFromAP(){}
 
-int numberOfSTAConnected(){}
+int numberOfSTAConnected(){return 0;}
 
 void getGatewayIP(int *IP){}
 
