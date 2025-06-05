@@ -170,6 +170,7 @@ State joinNetwork(Event event){
     unsigned long currentTime, startTime;
     int mySTAIP[4], nrOfPossibleParents = 0;
     messageParameters params;
+    bool receivedPIR = false, receivedFRTU = false;
     parentInfo possibleParents[10];
 
     if(reachableNetworks.len != 0){
@@ -190,20 +191,19 @@ State joinNetwork(Event event){
             sendMessage(connectedParentIP, smallSendBuffer);
 
             //Wait for the parent to respond
-            startTime = getCurrentTime();
+            /***startTime = getCurrentTime();
             currentTime = startTime;
             while( ((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=3000) ){
                 currentTime = getCurrentTime();
-            }
+            }***/
 
-            if (packetSize > 0){
+            receivedPIR = waitForMessage(PARENT_INFO_RESPONSE,connectedParentIP,3000);
+
+            if (receivedPIR){
                 LOG(MESSAGES,INFO,"Parent [Parent Info Response]: %s\n", receiveBuffer);
-                if(isMessageValid(PARENT_INFO_RESPONSE,receiveBuffer)){
-                    handleParentInfoResponse(receiveBuffer, possibleParents, nrOfPossibleParents);
-                    possibleParents[nrOfPossibleParents].ssid = reachableNetworks.item[i];
-                    nrOfPossibleParents ++;
-                }
-
+                handleParentInfoResponse(receiveBuffer, possibleParents, nrOfPossibleParents);
+                possibleParents[nrOfPossibleParents].ssid = reachableNetworks.item[i];
+                nrOfPossibleParents ++;
             }
 
             if(reachableNetworks.len != 1){
@@ -211,6 +211,8 @@ State joinNetwork(Event event){
                 disconnectFromAP();
             }
 
+            //Set the bool value to false for the next iteration parent PIR
+            receivedPIR = false;
         }
 
         //If none of the parents respond return to search state
@@ -242,14 +244,16 @@ State joinNetwork(Event event){
         sendMessage(parent, smallSendBuffer);
 
         //Wait for the parent to respond with his routing table information
-        startTime = getCurrentTime();
+        /***startTime = getCurrentTime();
         currentTime = startTime;
         while(((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=3000)){
             currentTime = getCurrentTime();
-        }
+        }***/
+
+        receivedFRTU = waitForMessage(FULL_ROUTING_TABLE_UPDATE,parent,3000);
 
         //Process the routing table update
-        if (packetSize > 0){
+        if (receivedFRTU){
             LOG(MESSAGES,INFO,"Parent [Full Routing Update] Response: %s\n", receiveBuffer);
             if(isMessageValid(FULL_ROUTING_TABLE_UPDATE,receiveBuffer)){
                 //LOG(MESSAGES,INFO,"Full Routing Update valid: %s\n", receiveBuffer);
@@ -257,6 +261,8 @@ State joinNetwork(Event event){
                 LOG(NETWORK,INFO,"Routing Table Updated:\n");
                 tablePrint(routingTable,printRoutingStruct);
             }
+        }else{
+            LOG(NETWORK,ERROR,"❌ ERROR: No routing table data received from parent.\n");
         }
 
         // If the joining node has children (i.e., his subnetwork has nodes), it must also send its routing table to its new parent.

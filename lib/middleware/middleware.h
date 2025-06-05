@@ -11,6 +11,7 @@
 typedef enum StrategyType{
     STRATEGY_INJECT,
     STRATEGY_PUBSUB,
+    STRATEGY_TOPOLOGY,
     STRATEGY_NONE,
 }StrategyType;
 

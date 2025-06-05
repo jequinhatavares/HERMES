@@ -36,7 +36,7 @@ void reportNewNodeToViz(int* nodeIP, int* parentIP){
         if(nextHopIP != nullptr){
             sendMessage(rootIP,msg);
         }else{
-            LOG(NETWORK, ERROR, "❌ No path to the root node was found in the routing table.\n");
+            LOG(NETWORK, ERROR, "❌ ERROR: No path to the root node was found in the routing table.\n");
         }
     }else LOG(DEBUG_SERVER,DEBUG,msg);
 

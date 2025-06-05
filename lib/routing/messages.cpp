@@ -700,7 +700,7 @@ bool isMessageTunneled(char* dataMessage){
     return( sscanf(dataMessage,"%d %*d.%*d.%*d.%*d %*d.%*d.%*d.%*d %d %*d.%*d.%*d.%*d %*d.%*d.%*d.%*d",&type,&type) ==2 );
 }
 
-bool waitForMessage(messageType type, int senderIP[4], unsigned long timeOut){
+bool waitForMessage(messageType type, int expectedSenderIP[4], unsigned long timeOut){
     int packetSize, receivedSenderIP[4];
     messageType receivedType;
     bool isExpectedMessage = false;
@@ -710,10 +710,11 @@ bool waitForMessage(messageType type, int senderIP[4], unsigned long timeOut){
     while( ((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=timeOut) && !isExpectedMessage ){
         currentTime = getCurrentTime();
         if(packetSize>0){
-            sscanf(receiveBuffer, "%d",&receivedType);
-            if(receivedType != type){
+            //Verify if the received message is from the expected type
+            if(isMessageValid(type,receiveBuffer)){
                 getSenderIP(receiveBuffer, receivedType,receivedSenderIP);
-                if(isIPEqual(senderIP,receivedSenderIP)){
+                //Verify if sender of the message corresponds to the expected sender
+                if(isIPEqual(expectedSenderIP,receivedSenderIP)){
                     isExpectedMessage = true;
                 }
             }
