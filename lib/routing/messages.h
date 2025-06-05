@@ -71,6 +71,6 @@ void propagateMessage(char* message, int* sourceIP);
 void encodeTunneledMessage(char* encodedMessage,size_t encodedMessageSize,int sourceIP[4], int destinationIP[4], char* encapsulatedMessage);
 bool isMessageTunneled(char* dataMessage);
 bool waitForMessage(messageType type, int expectedSenderIP[4], unsigned long timeOut);
-void getSenderIP(char* messageBuffer, messageType type, int senderIP[4]);
+void getSenderIP(char* messageBuffer, messageType type, int* senderIP);
 
 #endif //MESSAGES_H

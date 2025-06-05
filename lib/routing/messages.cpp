@@ -707,14 +707,18 @@ bool waitForMessage(messageType type, int expectedSenderIP[4], unsigned long tim
     //Wait for the parent to respond
     unsigned long startTime = getCurrentTime();
     unsigned long currentTime = startTime;
-    while( ((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=timeOut) && !isExpectedMessage ){
+    while( ((currentTime - startTime) <=timeOut) && !isExpectedMessage ){
+        packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer));
         currentTime = getCurrentTime();
         if(packetSize>0){
             //Verify if the received message is from the expected type
             if(isMessageValid(type,receiveBuffer)){
-                getSenderIP(receiveBuffer, receivedType,receivedSenderIP);
+                //LOG(MESSAGES,INFO,"Valid Message type\n");
+                getSenderIP(receiveBuffer, type,receivedSenderIP);
+                //LOG(MESSAGES,INFO,"Parsed Received IP: %i.%i.%i.%i\n",receivedSenderIP[0],receivedSenderIP[1],receivedSenderIP[2],receivedSenderIP[3]);
                 //Verify if sender of the message corresponds to the expected sender
                 if(isIPEqual(expectedSenderIP,receivedSenderIP)){
+                    //LOG(MESSAGES,INFO,"Valid Sender IP\n");
                     isExpectedMessage = true;
                 }
             }
@@ -723,7 +727,7 @@ bool waitForMessage(messageType type, int expectedSenderIP[4], unsigned long tim
     return isExpectedMessage;
 }
 
-void getSenderIP(char* messageBuffer, messageType type, int senderIP[4]){
+void getSenderIP(char* messageBuffer, messageType type, int* senderIP){
     switch (type) {
         case PARENT_INFO_RESPONSE:
             sscanf(messageBuffer, "%*d %d.%d.%d.%d",&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
