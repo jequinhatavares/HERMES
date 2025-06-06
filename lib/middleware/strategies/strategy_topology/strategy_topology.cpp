@@ -3,6 +3,9 @@
 int orphanIP[4];
 int newParentIP[4];
 
+int tmpChildIP[4];
+int tmpChildSTAIP[4];
+
 unsigned long lastMiddlewareUpdateTimeTopology;
 
 
@@ -39,7 +42,7 @@ void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int t
     }
 }
 
-void encodeMessageParentListAdvertisement(char* messageBuffer, size_t bufferSize, parentInfo* possibleParents, int nrOfPossibleParents, int *temporaryParent, int *mySTAIP){
+void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize, parentInfo* possibleParents, int nrOfPossibleParents, int *temporaryParent, int *mySTAIP){
     int offset = 0;
 
     // This is an intermediary message sent to the temporary parent.
@@ -58,12 +61,40 @@ void encodeMessageParentListAdvertisement(char* messageBuffer, size_t bufferSize
 
 void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
     TopologyMessageType type;
-    int destinationNodeIP[4],*nextHopIP,newParent[4], nChars = 0,IP[4];
+    int destinationNodeIP[4],*nextHopIP, nChars = 0,IP[4];
     int possibleParents[TableMaxSize][4],i=0;
     //Extract Inject Message Types
     sscanf(messageBuffer,"%*i %i",&type);
 
-    if(type == TOP_PARENT_LIST_ADVERTISEMENT){
+    if(type == TOP_PARENT_LIST_ADVERTISEMENT_REQUEST){
+        sscanf(messageBuffer,"%*d %*d %d.%d.%d.%d %d.%d.%d.%d %d.%d.%d.%d %n",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3]
+                ,&tmpChildIP[0],&tmpChildIP[1],&tmpChildIP[2],&tmpChildIP[3]
+                ,&tmpChildSTAIP[0],&tmpChildSTAIP[1],&tmpChildSTAIP[2],&tmpChildSTAIP[3],&nChars);
+
+        // Check whether this node is the intended destination of the message
+        if(isIPEqual(destinationNodeIP,myIP)){
+            if(!iamRoot){
+                //Encode the TOP_PARENT_LIST_ADVERTISEMENT message to be sent to the root
+                //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP] [nodeIP] [childSTAIP] [Possible Parent 1] [Possible Parent 2] ...
+                snprintf(largeSendBuffer, sizeof(largeSendBuffer),"%i %i %i.%i.%i.%i %i.%i.%i.%i %i.%i.%i.%i %s",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT,rootIP[0],rootIP[1],rootIP[2],rootIP[3],
+                         tmpChildIP[0],tmpChildIP[1],tmpChildIP[2],tmpChildIP[3],tmpChildSTAIP[0],tmpChildSTAIP[1],tmpChildSTAIP[2],tmpChildSTAIP[3],messageBuffer+nChars);
+                //Send the encode message to the root
+                nextHopIP = findRouteToNode(rootIP);
+                if(nextHopIP != nullptr){
+                    sendMessage(nextHopIP,largeSendBuffer);
+                }
+            }else{
+                // If the new node connects directly to the root and sends the TOP_PARENT_LIST_ADVERTISEMENT_REQUEST,
+                // the root can process the list of advertised parents and select a parent immediately
+
+            }
+
+        }else{
+            // This message type is intended to be sent only by the new node to its directly connected temporary parent
+            LOG(NETWORK, ERROR, "❌ ERROR: This node should be the destination of the TOP_PARENT_LIST_ADVERTISEMENT_REQUEST message\n");
+        }
+    }
+    else if(type == TOP_PARENT_LIST_ADVERTISEMENT){
         sscanf(messageBuffer,"%*d %*d %d.%d.%d.%d %n",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3],&nChars);
         // Check if i am the final destination of the message
         if(isIPEqual(destinationNodeIP,myIP)){
@@ -131,8 +162,9 @@ parentInfo chooseParentProcedure(parentInfo* possibleParents, int nrOfPossiblePa
         assignIP(temporaryParent,possibleParents[0].parentIP);
         getMySTAIP(mySTAIP);
     }
-    // Encode the PARENT_LIST_ADVERTISEMENT to send to the root of the network
-    encodeMessageParentListAdvertisement(largeSendBuffer, sizeof(largeSendBuffer), possibleParents, nrOfPossibleParents, temporaryParent, mySTAIP);
+
+    // Encode the PARENT_LIST_ADVERTISEMENT_REQUEST to send to the temporary parent, for in to send a PARENT_LIST_ADVERTISEMENT to the root
+    encodeParentListAdvertisementRequest(largeSendBuffer, sizeof(largeSendBuffer), possibleParents, nrOfPossibleParents, temporaryParent, mySTAIP);
 
     // Send the message to the temporary parent so it can be forwarded toward the root
     sendMessage(temporaryParent,largeSendBuffer);

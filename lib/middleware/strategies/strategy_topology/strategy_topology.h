@@ -20,7 +20,8 @@ extern int orphanIP[4];
 extern int newParentIP[4];
 
 typedef enum TopologyMessageType{
-    TOP_PARENT_LIST_ADVERTISEMENT,//0
+    TOP_PARENT_LIST_ADVERTISEMENT_REQUEST,//0
+    TOP_PARENT_LIST_ADVERTISEMENT,//1
     TOP_PARENT_REASSIGNMENT_COMMAND, //1
 } TopologyMessageType;
 
