@@ -36,7 +36,7 @@ void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int t
         }
 
     }else if(typeTopology == TOP_PARENT_REASSIGNMENT_COMMAND){
-        //MESSAGE_TYPE TOP_PARENT_REASSIGNMENT_COMMAND [nodeIP] [parentIP]
+        //MESSAGE_TYPE TOP_PARENT_REASSIGNMENT_COMMAND [tmpParentIP] [nodeIP] [parentIP]
         snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,TOP_PARENT_REASSIGNMENT_COMMAND,orphanIP[0],orphanIP[1],orphanIP[2],orphanIP[3],
                  newParentIP[0],newParentIP[1],newParentIP[2],newParentIP[3]);
     }
@@ -61,7 +61,7 @@ void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize
 
 void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
     TopologyMessageType type;
-    int destinationNodeIP[4],*nextHopIP, nChars = 0,IP[4];
+    int destinationNodeIP[4],*nextHopIP, nChars = 0,IP[4], targetNodeIP[4];
     int possibleParents[TableMaxSize][4],i=0;
     //Extract Inject Message Types
     sscanf(messageBuffer,"%*i %i",&type);
@@ -75,9 +75,9 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
         if(isIPEqual(destinationNodeIP,myIP)){
             if(!iamRoot){
                 //Encode the TOP_PARENT_LIST_ADVERTISEMENT message to be sent to the root
-                //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP] [nodeIP] [childSTAIP] [Possible Parent 1] [Possible Parent 2] ...
+                //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP =root] [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
                 snprintf(largeSendBuffer, sizeof(largeSendBuffer),"%i %i %i.%i.%i.%i %i.%i.%i.%i %i.%i.%i.%i %s",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT,rootIP[0],rootIP[1],rootIP[2],rootIP[3],
-                         tmpChildIP[0],tmpChildIP[1],tmpChildIP[2],tmpChildIP[3],tmpChildSTAIP[0],tmpChildSTAIP[1],tmpChildSTAIP[2],tmpChildSTAIP[3],messageBuffer+nChars);
+                         myIP[0],myIP[1],myIP[2],myIP[3],tmpChildIP[0],tmpChildIP[1],tmpChildIP[2],tmpChildIP[3],messageBuffer+nChars);
                 //Send the encode message to the root
                 nextHopIP = findRouteToNode(rootIP);
                 if(nextHopIP != nullptr){
@@ -86,7 +86,7 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
             }else{
                 // If the new node connects directly to the root and sends the TOP_PARENT_LIST_ADVERTISEMENT_REQUEST,
                 // the root can process the list of advertised parents and select a parent immediately
-
+                chooseParentStrategyTopology(messageBuffer);
             }
 
         }else{
@@ -98,14 +98,16 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
         sscanf(messageBuffer,"%*d %*d %d.%d.%d.%d %n",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3],&nChars);
         // Check if i am the final destination of the message
         if(isIPEqual(destinationNodeIP,myIP)){
-            char* token = strtok(messageBuffer+nChars, " ");
+            /***char* token = strtok(messageBuffer+nChars, " ");
             while (token != NULL) {
                 sscanf(token,"%d.%d.%d.%d",&IP[0],&IP[1],&IP[2],&IP[3]);
                 // Check if the nodeIP already exists in the middleware metrics table
                 assignIP(possibleParents[i],IP);
                 token = strtok(NULL, " ");
                 i++;
-            }
+            }***/
+            chooseParentStrategyTopology(messageBuffer);
+
         }else{ // If not, forward the message to the nextHop to the destination
             nextHopIP = findRouteToNode(destinationNodeIP);
             if (nextHopIP != nullptr){
@@ -116,8 +118,11 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
         sscanf(messageBuffer,"%*d %*d %d.%d.%d.%d",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3]);
         // Check if i am the final destination of the message
         if(isIPEqual(destinationNodeIP,myIP)){
-            // In this strategy, PARENT_REASSIGNMENT_COMMAND messages are only expected during the join phase, not during normal operation when this function runs
-            LOG(NETWORK, ERROR, "❌ ERROR: Received a TOP_PARENT_REASSIGNMENT_COMMAND unexpectedly\n");
+            // If this node receives a parent reassignment command concerning the temporary child node, it must forward the message to that child
+            sscanf(messageBuffer,"%*d %*d %*d.%*d.%*d.%*d %d.%d.%d.%d",&targetNodeIP[0],&targetNodeIP[1],&targetNodeIP[2],&targetNodeIP[3]);
+            if(isIPEqual(targetNodeIP,tmpChildIP)){
+                sendMessage(tmpChildSTAIP,messageBuffer);
+            }
         }else{ // If not, forward the message to the nextHop to the destination
             nextHopIP = findRouteToNode(destinationNodeIP);
             if (nextHopIP != nullptr){
@@ -197,5 +202,9 @@ parentInfo chooseParentProcedure(parentInfo* possibleParents, int nrOfPossiblePa
     }
 
     return possibleParents[0];
+
+}
+
+void chooseParentStrategyTopology(char* message){
 
 }

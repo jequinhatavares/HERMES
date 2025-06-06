@@ -39,5 +39,8 @@ void influenceRoutingStrategyTopology(char* dataMessage);
 void onTimerStrategyTopology();
 void* getContextStrategyTopology();
 
+parentInfo chooseParentProcedure(parentInfo* possibleParents, int nrOfPossibleParents);
+void chooseParentStrategyTopology(char* message);
+
 
 #endif //STRATEGY_TOPOLOGY_H
