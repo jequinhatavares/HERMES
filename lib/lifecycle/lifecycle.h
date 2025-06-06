@@ -14,15 +14,16 @@
 #include <cstring>
 //#include <../middleware/strategies/strategy_inject/strategy_inject.h>
 
+#define SSID_PREFIX      		"JessicaNode"
+
+#define PASS     		        "123456789"
+#define APPLICATION_PROCESSING_INTERVAL 120000
+
 extern void (*middlewareOnTimerCallback)();
 extern void (*middlewareHandleMessageCallback)(char*,size_t);
 extern void (*middlewareInfluenceRoutingCallback)(char*);
 extern void (*middlewareOnNetworkEventCallback)(int,int*);
 
-#define SSID_PREFIX      		"JessicaNode"
-#define PASS     		        "123456789"
-
-#define APPLICATION_PROCESSING_INTERVAL 120000
 
 
 State initNode(Event event);

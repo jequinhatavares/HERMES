@@ -15,6 +15,9 @@ void (*middlewareHandleMessageCallback)(char*,size_t) = nullptr;
 void (*middlewareInfluenceRoutingCallback)(char*) = nullptr;
 void (*middlewareOnNetworkEventCallback)(int,int*) = nullptr;
 
+// Structure that is going to contain all possible parents information
+
+
 StateMachine SM_ = {
         .current_state = sInit,
         .TransitionTable = {
@@ -190,13 +193,13 @@ State joinNetwork(Event event){
             LOG(NETWORK,INFO, "Connected to parent: %i.%i.%i.%i\n",connectedParentIP[0],connectedParentIP[1],connectedParentIP[2],connectedParentIP[3]);
             sendMessage(connectedParentIP, smallSendBuffer);
 
-            //Wait for the parent to respond
             /***startTime = getCurrentTime();
             currentTime = startTime;
             while( ((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=3000) ){
                 currentTime = getCurrentTime();
             }***/
 
+            //Wait for the parent to respond with his parent information
             receivedPIR = waitForMessage(PARENT_INFO_RESPONSE,connectedParentIP,3000);
 
             if (receivedPIR){
@@ -223,7 +226,7 @@ State joinNetwork(Event event){
         }
 
         //With all the information gathered from the potential parents, select the preferred parent
-        parentInfo preferredParent = chooseParent(possibleParents,reachableNetworks.len);
+        parentInfo preferredParent = chooseParent(possibleParents,nrOfPossibleParents);
         //Connect to the preferred parent
         if(reachableNetworks.len != 1)connectToAP(preferredParent.ssid, PASS);
 
@@ -243,13 +246,13 @@ State joinNetwork(Event event){
         encodeMessage(smallSendBuffer, sizeof(smallSendBuffer), CHILD_REGISTRATION_REQUEST, params);
         sendMessage(parent, smallSendBuffer);
 
-        //Wait for the parent to respond with his routing table information
         /***startTime = getCurrentTime();
         currentTime = startTime;
         while(((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=3000)){
             currentTime = getCurrentTime();
         }***/
 
+        //Wait for the parent to respond with his routing table information
         receivedFRTU = waitForMessage(FULL_ROUTING_TABLE_UPDATE,parent,3000);
 
         //Process the routing table update

@@ -702,7 +702,6 @@ bool isMessageTunneled(char* dataMessage){
 
 bool waitForMessage(messageType type, int expectedSenderIP[4], unsigned long timeOut){
     int packetSize, receivedSenderIP[4];
-    messageType receivedType;
     bool isExpectedMessage = false;
     //Wait for the parent to respond
     unsigned long startTime = getCurrentTime();
