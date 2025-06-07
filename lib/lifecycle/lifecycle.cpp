@@ -173,7 +173,7 @@ State joinNetwork(Event event){
     unsigned long currentTime, startTime;
     int mySTAIP[4], nrOfPossibleParents = 0;
     messageParameters params;
-    bool receivedPIR = false, receivedFRTU = false;
+    bool receivedPIR = false, receivedFRTU=false;
     parentInfo possibleParents[10];
 
     if(reachableNetworks.len != 0){

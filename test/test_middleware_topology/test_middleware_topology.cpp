@@ -78,6 +78,20 @@ void test_handle_parent_advertisement(){
     TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);
 }
 
+void test_handle_parent_assignment_command(){
+    //MESSAGE_TYPE TOP_PARENT_REASSIGNMENT_COMMAND [destinationIP] [nodeIP] [parentIP]
+    char PRC[100] = "13 2 1.1.1.1 2.2.2.2 5.5.5.5";
+    char correctEncodedMsg[100] = "13 2 2.2.2.2 2.2.2.2 5.5.5.5";
+
+    iamRoot = true;
+
+    handleMessageStrategyTopology(PRC, sizeof(PRC));
+
+    printf("Encoded message: %s\n", correctEncodedMsg);
+    printf("Encoded message: %s\n", smallSendBuffer);
+
+    TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);
+}
 void setUp(void){
     enableModule(STATE_MACHINE);
     enableModule(MESSAGES);
@@ -104,5 +118,6 @@ int main(int argc, char** argv){
     RUN_TEST(test_handle_parent_advertisement_request);
     RUN_TEST(test_root_handle_parent_advertisement_request);
     RUN_TEST(test_handle_parent_advertisement);
+    //RUN_TEST(test_handle_parent_assignment_command);
     UNITY_END();
 }

@@ -1,13 +1,10 @@
 #include "strategy_topology.h"
 
-int orphanIP[4];
-int newParentIP[4];
 
 int tmpChildIP[4];
 int tmpChildSTAIP[4];
 
 unsigned long lastMiddlewareUpdateTimeTopology;
-
 
 //Function Pointers Initializers
 void (*encodeTopicValue)(char*,size_t,void *) = nullptr;
@@ -66,7 +63,7 @@ void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize
 
 void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
     TopologyMessageType type;
-    int destinationNodeIP[4],*nextHopIP, nChars = 0,IP[4], targetNodeIP[4];
+    int destinationNodeIP[4],*nextHopIP, nChars = 0,IP[4], targetNodeIP[4],chosenParentIP[4];
     int possibleParents[TableMaxSize][4],i=0;
     //Extract Inject Message Types
     sscanf(messageBuffer,"%*i %i",&type);
@@ -127,6 +124,8 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
             // If this node receives a parent reassignment command concerning the temporary child node, it must forward the message to that child
             sscanf(messageBuffer,"%*d %*d %*d.%*d.%*d.%*d %d.%d.%d.%d",&targetNodeIP[0],&targetNodeIP[1],&targetNodeIP[2],&targetNodeIP[3]);
             if(isIPEqual(targetNodeIP,tmpChildIP)){
+                //Change the message destination IP to the childIP
+                //snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,TOP_PARENT_REASSIGNMENT_COMMAND,tmpChildIP[0],tmpChildIP[1],tmpChildIP[2],tmpChildIP[3],tmpChildIP[0],tmpChildIP[1],tmpChildIP[2],tmpChildIP[3],);
                 sendMessage(tmpChildSTAIP,messageBuffer);
             }
         }else{ // If not, forward the message to the nextHop to the destination
@@ -157,11 +156,6 @@ void* getContextStrategyTopology(){
 
 void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, TopologyMessageType type){
 
-    if(type == TOP_PARENT_LIST_ADVERTISEMENT){
-
-    }else if(type ==TOP_PARENT_REASSIGNMENT_COMMAND){
-
-    }
 }
 
 parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossibleParents){
