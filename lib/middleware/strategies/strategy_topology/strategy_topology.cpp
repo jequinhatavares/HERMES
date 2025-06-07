@@ -54,8 +54,8 @@ void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize
          The temporary parent will replace it with the correct root IP before forwarding.
          New Node-> Temporary Parent -> Root Node  ***/
 
-    //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [destination IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
-    offset = snprintf(messageBuffer, bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT,temporaryParent[0],temporaryParent[1],temporaryParent[2],temporaryParent[3],
+    //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [tmp parent IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
+    offset = snprintf(messageBuffer, bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT_REQUEST,temporaryParent[0],temporaryParent[1],temporaryParent[2],temporaryParent[3],
                       mySTAIP[0],mySTAIP[1],mySTAIP[2],mySTAIP[3],myIP[0],myIP[1],myIP[2],myIP[3]);
 
     for (int i = 0; i < nrOfPossibleParents; i++) {
@@ -164,7 +164,7 @@ void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, TopologyMessa
     }
 }
 
-parentInfo chooseParentProcedure(parentInfo* possibleParents, int nrOfPossibleParents){
+parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossibleParents){
     int mySTAIP[4], temporaryParent[4],assignedParent[4];
     int packetSize=0, receivedMessageType;
     bool isExpectedMessage=false;

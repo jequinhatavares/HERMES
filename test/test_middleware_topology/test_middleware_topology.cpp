@@ -10,17 +10,21 @@
 
 /*** ****************************** Tests ****************************** ***/
 
-void test_encode_inject_parent_list_advertisement(){
-    char correctEncodedMsg[100] = "13 0 3.3.3.3 1.1.1.1 2.2.2.1 2.2.2.1 2.2.2.1 2.2.2.1";
+void test_encode_parent_list_advertisement_request(){
+    //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [tmp parent IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
+    char correctEncodedMsg[100] = "13 0 3.3.3.3 3.3.3.1 1.1.1.1 2.2.2.2 2.2.2.2 2.2.2.2";
+    parentInfo possibleParents[3];
+    int nParents=0, IP[4] = {2,2,2,2},parentIP[4] = {3,3,3,3},mySTAIP[4] = {3,3,3,1};
 
-    char current_ssid[30] = "JessicaNode2:2:2:2:2:2";
-
-    for (int i = 0; i < 4; i++) {
-        strcpy(reachableNetworks.item[reachableNetworks.len], current_ssid);
-        reachableNetworks.len++;
+    for (int i = 0; i < 3; i++) {
+        assignIP(possibleParents[i].parentIP,IP);
+        possibleParents[i].rootHopDistance = 1;
+        possibleParents[i].nrOfChildren = 1;
+        nParents++;
     }
 
-    encodeMessageStrategyTopology(largeSendBuffer, sizeof(largeSendBuffer), TOP_PARENT_LIST_ADVERTISEMENT);
+    encodeParentListAdvertisementRequest(largeSendBuffer, sizeof(largeSendBuffer), possibleParents, nParents, parentIP, mySTAIP);
+
 
     printf("Encoded message: %s\n", correctEncodedMsg);
     printf("Encoded message: %s\n", largeSendBuffer);
@@ -28,14 +32,13 @@ void test_encode_inject_parent_list_advertisement(){
     TEST_ASSERT(strcmp(largeSendBuffer,correctEncodedMsg) == 0);
 }
 
-void test_encode_inject_parent_reassignment_command_advertisement(){
-    char correctEncodedMsg[100] = "13 1 2.2.2.2 5.5.5.5";
-    int IP1[4] = {2,2,2,2},IP2[4] = {5,5,5,5};
+void test_encode_handle_parent_advertisement_request(){
+    //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [tmp parent IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
+    char PAR[100] = "13 0 1.1.1.1 1.1.1.0 2.2.2.2 5.5.5.5 5.5.5.5 5.5.5.5";
+    //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP =root] [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
+    char correctEncodedMsg[100] = "13 1 4.4.4.4 1.1.1.1 2.2.2.2 5.5.5.5 5.5.5.5 5.5.5.5";
 
-    assignIP(orphanIP,IP1);
-    assignIP(newParentIP,IP2);
-
-    encodeMessageStrategyTopology(largeSendBuffer, sizeof(largeSendBuffer), TOP_PARENT_REASSIGNMENT_COMMAND);
+    handleMessageStrategyTopology(PAR, sizeof(PAR));
 
     printf("Encoded message: %s\n", correctEncodedMsg);
     printf("Encoded message: %s\n", largeSendBuffer);
@@ -56,7 +59,7 @@ void setUp(void){
     int nodeIP[4]={1,1,1,1};
     assignIP(myIP,nodeIP);
 
-    int root[4]={3,3,3,3};
+    int root[4]={4,4,4,4};
     assignIP(rootIP,root);
 
 }
@@ -65,7 +68,7 @@ void tearDown(void){}
 
 int main(int argc, char** argv){
     UNITY_BEGIN();
-    RUN_TEST(test_encode_inject_parent_list_advertisement);
-    RUN_TEST(test_encode_inject_parent_reassignment_command_advertisement);
+    RUN_TEST(test_encode_parent_list_advertisement_request);
+    RUN_TEST(test_encode_handle_parent_advertisement_request);
     UNITY_END();
 }

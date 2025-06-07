@@ -39,7 +39,10 @@ void influenceRoutingStrategyTopology(char* dataMessage);
 void onTimerStrategyTopology();
 void* getContextStrategyTopology();
 
-parentInfo chooseParentProcedure(parentInfo* possibleParents, int nrOfPossibleParents);
+void encodeParentAssignmentCommand(char* messageBuffer, size_t bufferSize, int* destinationIP, int* chosenParentIP, int* targetNodeIP);
+void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize, parentInfo* possibleParents, int nrOfPossibleParents, int *temporaryParent, int *mySTAIP);
+
+parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossibleParents);
 void chooseParentStrategyTopology(char* message);
 
 
