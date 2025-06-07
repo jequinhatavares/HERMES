@@ -32,7 +32,7 @@ void test_encode_parent_list_advertisement_request(){
     TEST_ASSERT(strcmp(largeSendBuffer,correctEncodedMsg) == 0);
 }
 
-void test_encode_handle_parent_advertisement_request(){
+void test_handle_parent_advertisement_request(){
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [tmp parent IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
     char PAR[100] = "13 0 1.1.1.1 1.1.1.0 2.2.2.2 5.5.5.5 5.5.5.5 5.5.5.5";
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP =root] [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
@@ -44,6 +44,38 @@ void test_encode_handle_parent_advertisement_request(){
     printf("Encoded message: %s\n", largeSendBuffer);
 
     TEST_ASSERT(strcmp(largeSendBuffer,correctEncodedMsg) == 0);
+}
+
+void test_root_handle_parent_advertisement_request(){
+    //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [tmp parent IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
+    char PAR[100] = "13 0 1.1.1.1 1.1.1.0 2.2.2.2 5.5.5.5 5.5.5.5 5.5.5.5";
+    //MESSAGE_TYPE TOP_PARENT_REASSIGNMENT_COMMAND [destinationIP] [nodeIP] [parentIP]
+    char correctEncodedMsg[100] = "13 2 2.2.2.2 2.2.2.2 5.5.5.5";
+
+    iamRoot = true;
+
+    handleMessageStrategyTopology(PAR, sizeof(PAR));
+
+    printf("Encoded message: %s\n", correctEncodedMsg);
+    printf("Encoded message: %s\n", smallSendBuffer);
+
+    TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);
+}
+
+void test_handle_parent_advertisement(){
+    //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP =root] [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
+    char PLA[100] = "13 1 1.1.1.1 3.3.3.3 2.2.2.2 5.5.5.5 5.5.5.5 5.5.5.5";
+    //MESSAGE_TYPE TOP_PARENT_REASSIGNMENT_COMMAND [destinationIP] [nodeIP] [parentIP]
+    char correctEncodedMsg[100] = "13 2 3.3.3.3 2.2.2.2 5.5.5.5";
+
+    iamRoot = true;
+
+    handleMessageStrategyTopology(PLA, sizeof(PLA));
+
+    printf("Encoded message: %s\n", correctEncodedMsg);
+    printf("Encoded message: %s\n", smallSendBuffer);
+
+    TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);
 }
 
 void setUp(void){
@@ -69,6 +101,8 @@ void tearDown(void){}
 int main(int argc, char** argv){
     UNITY_BEGIN();
     RUN_TEST(test_encode_parent_list_advertisement_request);
-    RUN_TEST(test_encode_handle_parent_advertisement_request);
+    RUN_TEST(test_handle_parent_advertisement_request);
+    RUN_TEST(test_root_handle_parent_advertisement_request);
+    RUN_TEST(test_handle_parent_advertisement);
     UNITY_END();
 }
