@@ -210,10 +210,9 @@ State joinNetwork(Event event){
                 nrOfPossibleParents ++;
             }
 
-            if(reachableNetworks.len != 1){
-                LOG(NETWORK,INFO,"Disconnecting from AP\n");
-                disconnectFromAP();
-            }
+
+            LOG(NETWORK,INFO,"Disconnecting from AP\n");
+            disconnectFromAP();
 
             //Set the bool value to false for the next iteration parent PIR
             receivedPIR = false;
@@ -230,7 +229,7 @@ State joinNetwork(Event event){
         parentInfo preferredParent = middlewareChooseParentCallback(possibleParents,nrOfPossibleParents);
 
         //Connect to the preferred parent
-        if(reachableNetworks.len != 1)connectToAP(preferredParent.ssid, PASS);
+        connectToAP(preferredParent.ssid, PASS);
 
         LOG(NETWORK,INFO,"Selected Parent -> IP: %i.%i.%i.%i | Children: %i | RootHopDist: %i\n",preferredParent.parentIP[0], preferredParent.parentIP[1], preferredParent.parentIP[2], preferredParent.parentIP[3], preferredParent.nrOfChildren, preferredParent.rootHopDistance);
 
