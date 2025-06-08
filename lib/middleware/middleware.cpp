@@ -94,6 +94,27 @@ void initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *),void (*
 }
 
 /**
+ * initMiddlewareStrategyPubSub
+ * Initializes the middleware strategy Pub/Sub by assigning the required function pointers.
+ * This function must be called only after selecting the STRATEGY_PUBSUB strategy using middlewareSelectStrategy.
+ *
+ * @param setValueFunction - Pointer to the function responsible for updating values within the pubsub table.
+ * @param encodeTopicFunction - Pointer to the function responsible for encoding the topic data into a buffer.
+ * @param decodeTopicFunction - Pointer to the function responsible for decoding a buffer into a topic identifier.
+ *
+ * @return void
+ */
+void initMiddlewareStrategyTopology(){
+    if(activeStrategy == nullptr){
+        LOG(NETWORK,ERROR,"ERROR: Initialization attempted without a selected strategy\n");
+        return;
+    }
+    initStrategyTopology();
+    middlewareChooseParentCallback = requestParentFromRoot;
+    initMiddlewareCallbacks();
+}
+
+/**
  * middlewareInfluenceRouting
  * Invokes the active middleware strategy to influence routing decisions
  *

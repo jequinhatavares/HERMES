@@ -23,6 +23,7 @@ extern void (*middlewareOnTimerCallback)();
 extern void (*middlewareHandleMessageCallback)(char*,size_t);
 extern void (*middlewareInfluenceRoutingCallback)(char*);
 extern void (*middlewareOnNetworkEventCallback)(int,int*);
+extern parentInfo (*middlewareChooseParentCallback)(parentInfo *,int);
 
 
 

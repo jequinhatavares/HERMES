@@ -21,8 +21,8 @@ void (*decodeTopicValue)(char*,int8_t *) = nullptr;
 
 void (*chooseParentFunction)(int*) = nullptr;
 
-void initStrategyTopology(void (*chooseParentFunctionPointer)(int*)){
-        chooseParentFunction = chooseParentFunctionPointer;
+void initStrategyTopology(){
+        //chooseParentFunction = chooseParentFunctionPointer;
 }
 
 void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int typeTopology){
@@ -209,6 +209,9 @@ parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossiblePa
     }
 
     LOG(MIDDLEWARE,INFO,"Received: %s\n",receiveBuffer);
+
+    //Disconnect from the temporary parent
+    disconnectFromAP();
 
     //Parse the received TOP_PARENT_REASSIGNMENT_COMMAND
     if(isExpectedMessage == true){

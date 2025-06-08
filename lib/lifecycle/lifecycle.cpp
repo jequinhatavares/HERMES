@@ -14,6 +14,7 @@ void (*middlewareOnTimerCallback)() = nullptr;
 void (*middlewareHandleMessageCallback)(char*,size_t) = nullptr;
 void (*middlewareInfluenceRoutingCallback)(char*) = nullptr;
 void (*middlewareOnNetworkEventCallback)(int,int*) = nullptr;
+parentInfo (*middlewareChooseParentCallback)(parentInfo *,int) = chooseParent;
 
 // Structure that is going to contain all possible parents information
 
@@ -226,7 +227,8 @@ State joinNetwork(Event event){
         }
 
         //With all the information gathered from the potential parents, select the preferred parent
-        parentInfo preferredParent = chooseParent(possibleParents,nrOfPossibleParents);
+        parentInfo preferredParent = middlewareChooseParentCallback(possibleParents,nrOfPossibleParents);
+
         //Connect to the preferred parent
         if(reachableNetworks.len != 1)connectToAP(preferredParent.ssid, PASS);
 
