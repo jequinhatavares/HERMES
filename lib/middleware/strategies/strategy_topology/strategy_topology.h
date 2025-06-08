@@ -14,7 +14,7 @@
 #include <lifecycle.h> //This dependency can be removed when the config file is created
 
 
-
+extern Strategy strategyTopology;
 
 extern int orphanIP[4];
 extern int newParentIP[4];

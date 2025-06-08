@@ -4,6 +4,7 @@
 //#include <strategies/strategy_interface.h>
 #include "strategies/strategy_inject/strategy_inject.h"
 #include "strategies/strategy_pubsub/strategy_pubsub.h"
+#include "strategies/strategy_topology/strategy_topology.h"
 #include <logger.h>
 #include <lifecycle.h>
 

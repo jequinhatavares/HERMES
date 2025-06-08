@@ -11,6 +11,9 @@
 #include "../../../transport_hal/transport_hal.h"
 #include "../strategy_interface.h"
 
+extern Strategy strategyPubSub;
+
+
 typedef enum topicTypes{
     TEMPERATURE,
     HUMIDITY,
@@ -46,7 +49,7 @@ typedef struct PubSubContext{
 
 extern int8_t topic;
 
-extern Strategy strategyPubSub;
+
 
 void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *) );
 void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typePubSub);

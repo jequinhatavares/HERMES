@@ -22,6 +22,11 @@ void middlewareSelectStrategy(StrategyType strategyType){
             activeStrategyType = STRATEGY_PUBSUB;
             break;
 
+        case STRATEGY_TOPOLOGY:
+            activeStrategy = &strategyTopology;
+            activeStrategyType = STRATEGY_TOPOLOGY;
+            break;
+
         case STRATEGY_NONE:
             activeStrategyType = STRATEGY_NONE;
             break;
