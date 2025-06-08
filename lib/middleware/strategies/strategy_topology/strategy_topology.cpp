@@ -169,6 +169,8 @@ parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossiblePa
     int packetSize=0, receivedMessageType;
     bool isExpectedMessage=false;
 
+    LOG(MESSAGES,INFO,"Strategy Topology\n");
+
 
     // Select the first element of the possibleParents List to be the temporary parent
     if(nrOfPossibleParents != 0){
