@@ -82,7 +82,7 @@ void setup(){
     //myMetric.processingCapacity = MAC[5];
     //context->injectNodeMetric(&myMetric);
 
-    middlewareSelectStrategy(STRATEGY_PUBSUB);
+    /***middlewareSelectStrategy(STRATEGY_PUBSUB);
     initMiddlewareStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
     //advertise and subscribe to topics
     PubSubContext *context = (PubSubContext*) middlewareGetStrategyContext();
@@ -95,8 +95,10 @@ void setup(){
     }else if(MAC[5] == 252){
         context->subscribeToTopic(HUMIDITY);
         context->advertiseTopic(CAMERA);
-    }
+    }***/
 
+    middlewareSelectStrategy(STRATEGY_TOPOLOGY);
+    initMiddlewareStrategyTopology();
 
     if(!iamRoot){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Search APs

@@ -93,10 +93,11 @@ void initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *),void (*
     initMiddlewareCallbacks();
 }
 
+//TODO function Header update
 /**
- * initMiddlewareStrategyPubSub
- * Initializes the middleware strategy Pub/Sub by assigning the required function pointers.
- * This function must be called only after selecting the STRATEGY_PUBSUB strategy using middlewareSelectStrategy.
+ * initMiddlewareStrategyTopology
+ * Initializes the middleware strategy Topology by assigning the required function pointers.
+ * This function must be called only after selecting the STRATEGY_TOPOLOGY strategy using middlewareSelectStrategy.
  *
  * @param setValueFunction - Pointer to the function responsible for updating values within the pubsub table.
  * @param encodeTopicFunction - Pointer to the function responsible for encoding the topic data into a buffer.

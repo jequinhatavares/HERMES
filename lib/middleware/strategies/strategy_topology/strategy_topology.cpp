@@ -15,9 +15,9 @@ int tmpChildSTAIP[4];
 
 unsigned long lastMiddlewareUpdateTimeTopology;
 
-//Function Pointers Initializers
-void (*encodeTopicValue)(char*,size_t,void *) = nullptr;
-void (*decodeTopicValue)(char*,int8_t *) = nullptr;
+//Init Function Pointers
+//void (*encodeTopicValue)(char*,size_t,void *) = nullptr;
+//void (*decodeTopicValue)(char*,int8_t *) = nullptr;
 
 void (*chooseParentFunction)(int*) = nullptr;
 
@@ -66,7 +66,7 @@ void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize
 
     for (int i = 0; i < nrOfPossibleParents; i++) {
         offset += snprintf(messageBuffer + offset, bufferSize - offset," %i.%i.%i.%i",
-                           possibleParents->parentIP[0],possibleParents->parentIP[1],possibleParents->parentIP[2],possibleParents->parentIP[3]);
+                           possibleParents[i].parentIP[0],possibleParents[i].parentIP[1],possibleParents[i].parentIP[2],possibleParents[i].parentIP[3]);
     }
 }
 
@@ -150,12 +150,8 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
     }
 }
 void onNetworkEventStrategyTopology(int networkEvent, int involvedIP[4]){
-
-
 }
 void influenceRoutingStrategyTopology(char* dataMessage){
-
-
 }
 void onTimerStrategyTopology(){
     unsigned long currentTime = getCurrentTime();
@@ -167,9 +163,6 @@ void* getContextStrategyTopology(){
     return nullptr;
 }
 
-void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, TopologyMessageType type){
-
-}
 
 parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossibleParents){
     int mySTAIP[4], temporaryParent[4],assignedParent[4];
