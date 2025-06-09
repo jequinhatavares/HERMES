@@ -12,10 +12,8 @@ unsigned long lastParentDisconnectionTime = 0 ;
 int parentDisconnectionCount = 0;
 
 
-
 void (*parentDisconnectCallback)() = nullptr;
 bool (*isChildRegisteredCallback)(int*) = nullptr;
-
 
 
 /**
@@ -289,18 +287,21 @@ void searchAP(const char* SSID){
  * @return void
  */
 void connectToAP(const char * SSID, const char * PASS) {
-
+    unsigned long startTime, endTime;
     WiFi.mode(WIFI_AP_STA);// changed were the wifi mode to WIFI_(AP)_STA
     WiFi.begin(SSID, PASS);
     //WiFi.setOutputPower(8.5);
 
+    startTime = getCurrentTime();
     // Wait for the Wi-Fi connection to establish or until timeout is reached
     while(WiFi.status() != WL_CONNECTED){
         delay(150);
         Serial.println(getWifiStatus(WiFi.status()));
         //Serial.print("...");
     }
-    //Serial.print("\n");
+    endTime = getCurrentTime();
+
+    LOG(NETWORK,DEBUG,"WiFi connect time:%lu\n",endTime-startTime);
 
 }
 /**

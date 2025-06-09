@@ -275,7 +275,6 @@ void searchAP(const char* SSID){
     }
    // Delete the scan result to free memory for code below.
     WiFi.scanDelete();
-    //return reachableNetworks;
 }
 
 /**
@@ -286,16 +285,20 @@ void searchAP(const char* SSID){
  * @return void
  */
 void connectToAP(const char * SSID, const char * PASS) {
-
+    unsigned long startTime, endTime;
     WiFi.mode(WIFI_AP_STA); //AP
     WiFi.begin(SSID, PASS);
 
+    startTime = getCurrentTime();
     // Wait for the Wi-Fi connection to establish or until timeout is reached
     while(WiFi.status() != WL_CONNECTED){
         Serial.println(getWifiStatus(WiFi.status()));
         delay(150);
     }
+    endTime = getCurrentTime();
 
+
+    LOG(NETWORK,DEBUG,"WiFi connect time:%lu\n",endTime-startTime);
 }
 /**
  * stopWifiAP
