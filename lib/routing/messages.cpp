@@ -519,17 +519,20 @@ void handleDebugMessage(char* msg){
 * @return void
 */
 void handleDataMessage(char *msg){
-    int type;
+    int type, nChars=0;
     int sourceIP[4], destinationIP[4], nextHopIP[4];
     int *nextHopPtr = nullptr;
     char payload[200];
     bool isTunneled = false;
     messageParameters parameters;
 
-    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %199s",&type, &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
-        &destinationIP[0],&destinationIP[1],&destinationIP[2],&destinationIP[3],payload);
+    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %n",&type, &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
+        &destinationIP[0],&destinationIP[1],&destinationIP[2],&destinationIP[3],&nChars);
     //Serial.printf("Message %s received from %d.%d.%d.%d to %d.%d.%d.%d", payload, senderIP[0],senderIP[1],senderIP[2],senderIP[3],
-        //destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3]);
+    //destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3]);
+
+    // Copy the rest of the string manually
+    strncpy(payload, msg + nChars, sizeof(payload) - 1);
 
     //Find the route to the destination IP of the message
     nextHopPtr = findRouteToNode(destinationIP);
