@@ -14,7 +14,7 @@ void test_encode_parent_list_advertisement_request(){
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [tmp parent IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
     char correctEncodedMsg[100] = "13 0 3.3.3.3 3.3.3.1 1.1.1.1 2.2.2.2 2.2.2.2 2.2.2.2";
     parentInfo possibleParents[3];
-    int nParents=0, IP[4] = {2,2,2,2},parentIP[4] = {3,3,3,3},mySTAIP[4] = {3,3,3,1};
+    uint8_t nParents=0, IP[4] = {2,2,2,2},parentIP[4] = {3,3,3,3},mySTAIP[4] = {3,3,3,1};
 
     for (int i = 0; i < 3; i++) {
         assignIP(possibleParents[i].parentIP,IP);
@@ -102,10 +102,10 @@ void setUp(void){
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
 
-    int nodeIP[4]={1,1,1,1};
+    uint8_t nodeIP[4]={1,1,1,1};
     assignIP(myIP,nodeIP);
 
-    int root[4]={4,4,4,4};
+    uint8_t root[4]={4,4,4,4};
     assignIP(rootIP,root);
 
 }
