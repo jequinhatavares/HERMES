@@ -114,7 +114,7 @@ void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessage
         if( sscanf(messageBuffer,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",&messageType,&injectType,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]
                 ,&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3], &metric) == 11 ){
 
-            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",messageType,injectType,myIP[0],myIP[1],myIP[2],myIP[3]
+            snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",messageType,injectType,myIP[0],myIP[1],myIP[2],myIP[3]
                     ,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3], metric);
 
         }
@@ -142,18 +142,18 @@ void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int typ
     if(type == INJECT_NODE_INFO){
         //MESSAGE_TYPE INJECT_NODE_INFO [sender IP] [nodeIP] metric
         encodeMyMetric(tmpBuffer, sizeof(tmpBuffer));
-        snprintf(messageBuffer, bufferSize,"%i %i %i.%i.%i.%i %s",MIDDLEWARE_MESSAGE,INJECT_NODE_INFO,myIP[0],myIP[1],myIP[2],myIP[3],tmpBuffer);
+        snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,INJECT_NODE_INFO,myIP[0],myIP[1],myIP[2],myIP[3],tmpBuffer);
 
     }else if(type == INJECT_TABLE_INFO){//INJECT_TABLE_INFO
         //MESSAGE_TYPE INJECT_TABLE_INFO [sender IP] |[nodeIP] metric |[nodeIP] metric |...
-        offset = snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,INJECT_TABLE_INFO,myIP[0],myIP[1],myIP[2],myIP[3]);
+        offset = snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu",MIDDLEWARE_MESSAGE,INJECT_TABLE_INFO,myIP[0],myIP[1],myIP[2],myIP[3]);
 
         for (int i = 0; i < metricsTable->numberOfItems; i++) {
             entryIP = (int*)tableKey(metricsTable,i);
             metricValue = tableRead(metricsTable,entryIP);
             if(metricValue != nullptr){
                 encodeMetricValue(tmpBuffer, sizeof(tmpBuffer),metricValue);
-                offset += snprintf(messageBuffer + offset, bufferSize - offset," |%i.%i.%i.%i %s",entryIP[0],entryIP[1],entryIP[2],entryIP[3],tmpBuffer);
+                offset += snprintf(messageBuffer + offset, bufferSize - offset," |%hhu.%hhu.%hhu.%hhu %s",entryIP[0],entryIP[1],entryIP[2],entryIP[3],tmpBuffer);
             }
         }
     }
@@ -170,7 +170,7 @@ void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int typ
 void encodeMyMetric(char* messageBuffer, size_t bufferSize){
     char tmpBuffer[20];
 
-    snprintf(messageBuffer,bufferSize,"%i.%i.%i.%i ", myIP[0],myIP[1],myIP[2],myIP[3]);
+    snprintf(messageBuffer,bufferSize,"%hhu.%hhu.%hhu.%hhu ", myIP[0],myIP[1],myIP[2],myIP[3]);
 
     void* metricValue = tableRead(metricsTable, myIP);
     if(metricValue != nullptr){
@@ -231,7 +231,7 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
         //To discard the message type and ensure the token points to the first routing table update entry
         token = strtok(NULL, "|");
         while (token != NULL) {
-            sscanf(token,"%d.%d.%d.%d %s",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],metricBuffer);
+            sscanf(token,"%hhu.%hhu.%hhu.%hhu %s",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],metricBuffer);
             // Check if the nodeIP already exists in the middleware metrics table
             void *metricValue = tableRead(metricsTable,nodeIP);
             if(metricValue != nullptr){// If the nodeIP is already in the table update the corresponding metric value
@@ -267,12 +267,12 @@ void onNetworkEventStrategyInject(int networkEvent, uint8_t involvedIP[4]){
         case NETEVENT_JOINED_NETWORK:
             encodeMessageStrategyInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
             sendMessage(involvedIP,smallSendBuffer);
-            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_NODE_INFO] message: \"%s\" to: %i.%i.%i.%i\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_NODE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
             break;
         case NETEVENT_CHILD_CONNECTED:
             encodeMessageStrategyInject(largeSendBuffer, sizeof(largeSendBuffer),INJECT_TABLE_INFO);
             sendMessage(involvedIP,largeSendBuffer);
-            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_TABLE_INFO] message: \"%s\" to: %i.%i.%i.%i\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_TABLE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
             break;
         case NETEVENT_CHILD_DISCONNECTED:
             break;
@@ -310,9 +310,9 @@ void influenceRoutingStrategyInject(char* dataMessage){
             findBestMetric = true;
         }
     }
-    LOG(MESSAGES,INFO,"Best Metric Node IP: %i.%i.%i.%i\n",bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
+    LOG(MESSAGES,INFO,"Best Metric Node IP: %hhu.%hhu.%hhu.%hhu\n",bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
 
-    sscanf(dataMessage, "%*d %*d.%*d.%*d.%*d %hhu.%hhu.%hhu.%hhu",&originalDestination[0],&originalDestination[1],&originalDestination[2],&originalDestination[3]);
+    sscanf(dataMessage, "%*d %*u.%*u.%*u.%*u %hhu.%hhu.%hhu.%hhu",&originalDestination[0],&originalDestination[1],&originalDestination[2],&originalDestination[3]);
 
     // If the best-metric IP address matches the message's original destination, tunneling is not required
     if(isIPEqual(originalDestination,bestMetricIP)){
@@ -321,10 +321,10 @@ void influenceRoutingStrategyInject(char* dataMessage){
         if(nextHopIP != nullptr){
             LOG(MESSAGES,INFO,"Encoded message: %s\n",dataMessage);
             sendMessage(nextHopIP, dataMessage);
-            LOG(MESSAGES,INFO,"Sending [DATA] message: \"%s\" to: %i.i.%i.%i\n",dataMessage,originalDestination[0],originalDestination[1],originalDestination[2],originalDestination[3]);
+            LOG(MESSAGES,INFO,"Sending [DATA] message: \"%s\" to: %hhu.hhu.%hhu.%hhu\n",dataMessage,originalDestination[0],originalDestination[1],originalDestination[2],originalDestination[3]);
 
         }else{
-            LOG(NETWORK,ERROR,"ERROR: Trying to send message to: %i.%i.%i.%i but did not find path to node\n",bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
+            LOG(NETWORK,ERROR,"ERROR: Trying to send message to: %hhu.%hhu.%hhu.%hhu but did not find path to node\n",bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
         }
         return;
     }
@@ -337,10 +337,10 @@ void influenceRoutingStrategyInject(char* dataMessage){
     encodeTunneledMessage(largeSendBuffer,sizeof(largeSendBuffer), myIP,bestMetricIP,dataMessage);
     nextHopIP = (uint8_t *) findRouteToNode(bestMetricIP);
     if(nextHopIP != nullptr){
-        LOG(MESSAGES,INFO,"Sending tunneled [DATA] message: \"%s\" to: %i.%i.%i.%i\n",dataMessage,bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
+        LOG(MESSAGES,INFO,"Sending tunneled [DATA] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",dataMessage,bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
         sendMessage(nextHopIP, largeSendBuffer);
     }else{
-        LOG(NETWORK,ERROR,"ERROR: Trying to send message to: %i.%i.%i.%i but did not find path to node\n",bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
+        LOG(NETWORK,ERROR,"ERROR: Trying to send message to: %hhu.%hhu.%hhu.%hhu but did not find path to node\n",bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
     }
 }
 
@@ -420,7 +420,7 @@ void setMetricValue(void* av, void*bv){
 }
 
 void printMetricStruct(TableEntry* Table){
-    LOG(NETWORK,INFO,"Node[%d.%d.%d.%d] → (Metric: %d) \n",
+    LOG(NETWORK,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → (Metric: %d) \n",
         ((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
         ((metricTableEntry *)Table->value)->processingCapacity);
 }

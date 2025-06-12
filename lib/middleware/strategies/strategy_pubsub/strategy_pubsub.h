@@ -60,7 +60,7 @@ void onTimerStrategyPubSub();
 void* getContextStrategyPubSub();
 
 void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType type);
-bool containsTopic(int8_t * list, int8_t topic);
+bool containsTopic(const int8_t * list, int8_t topic);
 void setPubSubInfo(void* av, void* bv);
 
 void printPubSubStruct(TableEntry* Table);

@@ -58,7 +58,7 @@ int8_t topic;
 void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *) ){
     pubsubTable->setValue = setValueFunction;
     //Initialize the pubsubTable
-    tableInit(pubsubTable, nodesPubSub, valuesPubSub, sizeof(int[4]), sizeof(PubSubInfo));
+    tableInit(pubsubTable, nodesPubSub, valuesPubSub, sizeof(uint8_t [4]), sizeof(PubSubInfo));
 
     //Initialize function to encode/decode the topics value
     encodeTopicValue = encodeTopicFunction;
@@ -74,10 +74,10 @@ void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, PubSubMessage
     if (type != PUBSUB_NODE_UPDATE){
         // If the encoded message already contains topic information, it means this is a propagation of an already encoded message.
         // In this case, only the sender address needs to be updated before further propagation.
-        if( sscanf(messageBuffer,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhu",&globalMessageType,&typePubSub,&IP[0],&IP[1],&IP[2],&IP[3]
+        if( sscanf(messageBuffer,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",&globalMessageType,&typePubSub,&IP[0],&IP[1],&IP[2],&IP[3]
                 ,&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3], &topic1) == 11 ){
 
-            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",globalMessageType,typePubSub,myIP[0],myIP[1],myIP[2],myIP[3]
+            snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhu",globalMessageType,typePubSub,myIP[0],myIP[1],myIP[2],myIP[3]
                     ,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3], topic1);
 
         }
@@ -93,7 +93,7 @@ void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, PubSubMessage
         if (restOfMessage == NULL) return;  // malformed messageBuffer
 
         // Compose the updated messageBuffer
-        snprintf(updatedMessage, sizeof(updatedMessage), "%d %d %d.%d.%d.%d %d.%d.%d.%d %s",
+        snprintf(updatedMessage, sizeof(updatedMessage), "%d %d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",
                  globalMessageType, typePubSub,
                  myIP[0],myIP[1],myIP[2],myIP[3],
                  nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3],
@@ -117,25 +117,25 @@ void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typ
         case PUBSUB_SUBSCRIBE:
             //Message sent when a one subscribes to a certain topic
             //13 1 [sender IP] [Subscriber IP] [Topic]
-            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE,
+            snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE,
                      myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
             break;
         case PUBSUB_UNSUBSCRIBE:
             //Message sent when a one unsubscribes to a certain topic
             //13 2 [sender IP] [Unsubscriber IP] [Topic]
-            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_UNSUBSCRIBE,
+            snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",MIDDLEWARE_MESSAGE,PUBSUB_UNSUBSCRIBE,
                      myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
             break;
         case PUBSUB_ADVERTISE:
             // Message used to advertise that the node is publishing a new topic
             //13 3 [sender IP] [Publisher IP] [Published Topic]
-            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_ADVERTISE,
+            snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",MIDDLEWARE_MESSAGE,PUBSUB_ADVERTISE,
                      myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
             break;
         case PUBSUB_UNADVERTISE:
             // Message used to advertise that the node is unpublishing a topic
             //13 4 [sender IP] [Publisher IP] [UnPublished Topic]
-            snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",MIDDLEWARE_MESSAGE,PUBSUB_UNADVERTISE,
+            snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",MIDDLEWARE_MESSAGE,PUBSUB_UNADVERTISE,
                      myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
             break;
 
@@ -158,7 +158,7 @@ void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typ
                 strcat(messageBuffer,tmpMessage4);
             }***/
             if (nodePubSubInfo != nullptr) {
-                offset = snprintf(messageBuffer, bufferSize, "%i %i %i.%i.%i.%i %i.%i.%i.%i | ",
+                offset = snprintf(messageBuffer, bufferSize, "%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu | ",
                                       MIDDLEWARE_MESSAGE, PUBSUB_NODE_UPDATE,
                                       myIP[0], myIP[1], myIP[2], myIP[3],
                                       myIP[0], myIP[1], myIP[2], myIP[3]);
@@ -178,14 +178,14 @@ void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typ
 
         case PUBSUB_TABLE_UPDATE:
             //13 6 [sender IP] |[node IP] [Published Topic List] [Subscribed Topics List] |[node IP] [Published Topic List] [Subscribed Topics List]...
-            offset = snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i |",MIDDLEWARE_MESSAGE,PUBSUB_TABLE_UPDATE,
+            offset = snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu |",MIDDLEWARE_MESSAGE,PUBSUB_TABLE_UPDATE,
                      myIP[0],myIP[1],myIP[2],myIP[3]);
             for (i = 0; i < pubsubTable->numberOfItems; i++) {
                 nodeIP = (int*) tableKey(pubsubTable,i);
                 PubSubInfo* entry = (PubSubInfo*) tableRead(pubsubTable, nodeIP);
                 if (entry != nullptr) {
                     // Append node IP
-                    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%i.%i.%i.%i ",
+                    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu.%hhu.%hhu.%hhu ",
                                        nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
 
                     // Append published topics
@@ -507,13 +507,13 @@ void onNetworkEventStrategyPubSub(int networkEvent, uint8_t involvedIP[4]){
         case NETEVENT_JOINED_NETWORK:
             encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_NODE_UPDATE);
             sendMessage(involvedIP,smallSendBuffer);
-            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/PUBSUB_NODE_INFO] message: \"%s\" to: %i.%i.%i.%i\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/PUBSUB_NODE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
 
             break;
         case NETEVENT_CHILD_CONNECTED:
             encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_TABLE_UPDATE);
             sendMessage(involvedIP,largeSendBuffer);
-            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/PUBSUB_TABLE_INFO] message: \"%s\" to: %i.%i.%i.%i\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/PUBSUB_TABLE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
             break;
         case NETEVENT_CHILD_DISCONNECTED:
             break;
@@ -585,7 +585,7 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
                     nextHopIP = (uint8_t *) findRouteToNode(nodeIP);
                     if(nextHopIP != nullptr){
                         sendMessage(nextHopIP,largeSendBuffer);
-                        LOG(NETWORK,ERROR,"Sending [DATA] message: %s to %i.%i.%i.%i\n",largeSendBuffer,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
+                        LOG(NETWORK,ERROR,"Sending [DATA] message: %s to %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
                     }else{
                         LOG(NETWORK,ERROR,"ERROR: Unable to find a path to the node in the routing table\n");
                     }
@@ -738,8 +738,8 @@ void unadvertiseTopic(int8_t pubTopic){
 }
 
 void printPubSubStruct(TableEntry* Table){
-    LOG(NETWORK,INFO,"Node[%d.%d.%d.%d] → ",
-        ((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3]);
+    LOG(NETWORK,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → ",
+        ((int8_t *)Table->key)[0],((int8_t *)Table->key)[1],((int8_t *)Table->key)[2],((int8_t *)Table->key)[3]);
 
     LOG(NETWORK,INFO,"(Publishes: ");
     for(int i = 0; i < MAX_TOPICS; ++i) {
@@ -757,7 +757,7 @@ void printPubSubStruct(TableEntry* Table){
 
 }
 
-bool containsTopic(int8_t * list, int8_t topic){
+bool containsTopic(const int8_t * list, int8_t topic){
     for (int i = 0; i < MAX_TOPICS; i++) {
         if(list[i] == topic){
             return true;
