@@ -5,6 +5,8 @@
 #include <logger.h>
 #include <table.h>
 #include "wifi_common.h"
+#include <cstdint>
+
 
 #define disconnectionThreshold 3
 
@@ -25,21 +27,21 @@ extern List reachableNetworks;
 // These callbacks let Wi-Fi events interact with other components (e.g., enqueueing state machine events)
 // without tight coupling, avoiding direct dependencies.
 extern void (*parentDisconnectCallback)();
-extern bool (*isChildRegisteredCallback)(int*);
+extern bool (*isChildRegisteredCallback)(uint8_t *);
 
 void initWifiEventHandlers();
 const char* getWifiStatus(int Status);
 void startWifiSTA(int* localIP, int* gateway, int* subnet, int* dns);
-void startWifiAP(const char* SSID, const char* Pass, int* localIP, int* gateway, int* subnet);
+void startWifiAP(const char* SSID, const char* Pass, uint8_t* localIP, uint8_t* gateway, uint8_t* subnet);
 void searchAP(const char*);
 void connectToAP(const char*, const char*);
 void stopWifiAP();
 void disconnectFromAP();
 int numberOfSTAConnected();
-void getGatewayIP(int* IP);
-void getMySTAIP(int* IP);
-void getMyMAC(int* MAC);
-void getMyAPIP(int* IP);
+void getGatewayIP(uint8_t* IP);
+void getMySTAIP(uint8_t* IP);
+void getMyMAC(uint8_t* MAC);
+void getMyAPIP(uint8_t* IP);
 void changeWifiMode(int);
 
 

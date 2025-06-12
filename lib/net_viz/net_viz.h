@@ -16,13 +16,13 @@ typedef enum messageVizType{
 }messageVizType;
 
 typedef struct messageVizParameters{
-    int IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};
+    uint8_t IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};
 }messageVizParameters;
 
 void encodeVizMessage(char* msg, messageVizType type, messageVizParameters parameters);
 
-void reportNewNodeToViz(int* nodeIP, int* parentIP);
-void reportDeletedNodeToViz(int* nodeIP);
+void reportNewNodeToViz(uint8_t * nodeIP, uint8_t * parentIP);
+void reportDeletedNodeToViz(uint8_t* nodeIP);
 
 
 #endif //NET_VIZ_H

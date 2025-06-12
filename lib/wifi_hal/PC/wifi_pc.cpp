@@ -9,7 +9,7 @@ int parentDisconnectionCount = 0;
 
 
 void (*parentDisconnectCallback)() = nullptr;
-bool (*isChildRegisteredCallback)(int*) = nullptr;
+bool (*isChildRegisteredCallback)(uint8_t*) = nullptr;
 
 
 /**
@@ -24,7 +24,7 @@ const char* getWifiStatus(int Status){return "";}
 
 void startWifiSTA(int* localIP, int* gateway, int* subnet, int* dns){}
 
-void startWifiAP(const char* SSID, const char* Pass, int* localIP, int* gateway, int* subnet){}
+void startWifiAP(const char* SSID, const char* Pass, uint8_t* localIP, uint8_t* gateway, uint8_t* subnet){}
 
 void searchAP(const char* SSID){}
 
@@ -36,13 +36,13 @@ void disconnectFromAP(){}
 
 int numberOfSTAConnected(){return 0;}
 
-void getGatewayIP(int *IP){}
+void getGatewayIP(uint8_t *IP){}
 
-void getMySTAIP(int *IP){}
+void getMySTAIP(uint8_t *IP){}
 
-void getMyMAC(int* MAC){}
+void getMyMAC(uint8_t* MAC){}
 
-void getMyAPIP(int* IP){}
+void getMyAPIP(uint8_t* IP){}
 
 void changeWifiMode(int mode){}
 

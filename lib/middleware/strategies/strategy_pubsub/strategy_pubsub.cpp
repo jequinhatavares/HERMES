@@ -43,7 +43,7 @@ TableInfo PSTable = {
 TableInfo* pubsubTable = &PSTable;
 
 
-int nodesPubSub[TableMaxSize][4];
+uint8_t nodesPubSub[TableMaxSize][4];
 
 unsigned long lastMiddlewareUpdateTimePubSub = 0;
 
@@ -68,23 +68,23 @@ void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopi
 void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType type){
     messageType globalMessageType;
     PubSubMessageType typePubSub;
-    int nodeIP[4],IP[4],topic;
+    uint8_t nodeIP[4],IP[4],topic1;
     char updatedMessage[256];
 
     if (type != PUBSUB_NODE_UPDATE){
         // If the encoded message already contains topic information, it means this is a propagation of an already encoded message.
         // In this case, only the sender address needs to be updated before further propagation.
-        if( sscanf(messageBuffer,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",&globalMessageType,&typePubSub,&IP[0],&IP[1],&IP[2],&IP[3]
-                ,&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3], &topic) == 11 ){
+        if( sscanf(messageBuffer,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhu",&globalMessageType,&typePubSub,&IP[0],&IP[1],&IP[2],&IP[3]
+                ,&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3], &topic1) == 11 ){
 
             snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i",globalMessageType,typePubSub,myIP[0],myIP[1],myIP[2],myIP[3]
-                    ,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3], topic);
+                    ,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3], topic1);
 
         }
     }else{
 
         // Parse the beginning of the message
-        sscanf(messageBuffer, "%d %d %*d.%*d.%*d.%*d %d.%d.%d.%d",
+        sscanf(messageBuffer, "%d %d %*hhu.%*hhu.%*hhu.%*hhu %hhu.%hhu.%hhu.%hhu",
                &globalMessageType, &typePubSub,
                &nodeIP[0], &nodeIP[1], &nodeIP[2], &nodeIP[3]);
 
@@ -215,7 +215,8 @@ void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typ
 
 void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
     char infoPubSub[100];
-    int IP[4],nodeIP[4],topic,i,k,count=0, charsRead = 0;
+    uint8_t IP[4],nodeIP[4];
+    int topic,i,k,count=0, charsRead = 0;
     PubSubMessageType type;
     PubSubInfo pbNewInfo,*pbCurrentRecord;
     bool isTableUpdated = false;
@@ -225,7 +226,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
     char *saveptr1, *saveptr2;
 
     //MESSAGE_TYPE  PUBSUB_TYPE  [sender/destination IP]  [nodeIP]  topic
-    sscanf(messageBuffer,"%*i %i %i.%i.%i.%i %n",&type,&IP[0],&IP[1],&IP[2],&IP[3],&charsRead);
+    sscanf(messageBuffer,"%*i %i %hhu.%hhu.%hhu.%hhu %n",&type,&IP[0],&IP[1],&IP[2],&IP[3],&charsRead);
 
     // Copy the rest of the string manually
     strncpy(infoPubSub, messageBuffer + charsRead, sizeof(infoPubSub) - 1);
@@ -236,12 +237,12 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
 
         case PUBSUB_PUBLISH:
             //13  0 [destination IP] [Publisher IP] [Published Topic]
-            sscanf(infoPubSub,"%i.%i.%i.%i %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
+            sscanf(infoPubSub,"%hhu.%hhu.%hhu.%hhu %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
             break;
         case PUBSUB_SUBSCRIBE:
             //Message sent when a one node subscribes to a certain topic
             //13 1 [sender IP] [Subscriber IP] [Topic]
-            sscanf(infoPubSub,"%i.%i.%i.%i %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
+            sscanf(infoPubSub,"%hhu.%hhu.%hhu.%hhu %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
 
             if(!isIPEqual(myIP,IP)){
                 pbCurrentRecord = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
@@ -289,7 +290,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
         case PUBSUB_UNSUBSCRIBE:
             //Message sent when a one unsubscribes to a certain topic
             //13 2 [sender IP] [Unsubscriber IP] [Topic]
-            sscanf(infoPubSub,"%i.%i.%i.%i %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
+            sscanf(infoPubSub,"%hhu.%hhu.%hhu.%hhu %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
 
             if(!isIPEqual(myIP,IP)) {
                 pbCurrentRecord = (PubSubInfo *) tableRead(pubsubTable, nodeIP);
@@ -333,7 +334,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
         case PUBSUB_ADVERTISE:
             // Message used to advertise that a node is publishing a new topic
             //13 3 [sender IP] [Publisher IP] [Published Topic]
-            sscanf(infoPubSub,"%i.%i.%i.%i %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
+            sscanf(infoPubSub,"%hhu.%hhu.%hhu.%hhu %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
             pbCurrentRecord = (PubSubInfo *) tableRead(pubsubTable, nodeIP);
             if(pbCurrentRecord != nullptr){
                 for (i = 0; i < MAX_TOPICS; i++) {
@@ -372,7 +373,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
         case PUBSUB_UNADVERTISE:
             // Message used to advertise that a node is unpublishing a topic
             //13 4 [sender IP] [Publisher IP] [UnPublished Topic]
-            sscanf(infoPubSub,"%i.%i.%i.%i %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
+            sscanf(infoPubSub,"%hhu.%hhu.%hhu.%hhu %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
 
             pbCurrentRecord = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
             if(pbCurrentRecord != nullptr){
@@ -417,8 +418,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
 
             if (nodeIPPart != NULL && topicsPart != NULL) {
                 // Parse node IP from nodeIPPart (you may need to skip the message type and sender IP first)
-                int dummy1, dummy2, senderIP[4];
-                sscanf(nodeIPPart, "%d.%d.%d.%d",&nodeIP[0], &nodeIP[1], &nodeIP[2], &nodeIP[3]);
+                sscanf(nodeIPPart, "%hhu.%hhu.%hhu.%hhu",&nodeIP[0], &nodeIP[1], &nodeIP[2], &nodeIP[3]);
 
                 // Parse the topic lists (published and subscribed)
                 count = 0;
@@ -465,7 +465,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
                 }
 
                 // Parse node IP
-                sscanf(token, "%d.%d.%d.%d", &nodeIP[0], &nodeIP[1], &nodeIP[2], &nodeIP[3]);
+                sscanf(token, "%hhu.%hhu.%hhu.%hhu", &nodeIP[0], &nodeIP[1], &nodeIP[2], &nodeIP[3]);
                 //printf("nodeIP: %d.%d.%d.%d\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
 
                 // Parse topic values
@@ -502,7 +502,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
 }
 
 
-void onNetworkEventStrategyPubSub(int networkEvent, int involvedIP[4]){
+void onNetworkEventStrategyPubSub(int networkEvent, uint8_t involvedIP[4]){
     switch (networkEvent) {
         case NETEVENT_JOINED_NETWORK:
             encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_NODE_UPDATE);
@@ -525,11 +525,11 @@ void onNetworkEventStrategyPubSub(int networkEvent, int involvedIP[4]){
 void influenceRoutingStrategyPubSub(char* dataMessage){
     int i,j;
     PubSubInfo *myPubSubInfo, *nodePubSubInfo;
-    int *nodeIP;
+    uint8_t *nextHopIP, *nodeIP;
     int8_t topicType;
     bool publisher = false;
     messageParameters parameters;
-    int *nextHopIP, nChars = 0;
+    int nChars = 0;
     char payload[100];
 
     sscanf(dataMessage, "%*d %*d.%*d.%*d.%*d %*d.%*d.%*d.%*d %n",&nChars);
@@ -564,7 +564,7 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
 
     // Go through the table to find which nodes have subscribed to the topic I'm publishing
     for (i = 0; i < pubsubTable->numberOfItems; i++) {
-        nodeIP = (int*) tableKey(pubsubTable,i);
+        nodeIP = (uint8_t *) tableKey(pubsubTable,i);
         if(nodeIP != nullptr){
             //Discard my entry in the table
             if(isIPEqual(nodeIP,myIP)){
@@ -582,7 +582,7 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
                     encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),DATA_MESSAGE,parameters);
 
                     // Send the published topic to the subscriber node
-                    nextHopIP = (int*) findRouteToNode(nodeIP);
+                    nextHopIP = (uint8_t *) findRouteToNode(nodeIP);
                     if(nextHopIP != nullptr){
                         sendMessage(nextHopIP,largeSendBuffer);
                         LOG(NETWORK,ERROR,"Sending [DATA] message: %s to %i.%i.%i.%i\n",largeSendBuffer,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);

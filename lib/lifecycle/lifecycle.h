@@ -3,7 +3,6 @@
 
 #include <transport_hal.h>
 #include <wifi_hal.h>
-//#include "../lib/wifi_hal/wifi_hal.h"
 #include <time_hal.h>
 #include <messages.h>
 #include <routing.h>
@@ -22,9 +21,8 @@
 extern void (*middlewareOnTimerCallback)();
 extern void (*middlewareHandleMessageCallback)(char*,size_t);
 extern void (*middlewareInfluenceRoutingCallback)(char*);
-extern void (*middlewareOnNetworkEventCallback)(int,int*);
+extern void (*middlewareOnNetworkEventCallback)(int,uint8_t *);
 extern parentInfo (*middlewareChooseParentCallback)(parentInfo *,int);
-
 
 
 State initNode(Event event);
@@ -64,16 +62,16 @@ void requestTaskExecution();
 extern StateMachine* SM;
 extern CircularBuffer* stateMachineEngine;
 
-extern int localIP[4];
-extern int gateway[4];
-extern int subnet[4];
-extern int dns[4];
+extern uint8_t localIP[4];
+extern uint8_t gateway[4];
+extern uint8_t subnet[4];
+extern uint8_t dns[4];
 
 extern int consecutiveSearchCount;
 extern bool lostParent;
 
 void parseMAC(const char* macStr, int* macArray);
-void setIPs(const int* MAC);
+void setIPs(const uint8_t * MAC);
 void handleTimers();
 #endif //LIFECYCLE_H
 

@@ -12,7 +12,7 @@
 
 
 void showMenu();
-void readIPAddress(int *ip, const char *prompt);
+void readIPAddress(uint8_t *ip, const char *prompt);
 void getDataMessage();
 void cliInteraction();
 

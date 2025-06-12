@@ -13,7 +13,7 @@ int parentDisconnectionCount = 0;
 
 
 void (*parentDisconnectCallback)() = nullptr;
-bool (*isChildRegisteredCallback)(int*) = nullptr;
+bool (*isChildRegisteredCallback)(uint8_t *) = nullptr;
 
 
 /**
@@ -25,7 +25,7 @@ bool (*isChildRegisteredCallback)(int*) = nullptr;
  */
 void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnected& info) {
     Serial.println("\n[WIFI_EVENTS] Station connected\n");
-    int lostChildMAC[6];
+    uint8_t lostChildMAC[6];
     lostChildMAC[0] = info.mac[0];lostChildMAC[1] = info.mac[1];
     lostChildMAC[2] = info.mac[2];lostChildMAC[3] = info.mac[3];
     lostChildMAC[4] = info.mac[4];lostChildMAC[5] = info.mac[5];
@@ -49,7 +49,7 @@ void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisc
     Serial.println("\n[WIFI_EVENTS] Station disconnected\n");
     //LOG(NETWORK,DEBUG,"STA DisconnectionTime: %lu\n", getCurrentTime());
 
-    int lostChildMAC[6];
+    uint8_t lostChildMAC[6];
     lostChildMAC[0] = info.mac[0];lostChildMAC[1] = info.mac[1];
     lostChildMAC[2] = info.mac[2];lostChildMAC[3] = info.mac[3];
     lostChildMAC[4] = info.mac[4];lostChildMAC[5] = info.mac[5];
@@ -218,7 +218,7 @@ void startWifiSTA(int* localIP, int* gateway, int* subnet, int* dns){
  *
  * @return void
  */
-void startWifiAP(const char* SSID, const char* Pass, int* localIP, int* gateway, int* subnet){
+void startWifiAP(const char* SSID, const char* Pass, uint8_t* localIP, uint8_t* gateway, uint8_t* subnet){
 
     // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
     //WiFi.config(localIP, gateway, subnet, gateway);
@@ -346,7 +346,7 @@ int numberOfSTAConnected(){
  * @param IP - the array that will store the IP address.
  * @return void
  */
-void getGatewayIP(int *IP){
+void getGatewayIP(uint8_t *IP){
     IPAddress ip = WiFi.gatewayIP();
     IP[0] = ip[0];IP[1] = ip[1];
     IP[2] = ip[2];IP[3] = ip[3];
@@ -359,7 +359,7 @@ void getGatewayIP(int *IP){
  * @param IP - the array that will store the IP address.
  * @return void.
  */
-void getMySTAIP(int *IP){
+void getMySTAIP(uint8_t *IP){
     IPAddress ip = WiFi.localIP();
     IP[0] = ip[0];IP[1] = ip[1];
     IP[2] = ip[2];IP[3] = ip[3];
@@ -372,14 +372,14 @@ void getMySTAIP(int *IP){
  * @param MAC - the array that will store the MAC address.
  * @return void.
  */
-void getMyMAC(int* MAC){
+void getMyMAC(uint8_t* MAC){
     //Serial.printf("My MAC: %s", WiFi.macAddress().c_str());
     unsigned int unsignedMAC[6];
     //Converting MAC from hexadecimal to unsigned int
     sscanf(WiFi.macAddress().c_str(),"%x:%x:%x:%x:%x:%x",&unsignedMAC[0],&unsignedMAC[1],&unsignedMAC[2],&unsignedMAC[3],&unsignedMAC[4],&unsignedMAC[5]);
 
     for (int i = 0; i < 6; i++) {
-        MAC[i] = (int)unsignedMAC[i];
+        MAC[i] = (uint8_t)unsignedMAC[i];
     }
 }
 
@@ -390,7 +390,7 @@ void getMyMAC(int* MAC){
  * @param IP - the array that will store the IP address.
  * @return void.
  */
-void getMyAPIP(int* IP){
+void getMyAPIP(uint8_t* IP){
     IPAddress ip = WiFi.softAPIP();
     IP[0] = ip[0];IP[1] = ip[1];
     IP[2] = ip[2];IP[3] = ip[3];

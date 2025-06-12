@@ -95,7 +95,7 @@ int receiveMessage(char *buffer,size_t bufferSize) {
  * @param IP - An array of four integers representing the target IP address.
  * @return void
  */
-void sendMessage(int IP[4],const char *message) {
+void sendMessage(uint8_t IP[4],const char *message) {
     int sentBytes=0;
     struct sockaddr_in targetAddr;
     targetAddr.sin_family = AF_INET;
@@ -104,7 +104,7 @@ void sendMessage(int IP[4],const char *message) {
 
 
     char ipString[16];
-    snprintf(ipString, sizeof(ipString), "%d.%d.%d.%d", IP[0], IP[1], IP[2], IP[3]);
+    snprintf(ipString, sizeof(ipString), "%hhu.%hhu.%hhu.%hhu", IP[0], IP[1], IP[2], IP[3]);
 
     if (inet_pton(AF_INET, ipString, &targetAddr.sin_addr) <= 0) {
         perror("inet_pton() failed");

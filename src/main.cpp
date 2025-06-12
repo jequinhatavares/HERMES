@@ -16,7 +16,6 @@
 //227:96:237:119
 
 
-
 metricTableEntry metrics[TableMaxSize];
 
 void waitForEnter() {
@@ -33,7 +32,7 @@ void waitForEnter() {
 }
 
 void setup(){
-    int MAC[6];
+    uint8_t MAC[6];
     metricTableEntry myMetric;
     Serial.begin(115200);
     //Serial.setDebugOutput(true);
@@ -151,9 +150,12 @@ void loop(){
 //#include <wifi_hal.h>
 //#include <transport_hal.h>
 //#include "lifecycle.h"
-#include <../include/lifecycle.h>
+#include "lifecycle.h"
 #include "cli.h"
 #include "logger.h"
+#include "../lib/middleware/strategies/strategy_inject/strategy_inject.h"
+#include "../lib/middleware/strategies/strategy_pubsub/strategy_pubsub.h"
+#include "middleware.h"
 
 //pio remote --agent raspberrypi run --force-remote -e raspberrypi_3b
 
@@ -166,6 +168,7 @@ void setup(){
     enableModule(NETWORK);
     enableModule(DEBUG_SERVER);
     enableModule(CLI);
+    enableModule(MIDDLEWARE);
 
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
@@ -175,6 +178,9 @@ void setup(){
     //iamRoot = true;
 
     Advance(SM, eSuccess);//Init
+
+     middlewareSelectStrategy(STRATEGY_TOPOLOGY);
+    initMiddlewareStrategyTopology();
 
     if(!iamRoot){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Search APs

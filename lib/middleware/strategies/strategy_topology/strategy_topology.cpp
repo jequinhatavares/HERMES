@@ -1,5 +1,6 @@
 #include "strategy_topology.h"
 
+
 Strategy strategyTopology = {
         .handleMessage = handleMessageStrategyTopology,
         .encodeMessage = encodeMessageStrategyTopology,
@@ -10,8 +11,9 @@ Strategy strategyTopology = {
 
 };
 
-int tmpChildIP[4];
-int tmpChildSTAIP[4];
+
+uint8_t tmpChildIP[4];
+uint8_t tmpChildSTAIP[4];
 
 unsigned long lastMiddlewareUpdateTimeTopology;
 
@@ -47,12 +49,12 @@ void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int t
                  newParentIP[0],newParentIP[1],newParentIP[2],newParentIP[3]);
     }***/
 }
-void encodeParentAssignmentCommand(char* messageBuffer, size_t bufferSize, int* destinationIP, int* chosenParentIP, int* targetNodeIP){
+void encodeParentAssignmentCommand(char* messageBuffer, size_t bufferSize, uint8_t * destinationIP, uint8_t * chosenParentIP, uint8_t * targetNodeIP){
     //MESSAGE_TYPE TOP_PARENT_REASSIGNMENT_COMMAND [destinationIP] [nodeIP] [parentIP]
-    snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,TOP_PARENT_REASSIGNMENT_COMMAND,destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],
+    snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",MIDDLEWARE_MESSAGE,TOP_PARENT_REASSIGNMENT_COMMAND,destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],
              targetNodeIP[0],targetNodeIP[1],targetNodeIP[2],targetNodeIP[3],chosenParentIP[0],chosenParentIP[1],chosenParentIP[2],chosenParentIP[3]);
 }
-void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize, parentInfo* possibleParents, int nrOfPossibleParents, int *temporaryParent, int *mySTAIP){
+void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize, parentInfo* possibleParents, int nrOfPossibleParents, uint8_t *temporaryParent, uint8_t *mySTAIP){
     int offset = 0;
 
     /*** This is an intermediary message sent to the temporary parent.
@@ -61,25 +63,25 @@ void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize
          New Node-> Temporary Parent -> Root Node  ***/
 
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [tmp parent IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
-    offset = snprintf(messageBuffer, bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT_REQUEST,temporaryParent[0],temporaryParent[1],temporaryParent[2],temporaryParent[3],
+    offset = snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT_REQUEST,temporaryParent[0],temporaryParent[1],temporaryParent[2],temporaryParent[3],
                       mySTAIP[0],mySTAIP[1],mySTAIP[2],mySTAIP[3],myIP[0],myIP[1],myIP[2],myIP[3]);
 
     for (int i = 0; i < nrOfPossibleParents; i++) {
-        offset += snprintf(messageBuffer + offset, bufferSize - offset," %i.%i.%i.%i",
+        offset += snprintf(messageBuffer + offset, bufferSize - offset," %hhu.%hhu.%hhu.%hhu",
                            possibleParents[i].parentIP[0],possibleParents[i].parentIP[1],possibleParents[i].parentIP[2],possibleParents[i].parentIP[3]);
     }
 }
 
 void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
     TopologyMessageType type;
-    int destinationNodeIP[4],*nextHopIP, nChars = 0,IP[4], targetNodeIP[4],chosenParentIP[4];
-    int possibleParents[TableMaxSize][4],i=0;
+    uint8_t destinationNodeIP[4],*nextHopIP,targetNodeIP[4],chosenParentIP[4];
+    int nChars = 0;
     //Extract Inject Message Types
     sscanf(messageBuffer,"%*i %i",&type);
 
     if(type == TOP_PARENT_LIST_ADVERTISEMENT_REQUEST){
         LOG(MESSAGES,INFO,"Received [PARENT_LIST_ADVERTISEMENT_REQUEST] message: \"%s\"\n", messageBuffer);
-        sscanf(messageBuffer,"%*d %*d %d.%d.%d.%d %d.%d.%d.%d %d.%d.%d.%d %n",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3]
+        sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3]
                ,&tmpChildSTAIP[0],&tmpChildSTAIP[1],&tmpChildSTAIP[2],&tmpChildSTAIP[3]
                ,&tmpChildIP[0],&tmpChildIP[1],&tmpChildIP[2],&tmpChildIP[3],&nChars);
 
@@ -88,7 +90,7 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
             if(!iamRoot){
                 //Encode the TOP_PARENT_LIST_ADVERTISEMENT message to be sent to the root
                 //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP =root] [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
-                snprintf(largeSendBuffer, sizeof(largeSendBuffer),"%i %i %i.%i.%i.%i %i.%i.%i.%i %i.%i.%i.%i %s",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT,rootIP[0],rootIP[1],rootIP[2],rootIP[3],
+                snprintf(largeSendBuffer, sizeof(largeSendBuffer),"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT,rootIP[0],rootIP[1],rootIP[2],rootIP[3],
                          myIP[0],myIP[1],myIP[2],myIP[3],tmpChildIP[0],tmpChildIP[1],tmpChildIP[2],tmpChildIP[3],messageBuffer+nChars);
                 //Send the encode message to the root
                 nextHopIP = findRouteToNode(rootIP);
@@ -108,7 +110,7 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
     }
     else if(type == TOP_PARENT_LIST_ADVERTISEMENT){
         LOG(MESSAGES,INFO,"Received [PARENT_LIST_ADVERTISEMENT] message: \"%s\"\n", messageBuffer);
-        sscanf(messageBuffer,"%*d %*d %d.%d.%d.%d %n",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3],&nChars);
+        sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %n",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3],&nChars);
         // Check if i am the final destination of the message
         if(isIPEqual(destinationNodeIP,myIP)){
             /***char* token = strtok(messageBuffer+nChars, " ");
@@ -131,11 +133,11 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
         LOG(MESSAGES,INFO,"Received [PARENT_REASSIGNMENT_COMMAND] message: \"%s\"\n", messageBuffer);
 
         //MESSAGE_TYPE TOP_PARENT_REASSIGNMENT_COMMAND [destinationIP] [nodeIP] [parentIP]
-        sscanf(messageBuffer,"%*d %*d %d.%d.%d.%d",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3]);
+        sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3]);
         // Check if i am the final destination of the message
         if(isIPEqual(destinationNodeIP,myIP)){
             // If this node receives a parent reassignment command concerning the temporary child node, it must forward the message to that child
-            sscanf(messageBuffer,"%*d %*d %*d.%*d.%*d.%*d %d.%d.%d.%d",&targetNodeIP[0],&targetNodeIP[1],&targetNodeIP[2],&targetNodeIP[3]);
+            sscanf(messageBuffer,"%*d %*d %*u.%*u.%*u.%*u %hhu.%hhu.%hhu.%hhu",&targetNodeIP[0],&targetNodeIP[1],&targetNodeIP[2],&targetNodeIP[3]);
             if(isIPEqual(targetNodeIP,tmpChildIP)){
                 //Change the message destination IP to the childIP
                 //snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,TOP_PARENT_REASSIGNMENT_COMMAND,tmpChildIP[0],tmpChildIP[1],tmpChildIP[2],tmpChildIP[3],tmpChildIP[0],tmpChildIP[1],tmpChildIP[2],tmpChildIP[3],);
@@ -149,7 +151,7 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
         }
     }
 }
-void onNetworkEventStrategyTopology(int networkEvent, int involvedIP[4]){
+void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]){
 }
 void influenceRoutingStrategyTopology(char* dataMessage){
 }
@@ -165,7 +167,7 @@ void* getContextStrategyTopology(){
 
 
 parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossibleParents){
-    int mySTAIP[4], temporaryParent[4],assignedParent[4];
+    uint8_t mySTAIP[4], temporaryParent[4],assignedParent[4];
     int packetSize=0, receivedMessageType;
     bool isExpectedMessage=false;
 
@@ -186,7 +188,7 @@ parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossiblePa
     // Send the message to the temporary parent so it can be forwarded toward the root
     sendMessage(temporaryParent,largeSendBuffer);
 
-    LOG(MIDDLEWARE,INFO,"Sending %s to Temporary Parent: %i.%i.%i.%i\n",largeSendBuffer, temporaryParent[0],temporaryParent[1],temporaryParent[2],temporaryParent[3]);
+    LOG(MIDDLEWARE,INFO,"Sending %s to Temporary Parent: %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer, temporaryParent[0],temporaryParent[1],temporaryParent[2],temporaryParent[3]);
 
 
     // Wait for the message from the root assigning me a parent
@@ -210,11 +212,11 @@ parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossiblePa
 
     //Parse the received TOP_PARENT_REASSIGNMENT_COMMAND
     if(isExpectedMessage == true){
-        sscanf(receiveBuffer,"%*d %*d %*d.%*d.%*d.%*d %d.%d.%d.%d",&assignedParent[0],&assignedParent[1],&assignedParent[2],&assignedParent[3]);
+        sscanf(receiveBuffer,"%*d %*u %*u.%*u.%*u.%*u %hhu.%hhu.%hhu.%hhu",&assignedParent[0],&assignedParent[1],&assignedParent[2],&assignedParent[3]);
         // Search in the possibleParents the chosen one
         for (int i = 0; i < nrOfPossibleParents; i++) {
             if(isIPEqual(possibleParents[i].parentIP, assignedParent)){
-                LOG(MIDDLEWARE,INFO,"Chosen Parent: %i.%i.%i.%i\n",assignedParent[0],assignedParent[1],assignedParent[2],assignedParent[3]);
+                LOG(MIDDLEWARE,INFO,"Chosen Parent: %hhu.%hhu.%hhu.%hhu\n",assignedParent[0],assignedParent[1],assignedParent[2],assignedParent[3]);
                 return possibleParents[i];
             }
         }
@@ -228,18 +230,18 @@ parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossiblePa
 }
 
 void chooseParentStrategyTopology(char* messageBuffer){
-    int sourceIP[4], targetNodeIP[4],possibleParents[TableMaxSize][4],IP[4],chosenParentIP[4],*nextHopIP;
+    uint8_t sourceIP[4], targetNodeIP[4],possibleParents[TableMaxSize][4],IP[4],chosenParentIP[4],*nextHopIP;
     int middlewareMessageType,nChars=0,parentsCount=0;
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP =root] [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
 
-    sscanf(messageBuffer,"%*d %d %*d.%*d.%*d.%*d %d.%d.%d.%d %d.%d.%d.%d %n",&middlewareMessageType,
+    sscanf(messageBuffer,"%*d %d %*u.%*u.%*u.%*u %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&middlewareMessageType,
             &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],&targetNodeIP[0],&targetNodeIP[1],&targetNodeIP[2],&targetNodeIP[3],&nChars);
 
     // Extract the list of possible parents from the message
     char* token = strtok(messageBuffer+nChars, " ");
     while (token != NULL) {
-        sscanf(token,"%d.%d.%d.%d",&IP[0],&IP[1],&IP[2],&IP[3]);
+        sscanf(token,"%hhu.%hhu.%hhu.%hhu",&IP[0],&IP[1],&IP[2],&IP[3]);
         // Check if the nodeIP already exists in the middleware metrics table
         assignIP(possibleParents[parentsCount],IP);
         token = strtok(NULL, " ");
@@ -255,7 +257,7 @@ void chooseParentStrategyTopology(char* messageBuffer){
         // If the message is of type TOP_PARENT_LIST_ADVERTISEMENT_REQUEST, it came directly from the new node we can send the new parent command to it directly
         encodeParentAssignmentCommand(smallSendBuffer,sizeof(smallSendBuffer), targetNodeIP, chosenParentIP,targetNodeIP);
         sendMessage(sourceIP,smallSendBuffer);
-        LOG(MIDDLEWARE,INFO,"Sending %s to: %i.%i.%i.%i\n",smallSendBuffer, targetNodeIP[0],targetNodeIP[1],targetNodeIP[2],targetNodeIP[3]);
+        LOG(MIDDLEWARE,INFO,"Sending %s to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer, targetNodeIP[0],targetNodeIP[1],targetNodeIP[2],targetNodeIP[3]);
 
     }else if(middlewareMessageType == TOP_PARENT_LIST_ADVERTISEMENT){
         // If the received message is a TOP_PARENT_LIST_ADVERTISEMENT, it came from the temporary parent.
@@ -265,7 +267,7 @@ void chooseParentStrategyTopology(char* messageBuffer){
         if(nextHopIP != nullptr){
             sendMessage(nextHopIP,smallSendBuffer);
         }
-        LOG(MIDDLEWARE,INFO,"Sending %s to: %i.%i.%i.%i\n",smallSendBuffer, sourceIP[0],sourceIP[1],sourceIP[2],sourceIP[3]);
+        LOG(MIDDLEWARE,INFO,"Sending %s to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer, sourceIP[0],sourceIP[1],sourceIP[2],sourceIP[3]);
 
     }
 

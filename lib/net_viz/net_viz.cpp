@@ -17,7 +17,7 @@ void encodeVizMessage(char* msg, messageVizType type, messageVizParameters param
     }
 }
 
-void reportNewNodeToViz(int* nodeIP, int* parentIP){
+void reportNewNodeToViz(uint8_t * nodeIP, uint8_t * parentIP){
 #ifdef VISUALIZATION_ON
     char msg[50];
     messageParameters parameters;
@@ -32,7 +32,7 @@ void reportNewNodeToViz(int* nodeIP, int* parentIP){
     encodeMessage(msg, sizeof (msg),DEBUG_MESSAGE, parameters);
 
     if(!iamRoot){
-        int *nextHopIP = findRouteToNode(rootIP);
+        uint8_t *nextHopIP = findRouteToNode(rootIP);
         if(nextHopIP != nullptr){
             sendMessage(rootIP,msg);
         }else{
@@ -43,7 +43,7 @@ void reportNewNodeToViz(int* nodeIP, int* parentIP){
 #endif
 }
 
-void reportDeletedNodeToViz(int* nodeIP){
+void reportDeletedNodeToViz(uint8_t * nodeIP){
 #ifdef VISUALIZATION_ON
     char msg[50];
     messageParameters parameters;
@@ -58,7 +58,7 @@ void reportDeletedNodeToViz(int* nodeIP){
 
 
     if(!iamRoot){//If i am not the root send the message to the root
-        int *nextHopIP = findRouteToNode(rootIP);
+        uint8_t *nextHopIP = findRouteToNode(rootIP);
         if(nextHopIP != nullptr){
             sendMessage(rootIP,msg);
         }else{

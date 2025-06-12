@@ -33,12 +33,12 @@ void showMenu() {
  *
  * @return void
  */
-void readIPAddress(int *ip, const char *prompt) {
+void readIPAddress(uint8_t *ip, const char *prompt) {
     #if defined(ESP32) || defined(ESP8266)
     LOG(CLI,INFO,"%s (format: X.X.X.X): ", prompt);
     while (Serial.available() == 0) {} // Wait for input
     String input = Serial.readStringUntil('\n');
-    if (sscanf(input.c_str(), "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]) != 4) {
+    if (sscanf(input.c_str(), "%hhu.%hhu.%hhu.%hhu", &ip[0], &ip[1], &ip[2], &ip[3]) != 4) {
         LOG(CLI,INFO,"❌ Invalid IP format. Please try again.\n");
         readIPAddress(ip, prompt);
     }
@@ -55,9 +55,9 @@ void readIPAddress(int *ip, const char *prompt) {
 void getDataMessage() {
     #if defined(ESP32) || defined(ESP8266)
     messageParameters parameters;
-    int nextHopIP[4];
+    uint8_t nextHopIP[4];
     char msg[255]="";
-    int * ptrIP;
+    uint8_t *ptrIP;
 
     //delay(100); // Give Serial buffer time to clear
 

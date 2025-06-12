@@ -6,7 +6,7 @@
 
 
 char receiveBuffer[256] = "";
-char largeSendBuffer[256] = "";
+char largeSendBuffer[255] = "";
 char smallSendBuffer[50] = "";
 
 
@@ -34,27 +34,27 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
     switch (type) {
         case PARENT_DISCOVERY_REQUEST:
             //0 [mySTAIP]
-            snprintf(msg,bufferSize,"%i %i.%i.%i.%i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
+            snprintf(msg,bufferSize,"%i %hhu.%hhu.%hhu.%hhu",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
             break;
         case PARENT_INFO_RESPONSE:
             //1 [my AP IP] [my hop distance to the root] [my number of children]
-            snprintf(msg,bufferSize,"%i %i.%i.%i.%i %i %i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
+            snprintf(msg,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %i %i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
                     parameters.hopDistance, parameters.childrenNumber);
             break;
         case CHILD_REGISTRATION_REQUEST:
             //2 [my AP IP] [my STA IP] [my sequence number]
-            snprintf(msg,bufferSize,"%i %i.%i.%i.%i %i.%i.%i.%i %i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
+            snprintf(msg,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3],
                     parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3], parameters.sequenceNumber);
             break;
         case FULL_ROUTING_TABLE_UPDATE:
             //3 [senderIP] [rootIP] |[node1 IP] [hopDistance] [Sequence Number1]|[node2 IP] [hopDistance] [Sequence Number2]|....
-            snprintf(msg,bufferSize,"%i %i.%i.%i.%i %i.%i.%i.%i |",type,myIP[0],myIP[1],myIP[2],
+            snprintf(msg,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu |",type,myIP[0],myIP[1],myIP[2],
                     myIP[3],rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
 
             for (int i = 0; i < routingTable->numberOfItems; i++) {
-                snprintf(tempMsg,sizeof(tempMsg),"%i.%i.%i.%i %i %i|",((int*)routingTable->table[i].key)[0],
-                        ((int*)routingTable->table[i].key)[1],((int*)routingTable->table[i].key)[2],
-                        ((int*)routingTable->table[i].key)[3],((routingTableEntry *)routingTable->table[i].value)->hopDistance,
+                snprintf(tempMsg,sizeof(tempMsg),"%hhu.%hhu.%hhu.%hhu %i %i|",((uint8_t *)routingTable->table[i].key)[0],
+                        ((uint8_t *)routingTable->table[i].key)[1],((uint8_t *)routingTable->table[i].key)[2],
+                        ((uint8_t *)routingTable->table[i].key)[3],((routingTableEntry *)routingTable->table[i].value)->hopDistance,
                         ((routingTableEntry *)routingTable->table[i].value)->sequenceNumber);
 
                 strcat(msg, tempMsg);
@@ -65,11 +65,11 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
 
         case PARTIAL_ROUTING_TABLE_UPDATE:
             //4 [senderIP] |[node1 IP] [hopDistance] [sequenceNumber]| [node2 IP] [hopDistance] [sequenceNumber] ...
-            snprintf(msg,bufferSize,"%i %i.%i.%i.%i |",type,myIP[0],myIP[1],myIP[2],myIP[3]);
+            snprintf(msg,bufferSize,"%i %hhu.%hhu.%hhu.%hhu |",type,myIP[0],myIP[1],myIP[2],myIP[3]);
             for (int i = 0; i < parameters.nrOfNodes; i++){
                 nodeRoutingEntry = (routingTableEntry*)tableRead(routingTable, parameters.IP[i]);
                 if(nodeRoutingEntry != nullptr){
-                    snprintf(tempMsg,sizeof(tempMsg),"%i.%i.%i.%i %i %i |",parameters.IP[i][0],parameters.IP[i][1],parameters.IP[i][2],parameters.IP[i][3],nodeRoutingEntry->hopDistance, nodeRoutingEntry->sequenceNumber);
+                    snprintf(tempMsg,sizeof(tempMsg),"%hhu.%hhu.%hhu.%hhu %i %i |",parameters.IP[i][0],parameters.IP[i][1],parameters.IP[i][2],parameters.IP[i][3],nodeRoutingEntry->hopDistance, nodeRoutingEntry->sequenceNumber);
                     strcat(msg, tempMsg);
                     strcpy(tempMsg , "");
                 }
@@ -78,9 +78,9 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
 
         case PARENT_LIST_ADVERTISEMENT:
             //5 [myIP] [rootIP] [parent1IP] [parent2IP] [parent3IP] ...
-            snprintf(msg,bufferSize,"%i %i.%i.%i.%i %i.%i.%i.%i",type,myIP[0],myIP[1],myIP[2],myIP[3],rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
+            snprintf(msg,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",type,myIP[0],myIP[1],myIP[2],myIP[3],rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
             for (int i = 0; i < parameters.nrOfNodes; i++) {
-                snprintf(tempMsg,sizeof(tempMsg),"%i.%i.%i.%i",parameters.IP[i][0], parameters.IP[i][1],
+                snprintf(tempMsg,sizeof(tempMsg),"%hhu.%hhu.%hhu.%hhu",parameters.IP[i][0], parameters.IP[i][1],
                         parameters.IP[i][2], parameters.IP[i][3]);
 
                 strcat(msg, tempMsg);
@@ -90,12 +90,12 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
 
         case PARENT_REASSIGNMENT_COMMAND:
             //6 [nodeIP] [parentIP]
-            snprintf(msg,bufferSize,"%i %i.%i.%i.%i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
+            snprintf(msg,bufferSize,"%i %hhu.%hhu.%hhu.%hhu",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
             break;
 
         case TOPOLOGY_BREAK_ALERT:
             //7 [senderIP]
-            snprintf(msg,bufferSize,"%i %i.%i.%i.%i",type,myIP[0],myIP[1],myIP[2],myIP[3]);
+            snprintf(msg,bufferSize,"%i %hhu.%hhu.%hhu.%hhu",type,myIP[0],myIP[1],myIP[2],myIP[3]);
             break;
 
         case PARENT_RESET_NOTIFICATION:
@@ -110,13 +110,13 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
 
         case DATA_MESSAGE:
             //11 [source node IP] [destination node IP] [message payload]
-            snprintf(msg,bufferSize,"%i %i.%i.%i.%i %i.%i.%i.%i %s",type,parameters.IP1[0],parameters.IP1[1],
+            snprintf(msg,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",type,parameters.IP1[0],parameters.IP1[1],
                     parameters.IP1[2],parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3],parameters.payload);
             break;
 
         case ACK_MESSAGE:
             //12 [source node IP] [destination node IP]
-            snprintf(msg,bufferSize,"%i %i.%i.%i.%i %i.%i.%i.%i",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],
+            snprintf(msg,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],
                     parameters.IP1[3],parameters.IP2[0],parameters.IP2[1],parameters.IP2[2],parameters.IP2[3]);
             break;
 
@@ -142,16 +142,17 @@ bool isMessageValid(int expectedMessageType,char* msg){
 
     switch (type) {
         case PARENT_DISCOVERY_REQUEST: {
-            int IP[4];
-            parsedFields = sscanf(msg, "%d %d.%d.%d.%d", &type, &IP[0], &IP[1], &IP[2], &IP[3]);
+            uint8_t IP[4];
+            parsedFields = sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu", &type, &IP[0], &IP[1], &IP[2], &IP[3]);
             if(parsedFields != 5){
                 return false;
             }
             break;
         }
         case PARENT_INFO_RESPONSE: {
-            int IP[4], hopDistance, children;
-            parsedFields = sscanf(msg, "%d %d.%d.%d.%d %d %d", &type, &IP[0], &IP[1], &IP[2], &IP[3], &hopDistance, &children);
+            uint8_t IP[4];
+            int hopDistance, children;
+            parsedFields = sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %d %d", &type, &IP[0], &IP[1], &IP[2], &IP[3], &hopDistance, &children);
             if(parsedFields != 7){
                 LOG(MESSAGES, ERROR, "Invalid PARENT_INFO_RESPONSE\n");
                 return false;
@@ -159,39 +160,42 @@ bool isMessageValid(int expectedMessageType,char* msg){
             return true;
         }
         case CHILD_REGISTRATION_REQUEST: {
-            int IP1[4], IP2[4], seqNum;
-            return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %d", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
+            uint8_t IP1[4], IP2[4];
+            int seqNum;
+            return (sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %d", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
                            &IP2[0], &IP2[1], &IP2[2], &IP2[3], &seqNum) == 10);
             break;
         }
         case FULL_ROUTING_TABLE_UPDATE: {
-            int IP1[4], IP2[4],hopDistance,sequenceNumber;
+            uint8_t IP1[4], IP2[4];
+            int hopDistance,sequenceNumber;
             char msgCopy[255];
             strcpy(msgCopy, msg);
 
-            if(sscanf(msgCopy, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],&IP2[0], &IP2[1], &IP2[2], &IP2[3]) != 9)return false;
+            if(sscanf(msgCopy, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],&IP2[0], &IP2[1], &IP2[2], &IP2[3]) != 9)return false;
             char* token = strtok(msgCopy, "|");
 
             token = strtok(NULL, "|");
 
             while (token != NULL) {
-                if(sscanf(token, "%d.%d.%d.%d %d %d",&IP1[0],&IP1[1],&IP1[2],&IP1[3],&hopDistance,&sequenceNumber) != 6) return false;
+                if(sscanf(token, "%hhu.%hhu.%hhu.%hhu %d %d",&IP1[0],&IP1[1],&IP1[2],&IP1[3],&hopDistance,&sequenceNumber) != 6) return false;
                 token = strtok(NULL, "|");
             }
             return true;
             break;
         }
         case PARTIAL_ROUTING_TABLE_UPDATE: {
-            int IP1[4], hopDistance,sequenceNumber;
+            uint8_t IP1[4];
+            int hopDistance,sequenceNumber;
             char msgCopy[255];
             strcpy(msgCopy, msg);
-            if(sscanf(msgCopy, "%d %d.%d.%d.%d", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3]) != 5)return false;
+            if(sscanf(msgCopy, "%d %hhu.%hhu.%hhu.%hhu", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3]) != 5)return false;
             char* token = strtok(msgCopy, "|");
 
             token = strtok(NULL, "|");
 
             while (token != NULL) {
-                if(sscanf(token, "%d.%d.%d.%d %d %d",&IP1[0],&IP1[1],&IP1[2],&IP1[3],&hopDistance,&sequenceNumber) != 6) return false;
+                if(sscanf(token, "%hhu.%hhu.%hhu.%hhu %d %d",&IP1[0],&IP1[1],&IP1[2],&IP1[3],&hopDistance,&sequenceNumber) != 6) return false;
                 token = strtok(NULL, "|");
             }
             return true;
@@ -230,15 +234,15 @@ bool isMessageValid(int expectedMessageType,char* msg){
             break;
         }
         case DATA_MESSAGE: {
-            int IP1[4], IP2[4];
+            uint8_t IP1[4], IP2[4];
             char payload[200];
-            return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %199s", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
+            return (sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %199s", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
                            &IP2[0], &IP2[1], &IP2[2], &IP2[3], payload) == 10);
             break;
         }
         case ACK_MESSAGE: {
-            int IP1[4], IP2[4];
-            return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
+            uint8_t IP1[4], IP2[4];
+            return (sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
                            &IP2[0], &IP2[1], &IP2[2], &IP2[3]) == 9);
             break;
         }
@@ -260,9 +264,9 @@ bool isMessageValid(int expectedMessageType,char* msg){
  */
 void handleParentDiscoveryRequest(char* msg){
     int messageType;
-    int childIP[4];
+    uint8_t childIP[4];
     messageParameters parameters;
-    sscanf(msg, "%d %i.%i.%i.%i", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
+    sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu", &messageType, &childIP[0], &childIP[1], &childIP[2], &childIP[3]);
 
     //Send my information(IP, nr of children and root hop distance) to the node requesting it
     parameters.IP1[0] = myIP[0]; parameters.IP1[1] = myIP[1]; parameters.IP1[2] = myIP[2]; parameters.IP1[3] = myIP[3];
@@ -312,11 +316,12 @@ void handleParentInfoResponse(char* msg, parentInfo *parents, int i){
 */
 void handleChildRegistrationRequest(char * msg){
     int type;
-    int childAPIP[4], childSTAIP[4],sequenceNumber;
+    uint8_t childAPIP[4], childSTAIP[4];
+    int sequenceNumber;
     routingTableEntry newNode;
     messageParameters parameters;
 
-    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %d", &type, &childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],
+    sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %d", &type, &childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3],
            &childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3], &sequenceNumber);
 
 
@@ -351,7 +356,7 @@ void handleChildRegistrationRequest(char * msg){
 
     encodeMessage(smallSendBuffer,sizeof(smallSendBuffer), PARTIAL_ROUTING_TABLE_UPDATE, parameters);
     LOG(MESSAGES,INFO,"Sending [PARTIAL ROUTING TABLE UPDATE] message: \"%s\"\n", smallSendBuffer);
-    propagateMessage(smallSendBuffer, childAPIP);
+    propagateMessage(smallSendBuffer,  childAPIP);
     //Sending new node information to the DEBUG visualization program, if enabled
     reportNewNodeToViz(childAPIP, myIP);
 
@@ -369,12 +374,12 @@ void handleChildRegistrationRequest(char * msg){
 */
 void handleFullRoutingTableUpdate(char * msg){
     int type, nrOfChanges = 0;
-    int nodeIP[4], sourceIP[4];
+    uint8_t nodeIP[4], sourceIP[4];
     int hopDistance,sequenceNumber;
     messageParameters parameters;
     bool isRoutingTableChanged = false, isRoutingEntryChanged = false ;
     //Parse Message Type and root node IP
-    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type,&sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
+    sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", &type,&sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
 
     char* token = strtok(msg, "|");
 
@@ -382,7 +387,7 @@ void handleFullRoutingTableUpdate(char * msg){
     token = strtok(NULL, "|");
 
     while (token != NULL) {
-        sscanf(token, "%d.%d.%d.%d %d %d",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&hopDistance,&sequenceNumber);
+        sscanf(token, "%hhu.%hhu.%hhu.%hhu %d %d",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&hopDistance,&sequenceNumber);
         //Serial.printf("Token: %s\n", token);
 
         //Serial.printf("Parsed IP values: nodeIP %d.%d.%d.%d nextHopIp %d.%d.%d.%d hopDistance %d\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],
@@ -422,13 +427,14 @@ void handleFullRoutingTableUpdate(char * msg){
 */
 void handlePartialRoutingUpdate(char *msg){
     int type, nrOfChanges = 0;
-    int nodeIP[4], senderIP[4],sequenceNumber;
+    uint8_t nodeIP[4], senderIP[4];
+    int sequenceNumber;
     int hopDistance;
     bool isRoutingTableChanged = false, isRoutingEntryChanged = false;
     messageParameters parameters;
 
     //Parse Message Type and senderIP
-    sscanf(msg, "%d %d.%d.%d.%d", &type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
+    sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu", &type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
 
     char* token = strtok(msg, "|");
 
@@ -436,13 +442,10 @@ void handlePartialRoutingUpdate(char *msg){
     token = strtok(NULL, "|");
 
     while (token != NULL) {
-        sscanf(token, "%d.%d.%d.%d %d %d",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&hopDistance,&sequenceNumber);
+        sscanf(token, "%hhu.%hhu.%hhu.%hhu %d %d",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&hopDistance,&sequenceNumber);
         //Serial.printf("Token: %s\n", token);
 
-        //Serial.printf("Parsed IP values: nodeIP %d.%d.%d.%d nextHopIp %d.%d.%d.%d hopDistance %d\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],
-        // nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3], hopDistance);
         //Update the Routing Table
-        //updateRoutingTableSN(nodeIP,newNode,sourceIP);
         isRoutingEntryChanged = updateRoutingTableSN(nodeIP,hopDistance,sequenceNumber,senderIP);
         // If the node's routing entry was modified, add it to the list of nodes to include in the Partial routing update
         if(isRoutingEntryChanged == true){
@@ -473,8 +476,9 @@ void handlePartialRoutingUpdate(char *msg){
 
 void handleTopologyBreakAlert(char *msg){
     //TODO set a variable as to my tree broken
-    int type, senderIP[4];
-    sscanf(msg, "%d %d.%d.%d.%d",&type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
+    int type;
+    uint8_t senderIP[4];
+    sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu",&type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
     // Propagate the message to my children
     propagateMessage(msg, senderIP);
 }
@@ -492,11 +496,11 @@ void handleParentResetNotification(char *msg){
  * @return void
  */
 void handleDebugMessage(char* msg){
-    int nextHopIP[4];
+    uint8_t nextHopIP[4];
 
     //If this message is not intended for this node, forward it to the next hop leading to its destination.
     if(!iamRoot){
-        int* nextHopPtr = findRouteToNode(rootIP);
+        uint8_t * nextHopPtr = findRouteToNode(rootIP);
         if (nextHopPtr != nullptr){
             assignIP(nextHopIP, nextHopPtr);
         }else{
@@ -520,13 +524,13 @@ void handleDebugMessage(char* msg){
 */
 void handleDataMessage(char *msg){
     int type, nChars=0;
-    int sourceIP[4], destinationIP[4], nextHopIP[4];
-    int *nextHopPtr = nullptr;
+    uint8_t sourceIP[4], destinationIP[4], nextHopIP[4];
+    uint8_t *nextHopPtr = nullptr;
     char payload[200];
     bool isTunneled = false;
     messageParameters parameters;
 
-    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d %n",&type, &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
+    sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&type, &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
         &destinationIP[0],&destinationIP[1],&destinationIP[2],&destinationIP[3],&nChars);
     //Serial.printf("Message %s received from %d.%d.%d.%d to %d.%d.%d.%d", payload, senderIP[0],senderIP[1],senderIP[2],senderIP[3],
     //destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3]);
@@ -579,11 +583,11 @@ void handleDataMessage(char *msg){
  */
 void handleAckMessage(char *msg){
     int type;
-    int nextHopIP[4], sourceIP[4], destinationIP[4];
-    int *nextHopPtr = nullptr;
+    uint8_t nextHopIP[4], sourceIP[4], destinationIP[4];
+    uint8_t *nextHopPtr = nullptr;
 
 
-    sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d",&type, &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
+    sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",&type, &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
            &destinationIP[0],&destinationIP[1],&destinationIP[2],&destinationIP[3]);
     //Serial.printf("Message %s received from %d.%d.%d.%d to %d.%d.%d.%d", payload, senderIP[0],senderIP[1],senderIP[2],senderIP[3],
     //destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3]);
@@ -659,7 +663,7 @@ void handleDebugRegistrationRequest(char* msg){
  * @param sourceIP - The IP address of the node that sent me the message.
  * @return void
  */
-void propagateMessage(char* message, int* sourceIP){
+void propagateMessage(char* message, uint8_t * sourceIP){
     // If the message didn't come from the parent and i have a parent, forward it to the parent
     //LOG(MESSAGES, DEBUG, "SourceIP: %i.%i.%i.%i\nParentIP: %i.%i.%i.%i hasParent: %i\n",sourceIP[0], sourceIP[1],sourceIP[2],sourceIP[3],
     //   parent[0],parent[1],parent[2],parent[3],hasParent);
@@ -668,20 +672,20 @@ void propagateMessage(char* message, int* sourceIP){
     //Send the message to my parent only if it exists and is reachable
     if(parentRoutingEntry != nullptr){
         if(!isIPEqual(sourceIP, parent) && parentRoutingEntry->hopDistance != -1){
-            LOG(MESSAGES, DEBUG, "Propagating Message to parent: %i.%i.%i.%i\n",parent[0],parent[1],parent[2],parent[3]);
+            LOG(MESSAGES, DEBUG, "Propagating Message to parent: %d.%d.%d.%d\n",parent[0],parent[1],parent[2],parent[3]);
             sendMessage(parent, message);
         }
     }
 
     //Forward the message to all children except the one that sent it to me
     for(int i = 0; i< childrenTable->numberOfItems; i++){
-        childRoutingEntry = (routingTableEntry*)findNode(routingTable, (int*)childrenTable->table[i].key);
+        childRoutingEntry = (routingTableEntry*)findNode(routingTable, (uint8_t *)childrenTable->table[i].key);
         //LOG(MESSAGES, DEBUG, "SourceIP: %i.%i.%i.%i ChildIP: %i.%i.%i.%i\n",sourceIP[0], sourceIP[1],sourceIP[2],sourceIP[3],
         //        ((int*)childrenTable->table[i].key)[0],((int*)childrenTable->table[i].key)[1],((int*)childrenTable->table[i].key)[2],((int*)childrenTable->table[i].key)[3]);
         if (childRoutingEntry != nullptr){
             if(!isIPEqual((int*)childrenTable->table[i].key, sourceIP) && childRoutingEntry->hopDistance != -1){
-                LOG(MESSAGES, DEBUG, "Propagating Message to: %i.%i.%i.%i\n", ((int*)childrenTable->table[i].key)[0],((int*)childrenTable->table[i].key)[1],((int*)childrenTable->table[i].key)[2],((int*)childrenTable->table[i].key)[3]);
-                sendMessage((int*)childrenTable->table[i].value, message);
+                LOG(MESSAGES, DEBUG, "Propagating Message to: %i.%i.%i.%i\n", ((uint8_t *)childrenTable->table[i].key)[0],((uint8_t *)childrenTable->table[i].key)[1],((uint8_t *)childrenTable->table[i].key)[2],((uint8_t *)childrenTable->table[i].key)[3]);
+                sendMessage((uint8_t *)childrenTable->table[i].value, message);
             }
         }
 
@@ -689,7 +693,7 @@ void propagateMessage(char* message, int* sourceIP){
 
 }
 
-void encodeTunneledMessage(char* encodedMessage,size_t encodedMessageSize,int sourceIP[4], int destinationIP[4], char* encapsulatedMessage){
+void encodeTunneledMessage(char* encodedMessage,size_t encodedMessageSize,uint8_t sourceIP[4], uint8_t destinationIP[4], char* encapsulatedMessage){
     messageParameters params;
     assignIP(params.IP1,sourceIP);
     assignIP(params.IP2,destinationIP);
@@ -700,11 +704,12 @@ void encodeTunneledMessage(char* encodedMessage,size_t encodedMessageSize,int so
 bool isMessageTunneled(char* dataMessage){
     messageType type;
     //int sourceIP[4],originalDestinationIP[4];
-    return( sscanf(dataMessage,"%d %*d.%*d.%*d.%*d %*d.%*d.%*d.%*d %d %*d.%*d.%*d.%*d %*d.%*d.%*d.%*d",&type,&type) ==2 );
+    return( sscanf(dataMessage,"%d %*u.%*u.%*u.%*u %*u.%*u.%*u.%*u %d %*u.%*u.%*u.%*u %*u.%*u.%*u.%*u",&type,&type) ==2 );
 }
 
-bool waitForMessage(messageType type, int expectedSenderIP[4], unsigned long timeOut){
-    int packetSize, receivedSenderIP[4];
+bool waitForMessage(messageType type, uint8_t expectedSenderIP[4], unsigned long timeOut){
+    int packetSize;
+    uint8_t receivedSenderIP[4];
     bool isExpectedMessage = false;
     //Wait for the parent to respond
     unsigned long startTime = getCurrentTime();
@@ -729,13 +734,13 @@ bool waitForMessage(messageType type, int expectedSenderIP[4], unsigned long tim
     return isExpectedMessage;
 }
 
-void getSenderIP(char* messageBuffer, messageType type, int* senderIP){
+void getSenderIP(char* messageBuffer, messageType type, uint8_t * senderIP){
     switch (type) {
         case PARENT_INFO_RESPONSE:
-            sscanf(messageBuffer, "%*d %d.%d.%d.%d",&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
+            sscanf(messageBuffer, "%*d %hhu.%hhu.%hhu.%hhu",&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
             break;
         case FULL_ROUTING_TABLE_UPDATE:
-            sscanf(messageBuffer, "%*d %d.%d.%d.%d",&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
+            sscanf(messageBuffer, "%*d %hhu.%hhu.%hhu.%hhu",&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
             break;
         default:
             break;

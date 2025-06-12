@@ -36,7 +36,7 @@ void initStrategyInject(void (*setValueFunction)(void*,void*), void *metricStruc
 void encodeMessageInject(char* messageBuffer, size_t bufferSize, int type);
 void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int type);
 void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize);
-void onNetworkEventStrategyInject(int networkEvent, int involvedIP[4]);
+void onNetworkEventStrategyInject(int networkEvent, uint8_t involvedIP[4]);
 void influenceRoutingStrategyInject(char* dataMessage);
 void onTimerStrategyInject();
 void* getContextStrategyInject();

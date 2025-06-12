@@ -9,7 +9,7 @@ typedef struct Strategy{
     void (*encodeMessage)(char *messageBuffer,size_t bufferSize, int type);
     void (*influenceRouting)(char *dataMessage);
     void (*onTimer)(void);
-    void (*onNetworkEvent)(int context, int contextIP[4]);
+    void (*onNetworkEvent)(int context, uint8_t contextIP[4]);
     void *(*getContext)(void); // strategy-specific functions
 } Strategy;
 

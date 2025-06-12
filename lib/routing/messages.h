@@ -18,9 +18,9 @@
 #include "../net_viz/net_viz.h"
 
 typedef struct messageParameters{
-    int IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};
+    uint8_t IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};
     int nrOfNodes = 0;
-    int IP[10][4];
+    uint8_t IP[10][4];
     int hopDistance = -1;
     int sequenceNumber = 0;
     int childrenNumber = -1;
@@ -46,7 +46,7 @@ typedef enum messageType{
 }messageType;
 
 extern char receiveBuffer[256];
-extern char largeSendBuffer[256];
+extern char largeSendBuffer[255];
 extern char smallSendBuffer[50];
 
 
@@ -67,10 +67,10 @@ void handleAckMessage(char *msg);
 void handleDebugRegistrationRequest(char* msg);
 void handleDebugMessage2(char* msg, int* nextHopIP);
 
-void propagateMessage(char* message, int* sourceIP);
-void encodeTunneledMessage(char* encodedMessage,size_t encodedMessageSize,int sourceIP[4], int destinationIP[4], char* encapsulatedMessage);
+void propagateMessage(char* message, uint8_t * sourceIP);
+void encodeTunneledMessage(char* encodedMessage,size_t encodedMessageSize,uint8_t sourceIP[4], uint8_t destinationIP[4], char* encapsulatedMessage);
 bool isMessageTunneled(char* dataMessage);
-bool waitForMessage(messageType type, int expectedSenderIP[4], unsigned long timeOut);
-void getSenderIP(char* messageBuffer, messageType type, int* senderIP);
+bool waitForMessage(messageType type, uint8_t expectedSenderIP[4], unsigned long timeOut);
+void getSenderIP(char* messageBuffer, messageType type, uint8_t * senderIP);
 
 #endif //MESSAGES_H

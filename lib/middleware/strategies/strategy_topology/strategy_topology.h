@@ -34,7 +34,7 @@ typedef struct TopologyContext{
 void initStrategyTopology();
 void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int typeTopology);
 void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize);
-void onNetworkEventStrategyTopology(int networkEvent, int involvedIP[4]);
+void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]);
 void influenceRoutingStrategyTopology(char* dataMessage);
 void onTimerStrategyTopology();
 void* getContextStrategyTopology();

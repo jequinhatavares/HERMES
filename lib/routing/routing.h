@@ -4,32 +4,34 @@
 //#include "table.h"
 #include <../table/table.h>
 #include <logger.h>
+#include <cstdint>
+
 //#include <../middleware/strategies/strategy_inject.h>
 
 typedef struct parentInfo{
     char* ssid;
-    int parentIP[4];
+    uint8_t parentIP[4];
     int rootHopDistance;
     int nrOfChildren;
 }parentInfo;
 
 typedef struct routingTableEntry {
     int hopDistance;
-    int nextHopIP[4];
+    uint8_t nextHopIP[4];
     int sequenceNumber;
 } routingTableEntry;
 
 extern TableInfo* routingTable;
 extern TableInfo* childrenTable;
-extern int parent[4];
 
 extern bool iamRoot;
 extern int rootHopDistance;
 extern int numberOfChildren;
 extern bool hasParent;
 
-extern int myIP[4];
-extern int rootIP[4];
+extern uint8_t myIP[4];
+extern uint8_t rootIP[4];
+extern uint8_t parent[4];
 extern int mySequenceNumber;
 
 extern unsigned long lastRoutingUpdateTime;
@@ -37,20 +39,20 @@ extern unsigned long lastRoutingUpdateTime;
 //extern int debugServerIP[4];
 
 bool isIPEqual(void* a, void* b);
-void assignIP(int destIP[4], int sourceIP[4]);
+void assignIP(uint8_t destIP[4], uint8_t sourceIP[4]);
 void setKey(void* av, void* bv);
 void setValue(void* av, void* bv);
 void initTables();
 void printRoutingStruct(TableEntry* Table);
 void printChildStruct(TableEntry* Table);
-void* findNode(TableInfo* Table, int nodeIP[4]);
-int* findRouteToNode(int nodeIP[4]);
+void* findNode(TableInfo* Table, uint8_t nodeIP[4]);
+uint8_t * findRouteToNode(uint8_t nodeIP[4]);
 //void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4]);
-bool updateRoutingTableSN(int nodeIP[4], int hopDistance, int sequenceNumber, int senderIP[4]);
-void updateChildrenTable(int APIP[4], int STAIP[4]);
+bool updateRoutingTableSN(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, uint8_t senderIP[4]);
+void updateChildrenTable(uint8_t APIP[4], uint8_t STAIP[4]);
 parentInfo chooseParent(parentInfo* possibleParents, int n);
-bool inMySubnet(int* nodeIP);
+bool inMySubnet(uint8_t * nodeIP);
 void updateMySequenceNumber(int newSequenceNumber);
-void getIPFromMAC(int * MAC, int* IP);
+void getIPFromMAC(uint8_t * MAC, uint8_t * IP);
 
 #endif //ROUTING_H

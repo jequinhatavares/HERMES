@@ -54,7 +54,7 @@ extern int8_t topic;
 void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *) );
 void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typePubSub);
 void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize);
-void onNetworkEventStrategyPubSub(int networkEvent, int involvedIP[4]);
+void onNetworkEventStrategyPubSub(int networkEvent, uint8_t involvedIP[4]);
 void influenceRoutingStrategyPubSub(char* dataMessage);
 void onTimerStrategyPubSub();
 void* getContextStrategyPubSub();
