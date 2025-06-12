@@ -101,7 +101,7 @@ void injectNodeMetric(void* metric){
  *
  * @return void
  */
-void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessageType type) {
+void rewriteSenderIPInject(char* messageBuffer, char* writeBuffer,size_t writeBufferSize, InjectMessageType type) {
     int messageType, nChars;
     uint8_t senderIP[4],nodeIP[4];
     InjectMessageType injectType;
@@ -114,7 +114,7 @@ void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessage
                 ,&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3], &nChars) == 10 ){
 
             LOG(MIDDLEWARE,DEBUG,"1\n");
-            snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",messageType,injectType,myIP[0],myIP[1],myIP[2],myIP[3]
+            snprintf(writeBuffer,writeBufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",messageType,injectType,myIP[0],myIP[1],myIP[2],myIP[3]
                     ,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3], messageBuffer + nChars);
 
         }
@@ -140,6 +140,7 @@ void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int typ
     InjectMessageType injectType;
 
     if(type == INJECT_NODE_INFO){
+        //Max Size: 20 + metric encoding size
         //MESSAGE_TYPE INJECT_NODE_INFO [sender IP] [nodeIP] metric
         encodeMyMetric(tmpBuffer, sizeof(tmpBuffer));
         snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,INJECT_NODE_INFO,myIP[0],myIP[1],myIP[2],myIP[3],tmpBuffer);
@@ -222,7 +223,7 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
         tablePrint(metricsTable,printMetricStruct);
 
         //Encode this node IP as the sender IP and propagate the message
-        rewriteSenderIPInject(messageBuffer, bufferSize,INJECT_NODE_INFO);
+        rewriteSenderIPInject(messageBuffer,smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
         propagateMessage(messageBuffer,senderIP);
 
     }else if(injectType == INJECT_TABLE_INFO){

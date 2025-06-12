@@ -127,12 +127,33 @@ void test_rewrite_sender_with_complex_metric(){
     metric.processingCapacity = 1;
     injectNodeMetric(&metric);
 
-    rewriteSenderIPInject(middlewareMsg1, sizeof(middlewareMsg1), INJECT_NODE_INFO);
+    rewriteSenderIPInject(middlewareMsg1, smallSendBuffer,sizeof(smallSendBuffer), INJECT_NODE_INFO);
 
 
     printf("Encoded message: %s len:%i\n",middlewareMsg1, strlen(middlewareMsg1));
     printf("Correct message: %s len:%i\n",correctEncodedMsg, strlen(correctEncodedMsg));
-    TEST_ASSERT(strcmp(middlewareMsg1,correctEncodedMsg) == 0);/******/
+    TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);/******/
+
+    tableClean(metricsTable);
+}
+
+void test_rewrite_sender_with_bigger_ip(){
+    metricTableEntry metric;
+    char middlewareMsg1[50] = "13 0 2.2.2.2 2.2.2.2 2 3 0,777";
+    char correctEncodedMsg[50] = "13 0 111.111.111.111 2.2.2.2 2 3 0,777";
+    initStrategyInject(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
+
+    uint8_t nodeIP[4]={111,111,111,111};
+    assignIP(myIP,nodeIP);
+
+    metric.processingCapacity = 1;
+    injectNodeMetric(&metric);
+
+    rewriteSenderIPInject(middlewareMsg1,smallSendBuffer, sizeof(smallSendBuffer), INJECT_NODE_INFO);
+
+    printf("Encoded message: %s len:%i\n",middlewareMsg1, strlen(smallSendBuffer));
+    printf("Correct message: %s len:%i\n",correctEncodedMsg, strlen(correctEncodedMsg));
+    TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);/******/
 
     tableClean(metricsTable);
 }
@@ -163,5 +184,6 @@ int main(int argc, char** argv){
     RUN_TEST(test_encode_middleware_node_info_message);
     RUN_TEST(test_encode_middleware_table_info_message);
     RUN_TEST(test_rewrite_sender_with_complex_metric);
+    RUN_TEST(test_rewrite_sender_with_bigger_ip);
     UNITY_END();
 }

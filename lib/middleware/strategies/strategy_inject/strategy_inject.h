@@ -44,8 +44,7 @@ void* getContextStrategyInject();
 void injectNodeMetric(void* metric);
 
 void encodeMyMetric(char* messageBuffer, size_t bufferSize);
-void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessageType type);
-
+void rewriteSenderIPInject(char* messageBuffer, char* writeBuffer, size_t writeBufferSize, InjectMessageType type);
 void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry);
 void decodeMetricEntry(char* buffer, void *metricEntry);
 void printMetricStruct(TableEntry* Table);
