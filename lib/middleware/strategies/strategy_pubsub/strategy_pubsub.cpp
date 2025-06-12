@@ -65,19 +65,19 @@ void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopi
     decodeTopicValue = decodeTopicFunction;
 }
 
-void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType type){
+void rewriteSenderIPPubSub(char* messageBuffer, char* writeBuffer, size_t writeBufferSize, PubSubMessageType type){
     messageType globalMessageType;
     PubSubMessageType typePubSub;
     uint8_t nodeIP[4],IP[4],topic1;
-    char updatedMessage[256];
+    char updatedMessage[255];
 
-    if (type != PUBSUB_NODE_UPDATE){
+    if (type != PUBSUB_NODE_UPDATE){ // type == PUBSUB_PUBLISH, PUBSUB_SUBSCRIBE, PUBSUB_UNSUBSCRIBE, PUBSUB_ADVERTISE, PUBSUB_UNADVERTISE,
         // If the encoded message already contains topic information, it means this is a propagation of an already encoded message.
         // In this case, only the sender address needs to be updated before further propagation.
-        if( sscanf(messageBuffer,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",&globalMessageType,&typePubSub,&IP[0],&IP[1],&IP[2],&IP[3]
+        if( sscanf(messageBuffer,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhd",&globalMessageType,&typePubSub,&IP[0],&IP[1],&IP[2],&IP[3]
                 ,&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3], &topic1) == 11 ){
 
-            snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhu",globalMessageType,typePubSub,myIP[0],myIP[1],myIP[2],myIP[3]
+            snprintf(writeBuffer,writeBufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhd",globalMessageType,typePubSub,myIP[0],myIP[1],myIP[2],myIP[3]
                     ,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3], topic1);
 
         }
@@ -100,7 +100,7 @@ void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, PubSubMessage
                  restOfMessage);
 
         // Copy it back
-        strncpy(messageBuffer, updatedMessage, bufferSize);/******/
+        strncpy(writeBuffer, updatedMessage, writeBufferSize);/******/
 
     }
 
@@ -284,8 +284,8 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
 
 
             //Propagate the subscription message in the network
-            rewriteSenderIPPubSub(messageBuffer, bufferSize,PUBSUB_SUBSCRIBE);
-            propagateMessage(messageBuffer,IP);
+            rewriteSenderIPPubSub(messageBuffer,smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE);
+            propagateMessage(smallSendBuffer,IP);
             break;
 
         case PUBSUB_UNSUBSCRIBE:
@@ -328,7 +328,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             //}
 
             //Propagate the deleted subscription message in the network
-            rewriteSenderIPPubSub(messageBuffer, bufferSize,PUBSUB_UNSUBSCRIBE);
+            rewriteSenderIPPubSub(messageBuffer,smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_UNSUBSCRIBE);
             propagateMessage(messageBuffer,IP);
 
             break;
@@ -366,8 +366,8 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             }
 
             //Propagate the adverting message in the network
-            rewriteSenderIPPubSub(messageBuffer, bufferSize,PUBSUB_ADVERTISE);
-            propagateMessage(messageBuffer,IP);
+            rewriteSenderIPPubSub(messageBuffer,smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_ADVERTISE);
+            propagateMessage(smallSendBuffer,IP);
 
             break;
 
@@ -406,12 +406,13 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             }
 
             //Propagate the unadvertised topic message in the network
-            rewriteSenderIPPubSub(messageBuffer, bufferSize,PUBSUB_UNADVERTISE);
-            propagateMessage(messageBuffer,IP);
+            rewriteSenderIPPubSub(messageBuffer,smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_UNADVERTISE);
+            propagateMessage(smallSendBuffer,IP);
 
             break;
 
         case PUBSUB_NODE_UPDATE:
+            //Max size: 40 + nTopics * 2 +(nTopics-1)*2
             // Message used to advertise all publish-subscribe information of the node
             //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
             nodeIPPart = strtok(infoPubSub, "|");  // First part before the '|'
@@ -443,13 +444,13 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             }
 
             //Propagate the unadvertised topic message in the network
-            rewriteSenderIPPubSub(messageBuffer, bufferSize,PUBSUB_NODE_UPDATE);
-            propagateMessage(messageBuffer,IP);
+            rewriteSenderIPPubSub(messageBuffer,largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_NODE_UPDATE);
+            propagateMessage(largeSendBuffer,IP);
 
             break;/******/
 
         case PUBSUB_TABLE_UPDATE:
-            //Buffer max size = 22 + 30*N
+            //Buffer max size = 22 + 30*nNodes
             //13 6 [sender IP] |[node IP] [Published Topic List] [Subscribed Topics List] |[node IP] [Published Topic List] [Subscribed Topics List]...
             entry = strtok_r(infoPubSub, "|", &saveptr1);
 

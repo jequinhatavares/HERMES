@@ -344,7 +344,7 @@ void test_message_rewriteIP(){
 
     //printf("Encoded Message: %s\n",receivedMiddlewareMessage);
 
-    TEST_ASSERT(strcmp(receivedMiddlewareMessage,correctEncodedMsg) == 0);
+    TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);
 
     tableClean(pubsubTable);
 }
@@ -362,7 +362,7 @@ void test_message_rewriteIP_info_update_message(){
 
     //printf("Encoded Message: %s\n",receivedMiddlewareMessage);
 
-    TEST_ASSERT(strcmp(receivedMiddlewareMessage,correctEncodedMsg) == 0);
+    TEST_ASSERT(strcmp(largeSendBuffer,correctEncodedMsg) == 0);
 
     tableClean(pubsubTable);
 }

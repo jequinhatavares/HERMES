@@ -59,7 +59,7 @@ void influenceRoutingStrategyPubSub(char* dataMessage);
 void onTimerStrategyPubSub();
 void* getContextStrategyPubSub();
 
-void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, PubSubMessageType type);
+void rewriteSenderIPPubSub(char* messageBuffer, char* writeBuffer, size_t writeBufferSize, PubSubMessageType type);
 bool containsTopic(const int8_t * list, int8_t topic);
 void setPubSubInfo(void* av, void* bv);
 
