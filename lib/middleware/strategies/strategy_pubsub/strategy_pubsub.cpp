@@ -108,7 +108,8 @@ void rewriteSenderIPPubSub(char* messageBuffer, size_t bufferSize, PubSubMessage
 
 void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typePubSub) {
     PubSubInfo *nodePubSubInfo;
-    int offset = 0,*nodeIP,i,j;
+    int offset = 0,i,j;
+    uint8_t *nodeIP;
 
     // These messages encode the node's own publish/subscribe information
     switch (typePubSub) {
@@ -181,7 +182,7 @@ void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typ
             offset = snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu |",MIDDLEWARE_MESSAGE,PUBSUB_TABLE_UPDATE,
                      myIP[0],myIP[1],myIP[2],myIP[3]);
             for (i = 0; i < pubsubTable->numberOfItems; i++) {
-                nodeIP = (int*) tableKey(pubsubTable,i);
+                nodeIP = (uint8_t *) tableKey(pubsubTable,i);
                 PubSubInfo* entry = (PubSubInfo*) tableRead(pubsubTable, nodeIP);
                 if (entry != nullptr) {
                     // Append node IP

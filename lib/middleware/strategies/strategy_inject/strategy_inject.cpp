@@ -224,7 +224,7 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
 
         //Encode this node IP as the sender IP and propagate the message
         rewriteSenderIPInject(messageBuffer,smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
-        propagateMessage(messageBuffer,senderIP);
+        propagateMessage(smallSendBuffer,senderIP);
 
     }else if(injectType == INJECT_TABLE_INFO){
         //MESSAGE_TYPE INJECT_TABLE_INFO [sender IP] |[nodeIP] metric |[nodeIP] metric |...

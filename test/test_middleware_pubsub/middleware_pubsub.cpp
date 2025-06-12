@@ -10,7 +10,7 @@
 /*** ****************************** Tests ****************************** ***/
 
 void test_init_middleware(){
-    int IP[4]={1,1,1,1};
+    uint8_t IP[4]={1,1,1,1};
     initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
     tablePrint(pubsubTable, printPubSubStruct);
@@ -167,8 +167,8 @@ void test_encode_middleware_table_update_message(){
     //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
     encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer) ,PUBSUB_TABLE_UPDATE);
 
-    //printf("Encoded Message: %s\n",correctEncodedMsg);
-    //printf("Encoded Message: %s\n",largeSendBuffer);
+    printf("Encoded Message: %s\n",correctEncodedMsg);
+    printf("Encoded Message: %s\n",largeSendBuffer);
     TEST_ASSERT(strcmp(largeSendBuffer,correctEncodedMsg) == 0);/******/
     tableClean(pubsubTable);
 }
@@ -178,7 +178,7 @@ void test_handle_middleware_subscribe_message(){
     char receivedMiddlewareMessage[50] = "13 1 3.3.3.3 2.2.2.2 2";
     int8_t topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
     PubSubInfo *nodePubSubInfo;
-    int nodeIP[4] ={2,2,2,2};
+    uint8_t nodeIP[4] ={2,2,2,2};
 
     initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
@@ -202,7 +202,7 @@ void test_handle_middleware_unsubscribe_message(){
     char receivedMiddlewareMessage2[50] = "13 2 3.3.3.3 2.2.2.2 2";
     int8_t topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
     PubSubInfo *nodePubSubInfo;
-    int nodeIP[4] ={2,2,2,2};
+    uint8_t nodeIP[4] ={2,2,2,2};
 
     initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
@@ -227,7 +227,7 @@ void test_handle_middleware_advertise_message(){
     char receivedMiddlewareMessage2[50] = "13 2 3.3.3.3 2.2.2.2 2";
     int8_t topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
     PubSubInfo *nodePubSubInfo;
-    int nodeIP[4] ={2,2,2,2};
+    uint8_t nodeIP[4] ={2,2,2,2};
 
     initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
@@ -250,7 +250,7 @@ void test_handle_middleware_unadvertise_message(){
     char receivedMiddlewareMessage2[50] = "13 4 3.3.3.3 2.2.2.2 2";
     int8_t topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
     PubSubInfo *nodePubSubInfo;
-    int nodeIP[4] ={2,2,2,2};
+    uint8_t nodeIP[4] ={2,2,2,2};
 
     initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
@@ -276,7 +276,7 @@ void test_handle_middleware_info_update_message(){
     char receivedMiddlewareMessage2[50] = "13 4 3.3.3.3 2.2.2.2 2";
     int8_t topic = TEMPERATURE, topic2 = HUMIDITY, topic3 = CAMERA;
     PubSubInfo *nodePubSubInfo;
-    int nodeIP[4] ={2,2,2,2};
+    uint8_t nodeIP[4] ={2,2,2,2};
 
     initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
@@ -305,7 +305,7 @@ void test_handle_middleware_table_update_message(){
     char receivedMiddlewareMessage[100] = "13 6 1.1.1.1 |1.1.1.1 2 -1 -1 1 0 -1 |2.2.2.2 -1 -1 -1 2 -1 -1";
     int8_t topic = TEMPERATURE, topic2 = HUMIDITY, topic3 = CAMERA;
     PubSubInfo *nodePubSubInfo;
-    int nodeIP[4] ={2,2,2,2};
+    uint8_t nodeIP[4] ={2,2,2,2};
 
     initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
@@ -387,7 +387,7 @@ void setUp(void){
     lastModule = NETWORK;
     currentLogLevel = DEBUG;
 
-    int IP[4]={1,1,1,1};
+    uint8_t IP[4]={1,1,1,1};
     assignIP(myIP,IP);
 }
 
