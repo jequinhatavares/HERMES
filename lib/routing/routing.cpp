@@ -68,14 +68,14 @@ routingTableEntry routingTableEntries[TableMaxSize];
  * AP[TableMaxSize][4] - Preallocated memory for storing the AP IP addresses of child nodes.
  ***/
 TableEntry cTable[TableMaxSize];
-TableInfo TTable = {
+TableInfo CTable = {
         .numberOfItems=0,
         .isEqual = isIPEqual,
         .table = cTable,
         .setKey = setKey,
         .setValue = setKey,
 };
-TableInfo* childrenTable = &TTable;
+TableInfo* childrenTable = &CTable;
 
 uint8_t STA[TableMaxSize][4], AP[TableMaxSize][4];
 
