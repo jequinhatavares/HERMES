@@ -66,9 +66,9 @@ void (*decodeMetricValue)(char*,void *) = nullptr;
  *
  * @return void
  */
-void initStrategyInject(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)) {
+void initStrategyInject(void (*setValueFunction)(void*,void*), void *metricValues, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)) {
     metricsTable->setValue = setValueFunction;
-    tableInit(metricsTable, nodes, metricStruct, sizeof(int[4]), metricStructSize);
+    tableInit(metricsTable, nodes, metricValues, sizeof(uint8_t [4]), metricStructSize);
 
     encodeMetricValue = encodeMetricFunction;
     decodeMetricValue = decodeMetricFunction;
