@@ -118,12 +118,32 @@ void test_encode_middleware_table_info_message(){
     tableClean(metricsTable);
 }
 
+void test_rewrite_sender_with_complex_metric(){
+    metricTableEntry metric;
+    char middlewareMsg1[50] = "13 0 2.2.2.2 2.2.2.2 2 3 0,777";
+    char correctEncodedMsg[50] = "13 0 1.1.1.1 2.2.2.2 2 3 0,777";
+    initStrategyInject(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
+
+    metric.processingCapacity = 1;
+    injectNodeMetric(&metric);
+
+    rewriteSenderIPInject(middlewareMsg1, sizeof(middlewareMsg1), INJECT_NODE_INFO);
+
+
+    printf("Encoded message: %s len:%i\n",middlewareMsg1, strlen(middlewareMsg1));
+    printf("Correct message: %s len:%i\n",correctEncodedMsg, strlen(correctEncodedMsg));
+    TEST_ASSERT(strcmp(middlewareMsg1,correctEncodedMsg) == 0);/******/
+
+    tableClean(metricsTable);
+}
+
 void setUp(void){
     enableModule(STATE_MACHINE);
     enableModule(MESSAGES);
     enableModule(NETWORK);
     enableModule(DEBUG_SERVER);
     enableModule(CLI);
+    enableModule(MIDDLEWARE);
 
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
@@ -142,5 +162,6 @@ int main(int argc, char** argv){
     RUN_TEST(test_handle_middleware_table_info_message);
     RUN_TEST(test_encode_middleware_node_info_message);
     RUN_TEST(test_encode_middleware_table_info_message);
+    RUN_TEST(test_rewrite_sender_with_complex_metric);
     UNITY_END();
 }
