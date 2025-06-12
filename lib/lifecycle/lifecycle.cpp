@@ -1,9 +1,9 @@
 #include "lifecycle.h"
 
-int localIP[4];
-int gateway[4];
-int subnet[4];
-int dns[4];
+uint8_t localIP[4];
+uint8_t gateway[4];
+uint8_t subnet[4];
+uint8_t dns[4];
 
 int consecutiveSearchCount = 0;
 bool lostParent = false;
@@ -13,7 +13,7 @@ unsigned long lastApplicationProcessingTime = 0;
 void (*middlewareOnTimerCallback)() = nullptr;
 void (*middlewareHandleMessageCallback)(char*,size_t) = nullptr;
 void (*middlewareInfluenceRoutingCallback)(char*) = nullptr;
-void (*middlewareOnNetworkEventCallback)(int,int*) = nullptr;
+void (*middlewareOnNetworkEventCallback)(int,uint8_t *) = nullptr;
 parentInfo (*middlewareChooseParentCallback)(parentInfo *,int) = chooseParent;
 
 // Structure that is going to contain all possible parents information
@@ -51,8 +51,8 @@ void onParentDisconnect(){
     LOG(NETWORK, DEBUG,"onParentDisconnect callback!\n");
     insertLast(stateMachineEngine, eLostParentConnection);
 }
-bool isChildRegistered(int* MAC){
-    int nodeIP[4];
+bool isChildRegistered(uint8_t * MAC){
+    uint8_t nodeIP[4];
 
     //LOG(NETWORK,DEBUG, "MAC inside isChildRegistered Callback: %i:%i:%i:%i:%i:%i\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
     //Translate the MAC address to an IP address
@@ -65,15 +65,15 @@ bool isChildRegistered(int* MAC){
 }
 
 State initNode(Event event){
-    int MAC[6];
+    uint8_t MAC[6];
     char strMAC[30], ssid[256]; // Make sure this buffer is large enough to hold the entire SSID
     routingTableEntry me;
-    int invalidIP[4] = {-1,-1,-1,-1};
+    uint8_t invalidIP[4] = {0,0,0,0};
 
 
     strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
     getMyMAC(MAC);
-    sprintf(strMAC, "%i:%i:%i:%i:%i:%i",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
+    sprintf(strMAC, "%hhu:%hhu:%hhu:%hhu:%hhu:%hhu",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
     strcat(ssid,strMAC);
 
 
@@ -95,6 +95,7 @@ State initNode(Event event){
 
     //Add myself to my routing table
     myIP[0] = localIP[0]; myIP[1] = localIP[1];myIP[2] = localIP[2]; myIP[3] = localIP[3];
+    LOG(NETWORK,INFO,"My IP: %hhu.%hhu.%hhu.%hhu\n",myIP[0],myIP[1],myIP[2],myIP[3]);
     me.nextHopIP[0] = localIP[0]; me.nextHopIP[1] = localIP[1];me.nextHopIP[2] = localIP[2]; me.nextHopIP[3] = localIP[3];
     me.hopDistance = 0;
     me.sequenceNumber = mySequenceNumber;
@@ -120,8 +121,8 @@ State initNode(Event event){
 
 State search(Event event){
     LOG(STATE_MACHINE,INFO,"Search State\n");
-    int i, k, nodeIP[4];
-    int MAC[6];
+    int i, k;
+    uint8_t MAC[6],nodeIP[4];
 
     // Clear reachableNetworks before rescanning
     for (i = 0; i < reachableNetworks.len; ++i) {
@@ -138,9 +139,11 @@ State search(Event event){
     LOG(NETWORK,DEBUG, "Found %i Wi-Fi networks.\n", reachableNetworks.len);
     for (i=0; i<reachableNetworks.len; i++){
         LOG(NETWORK,INFO,"Found SSID: %s\n", reachableNetworks.item[i]);
-        sscanf(reachableNetworks.item[i], "JessicaNode%i:%i:%i:%i:%i:%i",&MAC[0],&MAC[1],&MAC[2],&MAC[3],&MAC[4],&MAC[5]);
+        sscanf(reachableNetworks.item[i], "JessicaNode%hhu:%hhu:%hhu:%hhu:%hhu:%hhu",&MAC[0],&MAC[1],&MAC[2],&MAC[3],&MAC[4],&MAC[5]);
         getIPFromMAC(MAC, nodeIP);
         if(inMySubnet(nodeIP)){
+            LOG(NETWORK,DEBUG,"Removed ssid from list: %s\n",reachableNetworks.item[i]);
+            LOG(NETWORK,DEBUG,"NodeIP: %hhu.%hhu.%hhu.%hhu\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
             //Remove nodes that are part of my subnetwork of the reachableNetworks List
             for (k = i; k < reachableNetworks.len-1; k++) {
                 strcpy( reachableNetworks.item[k] , reachableNetworks.item[k+1]);
@@ -159,6 +162,7 @@ State search(Event event){
     }
     //If the search after filtering returns a non-empty list, proceed to the choose parent state
     if(reachableNetworks.len > 0){
+        consecutiveSearchCount = 0;
         insertFirst(stateMachineEngine, eSuccess);
         return sChooseParent;
     }else{//If not continuing searching
@@ -170,9 +174,11 @@ State search(Event event){
 
 State joinNetwork(Event event){
     LOG(STATE_MACHINE,INFO,"Join Network State\n");
-    int packetSize = 0, connectedParentIP[4];
+    int packetSize = 0;
+    uint8_t connectedParentIP[4];
     unsigned long currentTime, startTime;
-    int mySTAIP[4], nrOfPossibleParents = 0;
+    uint8_t mySTAIP[4];
+    int nrOfPossibleParents = 0;
     messageParameters params;
     bool receivedPIR = false, receivedFRTU=false;
     parentInfo possibleParents[10];
@@ -191,7 +197,7 @@ State joinNetwork(Event event){
             encodeMessage(smallSendBuffer,sizeof (smallSendBuffer),PARENT_DISCOVERY_REQUEST, params);
 
             getGatewayIP(connectedParentIP);
-            LOG(NETWORK,INFO, "Connected to parent: %i.%i.%i.%i\n",connectedParentIP[0],connectedParentIP[1],connectedParentIP[2],connectedParentIP[3]);
+            LOG(NETWORK,INFO, "Connected to parent: %hhu.%hhu.%hhu.%hhu\n",connectedParentIP[0],connectedParentIP[1],connectedParentIP[2],connectedParentIP[3]);
             sendMessage(connectedParentIP, smallSendBuffer);
 
             /***startTime = getCurrentTime();
@@ -310,7 +316,8 @@ State idle(Event event){
 
 State handleMessages(Event event){
     LOG(STATE_MACHINE,INFO,"Handle Messages State\n");
-    int messageType,childSTAIP[4];
+    int messageType;
+    uint8_t childSTAIP[4];
 
     sscanf(receiveBuffer, "%d", &messageType);
     if(!isMessageValid(messageType, receiveBuffer)){
@@ -326,7 +333,7 @@ State handleMessages(Event event){
         case CHILD_REGISTRATION_REQUEST:
             LOG(MESSAGES,INFO,"Received [Child Registration Request] message: \"%s\"\n", receiveBuffer);
             handleChildRegistrationRequest(receiveBuffer);
-            sscanf(receiveBuffer,"%*d %*d.%*d.%*d.%*d %d.%d.%d.%d",&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
+            sscanf(receiveBuffer,"%*d %*hhu.%*hhu.%*hhu.%*hhu %hhu.%hhu.%hhu.%hhu",&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
             middlewareOnNetworkEventCallback(1,childSTAIP);
             break;
 
@@ -379,7 +386,7 @@ State handleMessages(Event event){
 }
 
 State parentRecovery(Event event){
-    int* STAIP= nullptr;
+    uint8_t * STAIP= nullptr;
     messageParameters parameters;
 
     if(iamRoot) return sIdle;
@@ -395,7 +402,7 @@ State parentRecovery(Event event){
     encodeMessage(smallSendBuffer,sizeof(smallSendBuffer),TOPOLOGY_BREAK_ALERT,parameters);
     LOG(MESSAGES,INFO,"Informing my children about the lost connection\n");
     for (int i = 0; i < childrenTable->numberOfItems; ++i) {
-        STAIP = (int*) findNode(childrenTable, (int*) childrenTable->table[i].key);
+        STAIP = (uint8_t *) findNode(childrenTable, (uint8_t *) childrenTable->table[i].key);
         if(STAIP != nullptr){
             sendMessage(STAIP,smallSendBuffer);
         }
@@ -417,33 +424,34 @@ State parentRecovery(Event event){
 
 State childRecovery(Event event){
     LOG(STATE_MACHINE,INFO,"Child Recovery State\n");
-    int i;
-    int lostChildIP[4], subNetSize = 0, lostNodeSubnetwork[routingTable->numberOfItems][4], **lostNodes;
-    int *nodeIP, *MAC;
+    int i, subNetSize = 0;
+    uint8_t lostChildIP[4];
+    uint8_t lostNodeSubnetwork[routingTable->numberOfItems][4];
+    uint8_t *nodeIP,*MAC;
     messageParameters parameters;
     routingTableEntry unreachableEntry, *lostNodeTableEntry;
 
     for (int k = 0; k <lostChildrenTable->numberOfItems ; k++) {
-        MAC = (int*) tableKey(lostChildrenTable, k);
+        MAC = (uint8_t *) tableKey(lostChildrenTable, k);
         if(MAC != nullptr){
             childConnectionStatus *status = (childConnectionStatus*)tableRead(lostChildrenTable, MAC);
             if(status->childTimedOut){
 
                 //Transform the lost child MAC into a IP
                 getIPFromMAC(MAC,lostChildIP);
-                LOG(NETWORK,DEBUG,"Lost Child MAC: %i.%i.%i.%i.%i.%i \n", MAC[0], MAC[1], MAC[2], MAC[3], MAC[4], MAC[6]);
-                LOG(NETWORK,DEBUG,"Lost Child IP: %i.%i.%i.%i \n", lostChildIP[0], lostChildIP[1], lostChildIP[2], lostChildIP[3]);
+                LOG(NETWORK,DEBUG,"Lost Child MAC: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu \n", MAC[0], MAC[1], MAC[2], MAC[3], MAC[4], MAC[6]);
+                LOG(NETWORK,DEBUG,"Lost Child IP: %hhu.%hhu.%hhu.%hhu \n", lostChildIP[0], lostChildIP[1], lostChildIP[2], lostChildIP[3]);
 
                 // Identify all nodes that were part of the lost child’s subnetwork.
                 for (i = 0; i < routingTable->numberOfItems; i++) {
-                    nodeIP = (int*) tableKey(routingTable, i);
+                    nodeIP = (uint8_t *) tableKey(routingTable, i);
                     routingTableEntry* routingValue = (routingTableEntry*) findNode(routingTable,nodeIP);
                     if(routingValue != nullptr){
                         // If the next Hop IP is the IP of the lost child, it means this node is part of the
                         // lostChild subnetwork (including itself)
                         if(isIPEqual(routingValue->nextHopIP, lostChildIP)){
 
-                            LOG(NETWORK,DEBUG,"Node: %i.%i.%i.%i belongs to lost child subnetwork\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
+                            LOG(NETWORK,DEBUG,"Node: %hhu.%hhu.%hhu.%hhu belongs to lost child subnetwork\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
                             assignIP(lostNodeSubnetwork[subNetSize],nodeIP);
                             assignIP(parameters.IP[subNetSize], nodeIP);
                             subNetSize ++;
@@ -455,7 +463,7 @@ State childRecovery(Event event){
                 parameters.nrOfNodes = subNetSize;
 
                 // Remove the lost child from my children table
-                LOG(NETWORK,DEBUG,"Removing unreachable Node :%i.%i.%i.%i from my children Table\n",lostChildIP[0],lostChildIP[1],lostChildIP[2],lostChildIP[3]);
+                LOG(NETWORK,DEBUG,"Removing unreachable Node :%hhu.%hhu.%hhu.%hhu from my children Table\n",lostChildIP[0],lostChildIP[1],lostChildIP[2],lostChildIP[3]);
                 tableRemove(childrenTable, lostChildIP);
                 numberOfChildren--;
                 LOG(NETWORK,DEBUG,"Updated Children Table\n");
@@ -466,7 +474,7 @@ State childRecovery(Event event){
                 for (i = 0; i < subNetSize; i++) {
                     // Mark the nodes as unreachable in the routing table
                     lostNodeTableEntry = (routingTableEntry*)tableRead(routingTable, lostNodeSubnetwork[i]);
-                    LOG(NETWORK,DEBUG,"Updating Node: %i.%i.%i.%i from my routing Table\n",lostNodeSubnetwork[i][0],lostNodeSubnetwork[i][1],lostNodeSubnetwork[i][2],lostNodeSubnetwork[i][3]);
+                    LOG(NETWORK,DEBUG,"Updating Node: %hhu.%hhu.%hhu.%hhu from my routing Table\n",lostNodeSubnetwork[i][0],lostNodeSubnetwork[i][1],lostNodeSubnetwork[i][2],lostNodeSubnetwork[i][3]);
                     assignIP(unreachableEntry.nextHopIP,lostNodeSubnetwork[i]);
                     // Increment the lost child’s sequence number by 1, symbolizing that this route is now invalid due to the loss of connectivity
                     unreachableEntry.sequenceNumber = lostNodeTableEntry->sequenceNumber + 1;
@@ -486,7 +494,7 @@ State childRecovery(Event event){
 
                 //Report the deleted node to the monitoring server
                 reportDeletedNodeToViz(lostChildIP);
-                }
+            }
             subNetSize = 0;
         }
 
@@ -498,19 +506,19 @@ State childRecovery(Event event){
 
 State forceRestart(Event event){
     LOG(STATE_MACHINE,INFO,"Force Restart State\n");
-    int *childAPIP, *childSTAIP, *nodeIP;
-    int invalidIP[4] = {-1,-1,-1,-1};
+    uint8_t *childAPIP, *childSTAIP, *nodeIP;
+    uint8_t invalidIP[4] = {0,0,0,0};
     messageParameters parameters;
     routingTableEntry me;
     // If the node has children, notify them that its parent (this node) is restarting.
     // This means it will no longer be their parent, and they should start searching for a new one.
     for (int i = 0; i < childrenTable->numberOfItems; ++i) {
-        childAPIP = (int*) tableKey(childrenTable, i);
-        childSTAIP = (int*) tableRead(childrenTable,childAPIP);
+        childAPIP = (uint8_t *) tableKey(childrenTable, i);
+        childSTAIP = (uint8_t *) tableRead(childrenTable,childAPIP);
         // Notify the child with a message that the node is restarting
         encodeMessage(smallSendBuffer, sizeof(smallSendBuffer),PARENT_RESET_NOTIFICATION,parameters);
         sendMessage(childSTAIP,smallSendBuffer);
-        LOG(MESSAGES,DEBUG,"Sending: %s to: %i.%i.%i.%i\n",smallSendBuffer,childAPIP[0],childAPIP[1],childAPIP[2],childAPIP[3]);
+        LOG(MESSAGES,DEBUG,"Sending: %s to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer,childAPIP[0],childAPIP[1],childAPIP[2],childAPIP[3]);
     }
 
     // Clear all entries from the children table
@@ -620,7 +628,7 @@ void parseMAC(const char* macStr, int* macArray) {
  * Given the MAC address: CC:50:E3:60:E6:87
  * The generated IP address will be: 227.96.230.135 //TODO correct this docs
  */
-void setIPs(const int* MAC){
+void setIPs(const uint8_t * MAC){
     localIP[0] = MAC[5];localIP[1] = MAC[4];
     localIP[2] = MAC[3];localIP[3] = 1;
 
