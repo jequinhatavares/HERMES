@@ -69,7 +69,7 @@ void initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,vo
         LOG(NETWORK,ERROR,"ERROR: Initialization attempted without a selected strategy\n");
         return;
     }
-    initStrategyInject(setValueFunction,metricStruct,metricStructSize,encodeMetricFunction,decodeMetricFunction);
+    initStrategyInject(metricStruct,metricStructSize,setValueFunction,encodeMetricFunction,decodeMetricFunction);
     initMiddlewareCallbacks();
 }
 
@@ -110,7 +110,7 @@ void initMiddlewareStrategyTopology(){
         LOG(NETWORK,ERROR,"ERROR: Initialization attempted without a selected strategy\n");
         return;
     }
-    initStrategyTopology();
+    //initStrategyTopology();
     middlewareChooseParentCallback = requestParentFromRoot;
     initMiddlewareCallbacks();
 }

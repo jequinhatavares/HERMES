@@ -15,7 +15,7 @@ void tearDown(void){}
 
 void test_select_strategy(){
     middlewareSelectStrategy(STRATEGY_INJECT);
-    initStrategyInject(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
+    initStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
 
     InjectContext *api = (InjectContext*) middlewareGetStrategyContext();
 }
