@@ -28,7 +28,7 @@ void middlewareInfluenceRouting(char* dataMessage);
 void middlewareHandleMessage(char* messageBuffer, size_t bufferSize);
 void middlewareEncodeMessage(char* messageBuffer, size_t bufferSize, int type);
 void middlewareOnTimer();
-void middlewareOnNetworkEvent(int networkEvent, int involvedIP[4]);
+void middlewareOnNetworkEvent(int networkEvent, uint8_t involvedIP[4]);
 void* middlewareGetStrategyContext();
 
 

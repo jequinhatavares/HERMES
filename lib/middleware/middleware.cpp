@@ -188,7 +188,7 @@ void middlewareOnTimer(){
  *
  * @return void
  */
-void middlewareOnNetworkEvent(int networkEvent, int involvedIP[4]){
+void middlewareOnNetworkEvent(int networkEvent, uint8_t involvedIP[4]){
     if(activeStrategy == nullptr){
         LOG(NETWORK,ERROR,"ERROR: Cannot perform middleware periodic tasks, no active strategy selected.\n");
         return;
