@@ -4,12 +4,12 @@
 #define LIMIT_PARENT_VISIBILITY
 
 bool iamRoot = false;
-int rootHopDistance = -1;
+int rootHopDistance = 0;
 int numberOfChildren = 0;
 bool hasParent = false;
-int parent[4];
-int myIP[4];
-int rootIP[4];
+uint8_t parent[4];
+uint8_t myIP[4];
+uint8_t rootIP[4];
 int mySequenceNumber = 2;
 unsigned long lastRoutingUpdateTime;
 
@@ -48,7 +48,7 @@ TableInfo RTable = {
 };
 TableInfo* routingTable = &RTable;
 
-int IP[TableMaxSize][4];
+uint8_t IP[TableMaxSize][4];
 routingTableEntry routingTableEntries[TableMaxSize];
 
 /***
@@ -77,7 +77,7 @@ TableInfo TTable = {
 };
 TableInfo* childrenTable = &TTable;
 
-int STA[TableMaxSize][4], AP[TableMaxSize][4];
+uint8_t STA[TableMaxSize][4], AP[TableMaxSize][4];
 
 
 /**
@@ -89,8 +89,8 @@ int STA[TableMaxSize][4], AP[TableMaxSize][4];
  * @return (bool) - True if the IP addresses are equal, false otherwise.
  */
 bool isIPEqual(void* a, void* b){
-    int* aIP = (int*) a;
-    int* bIP = (int*) b;
+    uint8_t * aIP = (uint8_t *) a;
+    uint8_t * bIP = (uint8_t *) b;
     //printf("In Function is IPEqual\n");
     if(aIP[0] == bIP[0] && aIP[1] == bIP[1] && aIP[2] == bIP[2] && aIP[3] == bIP[3]){
         return true;
@@ -98,14 +98,14 @@ bool isIPEqual(void* a, void* b){
     return false;
 }
 
-void assignIP(int destIP[4], int sourceIP[4]){
+void assignIP(uint8_t destIP[4], uint8_t sourceIP[4]){
     destIP[0] = sourceIP[0];destIP[1] = sourceIP[1];
     destIP[2] = sourceIP[2];destIP[3] = sourceIP[3];
 }
 
 void setKey(void* av, void* bv){
-    int* a = (int*) av;
-    int* b = (int*) bv;
+    uint8_t * a = (uint8_t *) av;
+    uint8_t * b = (uint8_t *) bv;
     //Serial.printf("Key.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a[0],a[1],a[2],a[3], b[0],b[1],b[2],b[3]);
     a[0] = b[0];
     a[1] = b[1];
@@ -135,8 +135,8 @@ void setValue(void* av, void* bv){
  */
 void initTables(){
     //Serial.printf("SizeOf int[4]: %i struct: %i", sizeof(int[4]), sizeof(routingTableEntry));
-    tableInit(routingTable,IP, &routingTableEntries, sizeof(int[4]),sizeof(routingTableEntry));
-    tableInit(childrenTable,AP,STA, sizeof(int[4]), sizeof(int[4]));
+    tableInit(routingTable,IP, &routingTableEntries, sizeof(uint8_t[4]),sizeof(routingTableEntry));
+    tableInit(childrenTable,AP,STA, sizeof(uint8_t[4]), sizeof(uint8_t[4]));
 }
 
 /**
@@ -147,17 +147,17 @@ void initTables(){
  * @return (void)
  */
 void printRoutingStruct(TableEntry* Table){
-    LOG(NETWORK,INFO,"Node[%d.%d.%d.%d] → NextHop[%d.%d.%d.%d] | (Distance: %d) | (Sequence Number: %d)\n",
-           ((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
+    LOG(NETWORK,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → NextHop[%hhu.%hhu.%hhu.%hhu] | (Distance: %d) | (Sequence Number: %d)\n",
+           ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
            ((routingTableEntry *)Table->value)->nextHopIP[0],((routingTableEntry *)Table->value)->nextHopIP[1],
            ((routingTableEntry *)Table->value)->nextHopIP[2],((routingTableEntry *)Table->value)->nextHopIP[3],
            ((routingTableEntry *)Table->value)->hopDistance,((routingTableEntry *)Table->value)->sequenceNumber);
 }
 
 void printChildStruct(TableEntry* Table){
-    LOG(NETWORK,INFO,"K: AP IP %i.%i.%i.%i "
-           "V: STA IP: %i.%i.%i.%i\n",((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
-           ((int *)Table->value)[0],((int *)Table->value)[1],((int *)Table->value)[2],((int *)Table->value)[3]);
+    LOG(NETWORK,INFO,"K: AP IP %hhu.%hhu.%hhu.%hhu "
+           "V: STA IP: %hhu.%hhu.%hhu.%hhu\n",((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
+           ((uint8_t *)Table->value)[0],((uint8_t *)Table->value)[1],((uint8_t *)Table->value)[2],((uint8_t *)Table->value)[3]);
 }
 /**
  * findNode
@@ -167,7 +167,7 @@ void printChildStruct(TableEntry* Table){
  * @param nodeIP - The IP address of the node to find.
  * @return (void*) - A pointer to the found entry or nullptr if not found.
  */
-void* findNode(TableInfo* Table, int nodeIP[4]){
+void* findNode(TableInfo* Table, uint8_t nodeIP[4]){
     return tableRead(Table, nodeIP);
 }
 
@@ -178,7 +178,7 @@ void* findNode(TableInfo* Table, int nodeIP[4]){
  * @param nodeIP - The IP address of the destination node.
  * @return (int*) - A pointer to the next-hop IP address or nullptr in case of no route found
  */
-int* findRouteToNode(int nodeIP[4]){
+uint8_t* findRouteToNode(uint8_t nodeIP[4]){
 
     //Check if the node is my parent
     if(isIPEqual(nodeIP,parent)){
@@ -188,7 +188,7 @@ int* findRouteToNode(int nodeIP[4]){
     }
 
     //Check if node is my child
-    int* childIP1 = (int*) findNode(childrenTable,nodeIP);
+    uint8_t * childIP1 = (uint8_t *) findNode(childrenTable,nodeIP);
     if(childIP1 != nullptr)
     {//Return the address of the child itself (translated to its STA addr)
         //Serial.printf("Child\n");
@@ -200,7 +200,7 @@ int* findRouteToNode(int nodeIP[4]){
 
     if(entry == nullptr) return nullptr;//If we cant find the node in the table return nullptr to avoid segmentation fault
 
-    int* childIP2 = (int*) findNode(childrenTable,entry->nextHopIP);
+    uint8_t * childIP2 = (uint8_t *) findNode(childrenTable,entry->nextHopIP);
     //If the next Hop is one of my children the IP needs to be translated to its STA IP to forward the message
     if(childIP2 != nullptr){
         //Serial.printf("Child2\n");
@@ -245,7 +245,6 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4
          assignIP(newNode.nextHopIP, nodeIP);
      }
      //If the next hop is my parent or child, increase the hop distance by 1
-     //TODO esta condição já não me está a fazer sentido
      else if( (isIPEqual(newNode.nextHopIP, parent) || findNode(childrenTable,newNode.nextHopIP) != nullptr) && newNode.hopDistance != -1){
          newNode.hopDistance = newNode.hopDistance + 1;
      }
@@ -276,7 +275,7 @@ void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4
     }
 }***/
 
-bool updateRoutingTableSN(int nodeIP[4], int hopDistance, int sequenceNumber, int senderIP[4]){
+bool updateRoutingTableSN(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, uint8_t senderIP[4]){
     routingTableEntry updatedEntry;
     routingTableEntry *nodeEntry = (routingTableEntry*) findNode(routingTable, nodeIP);
 
@@ -334,7 +333,7 @@ bool updateRoutingTableSN(int nodeIP[4], int hopDistance, int sequenceNumber, in
  * @param STAIP - The IP address of the corresponding station.
  * @return (void)
  */
-void updateChildrenTable(int APIP[4], int STAIP[4]){
+void updateChildrenTable(uint8_t APIP[4], uint8_t STAIP[4]){
     //The node is not yet in the table
     if(findNode(childrenTable, APIP) == nullptr){
         tableAdd(childrenTable, APIP, STAIP);
@@ -422,13 +421,17 @@ parentInfo chooseParent(parentInfo* possibleParents, int n){
 
 #endif
 
-bool inMySubnet(int* nodeIP){
+bool inMySubnet(uint8_t * nodeIP){
     routingTableEntry *routingEntry;
-    routingEntry = (routingTableEntry*) findNode(routingTable,nodeIP);
-    int *childIP;
+    uint8_t *childIP;
 
+    //If the node is my direct child return true
+    if(tableFind(childrenTable,nodeIP) != -1) return true;
+
+    // Now check for nodes that are not direct children, but belong to the subnetwork of my children (e.g., grandchildren, etc.)
+    routingEntry = (routingTableEntry*) findNode(routingTable,nodeIP);
     for (int i = 0; i < childrenTable->numberOfItems; i++) {
-        childIP = (int*)tableKey(childrenTable, i );
+        childIP = (uint8_t *)tableKey(childrenTable, i );
         // The node belongs to my subnetwork if the next hop to reach it is one of my children
         if (childIP != nullptr && routingEntry != nullptr){
             if(isIPEqual(routingEntry->nextHopIP,childIP)) return true;
@@ -451,7 +454,7 @@ void updateMySequenceNumber(int newSequenceNumber){
     }
 }
 
-void getIPFromMAC(int * MAC, int* IP){
+void getIPFromMAC(uint8_t * MAC, uint8_t * IP){
     IP[0] = MAC[5];
     IP[1] = MAC[4];
     IP[2] = MAC[3];
