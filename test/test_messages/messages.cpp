@@ -27,7 +27,7 @@ void test_pir_incorrect(){
 
 void test_data_messages_encoding(){
     char msg[20] = "Hello", messageBuffer[100];
-    char correctMessage[100]= "11 Hello 1.1.1.1 2.2.2.2";
+    char correctMessage[100]= "11 1.1.1.1 2.2.2.2 Hello";
     messageParameters params;
     params.IP1[0] = 1; params.IP1[1] = 1; params.IP1[2] = 1; params.IP1[3] = 1;
     params.IP2[0] = 2; params.IP2[1] = 2; params.IP2[2] = 2; params.IP2[3] = 2;
@@ -125,13 +125,13 @@ void test_DATA_messages_invalid_encoding(){
     char incorrectMessage[100]= "12 HELLO 1.1.1.1 2.2.2.2";
     TEST_ASSERT(isMessageValid(DATA_MESSAGE,incorrectMessage) == false);
 
-    char incorrectMessage2[100]= "11 1.1.1.1 2.2.2.2 HELLO";
+    char incorrectMessage2[100]= "11 HELLO1.1.1.1 2.2.2.2";
     TEST_ASSERT(isMessageValid(DATA_MESSAGE,incorrectMessage2) == false);
 
     char incorrectMessage3[100]= "11 HELLO 1.1.1.1";
     TEST_ASSERT(isMessageValid(DATA_MESSAGE,incorrectMessage3) == false);
 
-    char correctMessage[100]= "11 HELLO 1.1.1.1 2.2.2.2";
+    char correctMessage[100]= "11 1.1.1.1 2.2.2.2 HELLO";
     TEST_ASSERT(isMessageValid(DATA_MESSAGE,correctMessage) == true);
 
 }
