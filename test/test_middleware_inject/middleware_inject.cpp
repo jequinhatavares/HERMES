@@ -17,7 +17,7 @@ metricTableEntry metrics[TableMaxSize];
 
 void test_init_middleware(){
     metricTableEntry metric;
-    int IP[4]={1,1,1,1};
+    uint8_t IP[4]={1,1,1,1};
     initStrategyInject(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
 
     metric.processingCapacity = 1;
@@ -34,8 +34,8 @@ void test_init_middleware(){
 
 void test_handle_middleware_node_info_message(){
     metricTableEntry metric;
-    int mynodeIP[4]={2,2,2,2};
-    int nodeIP[4]={1,1,1,1};
+    uint8_t mynodeIP[4]={2,2,2,2};
+    uint8_t nodeIP[4]={1,1,1,1};
     char middlewareMsg[50] = "13 0 1.1.1.1 1.1.1.1 1";
 
     assignIP(myIP,mynodeIP);
@@ -55,8 +55,8 @@ void test_handle_middleware_node_info_message(){
 
 void test_handle_middleware_table_info_message(){
     metricTableEntry metric;
-    int node2IP[4]={2,2,2,2};
-    int node3IP[4]={3,3,3,3};
+    uint8_t node2IP[4]={2,2,2,2};
+    uint8_t node3IP[4]={3,3,3,3};
     char middlewareMsg[50] = "13 1 1.1.1.1 |1.1.1.1 1 |2.2.2.2 2 |3.3.3.3 3";
 
     initStrategyInject(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
@@ -82,7 +82,7 @@ void test_handle_middleware_table_info_message(){
 
 void test_encode_middleware_node_info_message(){
     metricTableEntry metric;
-    int nodeIP[4]={2,2,2,2};
+    uint8_t nodeIP[4]={2,2,2,2};
     char middlewareMsg[50] = " 13 0 2.2.2.2 1.1.1.1 1", msgBuffer[100];
     char correctEncodedMsg[50] = "13 0 1.1.1.1 1.1.1.1 1";
     initStrategyInject(setMetricValue, (void*) metrics,sizeof(metricTableEntry),encodeMetricEntry,decodeMetricEntry);
@@ -111,8 +111,8 @@ void test_encode_middleware_table_info_message(){
 
     encodeMessageStrategyInject(largeSendBuffer, sizeof(largeSendBuffer),INJECT_TABLE_INFO);
 
-    //printf("Encoded message: %s len:%i\n",largeSendBuffer, strlen(largeSendBuffer));
-    //printf("Correct message: %s len:%i\n",correctEncodedMsg, strlen(correctEncodedMsg));
+    printf("Encoded message: %s len:%i\n",largeSendBuffer, strlen(largeSendBuffer));
+    printf("Correct message: %s len:%i\n",correctEncodedMsg, strlen(correctEncodedMsg));
     TEST_ASSERT(strcmp(largeSendBuffer,correctEncodedMsg) == 0);/******/
 
     tableClean(metricsTable);
@@ -128,7 +128,7 @@ void setUp(void){
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
 
-    int nodeIP[4]={1,1,1,1};
+    uint8_t nodeIP[4]={1,1,1,1};
     assignIP(myIP,nodeIP);
 
 }

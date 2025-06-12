@@ -95,7 +95,6 @@ void injectNodeMetric(void* metric){
  * rewriteSenderIPInject
  * Updates the sender IP address of a message buffer before further propagation.
  *
- *
  * @param messageBuffer - Pointer to the buffer containing the encoded message.
  * @param bufferSize - Size of the message buffer in bytes.
  * @param type - The type of Inject message being processed.
@@ -103,19 +102,20 @@ void injectNodeMetric(void* metric){
  * @return void
  */
 void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessageType type) {
-    int messageType,metric;
+    int messageType, nChars;
     uint8_t senderIP[4],nodeIP[4];
     InjectMessageType injectType;
+
 
     //TODO ISTO DA %i metric nao tem que estar abstrato
     if(type == INJECT_NODE_INFO){
         // If the encoded message already contains metric information, it means this is a propagation of an already encoded message.
         // In this case, only the sender address needs to be updated before further propagation.
-        if( sscanf(messageBuffer,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",&messageType,&injectType,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]
-                ,&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3], &metric) == 11 ){
+        if( sscanf(messageBuffer,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&messageType,&injectType,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]
+                ,&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3], &nChars) == 11 ){
 
-            snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",messageType,injectType,myIP[0],myIP[1],myIP[2],myIP[3]
-                    ,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3], metric);
+            snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",messageType,injectType,myIP[0],myIP[1],myIP[2],myIP[3]
+                    ,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3], messageBuffer + nChars);
 
         }
     }
@@ -133,8 +133,8 @@ void rewriteSenderIPInject(char* messageBuffer, size_t bufferSize, InjectMessage
  * @return void
  */
 void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int type){
-    int messageType, senderIP[4],nodeIP[4],metric,offset = 0;
-    int *entryIP;
+    int offset = 0;
+    uint8_t *entryIP;
     char tmpBuffer[20], tmpBuffer2[50];
     void *metricValue;
     InjectMessageType injectType;
@@ -149,7 +149,7 @@ void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int typ
         offset = snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu",MIDDLEWARE_MESSAGE,INJECT_TABLE_INFO,myIP[0],myIP[1],myIP[2],myIP[3]);
 
         for (int i = 0; i < metricsTable->numberOfItems; i++) {
-            entryIP = (int*)tableKey(metricsTable,i);
+            entryIP = (uint8_t *)tableKey(metricsTable,i);
             metricValue = tableRead(metricsTable,entryIP);
             if(metricValue != nullptr){
                 encodeMetricValue(tmpBuffer, sizeof(tmpBuffer),metricValue);
@@ -374,8 +374,8 @@ void* getContextStrategyInject(){
 }
 
 void setIP(void* av, void* bv){
-    int* a = (int*) av;
-    int* b = (int*) bv;
+    uint8_t * a = (uint8_t *) av;
+    uint8_t * b = (uint8_t *) bv;
     //Serial.printf("Key.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a[0],a[1],a[2],a[3], b[0],b[1],b[2],b[3]);
     a[0] = b[0];
     a[1] = b[1];
@@ -421,6 +421,6 @@ void setMetricValue(void* av, void*bv){
 
 void printMetricStruct(TableEntry* Table){
     LOG(NETWORK,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → (Metric: %d) \n",
-        ((int*)Table->key)[0],((int*)Table->key)[1],((int*)Table->key)[2],((int*)Table->key)[3],
+        ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
         ((metricTableEntry *)Table->value)->processingCapacity);
 }

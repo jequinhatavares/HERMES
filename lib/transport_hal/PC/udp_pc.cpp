@@ -2,7 +2,7 @@
 #include "udp_pc.h"
 
 
-void sendMessage(int address[4], const char * msg){}
+void sendMessage(uint8_t address[4], const char * msg){}
 
 int receiveMessage(char* buffer, size_t bufferSize){return 0;}
 
