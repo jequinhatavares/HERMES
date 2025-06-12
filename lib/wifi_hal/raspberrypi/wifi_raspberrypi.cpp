@@ -9,7 +9,7 @@ wifi_event_handler_t wifi_event_handlers[MAX_WIFI_EVENTS] = {nullptr};
 
 
 void (*parentDisconnectCallback)() = nullptr;
-bool (*isChildRegisteredCallback)(int*) = nullptr;
+bool (*isChildRegisteredCallback)(uint8_t*) = nullptr;
 
 
 unsigned long lastParentDisconnectionTime = 0 ;
@@ -25,7 +25,7 @@ List reachableNetworks;
  * @return void
  */
 void onAPModeStationConnectedHandler(wifi_event_info__t *info){
-    int lostChildMAC[6];
+    uint8_t lostChildMAC[6];
     printf("\n[WIFI_EVENTS] Station connected ");
     printf("MAC: %i:%i:%i:%i:%i:%i\n",info->MAC[0],info->MAC[1],info->MAC[2],info->MAC[3],info->MAC[4],info->MAC[5]);
     lostChildMAC[0] = info->MAC[0];lostChildMAC[1] = info->MAC[1];
@@ -51,7 +51,7 @@ void onAPModeStationDisconnectedHandler(wifi_event_info__t *info){
     printf("\n[WIFI_EVENTS] Station Disconnected ");
     printf("MAC: %i:%i:%i:%i:%i:%i\n",info->MAC[0],info->MAC[1],info->MAC[2],info->MAC[3],info->MAC[4],info->MAC[5]);
 
-    int lostChildMAC[6];
+    uint8_t lostChildMAC[6];
     lostChildMAC[0] = info->MAC[0];lostChildMAC[1] = info->MAC[1];
     lostChildMAC[2] = info->MAC[2];lostChildMAC[3] = info->MAC[3];
     lostChildMAC[4] = info->MAC[4];lostChildMAC[5] = info->MAC[5];
@@ -125,7 +125,8 @@ void onStationModeDisconnectedHandler(wifi_event_info__t *info){
  * @return void
  */
 void parseWifiEventInfo(char *msg){
-    int number,MAC[6],parsedFields = 0;
+    int number,parsedFields = 0;
+    uint8_t MAC[6];
     char eventType[40];
     unsigned int unsignedMAC[6];
     wifi_event_info__t eventInfo;
@@ -143,7 +144,7 @@ void parseWifiEventInfo(char *msg){
 
         parsedFields = sscanf(msg,"<%i>%s %x:%x:%x:%x:%x:%x",&number,eventType,&unsignedMAC[0],&unsignedMAC[1],&unsignedMAC[2],&unsignedMAC[3],&unsignedMAC[4],&unsignedMAC[5]);
         for (int i = 0; i < 6; i++) {
-            MAC[i] = (int)unsignedMAC[i];
+            MAC[i] = (uint8_t)unsignedMAC[i];
             eventInfo.MAC[i]=MAC[i];
         }
         wifi_event_handlers[WIFI_EVENT_AP_STACONNECTED](&eventInfo);
@@ -152,7 +153,7 @@ void parseWifiEventInfo(char *msg){
 
         parsedFields = sscanf(msg,"<%i>%s %x:%x:%x:%x:%x:%x",&number,eventType,&unsignedMAC[0],&unsignedMAC[1],&unsignedMAC[2],&unsignedMAC[3],&unsignedMAC[4],&unsignedMAC[5]);
         for (int i = 0; i < 6; i++) {
-            MAC[i] = (int)unsignedMAC[i];
+            MAC[i] = (uint8_t)unsignedMAC[i];
             eventInfo.MAC[i]=MAC[i];
         }
         wifi_event_handlers[WIFI_EVENT_AP_STADISCONNECTED](&eventInfo);
@@ -161,7 +162,7 @@ void parseWifiEventInfo(char *msg){
         //<3>CTRL-EVENT-CONNECTED - Connection to ce:50:e3:60:e6:87 completed [id=0 id_str=]
         parsedFields = sscanf(msg,"<%i>%s - Connection to %x:%x:%x:%x:%x:%x",&number,eventType,&unsignedMAC[0],&unsignedMAC[1],&unsignedMAC[2],&unsignedMAC[3],&unsignedMAC[4],&unsignedMAC[5]);
         for (int i = 0; i < 6; i++) {
-            MAC[i] = (int)unsignedMAC[i];
+            MAC[i] = (uint8_t)unsignedMAC[i];
             eventInfo.MAC[i]=MAC[i];
         }
         wifi_event_handlers[WIFI_EVENT_STA_CONNECTED](&eventInfo);
@@ -172,7 +173,7 @@ void parseWifiEventInfo(char *msg){
         int reason;
         parsedFields = sscanf(msg,"<%i>%s bssid=%x:%x:%x:%x:%x:%x reason=%i",&number,eventType,&unsignedMAC[0],&unsignedMAC[1],&unsignedMAC[2],&unsignedMAC[3],&unsignedMAC[4],&unsignedMAC[5],&reason);
         for (int i = 0; i < 6; i++) {
-            MAC[i] = (int)unsignedMAC[i];
+            MAC[i] = (uint8_t)unsignedMAC[i];
             eventInfo.MAC[i]=MAC[i];
         }
         eventInfo.reason = reason;
@@ -363,7 +364,7 @@ void waitForWifiEvent() {
  * @param IP - the array that will store the IP address.
  * @return void
  */
-void getMyAPIP(int*IP){
+void getMyAPIP(uint8_t*IP){
     int fd;
     struct ifreq ifr; // Structure to hold interface request information
 
@@ -396,7 +397,7 @@ void getMyAPIP(int*IP){
  * @param IP - the array that will store the IP address.
  * @return void.
  */
-void getMySTAIP(int*IP){
+void getMySTAIP(uint8_t*IP){
     int fd;
     struct ifreq ifr; // Structure to hold interface request information
 
@@ -429,7 +430,7 @@ void getMySTAIP(int*IP){
  * @param IP - the array that will store the IP address.
  * @return void
  */
-void getGatewayIP(int*IP){
+void getGatewayIP(uint8_t*IP){
     FILE *fp;
     char line[256];
     char iface[IFNAMSIZ];
@@ -447,7 +448,7 @@ void getGatewayIP(int*IP){
 
     while (fgets(line, sizeof(line), fp)) {
         if (sscanf(line, "%s\t%lx\t%lx", iface, &destination, &gateway) == 3) {
-            if (destination == 0) { // destination 0.0.0.0 means default route
+            if (destination == 0 && strcmp(iface, "wlan0") == 0) { // destination 0.0.0.0 means default route
                 struct in_addr gw_addr;
                 gw_addr.s_addr = gateway;
 
@@ -456,7 +457,7 @@ void getGatewayIP(int*IP){
                 printf("Gateway for interface %s is: %s\n", iface, ip_str);
 
                 // Parse into IP[4]
-                if (sscanf(ip_str, "%d.%d.%d.%d", &IP[0], &IP[1], &IP[2], &IP[3]) != 4) {
+                if (sscanf(ip_str, "%hhu.%hhu.%hhu.%hhu", &IP[0], &IP[1], &IP[2], &IP[3]) != 4) {
                     fprintf(stderr, "Failed to parse gateway IP string.\n");
                 }
                 break;
@@ -474,7 +475,7 @@ void getGatewayIP(int*IP){
  * @param MAC - the array that will store the MAC address.
  * @return void.
  */
-void getMyMAC(int* MAC){
+void getMyMAC(uint8_t* MAC){
     int fd;
     struct ifreq ifr;     // Structure to hold interface request information
 
@@ -643,7 +644,7 @@ int numberOfSTAConnected(){
 void connectToAP(const char * SSID, const char * PASS){
     char command[256];
     snprintf(command, sizeof(command),
-             "nmcli dev wifi connect '%s' password '%s' 2>&1",
+             "nmcli dev wifi connect '%s' password '%s' ifname wlan0 2>&1",
              SSID, PASS);
 
     FILE *fp = popen(command, "r");
@@ -701,7 +702,7 @@ void disconnectFromAP() {
 
 }
 
-void startWifiAP(const char* SSID, const char* Pass, int* localIP, int* gateway, int* subnet){
+void startWifiAP(const char* SSID, const char* Pass, uint8_t* localIP, uint8_t* gateway, uint8_t* subnet){
     //Init Wifi Event Handlers
     initWifiEventHandlers();
     //Init the table that are going to save the lost children information

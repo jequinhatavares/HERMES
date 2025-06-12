@@ -31,8 +31,8 @@ typedef enum wifi_event_t{
 } wifi_event_t;
 
 typedef struct wifi_event_info__t{
-    int IP[4];
-    int MAC[6];
+    uint8_t IP[4];
+    uint8_t MAC[6];
     int reason;
 }wifi_event_info__t;
 
