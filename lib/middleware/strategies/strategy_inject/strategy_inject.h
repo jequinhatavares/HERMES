@@ -22,7 +22,7 @@ typedef enum InjectMessageType{
     INJECT_TABLE_INFO,
 } InjectMessageType;
 
-// Inject strategy API
+// Inject strategy context definition
 typedef struct InjectContext{
     void (*injectNodeMetric)(void* metric);
 } InjectContext;
@@ -31,7 +31,7 @@ extern Strategy strategyInject;
 
 extern unsigned long lastMiddlewareUpdateTimeInject;
 
-void initStrategyInject(void (*setValueFunction)(void*,void*), void *metricStruct, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
+void initStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
 
 void encodeMessageInject(char* messageBuffer, size_t bufferSize, int type);
 void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int type);

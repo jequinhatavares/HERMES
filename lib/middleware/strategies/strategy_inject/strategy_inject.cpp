@@ -66,7 +66,7 @@ void (*decodeMetricValue)(char*,void *) = nullptr;
  *
  * @return void
  */
-void initStrategyInject(void (*setValueFunction)(void*,void*), void *metricValues, size_t metricStructSize,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)) {
+void initStrategyInject(void *metricValues, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)) {
     metricsTable->setValue = setValueFunction;
     tableInit(metricsTable, nodes, metricValues, sizeof(uint8_t [4]), metricStructSize);
 
@@ -191,23 +191,23 @@ void encodeMyMetric(char* messageBuffer, size_t bufferSize){
  * @return void
  */
 void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
-    char metricBuffer[20];
     uint8_t senderIP[4],nodeIP[4];
     void  *emptyEntry = nullptr;
     InjectMessageType injectType;
+    int nChars=0;
 
     //Extract Inject Message Types
     sscanf(messageBuffer,"%*i %i",&injectType);
 
     if(injectType == INJECT_NODE_INFO){
         //MESSAGE_TYPE INJECT_NODE_INFO [sender IP] [nodeIP] metric
-        sscanf(messageBuffer,"%*d %d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",&injectType,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
-               &nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],metricBuffer);
+        sscanf(messageBuffer,"%*d %d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&injectType,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
+               &nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&nChars);
 
         // Check if the nodeIP already exists in the middleware metrics table
         void *metricValue = tableRead(metricsTable,nodeIP);
         if(metricValue != nullptr){// If the nodeIP is already in the table update the corresponding metric value
-            decodeMetricValue(metricBuffer,metricValue);
+            decodeMetricValue(messageBuffer+nChars,metricValue);
             tableUpdate(metricsTable,nodeIP,metricValue);
         }else{
             /*** If it is a new node, add the nodeIP to the table as a key with a corresponding dummy metric value (nullptr).
@@ -215,7 +215,7 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
             We cannot store the actual metric here because its structure is abstract and unknown to this layer.***/
             tableAdd(metricsTable,nodeIP,emptyEntry);
             metricValue = tableRead(metricsTable,nodeIP);
-            decodeMetricValue(metricBuffer,metricValue);
+            decodeMetricValue(messageBuffer+nChars,metricValue);
             tableUpdate(metricsTable,nodeIP,metricValue);
         }
         //Print the updated table
@@ -232,11 +232,11 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
         //To discard the message type and ensure the token points to the first routing table update entry
         token = strtok(NULL, "|");
         while (token != NULL) {
-            sscanf(token,"%hhu.%hhu.%hhu.%hhu %s",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],metricBuffer);
+            sscanf(token,"%hhu.%hhu.%hhu.%hhu %n",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&nChars);
             // Check if the nodeIP already exists in the middleware metrics table
             void *metricValue = tableRead(metricsTable,nodeIP);
             if(metricValue != nullptr){// If the nodeIP is already in the table update the corresponding metric value
-                decodeMetricValue(metricBuffer,metricValue);
+                decodeMetricValue(token+nChars,metricValue);
                 tableUpdate(metricsTable,nodeIP,metricValue);
             }else{
                 /*** If it is a new node, add the nodeIP to the table as a key with a corresponding dummy metric value (nullptr).
@@ -244,9 +244,10 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
                 We cannot store the actual metric here because its structure is abstract and unknown to this layer.***/
                 tableAdd(metricsTable,nodeIP,emptyEntry);
                 metricValue = tableRead(metricsTable,nodeIP);
-                decodeMetricValue(metricBuffer,metricValue);
+                decodeMetricValue(token+nChars,metricValue);
                 tableUpdate(metricsTable,nodeIP,metricValue);
             }
+            nChars=0;
             token = strtok(NULL, "|");
         }
 
