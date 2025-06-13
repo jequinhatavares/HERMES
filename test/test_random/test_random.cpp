@@ -10,7 +10,7 @@
 /*** ****************************** Tests ****************************** ***/
 
 void test_uint8(){
-    //MESSAGE_TYPE TOP_PARENT_REASSIGNMENT_COMMAND [destinationIP] [nodeIP] [parentIP]
+    //MESSAGE_TYPE TOP_PARENT_ASSIGNMENT_COMMAND [destinationIP] [nodeIP] [parentIP]
     uint8_t number = 1,sNumber1,sNumber2,eNumber1 = 7 ,eNumber2 = 8;
     char message[30] = "255.255", buffer[10];
 
