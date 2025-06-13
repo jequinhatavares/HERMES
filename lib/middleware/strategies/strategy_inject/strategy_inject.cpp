@@ -367,7 +367,8 @@ void registerInjectMetric(uint8_t *nodeIP, char* metricBuffer){
     }
 }
 
-/////////// USER Side Functions //////////////////////////
+/******************************-----------Application Defined Functions----------------********************************/
+
 int compareMetrics(void *metricAv,void*metricBv){
     if(metricAv == nullptr && metricBv == nullptr) return -1;
 

@@ -48,14 +48,14 @@ uint8_t nodesTopology[TableMaxSize][4];
 void (*encodeTopologyMetricValue)(char*,size_t,void *) = nullptr;
 void (*decodeTopologyMetricValue)(char*,void *) = nullptr;
 
-void (*chooseParentFunction)(TableInfo *, int**) = nullptr;
+uint8_t * (*chooseParentFunction)(uint8_t *, uint8_t **, uint8_t) = nullptr;
 
 
 TopologyContext topologyContext ={
         .setMetric = topologySetNodeMetric,
 };
 
-void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *)){
+void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t **, uint8_t)){
     //Only the root initializes the table data; that is, only the root maintains a table containing the node metrics used to select parent nodes
     if(!iamRoot) return;
 
@@ -65,7 +65,7 @@ void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStruc
     encodeTopologyMetricValue = encodeTopologyMetricFunction;
     decodeTopologyMetricValue = decodeTopologyMetricFunction;
 
-    //chooseParentFunction = chooseParentFunctionPointer;
+    chooseParentFunction = selectParentFunction;
 }
 
 void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int typeTopology){
@@ -95,8 +95,8 @@ void encodeNodeMetricReport(char* messageBuffer, size_t bufferSize, void* metric
     //Encode the metric value
     encodeTopologyMetricValue(metricBuffer, sizeof(metricBuffer),metric);
 
-    //MESSAGE_TYPE TOP_NODE_METRICS_REPORT [destination:rootIP] [nodeIP] [metric]
-    snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,TOP_NODE_METRICS_REPORT,
+    //MESSAGE_TYPE TOP_METRICS_REPORT [destination:rootIP] [nodeIP] [metric]
+    snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,TOP_METRICS_REPORT,
              rootIP[0],rootIP[1],rootIP[2],rootIP[3],myIP[0],myIP[1],myIP[2],myIP[3],metricBuffer);
 }
 void encodeParentAssignmentCommand(char* messageBuffer, size_t bufferSize, uint8_t * destinationIP, uint8_t * chosenParentIP, uint8_t * targetNodeIP){
@@ -165,15 +165,8 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
         LOG(MESSAGES,INFO,"Received [PARENT_LIST_ADVERTISEMENT] message: \"%s\"\n", messageBuffer);
         sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %n",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3],&nChars);
         // Check if i am the final destination of the message
-        if(isIPEqual(destinationNodeIP,myIP)){
-            /***char* token = strtok(messageBuffer+nChars, " ");
-            while (token != NULL) {
-                sscanf(token,"%d.%d.%d.%d",&IP[0],&IP[1],&IP[2],&IP[3]);
-                // Check if the nodeIP already exists in the middleware metrics table
-                assignIP(possibleParents[i],IP);
-                token = strtok(NULL, " ");
-                i++;
-            }***/
+        if(isIPEqual(destinationNodeIP,myIP) && iamRoot){
+
             chooseParentStrategyTopology(messageBuffer);
 
         }else{ // If not, forward the message to the nextHop to the destination
@@ -202,8 +195,8 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
                 sendMessage(nextHopIP,messageBuffer);
             }
         }
-    }else if(type ==TOP_NODE_METRICS_REPORT){
-        //MESSAGE_TYPE TOP_NODE_METRICS_REPORT [destination:rootIP] [nodeIP] [metric]
+    }else if(type ==TOP_METRICS_REPORT){
+        //MESSAGE_TYPE TOP_METRICS_REPORT [destination:rootIP] [nodeIP] [metric]
         if(!iamRoot){// If the node is not the root, the metrics message is not intended for it
             nextHopIP = findRouteToNode(rootIP);
             if(nextHopIP != nullptr){
@@ -215,7 +208,6 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
             sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n"
                    ,&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3],
                    &targetNodeIP[0],&targetNodeIP[1],&targetNodeIP[2],&targetNodeIP[3], &nChars);
-
 
             //Decode and register the metric in the table
             registerTopologyMetric(targetNodeIP,messageBuffer+nChars);
@@ -380,4 +372,53 @@ void topologySetNodeMetric(void* metric){
             tableUpdate(metricsTable, myIP, metric);
         }
     }
+}
+
+
+void* getNodeTopologyMetric(uint8_t * nodeIP){
+    return tableRead(topologyMetricsTable,nodeIP);
+}
+
+/******************************-----------Application Defined Functions----------------********************************/
+
+uint8_t * chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t **potentialParents, uint8_t nPotentialParents){
+    int maxProcessingCapacity = 0;
+    int bestParentIndex = -1;
+    topologyTableEntry *topologyMetricValue;
+
+    for (int i = 0; i < nPotentialParents; i++) {
+        topologyMetricValue = (topologyTableEntry*) getNodeTopologyMetric(potentialParents[i]);
+        if(topologyMetricValue->processingCapacity >= maxProcessingCapacity){
+            bestParentIndex = i;
+        }
+    }
+
+    if(bestParentIndex != -1) return potentialParents[bestParentIndex];
+    else return nullptr;
+
+}
+
+void encodeTopologyMetricEntry(char* buffer, size_t bufferSize, void *metricEntry){
+    topologyTableEntry *metric = (topologyTableEntry*) metricEntry;
+    snprintf(buffer,bufferSize,"%i", metric->processingCapacity);
+}
+
+void decodeTopologyMetricEntry(char* buffer, void *metricEntry){
+    topologyTableEntry *metric = (topologyTableEntry*)metricEntry;
+    sscanf(buffer,"%i", &metric->processingCapacity);
+}
+
+
+void setTopologyMetricValue(void* av, void*bv){
+    if(bv == nullptr)return; //
+    topologyTableEntry *a = (topologyTableEntry *) av;
+    topologyTableEntry *b = (topologyTableEntry *) bv;
+
+    a->processingCapacity = b->processingCapacity;
+}
+
+void printTopologyMetricStruct(TableEntry* Table){
+    LOG(NETWORK,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → (Topology Metric: %d) \n",
+        ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
+        ((topologyTableEntry *)Table->value)->processingCapacity);
 }

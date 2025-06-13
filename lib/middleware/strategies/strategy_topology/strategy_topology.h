@@ -19,11 +19,14 @@ extern Strategy strategyTopology;
 extern int orphanIP[4];
 extern int newParentIP[4];
 
+extern TableInfo* topologyMetricsTable;
+
+
 typedef enum TopologyMessageType{
     TOP_PARENT_LIST_ADVERTISEMENT_REQUEST,//0
     TOP_PARENT_LIST_ADVERTISEMENT,//1
     TOP_PARENT_REASSIGNMENT_COMMAND, //2
-    TOP_NODE_METRICS_REPORT, //3
+    TOP_METRICS_REPORT, //3
 } TopologyMessageType;
 
 
@@ -32,7 +35,11 @@ typedef struct TopologyContext{
     void (*setMetric)(void* metric);
 } TopologyContext;
 
-void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *));
+struct topologyTableEntry{
+    int processingCapacity;
+};
+
+void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *), uint8_t* (*selectParentFunction)(uint8_t *, uint8_t **, uint8_t));
 void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int typeTopology);
 void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize);
 void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]);
@@ -50,6 +57,15 @@ parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossiblePa
 void chooseParentStrategyTopology(char* message);
 
 void topologySetNodeMetric(void* metric);
+
+
+/******************************-----------Application Defined Functions----------------********************************/
+
+uint8_t * chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t **potentialParents, uint8_t nPotentialParents);
+void encodeTopologyMetricEntry(char* buffer, size_t bufferSize, void *metricEntry);
+void decodeTopologyMetricEntry(char* buffer, void *metricEntry);
+void setTopologyMetricValue(void* av, void*bv);
+void printTopologyMetricStruct(TableEntry* Table);
 
 
 #endif //STRATEGY_TOPOLOGY_H
