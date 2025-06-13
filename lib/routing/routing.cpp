@@ -31,7 +31,7 @@ unsigned long lastRoutingUpdateTime;
  * RTable - A struct that holds routing table metadata, including:
  * * * .numberOfItems - The current number of entries in the routing table.
  * * * .isEqual - A function pointer for comparing table keys (IP addresses).
- * * * .setKey - A function pointer for assigning preallocated memory for keys (IP addresses stored as int[4]).
+ * * * .setIP - A function pointer for assigning preallocated memory for keys (IP addresses stored as int[4]).
  * * * .setValue - A function pointer for assigning preallocated memory for values (routing table entries of type routingTableEntry).
  * * * .table - A pointer to the rTable.
  *
@@ -43,7 +43,7 @@ TableInfo RTable = {
     .numberOfItems = 0,
     .isEqual = isIPEqual,
     .table = rTable,
-    .setKey = setKey,
+    .setKey = setIP,
     .setValue = setValue,
 };
 TableInfo* routingTable = &RTable;
@@ -72,8 +72,8 @@ TableInfo CTable = {
         .numberOfItems=0,
         .isEqual = isIPEqual,
         .table = cTable,
-        .setKey = setKey,
-        .setValue = setKey,
+        .setKey = setIP,
+        .setValue = setIP,
 };
 TableInfo* childrenTable = &CTable;
 
@@ -103,7 +103,7 @@ void assignIP(uint8_t destIP[4], uint8_t sourceIP[4]){
     destIP[2] = sourceIP[2];destIP[3] = sourceIP[3];
 }
 
-void setKey(void* av, void* bv){
+void setIP(void* av, void* bv){
     uint8_t * a = (uint8_t *) av;
     uint8_t * b = (uint8_t *) bv;
     //Serial.printf("Key.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a[0],a[1],a[2],a[3], b[0],b[1],b[2],b[3]);

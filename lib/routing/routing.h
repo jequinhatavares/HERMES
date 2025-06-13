@@ -40,7 +40,7 @@ extern unsigned long lastRoutingUpdateTime;
 
 bool isIPEqual(void* a, void* b);
 void assignIP(uint8_t destIP[4], uint8_t sourceIP[4]);
-void setKey(void* av, void* bv);
+void setIP(void* av, void* bv);
 void setValue(void* av, void* bv);
 void initTables();
 void printRoutingStruct(TableEntry* Table);

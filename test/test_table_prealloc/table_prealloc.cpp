@@ -33,7 +33,7 @@ void printNodeStruct(TableEntry* Table){
            ((Entry *)Table->value)->IP[2],((Entry *)Table->value)->IP[3]);
 }
 
-void setKey(void* av, void* bv){
+void setIP(void* av, void* bv){
     int* a = (int*) av;
     int* b = (int*) bv;
 
@@ -64,7 +64,7 @@ void test_create_table_info(){
             .numberOfItems = 0,
             .isEqual = vectorEqual,
             .table = table,
-            .setKey = setKey,
+            .setKey = setIP,
             .setValue = setValue,
     };
 
@@ -90,7 +90,7 @@ void test_add_remove(){
             .numberOfItems = 0,
             .isEqual = vectorEqual,
             .table = table,
-            .setKey = setKey,
+            .setKey = setIP,
             .setValue = setValue,
     };
 

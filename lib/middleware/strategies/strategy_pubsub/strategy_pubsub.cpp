@@ -37,7 +37,7 @@ TableInfo PSTable = {
         .numberOfItems = 0,
         .isEqual = isIPEqual,
         .table = psTable,
-        .setKey = setKey,
+        .setKey = setIP,
         .setValue = nullptr,
 };
 TableInfo* pubsubTable = &PSTable;
