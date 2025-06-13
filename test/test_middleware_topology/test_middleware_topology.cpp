@@ -26,7 +26,6 @@ void test_encode_parent_list_advertisement_request(){
 
     encodeParentListAdvertisementRequest(largeSendBuffer, sizeof(largeSendBuffer), possibleParents, nParents, parentIP, mySTAIP);
 
-
     //printf("Encoded message: %s\n", correctEncodedMsg);
     //printf("Encoded message: %s\n", largeSendBuffer);
 

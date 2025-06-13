@@ -3,6 +3,10 @@
 Strategy *activeStrategy = nullptr;
 StrategyType activeStrategyType = STRATEGY_NONE;
 
+bool isStrategyInitialized = false;
+
+
+
 /**
  * middlewareSelectStrategy
  * Selects and activates a middleware strategy to influence routing behavior.
@@ -29,6 +33,7 @@ void middlewareSelectStrategy(StrategyType strategyType){
 
         case STRATEGY_NONE:
             activeStrategyType = STRATEGY_NONE;
+            initMiddlewareCallbacks();
             break;
 
         default:
@@ -71,6 +76,7 @@ void initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,vo
     }
     initStrategyInject(metricStruct,metricStructSize,setValueFunction,encodeMetricFunction,decodeMetricFunction);
     initMiddlewareCallbacks();
+    isStrategyInitialized = true;
 }
 
 /**
@@ -91,6 +97,8 @@ void initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *),void (*
     }
     initStrategyPubSub(setValueFunction,encodeTopicFunction,decodeTopicFunction);
     initMiddlewareCallbacks();
+    isStrategyInitialized = true;
+
 }
 
 //TODO function Header update
@@ -113,6 +121,8 @@ void initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyM
     initStrategyTopology(topologyMetricValues, topologyMetricStructSize,*setValueFunction,encodeTopologyMetricFunction,decodeTopologyMetricFunction,selectParentFunction);
     middlewareChooseParentCallback = requestParentFromRoot;
     initMiddlewareCallbacks();
+    isStrategyInitialized = true;
+
 }
 
 /**
@@ -127,6 +137,12 @@ void middlewareInfluenceRouting(char* dataMessage){
         LOG(NETWORK,ERROR,"ERROR: Trying to influence routing without selecting a middleware strategy\n");
         return;
     }
+    if(!isStrategyInitialized){
+        LOG(NETWORK,ERROR,"ERROR: Trying to influence routing without initializing the middleware strategy\n");
+        return;
+    }
+    if(activeStrategyType == STRATEGY_NONE) return;
+
     activeStrategy->influenceRouting(dataMessage);
 }
 
@@ -144,6 +160,12 @@ void middlewareHandleMessage(char* messageBuffer, size_t bufferSize){
         LOG(NETWORK,ERROR,"ERROR: Cannot handle middleware messages without a strategy selected.\n");
         return;
     }
+    if(!isStrategyInitialized){
+        LOG(NETWORK,ERROR,"ERROR: Cannot handle middleware messages without initializing the selected strategy.\n");
+        return;
+    }
+    if(activeStrategyType == STRATEGY_NONE) return;
+
     activeStrategy->handleMessage(messageBuffer,bufferSize);
 }
 
@@ -162,6 +184,12 @@ void middlewareEncodeMessage(char* messageBuffer, size_t bufferSize, int type){
         LOG(NETWORK,ERROR,"ERROR: Cannot encode middleware messages without a strategy selected.\n");
         return;
     }
+    if(!isStrategyInitialized){
+        LOG(NETWORK,ERROR,"ERROR: Cannot encode middleware messages without a strategy initialized.\n");
+        return;
+    }
+    if(activeStrategyType == STRATEGY_NONE) return;
+
     activeStrategy->encodeMessage(messageBuffer,bufferSize,type);
 }
 
@@ -176,6 +204,12 @@ void middlewareOnTimer(){
         LOG(NETWORK,ERROR,"ERROR: Cannot perform middleware periodic tasks, no active strategy selected.\n");
         return;
     }
+    if(!isStrategyInitialized){
+        LOG(NETWORK,ERROR,"ERROR: Cannot perform middleware periodic tasks without the strategy initialized.\n");
+        return;
+    }
+    if(activeStrategyType == STRATEGY_NONE) return;
+
     activeStrategy->onTimer();
 }
 
@@ -190,9 +224,15 @@ void middlewareOnTimer(){
  */
 void middlewareOnNetworkEvent(int networkEvent, uint8_t involvedIP[4]){
     if(activeStrategy == nullptr){
-        LOG(NETWORK,ERROR,"ERROR: Cannot perform middleware periodic tasks, no active strategy selected.\n");
+        LOG(NETWORK,ERROR,"ERROR: Cannot perform middleware onNetworkEvent tasks, no active strategy selected.\n");
         return;
     }
+    if(!isStrategyInitialized){
+        LOG(NETWORK,ERROR,"ERROR: Cannot perform middleware onNetworkEvent tasks without a strategy initialized.\n");
+        return;
+    }
+    if(activeStrategyType == STRATEGY_NONE) return;
+
     activeStrategy->onNetworkEvent(networkEvent, involvedIP);
 }
 
@@ -207,5 +247,11 @@ void* middlewareGetStrategyContext(){
         LOG(NETWORK,ERROR,"ERROR: Cannot get strategy context without a strategy selected.\n");
         return nullptr;
     }
+    if(!isStrategyInitialized){
+        LOG(NETWORK,ERROR,"ERROR: Cannot get strategy context without a strategy initialized.\n");
+        return nullptr;
+    }
+    if(activeStrategyType == STRATEGY_NONE) return nullptr;
+
     return activeStrategy->getContext();
 }

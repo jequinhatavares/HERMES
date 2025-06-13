@@ -15,6 +15,7 @@
 //227:96:230:135 root
 //227:96:237:119
 
+topologyTableEntry topologyMetrics[TableMaxSize];
 
 metricTableEntry metrics[TableMaxSize];
 
@@ -97,7 +98,7 @@ void setup(){
     }***/
 
     middlewareSelectStrategy(STRATEGY_TOPOLOGY);
-    initMiddlewareStrategyTopology();
+    initStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,chooseParentByProcessingCapacity);
 
     if(!iamRoot){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Search APs

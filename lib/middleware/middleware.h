@@ -18,7 +18,7 @@ typedef enum StrategyType{
 
 extern StrategyType activeStrategyType;
 
-
+void initMiddlewareCallbacks();
 
 void middlewareSelectStrategy(StrategyType strategyType);
 void initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
