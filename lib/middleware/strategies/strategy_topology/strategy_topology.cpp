@@ -38,7 +38,7 @@ TableInfo TTable = {
         .numberOfItems = 0,
         .isEqual = isIPEqual,
         .table = tTable,
-        .setKey = setKey,
+        .setKey = setIP,
         .setValue = nullptr,
 };
 TableInfo* topologyMetricsTable = &TTable;
@@ -69,8 +69,6 @@ void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStruc
 }
 
 void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int typeTopology){
-    int nodeIP[4],MAC[6];
-    int offset = 0;
 
     /***if(typeTopology == TOP_PARENT_LIST_ADVERTISEMENT){
         //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
@@ -108,7 +106,7 @@ void encodeParentAssignmentCommand(char* messageBuffer, size_t bufferSize, uint8
              ,chosenParentIP[0],chosenParentIP[1],chosenParentIP[2],chosenParentIP[3]);
 }
 void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize, parentInfo* possibleParents, int nrOfPossibleParents, uint8_t *temporaryParent, uint8_t *mySTAIP){
-    int offset = 0;
+    int offset;
 
     /*** This is an intermediary message sent to the temporary parent.
          Since the node is not yet integrated into the network and doesn't know the root IP, the destination field is set to the temporary parent’s IP.
@@ -130,8 +128,7 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
     TopologyMessageType type;
     uint8_t destinationNodeIP[4],*nextHopIP,targetNodeIP[4];
     int nChars = 0;
-    void *metricValue;
-    void *emptyEntry = nullptr;
+
     //Extract Inject Message Types
     sscanf(messageBuffer,"%*i %i",&type);
 
@@ -219,19 +216,10 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
                    ,&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3],
                    &targetNodeIP[0],&targetNodeIP[1],&targetNodeIP[2],&targetNodeIP[3], &nChars);
 
-            metricValue = tableRead(metricsTable,targetNodeIP);
-            if(metricValue != nullptr){// If the nodeIP is already in the table update the corresponding metric value
-                decodeTopologyMetricValue(messageBuffer+nChars,metricValue);
-                tableUpdate(metricsTable,targetNodeIP,metricValue);
-            }else{
-                /*** If it is a new node, add the nodeIP to the table as a key with a corresponding dummy metric value (nullptr).
-                This ensures that when the key is searched later, the function returns a pointer to a user-allocated struct.
-                We cannot store the actual metric here because its structure is abstract and unknown to this layer.***/
-                tableAdd(metricsTable,targetNodeIP,emptyEntry);
-                metricValue = tableRead(metricsTable,targetNodeIP);
-                decodeTopologyMetricValue(messageBuffer+nChars,metricValue);
-                tableUpdate(metricsTable,targetNodeIP,metricValue);
-            }
+
+            //Decode and register the metric in the table
+            registerTopologyMetric(targetNodeIP,messageBuffer+nChars);
+
         }
     }
 }
@@ -249,6 +237,22 @@ void* getContextStrategyTopology(){
     return &topologyContext;
 }
 
+void registerTopologyMetric(uint8_t *nodeIP, char* metricBuffer){
+    void *emptyEntry = nullptr;
+    void *metricValue = tableRead(topologyMetricsTable,nodeIP);
+    if(metricValue != nullptr){// If the nodeIP is already in the table update the corresponding metric value
+        decodeTopologyMetricValue(metricBuffer,metricValue);
+        tableUpdate(topologyMetricsTable,nodeIP,metricValue);
+    }else {
+        /*** If it is a new node, add the nodeIP to the table as a key with a corresponding dummy metric value (nullptr).
+        This ensures that when the key is searched later, the function returns a pointer to a user-allocated struct.
+        We cannot store the actual metric here because its structure is abstract and unknown to this layer.***/
+        tableAdd(topologyMetricsTable, nodeIP, emptyEntry);
+        metricValue = tableRead(topologyMetricsTable, nodeIP);
+        decodeTopologyMetricValue(metricBuffer, metricValue);
+        tableUpdate(topologyMetricsTable, nodeIP, metricValue);
+    }
+}
 
 parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossibleParents){
     uint8_t mySTAIP[4], temporaryParent[4],assignedParent[4];
