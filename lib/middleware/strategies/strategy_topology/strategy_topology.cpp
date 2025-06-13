@@ -382,15 +382,18 @@ void chooseParentStrategyTopology(char* messageBuffer){
 }
 
 void topologySetNodeMetric(void* metric){
+    uint8_t *nextHopIP;
 
     if(!iamRoot){ // If this node is not the root, send its metric data to the root for storage in the topologyMetricsTable.
-        uint8_t *nextHopIP;
-        encodeNodeMetricReport(smallSendBuffer,sizeof(smallSendBuffer),metric);
-        nextHopIP = findRouteToNode(rootIP);
-        if(nextHopIP != nullptr){
-            sendMessage(nextHopIP,smallSendBuffer);
-        }else{
-            LOG(NETWORK,ERROR,"❌ERROR: No path to root node was found in the routing table.\n");
+        // Only send the metric message to the root if the node is already part of the network
+        if(hasParent){
+            encodeNodeMetricReport(smallSendBuffer,sizeof(smallSendBuffer),metric);
+            nextHopIP = findRouteToNode(rootIP);
+            if(nextHopIP != nullptr){
+                sendMessage(nextHopIP,smallSendBuffer);
+            }else{
+                LOG(NETWORK,ERROR,"❌ERROR: No path to root node was found in the routing table.\n");
+            }
         }
 
     }else{ // If the node is the root, it can directly store the metric in the topologyMetricsTable.
