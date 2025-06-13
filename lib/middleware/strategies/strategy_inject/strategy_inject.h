@@ -45,10 +45,13 @@ void injectNodeMetric(void* metric);
 
 void encodeMyMetric(char* messageBuffer, size_t bufferSize);
 void rewriteSenderIPInject(char* messageBuffer, char* writeBuffer, size_t writeBufferSize, InjectMessageType type);
+
+void registerInjectMetric(uint8_t *nodeIP, char* metricBuffer);
+
 void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry);
 void decodeMetricEntry(char* buffer, void *metricEntry);
-void printMetricStruct(TableEntry* Table);
 void setMetricValue(void* av, void*bv);
+void printMetricStruct(TableEntry* Table);
 int compareMetrics(void *metricAv,void*metricBv);
 
 void setIP(void* av, void* bv);
