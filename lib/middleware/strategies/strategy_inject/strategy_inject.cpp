@@ -238,11 +238,15 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
  * @return void
  */
 void onNetworkEventStrategyInject(int networkEvent, uint8_t involvedIP[4]){
+    void* metricValue;
     switch (networkEvent) {
         case NETEVENT_JOINED_NETWORK:
-            encodeMessageStrategyInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
-            sendMessage(involvedIP,smallSendBuffer);
-            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_NODE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+            metricValue = tableRead(metricsTable,myIP);
+            if(metricValue != nullptr){ // If a metric was initialized by the application, send my metric value to the parent node
+                encodeMessageStrategyInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
+                sendMessage(involvedIP,smallSendBuffer);
+                LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_NODE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+            }
             break;
         case NETEVENT_CHILD_CONNECTED:
             encodeMessageStrategyInject(largeSendBuffer, sizeof(largeSendBuffer),INJECT_TABLE_INFO);
