@@ -48,14 +48,14 @@ uint8_t nodesTopology[TableMaxSize][4];
 void (*encodeTopologyMetricValue)(char*,size_t,void *) = nullptr;
 void (*decodeTopologyMetricValue)(char*,void *) = nullptr;
 
-uint8_t * (*chooseParentFunction)(uint8_t *, uint8_t **, uint8_t) = nullptr;
+uint8_t * (*chooseParentFunction)(uint8_t *, uint8_t (*)[4] , uint8_t) = nullptr;
 
 
 TopologyContext topologyContext ={
         .setMetric = topologySetNodeMetric,
 };
 
-void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t **, uint8_t)){
+void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t)){
     //Only the root initializes the table data; that is, only the root maintains a table containing the node metrics used to select parent nodes
     if(!iamRoot) return;
 
@@ -82,9 +82,9 @@ void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int t
             offset += snprintf(messageBuffer + offset, bufferSize - offset," %i.%i.%i.%i",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
         }
 
-    }else if(typeTopology == TOP_PARENT_REASSIGNMENT_COMMAND){
-        //MESSAGE_TYPE TOP_PARENT_REASSIGNMENT_COMMAND [tmpParentIP] [nodeIP] [parentIP]
-        snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,TOP_PARENT_REASSIGNMENT_COMMAND,orphanIP[0],orphanIP[1],orphanIP[2],orphanIP[3],
+    }else if(typeTopology == TOP_PARENT_ASSIGNMENT_COMMAND){
+        //MESSAGE_TYPE TOP_PARENT_ASSIGNMENT_COMMAND [tmpParentIP] [nodeIP] [parentIP]
+        snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,TOP_PARENT_ASSIGNMENT_COMMAND,orphanIP[0],orphanIP[1],orphanIP[2],orphanIP[3],
                  newParentIP[0],newParentIP[1],newParentIP[2],newParentIP[3]);
     }***/
 }
@@ -100,8 +100,8 @@ void encodeNodeMetricReport(char* messageBuffer, size_t bufferSize, void* metric
              rootIP[0],rootIP[1],rootIP[2],rootIP[3],myIP[0],myIP[1],myIP[2],myIP[3],metricBuffer);
 }
 void encodeParentAssignmentCommand(char* messageBuffer, size_t bufferSize, uint8_t * destinationIP, uint8_t * chosenParentIP, uint8_t * targetNodeIP){
-    //MESSAGE_TYPE TOP_PARENT_REASSIGNMENT_COMMAND [destinationIP] [nodeIP] [parentIP]
-    snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",MIDDLEWARE_MESSAGE,TOP_PARENT_REASSIGNMENT_COMMAND
+    //MESSAGE_TYPE TOP_PARENT_ASSIGNMENT_COMMAND [destinationIP] [nodeIP] [parentIP]
+    snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",MIDDLEWARE_MESSAGE,TOP_PARENT_ASSIGNMENT_COMMAND
              ,destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],targetNodeIP[0],targetNodeIP[1],targetNodeIP[2],targetNodeIP[3]
              ,chosenParentIP[0],chosenParentIP[1],chosenParentIP[2],chosenParentIP[3]);
 }
@@ -175,10 +175,10 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
                 sendMessage(nextHopIP,messageBuffer);
             }
         }
-    }else if(type == TOP_PARENT_REASSIGNMENT_COMMAND){
+    }else if(type == TOP_PARENT_ASSIGNMENT_COMMAND){
         LOG(MESSAGES,INFO,"Received [PARENT_REASSIGNMENT_COMMAND] message: \"%s\"\n", messageBuffer);
 
-        //MESSAGE_TYPE TOP_PARENT_REASSIGNMENT_COMMAND [destinationIP] [nodeIP] [parentIP]
+        //MESSAGE_TYPE TOP_PARENT_ASSIGNMENT_COMMAND [destinationIP] [nodeIP] [parentIP]
         sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3]);
         // Check if i am the final destination of the message
         if(isIPEqual(destinationNodeIP,myIP)){
@@ -186,7 +186,7 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
             sscanf(messageBuffer,"%*d %*d %*u.%*u.%*u.%*u %hhu.%hhu.%hhu.%hhu",&targetNodeIP[0],&targetNodeIP[1],&targetNodeIP[2],&targetNodeIP[3]);
             if(isIPEqual(targetNodeIP,tmpChildIP)){
                 //Change the message destination IP to the childIP
-                //snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,TOP_PARENT_REASSIGNMENT_COMMAND,tmpChildIP[0],tmpChildIP[1],tmpChildIP[2],tmpChildIP[3],tmpChildIP[0],tmpChildIP[1],tmpChildIP[2],tmpChildIP[3],);
+                //snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i %i.%i.%i.%i",MIDDLEWARE_MESSAGE,TOP_PARENT_ASSIGNMENT_COMMAND,tmpChildIP[0],tmpChildIP[1],tmpChildIP[2],tmpChildIP[3],tmpChildIP[0],tmpChildIP[1],tmpChildIP[2],tmpChildIP[3],);
                 sendMessage(tmpChildSTAIP,messageBuffer);
             }
         }else{ // If not, forward the message to the nextHop to the destination
@@ -279,7 +279,7 @@ parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossiblePa
         currentTime = getCurrentTime();
         if(packetSize>0){
             sscanf(receiveBuffer, "%*d %d",&receivedMessageType);
-            if(receivedMessageType == TOP_PARENT_REASSIGNMENT_COMMAND){
+            if(receivedMessageType == TOP_PARENT_ASSIGNMENT_COMMAND){
                 isExpectedMessage = true;
             }
         }
@@ -290,7 +290,7 @@ parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossiblePa
     //Disconnect from the temporary parent
     disconnectFromAP();
 
-    //Parse the received TOP_PARENT_REASSIGNMENT_COMMAND
+    //Parse the received TOP_PARENT_ASSIGNMENT_COMMAND
     if(isExpectedMessage == true){
         sscanf(receiveBuffer,"%*d %*u %*u.%*u.%*u.%*u %hhu.%hhu.%hhu.%hhu",&assignedParent[0],&assignedParent[1],&assignedParent[2],&assignedParent[3]);
         // Search in the possibleParents the chosen one
@@ -310,7 +310,8 @@ parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossiblePa
 }
 
 void chooseParentStrategyTopology(char* messageBuffer){
-    uint8_t sourceIP[4], targetNodeIP[4],possibleParents[TableMaxSize][4],IP[4],chosenParentIP[4],*nextHopIP;
+    uint8_t sourceIP[4], targetNodeIP[4],possibleParents[TableMaxSize][4],IP[4],*chosenParentIP = nullptr,*nextHopIP;
+    uint8_t blankParent[4]={0,0,0,0};
     int middlewareMessageType,nChars=0,parentsCount=0;
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP =root] [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
@@ -328,11 +329,19 @@ void chooseParentStrategyTopology(char* messageBuffer){
         parentsCount++;
     }
 
-    //Select the node parent from the list of candidates
-    assignIP(chosenParentIP, possibleParents[0]);
-    //TODO choose parent
+    //Select the node parent from the list of candidates using the application provided function
+    if(chooseParentFunction == nullptr)LOG(MIDDLEWARE,ERROR,"ERROR: Choose Parent Function not initialized\n");
+    else{
+        chosenParentIP = chooseParentFunction(targetNodeIP,possibleParents,parentsCount);
+    }
 
-    // Encode a TOP_PARENT_REASSIGNMENT_COMMAND to be sent either directly to the new node or to its temporary parent, who will relay the message
+    //If the APP function did not find any suitable parent then return without sending the Parent Assign Command
+    if(chosenParentIP == nullptr){
+        LOG(MIDDLEWARE,DEBUG,"No parent chosen\n");
+        return;
+    }
+
+    // Encode a TOP_PARENT_ASSIGNMENT_COMMAND to be sent either directly to the new node or to its temporary parent, who will relay the message
     if(middlewareMessageType == TOP_PARENT_LIST_ADVERTISEMENT_REQUEST){
         // If the message is of type TOP_PARENT_LIST_ADVERTISEMENT_REQUEST, it came directly from the new node we can send the new parent command to it directly
         encodeParentAssignmentCommand(smallSendBuffer,sizeof(smallSendBuffer), targetNodeIP, chosenParentIP,targetNodeIP);
@@ -349,7 +358,7 @@ void chooseParentStrategyTopology(char* messageBuffer){
         }
         LOG(MIDDLEWARE,INFO,"Sending %s to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer, sourceIP[0],sourceIP[1],sourceIP[2],sourceIP[3]);
 
-    }
+    }/******/
 }
 
 void topologySetNodeMetric(void* metric){
@@ -381,21 +390,22 @@ void* getNodeTopologyMetric(uint8_t * nodeIP){
 
 /******************************-----------Application Defined Functions----------------********************************/
 
-uint8_t * chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t **potentialParents, uint8_t nPotentialParents){
+uint8_t * chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t potentialParents[][4], uint8_t nPotentialParents){
     int maxProcessingCapacity = 0;
     int bestParentIndex = -1;
     topologyTableEntry *topologyMetricValue;
 
     for (int i = 0; i < nPotentialParents; i++) {
         topologyMetricValue = (topologyTableEntry*) getNodeTopologyMetric(potentialParents[i]);
-        if(topologyMetricValue->processingCapacity >= maxProcessingCapacity){
-            bestParentIndex = i;
+        if(topologyMetricValue != nullptr){
+            if(topologyMetricValue->processingCapacity >= maxProcessingCapacity){
+                bestParentIndex = i;
+            }
         }
     }
-
     if(bestParentIndex != -1) return potentialParents[bestParentIndex];
-    else return nullptr;
-
+    else{ return nullptr;}/******/
+    return nullptr;
 }
 
 void encodeTopologyMetricEntry(char* buffer, size_t bufferSize, void *metricEntry){
