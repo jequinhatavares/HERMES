@@ -105,12 +105,12 @@ void initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *),void (*
  *
  * @return void
  */
-void initMiddlewareStrategyTopology(){
+void initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t)){
     if(activeStrategy == nullptr){
         LOG(NETWORK,ERROR,"ERROR: Initialization attempted without a selected strategy\n");
         return;
     }
-    //initStrategyTopology();
+    initStrategyTopology(topologyMetricValues, topologyMetricStructSize,*setValueFunction,encodeTopologyMetricFunction,decodeTopologyMetricFunction,selectParentFunction);
     middlewareChooseParentCallback = requestParentFromRoot;
     initMiddlewareCallbacks();
 }
