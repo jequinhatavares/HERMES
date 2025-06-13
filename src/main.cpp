@@ -99,6 +99,9 @@ void setup(){
 
     middlewareSelectStrategy(STRATEGY_TOPOLOGY);
     initStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,chooseParentByProcessingCapacity);
+    TopologyContext *context = (TopologyContext*) middlewareGetStrategyContext();
+    myMetric.processingCapacity = MAC[5];
+    context->setMetric(&myMetric);
 
     if(!iamRoot){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Search APs
