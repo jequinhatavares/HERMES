@@ -101,15 +101,17 @@ void initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *),void (*
 
 }
 
-//TODO function Header update
 /**
  * initMiddlewareStrategyTopology
  * Initializes the middleware strategy Topology by assigning the required function pointers.
- * This function must be called only after selecting the STRATEGY_TOPOLOGY strategy using middlewareSelectStrategy.
+ * This function must be called only after selecting the STRATEGY_TOPOLOGY using middlewareSelectStrategy.
  *
- * @param setValueFunction - Pointer to the function responsible for updating values within the pubsub table.
- * @param encodeTopicFunction - Pointer to the function responsible for encoding the topic data into a buffer.
- * @param decodeTopicFunction - Pointer to the function responsible for decoding a buffer into a topic identifier.
+ * @param topologyMetricValues - Pointer to the memory where the topology metric table values are allocated.
+ * @param topologyMetricStructSize - Size of the topology metric structure in bytes.
+ * @param setValueFunction - Pointer to the function responsible for updating values within the topology table.
+ * @param encodeTopicFunction - Pointer to the function responsible for encoding the topology data into a buffer.
+ * @param decodeTopicFunction - Pointer to the function responsible for decoding a buffer into a topology metric struct.
+ * @param selectParentFunction - Pointer to the function that selects the parent for a new node from a list of potential parents
  *
  * @return void
  */
