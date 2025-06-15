@@ -212,8 +212,6 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
 
             //Decode and register the metric in the table
             registerTopologyMetric(targetNodeIP,messageBuffer+nChars);
-            LOG(MIDDLEWARE,INFO,"My Middleware Table Updated: \n");
-            tablePrint(topologyMetricsTable,printTopologyMetricStruct);
         }
     }
 }
@@ -406,8 +404,6 @@ void topologySetNodeMetric(void* metric){
         }else{ //The node is already present in the table
             tableUpdate(topologyMetricsTable, myIP, metric);
         }
-        LOG(MIDDLEWARE,INFO,"My Middleware Table: \n");
-        tablePrint(topologyMetricsTable,printTopologyMetricStruct);
 
     }else{ // If the node is the root, it can directly store the metric in the topologyMetricsTable.
         void* tableEntry = tableRead(topologyMetricsTable,myIP);
@@ -416,8 +412,6 @@ void topologySetNodeMetric(void* metric){
         }else{ //The node is already present in the table
             tableUpdate(topologyMetricsTable, myIP, metric);
         }
-        LOG(MIDDLEWARE,INFO,"My Middleware Table: \n");
-        tablePrint(topologyMetricsTable,printTopologyMetricStruct);
     }
     hasTopologyMetric = true;
 }
