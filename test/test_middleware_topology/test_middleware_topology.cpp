@@ -13,7 +13,7 @@ topologyTableEntry topologyMetrics[TableMaxSize];
 
 void test_encode_parent_list_advertisement_request(){
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [tmp parent IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
-    char correctEncodedMsg[100] = "13 0 3.3.3.3 3.3.3.1 1.1.1.1 2.2.2.2 2.2.2.2 2.2.2.2";
+    char correctEncodedMsg[100] = "10 0 3.3.3.3 3.3.3.1 1.1.1.1 2.2.2.2 2.2.2.2 2.2.2.2";
     parentInfo possibleParents[3];
     uint8_t nParents=0, IP[4] = {2,2,2,2},parentIP[4] = {3,3,3,3},mySTAIP[4] = {3,3,3,1};
 
@@ -26,17 +26,17 @@ void test_encode_parent_list_advertisement_request(){
 
     encodeParentListAdvertisementRequest(largeSendBuffer, sizeof(largeSendBuffer), possibleParents, nParents, parentIP, mySTAIP);
 
-    //printf("Encoded message: %s\n", correctEncodedMsg);
-    //printf("Encoded message: %s\n", largeSendBuffer);
+    printf("Encoded message: %s\n", correctEncodedMsg);
+    printf("Encoded message: %s\n", largeSendBuffer);
 
     TEST_ASSERT(strcmp(largeSendBuffer,correctEncodedMsg) == 0);
 }
 
 void test_handle_parent_advertisement_request(){
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [tmp parent IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
-    char PAR[100] = "13 0 1.1.1.1 1.1.1.0 2.2.2.2 5.5.5.5 5.5.5.5 5.5.5.5";
+    char PAR[100] = "10 0 1.1.1.1 1.1.1.0 2.2.2.2 5.5.5.5 5.5.5.5 5.5.5.5";
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP =root] [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
-    char correctEncodedMsg[100] = "13 1 4.4.4.4 1.1.1.1 2.2.2.2 5.5.5.5 5.5.5.5 5.5.5.5";
+    char correctEncodedMsg[100] = "10 1 4.4.4.4 1.1.1.1 2.2.2.2 5.5.5.5 5.5.5.5 5.5.5.5";
 
     handleMessageStrategyTopology(PAR, sizeof(PAR));
 
@@ -57,8 +57,8 @@ void test_init_strategy_topology(){
 
 void test_root_handle_message_metrics_report(){
     //MESSAGE_TYPE TOP_METRICS_REPORT [destination:rootIP] [nodeIP] [metric]
-    char MR1[100] = "13 3 1.1.1.1 2.2.2.2 2",MR2[100] = "13 3 1.1.1.1 3.3.3.3 3",MR3[100] = "13 3 1.1.1.1 4.4.4.4 4";
-    char correctEncodedMsg[100] = "13 2 3.3.3.3 2.2.2.2 5.5.5.5";
+    char MR1[100] = "10 3 1.1.1.1 2.2.2.2 2",MR2[100] = "10 3 1.1.1.1 3.3.3.3 3",MR3[100] = "10 3 1.1.1.1 4.4.4.4 4";
+    char correctEncodedMsg[100] = "10 2 3.3.3.3 2.2.2.2 5.5.5.5";
     uint8_t IP1[4]={2,2,2,2}, IP2[4]={3,3,3,3}, IP3[4]={4,4,4,4};
 
     uint8_t root[4]={1,1,1,1};
@@ -91,11 +91,11 @@ void test_root_handle_message_metrics_report(){
 }
 
 void test_root_handle_parent_advertisement_request(){
-    char MR1[100] = "13 3 1.1.1.1 2.2.2.2 2",MR2[100] = "13 3 1.1.1.1 3.3.3.3 3",MR3[100] = "13 3 1.1.1.1 4.4.4.4 4";
+    char MR1[100] = "10 3 1.1.1.1 2.2.2.2 2",MR2[100] = "10 3 1.1.1.1 3.3.3.3 3",MR3[100] = "10 3 1.1.1.1 4.4.4.4 4";
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [tmp parent IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
-    char PAR[100] = "13 0 1.1.1.1 1.1.1.0 5.5.5.5 2.2.2.2 3.3.3.3";
+    char PAR[100] = "10 0 1.1.1.1 1.1.1.0 5.5.5.5 2.2.2.2 3.3.3.3";
     //MESSAGE_TYPE TOP_PARENT_ASSIGNMENT_COMMAND [destinationIP] [nodeIP] [parentIP]
-    char correctEncodedMsg[100] = "13 2 5.5.5.5 5.5.5.5 3.3.3.3";
+    char correctEncodedMsg[100] = "10 2 5.5.5.5 5.5.5.5 3.3.3.3";
 
     iamRoot = true;
     initStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,chooseParentByProcessingCapacity);
@@ -117,9 +117,9 @@ void test_root_handle_parent_advertisement_request(){
 
 void test_root_handle_parent_list_advertisement(){
     //MESSAGE_TYPE TOP_METRICS_REPORT [destination:rootIP] [nodeIP] [metric]
-    char MR1[100] = "13 3 1.1.1.1 2.2.2.2 2",MR2[100] = "13 3 1.1.1.1 3.3.3.3 3",MR3[100] = "13 3 1.1.1.1 4.4.4.4 4";
-    char PLA[100] = "13 1 1.1.1.1 2.2.2.2 5.5.5.5 2.2.2.2 4.4.4.4";
-    char correctEncodedMsg[100] = "13 2 2.2.2.2 5.5.5.5 4.4.4.4";
+    char MR1[100] = "10 3 1.1.1.1 2.2.2.2 2",MR2[100] = "10 3 1.1.1.1 3.3.3.3 3",MR3[100] = "10 3 1.1.1.1 4.4.4.4 4";
+    char PLA[100] = "10 1 1.1.1.1 2.2.2.2 5.5.5.5 2.2.2.2 4.4.4.4";
+    char correctEncodedMsg[100] = "10 2 2.2.2.2 5.5.5.5 4.4.4.4";
     uint8_t IP1[4]={2,2,2,2}, IP2[4]={3,3,3,3}, IP3[4]={4,4,4,4};
 
     uint8_t root[4]={1,1,1,1};
@@ -145,7 +145,7 @@ void test_root_handle_parent_list_advertisement(){
 
 void test_root_handle_parent_advertisement_without_any_metric(){
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP =root] [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
-    char PLA[100] = "13 1 1.1.1.1 2.2.2.2 5.5.5.5 2.2.2.2 4.4.4.4";
+    char PLA[100] = "10 1 1.1.1.1 2.2.2.2 5.5.5.5 2.2.2.2 4.4.4.4";
     //MESSAGE_TYPE TOP_PARENT_ASSIGNMENT_COMMAND [destinationIP] [nodeIP] [parentIP]
     char correctEncodedMsg[100] = "";
 
@@ -167,9 +167,9 @@ void test_root_handle_parent_advertisement_without_any_metric(){
 
 void test_other_node_handle_parent_list_advertisement(){
     //MESSAGE_TYPE TOP_METRICS_REPORT [destination:rootIP] [nodeIP] [metric]
-    char MR1[100] = "13 3 1.1.1.1 2.2.2.2 2",MR2[100] = "13 3 1.1.1.1 3.3.3.3 3",MR3[100] = "13 3 1.1.1.1 4.4.4.4 4";
-    char PLA[100] = "13 1 4.4.4.4 2.2.2.2 5.5.5.5 2.2.2.2 4.4.4.4";
-    char correctEncodedMsg[100] = "13 2 2.2.2.2 5.5.5.5 4.4.4.4";
+    char MR1[100] = "10 3 1.1.1.1 2.2.2.2 2",MR2[100] = "10 3 1.1.1.1 3.3.3.3 3",MR3[100] = "10 3 1.1.1.1 4.4.4.4 4";
+    char PLA[100] = "10 1 4.4.4.4 2.2.2.2 5.5.5.5 2.2.2.2 4.4.4.4";
+    char correctEncodedMsg[100] = "10 2 2.2.2.2 5.5.5.5 4.4.4.4";
     uint8_t IP1[4]={2,2,2,2}, IP2[4]={3,3,3,3}, IP3[4]={4,4,4,4};
 
 

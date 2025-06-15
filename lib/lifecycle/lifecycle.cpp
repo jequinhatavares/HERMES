@@ -358,9 +358,6 @@ State handleMessages(Event event){
             insertLast(stateMachineEngine, eLostParentConnection);
             break;
 
-        case DEBUG_REGISTRATION_REQUEST:
-            if(iamRoot)handleDebugRegistrationRequest(receiveBuffer);
-            break;
 
         case DEBUG_MESSAGE:
             handleDebugMessage(receiveBuffer);

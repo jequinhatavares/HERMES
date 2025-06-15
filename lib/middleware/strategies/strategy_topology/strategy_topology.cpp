@@ -1,5 +1,7 @@
 #include "strategy_topology.h"
 
+//TODO Problemas: todos os nós tem uma tabela de métricas inicializada na memória
+// TODO Talvez retirar o endereço da raiz da mensagem já que a mensagem PLA é sempre para a raíz
 
 Strategy strategyTopology = {
         .handleMessage = handleMessageStrategyTopology,
@@ -8,7 +10,6 @@ Strategy strategyTopology = {
         .onTimer = onTimerStrategyTopology,
         .onNetworkEvent = onNetworkEventStrategyTopology,
         .getContext = getContextStrategyTopology,
-
 };
 
 uint8_t tmpChildIP[4];
@@ -16,6 +17,7 @@ uint8_t tmpChildSTAIP[4];
 
 unsigned long lastMiddlewareUpdateTimeTopology;
 
+bool hasTopologyMetric = false;
 
 /***
  * Topology metrics table
@@ -57,14 +59,13 @@ TopologyContext topologyContext ={
 
 void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t)){
     //Only the root initializes the table data; that is, only the root maintains a table containing the node metrics used to select parent nodes
-    if(!iamRoot) return;
-
+    //if(!iamRoot) return;
     topologyMetricsTable->setValue = setValueFunction;
+
     tableInit(topologyMetricsTable, nodesTopology, topologyMetricValues, sizeof(uint8_t [4]), topologyMetricStructSize);
 
     encodeTopologyMetricValue = encodeTopologyMetricFunction;
     decodeTopologyMetricValue = decodeTopologyMetricFunction;
-
     chooseParentFunction = selectParentFunction;
 }
 
@@ -211,7 +212,8 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
 
             //Decode and register the metric in the table
             registerTopologyMetric(targetNodeIP,messageBuffer+nChars);
-
+            LOG(MIDDLEWARE,INFO,"My Middleware Table Updated: \n");
+            tablePrint(topologyMetricsTable,printTopologyMetricStruct);
         }
     }
 }
@@ -220,16 +222,20 @@ void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]){
     uint8_t *nextHopIP;
     switch (networkEvent) {
         case NETEVENT_JOINED_NETWORK:
-            metricValue = tableRead(topologyMetricsTable,myIP);
-            if(metricValue != nullptr){//If the node already has an associated metric then send it to the root
-                encodeNodeMetricReport(smallSendBuffer, sizeof(smallSendBuffer),metricValue);
-                nextHopIP = findRouteToNode(rootIP);
-                if(nextHopIP != nullptr){
-                    sendMessage(nextHopIP,smallSendBuffer);
-                    LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_NODE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
-                }else{
-                    LOG(NETWORK, ERROR, "❌ ERROR: No path to the root node (%hhu.%hhu.%hhu.%hhu) was found in the routing table.\n",rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
+            if(hasTopologyMetric && !iamRoot){//If the node already has an associated metric then send it to the root
+                metricValue = tableRead(topologyMetricsTable,myIP);
+                if(metricValue != nullptr){
+                    encodeNodeMetricReport(smallSendBuffer, sizeof(smallSendBuffer),metricValue);
+                    nextHopIP = findRouteToNode(rootIP);
+                    if(nextHopIP != nullptr){
+                        sendMessage(nextHopIP,smallSendBuffer);
+                        LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_NODE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+                    }else{
+                        LOG(NETWORK, ERROR, "❌ ERROR: No path to the root node (%hhu.%hhu.%hhu.%hhu) was found in the routing table.\n",rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
+                    }
                 }
+            }else{
+                LOG(MIDDLEWARE,DEBUG,"did not sent any middleware metric\n");
             }
             break;
 
@@ -281,7 +287,6 @@ parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossiblePa
         getMySTAIP(mySTAIP);
     }
 
-
     // Encode the PARENT_LIST_ADVERTISEMENT_REQUEST to send to the temporary parent, for in to send a PARENT_LIST_ADVERTISEMENT to the root
     encodeParentListAdvertisementRequest(largeSendBuffer, sizeof(largeSendBuffer), possibleParents, nrOfPossibleParents, temporaryParent, mySTAIP);
 
@@ -289,7 +294,6 @@ parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossiblePa
     sendMessage(temporaryParent,largeSendBuffer);
 
     LOG(MIDDLEWARE,INFO,"Sending %s to Temporary Parent: %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer, temporaryParent[0],temporaryParent[1],temporaryParent[2],temporaryParent[3]);
-
 
     // Wait for the message from the root assigning me a parent
     unsigned long startTime = getCurrentTime();
@@ -305,18 +309,17 @@ parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossiblePa
         }
     }
 
-    LOG(MIDDLEWARE,INFO,"Received: %s\n",receiveBuffer);
 
     //Disconnect from the temporary parent
     disconnectFromAP();
 
     //Parse the received TOP_PARENT_ASSIGNMENT_COMMAND
     if(isExpectedMessage == true){
-        sscanf(receiveBuffer,"%*d %*u %*u.%*u.%*u.%*u %hhu.%hhu.%hhu.%hhu",&assignedParent[0],&assignedParent[1],&assignedParent[2],&assignedParent[3]);
+        LOG(MIDDLEWARE,INFO,"Received [PARENT_ASSIGNMENT_COMMAND]: %s\n",receiveBuffer);
+        sscanf(receiveBuffer,"%*d %*d %*u.%*u.%*u.%*u %*u.%*u.%*u.%*u %hhu.%hhu.%hhu.%hhu",&assignedParent[0],&assignedParent[1],&assignedParent[2],&assignedParent[3]);
         // Search in the possibleParents the chosen one
         for (int i = 0; i < nrOfPossibleParents; i++) {
             if(isIPEqual(possibleParents[i].parentIP, assignedParent)){
-                LOG(MIDDLEWARE,INFO,"Chosen Parent: %hhu.%hhu.%hhu.%hhu\n",assignedParent[0],assignedParent[1],assignedParent[2],assignedParent[3]);
                 return possibleParents[i];
             }
         }
@@ -396,14 +399,27 @@ void topologySetNodeMetric(void* metric){
             }
         }
 
-    }else{ // If the node is the root, it can directly store the metric in the topologyMetricsTable.
-        void*tableEntry = tableRead(metricsTable,myIP);
+        //Add the node topology metric to the table
+        void* tableEntry = tableRead(topologyMetricsTable,myIP);
         if(tableEntry == nullptr){ //The node is not yet in the table
-            tableAdd(metricsTable, myIP, metric);
+            tableAdd(topologyMetricsTable, myIP, metric);
         }else{ //The node is already present in the table
-            tableUpdate(metricsTable, myIP, metric);
+            tableUpdate(topologyMetricsTable, myIP, metric);
         }
+        LOG(MIDDLEWARE,INFO,"My Middleware Table: \n");
+        tablePrint(topologyMetricsTable,printTopologyMetricStruct);
+
+    }else{ // If the node is the root, it can directly store the metric in the topologyMetricsTable.
+        void* tableEntry = tableRead(topologyMetricsTable,myIP);
+        if(tableEntry == nullptr){ //The node is not yet in the table
+            tableAdd(topologyMetricsTable, myIP, metric);
+        }else{ //The node is already present in the table
+            tableUpdate(topologyMetricsTable, myIP, metric);
+        }
+        LOG(MIDDLEWARE,INFO,"My Middleware Table: \n");
+        tablePrint(topologyMetricsTable,printTopologyMetricStruct);
     }
+    hasTopologyMetric = true;
 }
 
 
@@ -413,7 +429,7 @@ void* getNodeTopologyMetric(uint8_t * nodeIP){
 
 /******************************-----------Application Defined Functions----------------********************************/
 
-uint8_t * chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t potentialParents[][4], uint8_t nPotentialParents){
+uint8_t* chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t potentialParents[][4], uint8_t nPotentialParents){
     int maxProcessingCapacity = 0;
     int bestParentIndex = -1;
     topologyTableEntry *topologyMetricValue;
@@ -421,12 +437,18 @@ uint8_t * chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t poten
     for (int i = 0; i < nPotentialParents; i++) {
         topologyMetricValue = (topologyTableEntry*) getNodeTopologyMetric(potentialParents[i]);
         if(topologyMetricValue != nullptr){
+            LOG(MIDDLEWARE,DEBUG,"Potential Parent: %hhu.%hhu.%hhu.%hhu metric:%d\n",potentialParents[i][0],potentialParents[i][1],potentialParents[i][2],potentialParents[i][3],topologyMetricValue->processingCapacity);
             if(topologyMetricValue->processingCapacity >= maxProcessingCapacity){
                 bestParentIndex = i;
+                maxProcessingCapacity = topologyMetricValue->processingCapacity;
+                LOG(MIDDLEWARE,DEBUG,"Parent Selected\n");
             }
         }
     }
-    if(bestParentIndex != -1) return potentialParents[bestParentIndex];
+    if(bestParentIndex != -1){
+        LOG(MIDDLEWARE,DEBUG,"Chosen Parent: %hhu.%hhu.%hhu.%hhu metric:%d\n",potentialParents[bestParentIndex][0],potentialParents[bestParentIndex][1],potentialParents[bestParentIndex][2],potentialParents[bestParentIndex][3]);
+        return potentialParents[bestParentIndex];
+    }
     else{ return nullptr;}/******/
     return nullptr;
 }

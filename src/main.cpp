@@ -97,11 +97,15 @@ void setup(){
         context->advertiseTopic(CAMERA);
     }***/
 
+    initMiddlewareCallbacks();
+
     middlewareSelectStrategy(STRATEGY_TOPOLOGY);
-    initStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,chooseParentByProcessingCapacity);
+    initMiddlewareStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,chooseParentByProcessingCapacity);
     TopologyContext *context = (TopologyContext*) middlewareGetStrategyContext();
     myMetric.processingCapacity = MAC[5];
-    context->setMetric(&myMetric);
+    if(context != nullptr)context->setMetric(&myMetric);/******/
+
+    //middlewareSelectStrategy(STRATEGY_NONE);
 
     if(!iamRoot){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Search APs

@@ -76,23 +76,6 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
             }
             break;
 
-        case PARENT_LIST_ADVERTISEMENT:
-            //5 [myIP] [rootIP] [parent1IP] [parent2IP] [parent3IP] ...
-            snprintf(msg,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",type,myIP[0],myIP[1],myIP[2],myIP[3],rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
-            for (int i = 0; i < parameters.nrOfNodes; i++) {
-                snprintf(tempMsg,sizeof(tempMsg),"%hhu.%hhu.%hhu.%hhu",parameters.IP[i][0], parameters.IP[i][1],
-                        parameters.IP[i][2], parameters.IP[i][3]);
-
-                strcat(msg, tempMsg);
-                strcpy(tempMsg , "");
-            }
-            break;
-
-        case PARENT_REASSIGNMENT_COMMAND:
-            //6 [nodeIP] [parentIP]
-            snprintf(msg,bufferSize,"%i %hhu.%hhu.%hhu.%hhu",type,parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
-            break;
-
         case TOPOLOGY_BREAK_ALERT:
             //7 [senderIP]
             snprintf(msg,bufferSize,"%i %hhu.%hhu.%hhu.%hhu",type,myIP[0],myIP[1],myIP[2],myIP[3]);
@@ -198,20 +181,6 @@ bool isMessageValid(int expectedMessageType,char* msg){
                 if(sscanf(token, "%hhu.%hhu.%hhu.%hhu %d %d",&IP1[0],&IP1[1],&IP1[2],&IP1[3],&hopDistance,&sequenceNumber) != 6) return false;
                 token = strtok(NULL, "|");
             }
-            return true;
-            break;
-        }
-        case PARENT_LIST_ADVERTISEMENT: {
-            /***int IP1[4], IP2[4];
-            return (sscanf(msg, "%d %d.%d.%d.%d %d.%d.%d.%d", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
-                           &IP2[0], &IP2[1], &IP2[2], &IP2[3]) == 9);***/
-            // extra parent IPs come after, but you could check those separately if needed
-            return true;
-            break;
-        }
-        case PARENT_REASSIGNMENT_COMMAND: {
-            /***int IP[4];
-            return (sscanf(msg, "%d %d.%d.%d.%d", &type, &IP[0], &IP[1], &IP[2], &IP[3]) == 5);***/
             return true;
             break;
         }
@@ -355,7 +324,7 @@ void handleChildRegistrationRequest(char * msg){
     parameters.nrOfNodes = 1;
 
     encodeMessage(smallSendBuffer,sizeof(smallSendBuffer), PARTIAL_ROUTING_TABLE_UPDATE, parameters);
-    LOG(MESSAGES,INFO,"Sending [PARTIAL ROUTING TABLE UPDATE] message: \"%s\"\n", smallSendBuffer);
+    //LOG(MESSAGES,INFO,"Sending [PARTIAL ROUTING TABLE UPDATE] message: \"%s\"\n", smallSendBuffer);
     propagateMessage(smallSendBuffer,  childAPIP);
     //Sending new node information to the DEBUG visualization program, if enabled
     reportNewNodeToViz(childAPIP, myIP);
@@ -606,33 +575,6 @@ void handleAckMessage(char *msg){
     }
 
 }
-
-/**
- * handleParentReassignmentCommand
- * Handles a PARENT_REASSIGNMENT_COMMAND message: decodes the message, ....
- *
- * @param msg - The message to decode.
- */
-void handleParentReassignmentCommand(char *msg, int *newParentIP){
-
-    //ToDo put event on the queue to change parent
-
-}
-
-/**
- * handleParentListAdvertisement
- * Handles a PARENT_LIST_ADVERTISEMENT: decodes the message, ...
- *
- * @param msg - The message to decode.
- * @return void
- */
-void handleParentListAdvertisement(char *msg){
-    int type;
-
-    //ToDo Callback to choose the node new parent
-
-}
-
 /**
  * handleDebugRegistrationRequest
  * Handles a DEBUG_REGISTRATION_REQUEST: decodes the message, ...

@@ -36,7 +36,7 @@ void test_handle_middleware_node_info_message(){
     metricTableEntry metric;
     uint8_t mynodeIP[4]={2,2,2,2};
     uint8_t nodeIP[4]={1,1,1,1};
-    char middlewareMsg[50] = "13 0 1.1.1.1 1.1.1.1 1";
+    char middlewareMsg[50] = "10 0 1.1.1.1 1.1.1.1 1";
 
     assignIP(myIP,mynodeIP);
 
@@ -57,7 +57,7 @@ void test_handle_middleware_table_info_message(){
     metricTableEntry metric;
     uint8_t node2IP[4]={2,2,2,2};
     uint8_t node3IP[4]={3,3,3,3};
-    char middlewareMsg[50] = "13 1 1.1.1.1 |1.1.1.1 1 |2.2.2.2 2 |3.3.3.3 3";
+    char middlewareMsg[50] = "10 1 1.1.1.1 |1.1.1.1 1 |2.2.2.2 2 |3.3.3.3 3";
 
     initStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
 
@@ -83,8 +83,8 @@ void test_handle_middleware_table_info_message(){
 void test_encode_middleware_node_info_message(){
     metricTableEntry metric;
     uint8_t nodeIP[4]={2,2,2,2};
-    char middlewareMsg[50] = " 13 0 2.2.2.2 1.1.1.1 1", msgBuffer[100];
-    char correctEncodedMsg[50] = "13 0 1.1.1.1 1.1.1.1 1";
+    char middlewareMsg[50] = " 10 0 2.2.2.2 1.1.1.1 1", msgBuffer[100];
+    char correctEncodedMsg[50] = "10 0 1.1.1.1 1.1.1.1 1";
     initStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
 
     metric.processingCapacity = 1;
@@ -99,8 +99,8 @@ void test_encode_middleware_node_info_message(){
 
 void test_encode_middleware_table_info_message(){
     metricTableEntry metric;
-    char middlewareMsg1[50] = " 13 0 2.2.2.2 2.2.2.2 2",middlewareMsg2[50] = " 13 0 2.2.2.2 3.3.3.3 3", msgBuffer[100];
-    char correctEncodedMsg[50] = "13 1 1.1.1.1 |1.1.1.1 1 |2.2.2.2 2 |3.3.3.3 3";
+    char middlewareMsg1[50] = " 10 0 2.2.2.2 2.2.2.2 2",middlewareMsg2[50] = " 10 0 2.2.2.2 3.3.3.3 3", msgBuffer[100];
+    char correctEncodedMsg[50] = "10 1 1.1.1.1 |1.1.1.1 1 |2.2.2.2 2 |3.3.3.3 3";
     initStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
 
     metric.processingCapacity = 1;
@@ -120,8 +120,8 @@ void test_encode_middleware_table_info_message(){
 
 void test_rewrite_sender_with_complex_metric(){
     metricTableEntry metric;
-    char middlewareMsg1[50] = "13 0 2.2.2.2 2.2.2.2 2 3 0,777";
-    char correctEncodedMsg[50] = "13 0 1.1.1.1 2.2.2.2 2 3 0,777";
+    char middlewareMsg1[50] = "10 0 2.2.2.2 2.2.2.2 2 3 0,777";
+    char correctEncodedMsg[50] = "10 0 1.1.1.1 2.2.2.2 2 3 0,777";
     initStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
 
     metric.processingCapacity = 1;
@@ -139,8 +139,8 @@ void test_rewrite_sender_with_complex_metric(){
 
 void test_rewrite_sender_with_bigger_ip(){
     metricTableEntry metric;
-    char middlewareMsg1[50] = "13 0 2.2.2.2 2.2.2.2 2 3 0,777";
-    char correctEncodedMsg[50] = "13 0 111.111.111.111 2.2.2.2 2 3 0,777";
+    char middlewareMsg1[50] = "10 0 2.2.2.2 2.2.2.2 2 3 0,777";
+    char correctEncodedMsg[50] = "10 0 111.111.111.111 2.2.2.2 2 3 0,777";
     initStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
 
     uint8_t nodeIP[4]={111,111,111,111};
