@@ -283,7 +283,7 @@ State joinNetwork(Event event){
             lastRoutingUpdateTime = getCurrentTime();
         }
 
-        middlewareOnNetworkEventCallback(0,parent);
+        if(middlewareOnNetworkEventCallback != nullptr)middlewareOnNetworkEventCallback(0,parent);
 
     }
 
@@ -334,7 +334,7 @@ State handleMessages(Event event){
             LOG(MESSAGES,INFO,"Received [Child Registration Request] message: \"%s\"\n", receiveBuffer);
             handleChildRegistrationRequest(receiveBuffer);
             sscanf(receiveBuffer,"%*d %*hhu.%*hhu.%*hhu.%*hhu %hhu.%hhu.%hhu.%hhu",&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
-            middlewareOnNetworkEventCallback(1,childSTAIP);
+            if(middlewareOnNetworkEventCallback != nullptr)middlewareOnNetworkEventCallback(1,childSTAIP);
             break;
 
         case FULL_ROUTING_TABLE_UPDATE:
@@ -375,7 +375,7 @@ State handleMessages(Event event){
 
         case MIDDLEWARE_MESSAGE:
             LOG(MESSAGES,INFO,"Received [Middleware] message: \"%s\"\n", receiveBuffer);
-            middlewareHandleMessageCallback(receiveBuffer, sizeof(receiveBuffer));
+            if(middlewareHandleMessageCallback != nullptr)middlewareHandleMessageCallback(receiveBuffer, sizeof(receiveBuffer));
             break;
     }
 
@@ -560,7 +560,7 @@ State executeTask(Event event){
     assignIP(parameters.IP2,rootIP);
 
     encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),DATA_MESSAGE,parameters);
-    middlewareInfluenceRoutingCallback(largeSendBuffer);
+    if(middlewareInfluenceRoutingCallback != nullptr)middlewareInfluenceRoutingCallback(largeSendBuffer);
 
 
     return sIdle;
@@ -588,7 +588,7 @@ void handleTimers(){
         lastRoutingUpdateTime = currentTime;
     }
 
-    middlewareOnTimerCallback();
+    if(middlewareOnTimerCallback != nullptr)middlewareOnTimerCallback();
 
     if( (currentTime-lastApplicationProcessingTime) >=APPLICATION_PROCESSING_INTERVAL){
         requestTaskExecution();
