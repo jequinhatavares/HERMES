@@ -1,0 +1,35 @@
+#include "neural_network.h"
+
+float* weights = nullptr;
+float* inputs = nullptr;
+int inputSize = 0;
+float bias = 0.0f;
+
+void configureNeuron(int receivedInputSize, float* receivedWeights, float receivedBias) {
+    // Clean up previous allocations
+    if (weights) delete[] weights;
+
+    // Initialize the input size (equal to the number of neurons in the previous layer)    inputSize = receivedInputSize;
+    weights = new float[inputSize];
+    memcpy(weights, receivedWeights, sizeof(float) * inputSize);
+
+    //Initialize the node bias value
+    bias = receivedBias;
+
+    if (inputs) delete[] inputs;
+    // Allocate space to store inputs (that correspond to the outputs of the previous layers)
+    inputs = new float[inputSize];
+}
+
+float ReLu(float x){
+    return x > 0 ? x : 0;
+}
+
+
+float computeNeuronOutput() {
+    float sum = bias;
+    for (int i = 0; i < inputSize; i++) {
+        sum += inputs[i] * weights[i];
+    }
+    return ReLu(sum);  // e.g., ReLU, sigmoid, etc.
+}
