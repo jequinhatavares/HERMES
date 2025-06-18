@@ -471,3 +471,7 @@ void printTopologyMetricStruct(TableEntry* Table){
         ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
         ((topologyTableEntry *)Table->value)->processingCapacity);
 }
+
+void printTopologyTableHeader(){
+    LOG(NETWORK,INFO,"**********************| Middleware Strategy Topology Table |**********************\n");
+}

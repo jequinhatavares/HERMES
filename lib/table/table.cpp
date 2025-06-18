@@ -162,10 +162,10 @@ void tableRemove(TableInfo* T, void* key){
  * @param print - A function pointer to print a table entry.
  * @return void
  */
-void tablePrint(TableInfo* T, void (*print)(TableEntry*)){
-    int i;
-    for(i=0; i<T->numberOfItems; i++){
-        print(&T->table[i]);
+void tablePrint(TableInfo* T, void (*printHeader)(), void (*printEntry)(TableEntry*)){
+    printHeader();
+    for(int i=0; i<T->numberOfItems; i++){
+        printEntry(&T->table[i]);
     }
 }
 

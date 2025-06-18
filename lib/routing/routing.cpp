@@ -154,10 +154,18 @@ void printRoutingStruct(TableEntry* Table){
            ((routingTableEntry *)Table->value)->hopDistance,((routingTableEntry *)Table->value)->sequenceNumber);
 }
 
+void printRoutingTableHeader(){
+    LOG(NETWORK,INFO,"========================| Routing Table |=======================\n");
+}
+
 void printChildStruct(TableEntry* Table){
     LOG(NETWORK,INFO,"K: AP IP %hhu.%hhu.%hhu.%hhu "
            "V: STA IP: %hhu.%hhu.%hhu.%hhu\n",((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
            ((uint8_t *)Table->value)[0],((uint8_t *)Table->value)[1],((uint8_t *)Table->value)[2],((uint8_t *)Table->value)[3]);
+}
+
+void printChildrenTableHeader(){
+    LOG(NETWORK,INFO,"========================| Children Table |=======================\n");
 }
 /**
  * findNode

@@ -759,6 +759,10 @@ void printPubSubStruct(TableEntry* Table){
 
 }
 
+void printPubSubTableHeader(){
+    LOG(NETWORK,INFO,"**********************| Middleware Strategy Pub/Sub Table |**********************\n");
+}
+
 bool containsTopic(const int8_t * list, int8_t topic){
     for (int i = 0; i < MAX_TOPICS; i++) {
         if(list[i] == topic){

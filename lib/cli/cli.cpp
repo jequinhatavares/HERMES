@@ -113,23 +113,23 @@ void cliInteraction(){
 
                 case 2:
                     LOG(CLI,INFO,"---------------------------- Routing Table ----------------------------\n");
-                    tablePrint(routingTable, printRoutingStruct);
+                    tablePrint(routingTable,printRoutingTableHeader, printRoutingStruct);
                     break;
 
                 case 3:
                     LOG(CLI,INFO,"---------------------------- Children Table ----------------------------\n");
-                    tablePrint(childrenTable, printChildStruct);
+                    tablePrint(childrenTable, printChildrenTableHeader,printChildStruct);
                     break;
 
                 case 4:
                     if(activeStrategyType == STRATEGY_NONE){
 
                     }else if(activeStrategyType == STRATEGY_INJECT){
-                        LOG(CLI,INFO,"---------------------------- Middleware Metrics Table ----------------------------\n");
-                        tablePrint(metricsTable,printMetricStruct);
+                        tablePrint(metricsTable,printMetricsTableHeader,printMetricStruct);
                     }else if(activeStrategyType == STRATEGY_PUBSUB){
-                        LOG(CLI,INFO,"---------------------------- Middleware PubSub Table ----------------------------\n");
-                        tablePrint(pubsubTable,printPubSubStruct);
+                        tablePrint(pubsubTable,printPubSubTableHeader,printPubSubStruct);
+                    }else if(activeStrategyType == STRATEGY_TOPOLOGY && iamRoot){
+                        tablePrint(pubsubTable,printTopologyTableHeader,printTopologyMetricStruct);
                     }
                     break;
 

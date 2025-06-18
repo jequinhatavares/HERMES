@@ -13,7 +13,7 @@ void test_init_middleware(){
     uint8_t IP[4]={1,1,1,1};
     initStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
 
-    tablePrint(pubsubTable, printPubSubStruct);
+    tablePrint(pubsubTable,printPubSubTableHeader, printPubSubStruct);
 
     tableClean(pubsubTable);
 }
@@ -316,7 +316,7 @@ void test_handle_middleware_table_update_message(){
     handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
 
 
-    tablePrint(pubsubTable,printPubSubStruct);
+    tablePrint(pubsubTable,printPubSubTableHeader,printPubSubStruct);
 
     nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
     TEST_ASSERT(nodePubSubInfo != nullptr);

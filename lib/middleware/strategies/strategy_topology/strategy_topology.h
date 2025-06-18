@@ -58,6 +58,7 @@ void chooseParentStrategyTopology(char* message);
 
 void topologySetNodeMetric(void* metric);
 
+void printTopologyTableHeader();
 
 /******************************-----------Application Defined Functions----------------********************************/
 

@@ -269,7 +269,7 @@ State joinNetwork(Event event){
                 //LOG(MESSAGES,INFO,"Full Routing Update valid: %s\n", receiveBuffer);
                 handleFullRoutingTableUpdate(receiveBuffer);
                 LOG(NETWORK,INFO,"Routing Table Updated:\n");
-                tablePrint(routingTable,printRoutingStruct);
+                tablePrint(routingTable,printRoutingTableHeader,printRoutingStruct);
             }
         }else{
             LOG(NETWORK,ERROR,"❌ ERROR: No routing table data received from parent.\n");
@@ -464,7 +464,7 @@ State childRecovery(Event event){
                 tableRemove(childrenTable, lostChildIP);
                 numberOfChildren--;
                 LOG(NETWORK,DEBUG,"Updated Children Table\n");
-                tablePrint(childrenTable, printChildStruct);
+                tablePrint(childrenTable,printChildrenTableHeader, printChildStruct);
 
                 unreachableEntry.hopDistance = -1;
                 // Mark the nodes as unreachable in the routing table.
@@ -483,7 +483,7 @@ State childRecovery(Event event){
                     propagateMessage(largeSendBuffer, myIP);
                 }
                 LOG(NETWORK,DEBUG,"Updated Routing Table:\n");
-                tablePrint(routingTable, printRoutingStruct);
+                tablePrint(routingTable,printRoutingTableHeader, printRoutingStruct);
 
 
                 // The procedure is finished so the child can be removed from the lostChildrenTable
@@ -521,7 +521,7 @@ State forceRestart(Event event){
     // Clear all entries from the children table
     tableClean(childrenTable);
     LOG(NETWORK,DEBUG,"Children Table Cleaning:\n");
-    tablePrint(childrenTable,printChildStruct);
+    tablePrint(childrenTable,printChildrenTableHeader,printChildStruct);
 
     // Remove all routing entries, keeping only the node's own entry intact
     tableClean(routingTable);
@@ -532,7 +532,7 @@ State forceRestart(Event event){
     tableAdd(routingTable,myIP,&me);
 
     LOG(NETWORK,DEBUG,"Routing Table Cleaning:\n");
-    tablePrint(routingTable,printRoutingStruct);
+    tablePrint(routingTable,printRoutingTableHeader,printRoutingStruct);
 
     // Clear the stored parent IP
     assignIP(parent,invalidIP);

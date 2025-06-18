@@ -23,7 +23,7 @@ void test_init_middleware(){
     metric.processingCapacity = 1;
     injectNodeMetric(&metric);
 
-    tablePrint(metricsTable, printMetricStruct);
+    tablePrint(metricsTable, printMetricsTableHeader,printMetricStruct);
 
     metricTableEntry *metricValue = (metricTableEntry*) tableRead(metricsTable,IP);
     TEST_ASSERT(metricValue != nullptr);
@@ -44,7 +44,7 @@ void test_handle_middleware_node_info_message(){
 
     handleMessageStrategyInject(middlewareMsg,sizeof(middlewareMsg));
 
-    tablePrint(metricsTable, printMetricStruct);
+    tablePrint(metricsTable,printMetricsTableHeader, printMetricStruct);
 
     metricTableEntry *metricValue = (metricTableEntry*) tableRead(metricsTable,nodeIP);
     TEST_ASSERT(metricValue != nullptr);
@@ -63,7 +63,7 @@ void test_handle_middleware_table_info_message(){
 
     handleMessageStrategyInject(middlewareMsg,sizeof(middlewareMsg));
 
-    tablePrint(metricsTable, printMetricStruct);
+    tablePrint(metricsTable,printMetricsTableHeader, printMetricStruct);
 
     metricTableEntry *metricValue = (metricTableEntry*) tableRead(metricsTable,myIP);
     TEST_ASSERT(metricValue != nullptr);

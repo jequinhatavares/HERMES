@@ -52,6 +52,7 @@ void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry);
 void decodeMetricEntry(char* buffer, void *metricEntry);
 void setMetricValue(void* av, void*bv);
 void printMetricStruct(TableEntry* Table);
+void printMetricsTableHeader();
 int compareMetrics(void *metricAv,void*metricBv);
 
 void setIP(void* av, void* bv);

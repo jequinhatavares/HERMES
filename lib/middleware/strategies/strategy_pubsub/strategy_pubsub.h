@@ -64,6 +64,7 @@ bool containsTopic(const int8_t * list, int8_t topic);
 void setPubSubInfo(void* av, void* bv);
 
 void printPubSubStruct(TableEntry* Table);
+void printPubSubTableHeader();
 void decodeTopic(char* dataMessage, int8_t * topicType);
 void encodeTopic(char*DataMessage,size_t messageSize, void* topic);
 

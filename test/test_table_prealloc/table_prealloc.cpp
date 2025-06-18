@@ -13,6 +13,8 @@ bool vectorEqual(void* a, void* b){
     }
     return false;
 }
+void printHeader(){
+}
 
 void printStruct(TableEntry* Table){
     printf("K: %i V: %i\n",((int*)Table->key)[0],((int*)Table->value)[0]);
@@ -123,7 +125,7 @@ void test_add_remove(){
     TEST_ASSERT((*result2).IP[0] == valueCopy2[0]);
     TEST_ASSERT((*result2).hopDistance == value2.hopDistance);
 
-    tablePrint(T,printNodeStruct);
+    tablePrint(T,printHeader,printNodeStruct);
     int index = tableFind(T, key1);
 
     tableRemove(T,key1);
@@ -135,7 +137,7 @@ void test_add_remove(){
     TEST_ASSERT(index1 == -1);
     TEST_ASSERT(index2 == index);
 
-    tablePrint(T,printNodeStruct);
+    tablePrint(T,printHeader,printNodeStruct);
     Entry* result3 = (Entry*)tableRead(T, key2);
 
     TEST_ASSERT((*result3).IP[0] == valueCopy2[0]);
