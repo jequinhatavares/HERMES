@@ -284,19 +284,20 @@ void searchAP(const char* SSID){
  * @return void
  */
 void connectToAP(const char * SSID, const char * PASS) {
-    unsigned long startTime, endTime;
+    unsigned long startTime, currentTime;
     WiFi.mode(WIFI_AP_STA); //AP
     WiFi.begin(SSID, PASS);
 
     startTime = getCurrentTime();
+    currentTime = startTime;
     // Wait for the Wi-Fi connection to establish or until timeout is reached
-    while(WiFi.status() != WL_CONNECTED){
+    while( ((currentTime - startTime) <= WIFI_TIMEOUT) && WiFi.status() != WL_CONNECTED){
         Serial.println(getWifiStatus(WiFi.status()));
         delay(150);
+        currentTime = getCurrentTime();
     }
-    endTime = getCurrentTime();
 
-    LOG(NETWORK,DEBUG,"WiFi connect time:%lu\n",endTime-startTime);
+    //LOG(NETWORK,DEBUG,"WiFi connect time:%lu\n",endTime-startTime);
 }
 /**
  * stopWifiAP

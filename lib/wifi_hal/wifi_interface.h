@@ -7,10 +7,13 @@
 #include "wifi_common.h"
 #include <cstdint>
 
-
 #define disconnectionThreshold 3
 
+
+#define WIFI_TIMEOUT 3000
+
 extern bool initializeAP;
+
 
 typedef struct List{
     char item[10][50];
