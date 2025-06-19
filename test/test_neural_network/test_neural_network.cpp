@@ -21,14 +21,27 @@ void test_memory_allocation(){
     }
 
     delete[] weights;
+    weights = nullptr;
     delete[] saveOrder;
-    delete[] inputs;
+    saveOrder = nullptr;
+    delete[] inputs;/******/
+    inputs = nullptr;
+
 }
 
 void test_neuron_output_calculation(){
-    for (int i = 0; i < 3; i++) {
-        printf("savedWeights:%f\n", weights[i]);
-    }
+    float weightsValues[3]={1.0,2.0,3.0}, bias=1, neuronOutput, correctNeuronOutput=15;
+    int inputSize = 3,saveOrderValues[3] ={1,2,3};
+
+    configureNeuron(inputSize, weightsValues,bias,saveOrderValues);
+
+    setInput(1,1);
+    setInput(2,2);
+    setInput(3,3);
+
+    neuronOutput = computeNeuronOutput();
+
+    TEST_ASSERT(neuronOutput==correctNeuronOutput);/******/
 }
 
 
@@ -44,7 +57,9 @@ void setUp(void){
     currentLogLevel = DEBUG;
 }
 
-void tearDown(void){}
+void tearDown(void){
+
+}
 
 int main(int argc, char** argv){
     UNITY_BEGIN();
