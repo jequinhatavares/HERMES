@@ -1,15 +1,16 @@
 #include "neural_network.h"
 
+int* saveOrder = nullptr;
 float* weights = nullptr;
 float* inputs = nullptr;
 int inputSize = 0;
 float bias = 0.0f;
 
-void configureNeuron(int receivedInputSize, float* receivedWeights, float receivedBias) {
+void configureNeuron(int receivedInputSize, float* receivedWeights, float receivedBias, int* receivedOrder) {
     // Clean up previous allocations
     if (weights) delete[] weights;
-
     // Initialize the input size (equal to the number of neurons in the previous layer)    inputSize = receivedInputSize;
+    inputSize = receivedInputSize;
     weights = new float[inputSize];
     memcpy(weights, receivedWeights, sizeof(float) * inputSize);
 
@@ -19,6 +20,12 @@ void configureNeuron(int receivedInputSize, float* receivedWeights, float receiv
     if (inputs) delete[] inputs;
     // Allocate space to store inputs (that correspond to the outputs of the previous layers)
     inputs = new float[inputSize];
+
+    if (saveOrder) delete[] saveOrder;
+    // Allocate space to store the save order
+    saveOrder = new int[inputSize];
+    memcpy(saveOrder, receivedOrder, sizeof(int) * inputSize);
+
 }
 
 float ReLu(float x){
@@ -26,7 +33,7 @@ float ReLu(float x){
 }
 
 
-float computeNeuronOutput() {
+float computeNeuronOutput(){
     float sum = bias;
     for (int i = 0; i < inputSize; i++) {
         sum += inputs[i] * weights[i];
