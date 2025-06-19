@@ -1,6 +1,7 @@
 #include <unity.h>
 #include <../lib/logger/logger.h>
 #include <../lib/neural_network/neural_network.h>
+#include <../lib/neural_network/neuron_manager.h>
 #include "table.h"
 
 //pio test -e native -f "test_neural_network" -v
@@ -42,6 +43,30 @@ void test_neuron_output_calculation(){
     neuronOutput = computeNeuronOutput();
 
     TEST_ASSERT(neuronOutput==correctNeuronOutput);/******/
+
+    delete[] weights;
+    weights = nullptr;
+    delete[] saveOrder;
+    saveOrder = nullptr;
+    delete[] inputs;/******/
+    inputs = nullptr;
+}
+
+void test_handle_message_assign_neuron(){
+    //DATA_MESSAGE NN_ASSIGN_NEURON [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    char receivedMessage[50] ="8 0 3 2 1 2 2.0 2.0 1";
+    float weightsValues[2]={2.0,2.0}, bias=1;
+    int saveOrderValues[2] ={1,2}, inputSize=2;
+
+    handleNeuralNetworkMessage(receivedMessage);
+
+    for (int i = 0; i < inputSize; i++) {
+        printf("weightsValues:%f savedWeights:%f\n",weightsValues[i],weights[i]);
+        printf("saveOrder:%i saveOrder:%i\n",saveOrderValues[i],saveOrder[i]);
+        TEST_ASSERT(weights[i] == weightsValues[i]);
+        TEST_ASSERT(saveOrder[i] == saveOrderValues[i]);
+    }
+
 }
 
 
@@ -65,6 +90,6 @@ int main(int argc, char** argv){
     UNITY_BEGIN();
     RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
-
+    RUN_TEST(test_handle_message_assign_neuron);
     UNITY_END();
 }
