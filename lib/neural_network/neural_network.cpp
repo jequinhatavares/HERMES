@@ -8,7 +8,7 @@ float bias = 0.0f;
 
 void configureNeuron(int receivedInputSize, float* receivedWeights, float receivedBias, int* receivedOrder) {
     // Clean up previous allocations
-    //if (weights) delete[] weights;
+    // if (weights) delete[] weights;
     // Initialize the input size (equal to the number of neurons in the previous layer)    inputSize = receivedInputSize;
     inputSize = receivedInputSize;
     weights = new float[inputSize];
