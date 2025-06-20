@@ -34,7 +34,19 @@ void setNeuronInfo(void* av, void* bv){
     a->inputSize = b->inputSize;
 }
 
-
+/**
+ * configureNeuron
+  * Initializes memory and saves the configuration for a neuron that this node is responsible for computing.
+ * This includes storing its input size, weights, bias, and the input save order mapping.
+ *
+ * @param neuronId           Unique identifier of the neuron within the distributed neural network.
+ * @param receivedInputSize  Number of inputs this neuron will receive (i.e., its number of weights).
+ * @param receivedWeights    Pointer to the array containing the neuron's weights.
+ * @param receivedBias       Bias value to be used during the neuron's output computation.
+ * @param receivedOrder      Pointer to the array specifying the input save order (mapping where each received input
+ * should be stored in the input vector).
+ * @return void
+ */
 void configureNeuron(int neuronId, int receivedInputSize, float* receivedWeights, float receivedBias, int* receivedOrder) {
     if (neuronCount >= MAX_NEURONS) {
         LOG(APP,ERROR, "ERROR: Exceeded max neurons per node.");
@@ -64,6 +76,14 @@ void configureNeuron(int neuronId, int receivedInputSize, float* receivedWeights
     neuronCount++;
 }
 
+/**
+ * getNeuronStorageIndex
+ * Searches for the specified neuron ID among the neurons managed by this node and returns
+ * the corresponding index used to access its stored parameters (weights, inputs, etc.).
+ *
+ * @param neuronId - Unique identifier of the neuron to locate
+ * @return Storage index if found, -1 if neuron not managed by this node
+ */
 int getNeuronStorageIndex(int neuronId){
     int neuronStorageIndex = -1;
 
@@ -74,7 +94,16 @@ int getNeuronStorageIndex(int neuronId){
     return neuronStorageIndex;
 }
 
-void setInput(int neuronId, float inputValue, int inputID){
+/**
+ * setInput
+ * Stores an input value for a specific neuron at the correct buffer position
+ *
+ * @param neuronId - Identifier of the target neuron
+ * @param inputValue - Value to be stored in the input buffer
+ * @param sourceNodeId - ID of the node that generated the corresponding neuron output
+ * @return void
+ */
+void setInput(int neuronId, float inputValue, int sourceNodeId){
     int inputStorageIndex = -1, neuronStorageIndex = -1;
 
     // Find the index in the local vectors (weights, inputs, saveOrder) where the neuron's parameters were stored
@@ -88,7 +117,7 @@ void setInput(int neuronId, float inputValue, int inputID){
 
     // Locate the index in the inputs vector where the new input should be stored, as specified by the saveOrder vector
     for (int i = 0; i < inputSizes[neuronStorageIndex]; i++) {
-        if(saveOrders[neuronStorageIndex][i]==inputID){
+        if(saveOrders[neuronStorageIndex][i]==sourceNodeId){
             inputStorageIndex = i;
         }
     }
@@ -99,11 +128,25 @@ void setInput(int neuronId, float inputValue, int inputID){
     }
 }
 
+/**
+ * ReLu
+ * Computes the Rectified Linear Unit activation function output
+ *
+ * @param x - Input value to the activation function
+ * @return x if x > 0, otherwise 0
+ */
 float ReLu(float x){
     return x > 0 ? x : 0;
 }
 
-
+/**
+ * computeNeuronOutput
+ * Computes the output of a given neuron by applying a weighted sum of its inputs
+ * followed by an activation function.
+ *
+ * @param neuronId - Unique identifier of the neuron to compute
+ * @return The computed output value of the neuron, or -99999.9 if the neuron is not found
+ */
 float computeNeuronOutput(int neuronId){
     int neuronStorageIndex = -1;
     float sum = 0;
@@ -129,6 +172,12 @@ float computeNeuronOutput(int neuronId){
     return ReLu(sum);  // Activation function
 }
 
+/**
+ * freeAllNeuronMemory
+ * Releases all dynamically allocated memory for the neurons parameters and resets state
+ *
+ * @return void
+ */
 void freeAllNeuronMemory() {
     for (int i = 0; i < neuronCount; ++i) {
         delete[] weights[i];

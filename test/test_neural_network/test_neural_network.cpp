@@ -78,9 +78,10 @@ void test_handle_message_assign_neuron_multiple_neurons(){
 
     neuronStorageIndex1 = getNeuronStorageIndex(neuronId1);
     TEST_ASSERT(neuronStorageIndex1 != -1);
+    TEST_ASSERT(neuronStorageIndex1 != 0);
 
     neuronStorageIndex2 = getNeuronStorageIndex(neuronId2);
-    TEST_ASSERT(neuronStorageIndex2 != -1);
+    TEST_ASSERT(neuronStorageIndex2 != 1);
 
     for (int i = 0; i < inputSize; i++) {
         printf("weightsValues:%f savedWeights:%f\n",weightsValues[i],weights[neuronStorageIndex1][i]);

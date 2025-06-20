@@ -55,7 +55,7 @@ void handleNeuralNetworkMessage(char* messageBuffer){
                 bias=atof(spaceToken);
                 LOG(NETWORK,DEBUG," bias token:%s\n",spaceToken);
 
-                //Save the parsed neuron values
+                //Save the parsed neuron parameters
                 configureNeuron(neuronId,inputSize,weightValues,bias, inputIndexMap);
 
                 delete[] inputIndexMap;

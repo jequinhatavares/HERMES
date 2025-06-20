@@ -28,7 +28,7 @@ void setNeuronInfo(void* av, void* bv);
 
 void configureNeuron(int neuronId, int receivedInputSize, float* receivedWeights, float receivedBias, int* receivedOrder);
 int getNeuronStorageIndex(int neuronId);
-void setInput(int neuronId,float inputValue, int inputID);
+void setInput(int neuronId,float inputValue, int sourceNodeId);
 float computeNeuronOutput(int neuronId);
 void freeAllNeuronMemory();
 
