@@ -55,6 +55,15 @@ PubSubInfo valuesPubSub[TableMaxSize];
 
 int8_t topic;
 
+/**
+ * initStrategyPubSub
+ * Initializes the PubSub strategy by setting callback functions and setting up the PubSubTable
+ *
+ * @param setValueFunction - Callback function for setting table values
+ * @param encodeTopicFunction - Callback for encoding topic data
+ * @param decodeTopicFunction - Callback for decoding topic data
+ * @return void
+ */
 void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *) ){
     pubsubTable->setValue = setValueFunction;
     //Initialize the pubsubTable
@@ -65,6 +74,16 @@ void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopi
     decodeTopicValue = decodeTopicFunction;
 }
 
+/**
+ * rewriteSenderIPPubSub
+ * Updates sender IP in PubSub messages during network propagation
+ *
+ * @param messageBuffer - Original message buffer
+ * @param writeBuffer - Buffer for the updated message
+ * @param writeBufferSize - Size of write buffer
+ * @param type - PubSub message type
+ * @return void
+ */
 void rewriteSenderIPPubSub(char* messageBuffer, char* writeBuffer, size_t writeBufferSize, PubSubMessageType type){
     messageType globalMessageType;
     PubSubMessageType typePubSub;
@@ -106,6 +125,15 @@ void rewriteSenderIPPubSub(char* messageBuffer, char* writeBuffer, size_t writeB
 
 }
 
+/**
+ * encodeMessageStrategyPubSub
+ * Constructs PubSub messages based on message type
+ *
+ * @param messageBuffer - buffer where the messages is going to be stored
+ * @param bufferSize - Size of the buffer
+ * @param typePubSub - Type of PubSub message to encode
+ * @return void
+ */
 void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typePubSub) {
     PubSubInfo *nodePubSubInfo;
     int offset = 0,i,j;
@@ -215,6 +243,14 @@ void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typ
     }
 }
 
+/**
+ * handleMessageStrategyPubSub
+ * Processes incoming PubSub message and depending on the message it can: add/remove/update values from the PubSub Table
+ *
+ * @param messageBuffer - Received message buffer
+ * @param bufferSize - Size of received buffer
+ * @return void
+ */
 void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
     char infoPubSub[100];
     uint8_t IP[4],nodeIP[4];
@@ -236,7 +272,6 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
     //printf("InfoPubSub: %s\n",infoPubSub);
 
     switch (type) {
-
         case PUBSUB_PUBLISH:
             //13  0 [destination IP] [Publisher IP] [Published Topic]
             sscanf(infoPubSub,"%hhu.%hhu.%hhu.%hhu %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
@@ -504,7 +539,16 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
     }
 }
 
-
+/**
+ * onNetworkEventStrategyPubSub
+ * Triggers the strategy logic to respond to a specific network event.
+ * If a child node connects to this node, it sends the full pub/sub table to the child.
+ * When the node itself joins the network, it sends its publishing and subscribing topic information to the parent node.
+ *
+ * @param networkEvent - Type of network event (join/connect/disconnect)
+ * @param involvedIP - IP address of relevant network node
+ * @return void
+ */
 void onNetworkEventStrategyPubSub(int networkEvent, uint8_t involvedIP[4]){
     switch (networkEvent) {
         case NETEVENT_JOINED_NETWORK:
@@ -525,6 +569,13 @@ void onNetworkEventStrategyPubSub(int networkEvent, uint8_t involvedIP[4]){
     }
 }
 
+/**
+ * influenceRoutingStrategyPubSub
+ * Influences routing by forwarding the message containing the topic to all subscribers.
+ *
+ * @param dataMessage - message containing (or not) the topic data
+ * @return void
+ */
 void influenceRoutingStrategyPubSub(char* dataMessage){
     int i,j;
     PubSubInfo *myPubSubInfo, *nodePubSubInfo;
@@ -599,6 +650,12 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
     }
 }
 
+/**
+ * onTimerStrategyPubSub
+ * Handles periodic PubSub maintenance tasks (currently unused)
+ *
+ * @return void
+ */
 void onTimerStrategyPubSub(){
     unsigned long currentTime = getCurrentTime();
     //Periodically send this node's metric to all other nodes in the network
@@ -610,7 +667,14 @@ void onTimerStrategyPubSub(){
     }
 }
 
-
+/**
+ * subscribeToTopic
+ * Registers a subscription to the specified topic on the local node and propagates
+ * the subscription information to the rest of the network.
+ *
+ * @param subTopic - Identifier of the topic to subscribe to
+ * @return void
+ */
 void subscribeToTopic(int8_t subTopic) {
     int i;
     PubSubInfo *myPubSubInfo, myInitInfo;
@@ -644,6 +708,15 @@ void subscribeToTopic(int8_t subTopic) {
 
 }
 
+
+/**
+ * unsubscribeFromTopic
+ * Removes the local subscription to the specified topic and propagates
+ * the unsubscription information to the rest of the network.
+ *
+ * @param subTopic - Identifier of the topic to unsubscribe from
+ * @return void
+ */
 void unsubscribeToTopic(int8_t subTopic){
     int i,k;
     PubSubInfo *myPubSubInfo,myInitInfo;
@@ -676,6 +749,14 @@ void unsubscribeToTopic(int8_t subTopic){
     propagateMessage(smallSendBuffer,myIP);
 }
 
+/**
+ * advertiseTopic
+ * Announces that this node is publishing a specific topic, making this
+ * information available to other nodes in the network.
+ *
+ * @param pubTopic - Identifier of the topic being advertised for publication
+ * @return void
+ */
 void advertiseTopic(int8_t pubTopic){
     int i;
     PubSubInfo *myPubSubInfo, myInitInfo;
@@ -708,6 +789,14 @@ void advertiseTopic(int8_t pubTopic){
     propagateMessage(smallSendBuffer,myIP);
 }
 
+/**
+ * unadvertiseTopic
+ * Informs the network that this node is no longer publishing the specified topic,
+ * removing it from the advertised publication list.
+ *
+ * @param pubTopic - Identifier of the topic that is no longer being published
+ * @return void
+ */
 void unadvertiseTopic(int8_t pubTopic){
     int i,k;
     PubSubInfo *myPubSubInfo, myInitInfo;
@@ -740,6 +829,13 @@ void unadvertiseTopic(int8_t pubTopic){
     propagateMessage(smallSendBuffer,myIP);
 }
 
+/**
+ * printPubSubStruct
+ * Function to print the PubSub Table
+ *
+ * @param Table - pubsubTable entry
+ * @return void
+ **/
 void printPubSubStruct(TableEntry* Table){
     LOG(NETWORK,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → ",
         ((int8_t *)Table->key)[0],((int8_t *)Table->key)[1],((int8_t *)Table->key)[2],((int8_t *)Table->key)[3]);
@@ -760,10 +856,24 @@ void printPubSubStruct(TableEntry* Table){
 
 }
 
+/**
+ * printPubSubTableHeader
+ * Prints header of PubSub table
+ *
+ * @return void
+ **/
 void printPubSubTableHeader(){
     LOG(NETWORK,INFO,"**********************| Middleware Strategy Pub/Sub Table |**********************\n");
 }
 
+/**
+ * containsTopic
+ * Checks if topic exists in provided subscription/publication list
+ *
+ * @param list - Array of topics to search
+ * @param topic - Topic identifier to find
+ * @return true if topic found, false otherwise
+ */
 bool containsTopic(const int8_t * list, int8_t topic){
     for (int i = 0; i < MAX_TOPICS; i++) {
         if(list[i] == topic){

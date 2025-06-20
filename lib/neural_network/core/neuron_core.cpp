@@ -11,29 +11,6 @@ int inputSizes[MAX_NEURONS];     // Each neuron has its own input size allocated
 int neuronCount = 0;             //Number of neurons currently computed by this node
 
 
-
-bool isNeuronEqual(void* av, void* bv) {
-    int *a = (int*) av;
-    int *b = (int*) bv;
-    return(*a==*b);
-}
-
-void setNeuronID(void* av, void* bv){
-    int *a = (int*) av;
-    int *b = (int*) bv;
-    *a=*b;
-}
-
-void setNeuronInfo(void* av, void* bv){
-    NeuronInfo *a = (NeuronInfo*) av;
-    NeuronInfo *b = (NeuronInfo*) bv;
-    a->saveOrder = b->saveOrder;
-    a->weights = b->weights;
-    a->inputs = b->inputs;
-    a->bias = b->bias;
-    a->inputSize = b->inputSize;
-}
-
 /**
  * configureNeuron
   * Initializes memory and saves the configuration for a neuron that this node is responsible for computing.
