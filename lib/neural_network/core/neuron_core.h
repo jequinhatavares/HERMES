@@ -3,13 +3,23 @@
 
 #include <cstring>
 #include <logger.h>
+#include <table.h>
+#include "../nn_configurations.h"
 
-extern int* saveOrder;
-extern float* weights;
-extern float* inputs;
+typedef struct NeuronInfo{
+    int* saveOrder = nullptr;
+    float* weights = nullptr;
+    float* inputs = nullptr;
+    int bias = 0;
+    int inputSize = 0;
+}NeuronInfo;
 
-void configureNeuron(int receivedInputSize, float* receivedWeights, float receivedBias, int* receivedOrder);
-float computeNeuronOutput();
-void setInput(float inputValue, int inputID);
+bool isNeuronEqual(void* av, void* bv);
+void setNeuronID(void* av, void* bv);
+void setNeuronInfo(void* av, void* bv);
+
+void configureNeuron(int neuronId, int receivedInputSize, float* receivedWeights, float receivedBias, int* receivedOrder);
+void setInput(int neuronId,float inputValue, int inputID);
+float computeNeuronOutput(int neuronId);
 
 #endif //NEURAL_NETWORK_H
