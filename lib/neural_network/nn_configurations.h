@@ -17,4 +17,9 @@
 #endif
 
 
+#if defined(NATIVE)
+#define MAX_NEURONS 3
+#endif
+
+
 #endif //NN_CONFIGURATIONS_H

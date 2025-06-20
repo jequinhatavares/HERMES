@@ -4,7 +4,7 @@
 void handleNeuralNetworkMessage(char* messageBuffer){
     NeuralNetworkMessageType type;
     sscanf(messageBuffer, "%*d %d",&type);
-    int neuronNumber,inputSize,*inputIndexMap,outputNeuron;
+    int neuronId,inputSize,*inputIndexMap,outputNeuron;
     float bias, *weightValues,inputValue;
     char* token, *spaceToken,*neuronEntry;
     char *saveptr1, *saveptr2;
@@ -23,7 +23,7 @@ void handleNeuralNetworkMessage(char* messageBuffer){
                 spaceToken = strtok_r(neuronEntry, " ",&saveptr2);
 
                 //spaceToken now pointing to the Neuron number
-                neuronNumber = atoi(spaceToken);
+                neuronId = atoi(spaceToken);
                 LOG(NETWORK,DEBUG," neuronId token:%s\n",spaceToken);
 
                 //spaceToken now pointing to the input size
@@ -56,7 +56,7 @@ void handleNeuralNetworkMessage(char* messageBuffer){
                 LOG(NETWORK,DEBUG," bias token:%s\n",spaceToken);
 
                 //Save the parsed neuron values
-                configureNeuron(inputSize,weightValues,bias, inputIndexMap);
+                configureNeuron(neuronId,inputSize,weightValues,bias, inputIndexMap);
 
                 delete[] inputIndexMap;
                 delete[] weightValues;
@@ -68,8 +68,8 @@ void handleNeuralNetworkMessage(char* messageBuffer){
 
         case NN_NEURON_OUTPUT:
             //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron Number] [Input Neuron Number] [Output Value]
-            sscanf(messageBuffer, "%*d %*d %d %d %f",&outputNeuron,&neuronNumber,&inputValue);
-            setInput(inputValue,outputNeuron);
+            sscanf(messageBuffer, "%*d %*d %d %d %f",&outputNeuron,&neuronId,&inputValue);
+            setInput(neuronId,inputValue,outputNeuron);
             break;
         default:
             break;
