@@ -21,6 +21,7 @@ typedef enum LogModules {
     CLI, //3
     DEBUG_SERVER, //4
     MIDDLEWARE, //5
+    APP, //6
 }LogModules;
 
 typedef enum LogLevels{
