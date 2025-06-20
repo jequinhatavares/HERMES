@@ -196,6 +196,7 @@ void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typ
 
                     // Append subscribed topics
                     for(j = 0; j < MAX_TOPICS; j++) {
+                        //Special encoding condition for not having space in the end of the message
                         if(i == pubsubTable->numberOfItems-1 && j == MAX_TOPICS-1){
                             offset += snprintf(messageBuffer + offset, bufferSize - offset, "%i", entry->subscribedTopics[j]);
                         }else{

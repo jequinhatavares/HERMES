@@ -5,13 +5,9 @@
 #include <cstring>
 #include <cstdio>
 
-#include "neural_network.h"
+#include "neuron_core.h"
+#include "../message_types.h"
 
-
-typedef enum NeuralNetworkMessageType{
-    NN_ASSIGN_NEURON, //O
-    NN_NEURON_OUTPUT, //1
-}NeuralNetworkMessageType;
 
 
 void handleNeuralNetworkMessage(char* messageBuffer);

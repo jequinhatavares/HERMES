@@ -1,4 +1,4 @@
-#include "neural_network.h"
+#include "neuron_core.h"
 
 int* saveOrder = nullptr;
 float* weights = nullptr;
@@ -51,7 +51,7 @@ float computeNeuronOutput(){
     for (int i = 0; i < inputSize; i++) {
         sum += inputs[i] * weights[i];
     }
-    return ReLu(sum);  // e.g., ReLU, sigmoid, etc.
+    return ReLu(sum);  // Activation function
 }
 
 

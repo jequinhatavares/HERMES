@@ -5,14 +5,13 @@ void handleNeuralNetworkMessage(char* messageBuffer){
     NeuralNetworkMessageType type;
     sscanf(messageBuffer, "%*d %d",&type);
     int neuronNumber,inputSize,*inputIndexMap,outputNeuron;
-    float bias, *weightValues, outputValue;
+    float bias, *weightValues,inputValue;
     char* token, *spaceToken,*entry;
     char *saveptr1, *saveptr2;
 
-
     switch (type) {
-        case NN_ASSIGN_NEURON:
-            //DATA_MESSAGE NN_ASSIGN_NEURON [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+        case NN_ASSIGN_COMPUTATION:
+            //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
             sscanf(messageBuffer, "%*d %*d %d %d",&neuronNumber,&inputSize);
             inputIndexMap = new int[inputSize];
             weightValues = new float[inputSize];
@@ -47,7 +46,7 @@ void handleNeuralNetworkMessage(char* messageBuffer){
             }
 
             //LOG(NETWORK,DEBUG,"token in bias:%s\n",token);
-            bias=atoi(token);
+            bias=atof(token);
 
             configureNeuron(inputSize,weightValues,bias, inputIndexMap);
 
@@ -58,10 +57,14 @@ void handleNeuralNetworkMessage(char* messageBuffer){
 
         case NN_NEURON_OUTPUT:
             //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron Number] [Input Neuron Number] [Output Value]
-            sscanf(messageBuffer, "%*d %*d %d %d %f",&neuronNumber,&outputNeuron,&outputValue);
-            setInput(outputValue,outputNeuron);
+            sscanf(messageBuffer, "%*d %*d %d %d %f",&outputNeuron,&neuronNumber,&inputValue);
+            setInput(inputValue,outputNeuron);
             break;
         default:
             break;
     }
+}
+
+void handleNeuronInput(){
+
 }
