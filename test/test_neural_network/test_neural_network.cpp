@@ -55,9 +55,25 @@ void test_neuron_output_calculation(){
     inputs = nullptr;
 }
 
-void test_handle_message_assign_neuron(){
-    //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
-    char receivedMessage[50] ="8 0 3 2 1 2 2.0 2.0 1";
+void test_handle_message_assign_neuron_one_neuron(){
+    //DATA_MESSAGE NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    char receivedMessage[50] ="8 0 |3 2 1 2 2.0 2.0 1";
+    float weightsValues[2]={2.0,2.0}, bias=1;
+    int saveOrderValues[2] ={1,2}, inputSize=2;
+
+    handleNeuralNetworkMessage(receivedMessage);
+
+    for (int i = 0; i < inputSize; i++) {
+        printf("weightsValues:%f savedWeights:%f\n",weightsValues[i],weights[i]);
+        printf("saveOrder:%i saveOrder:%i\n",saveOrderValues[i],saveOrder[i]);
+        TEST_ASSERT(weights[i] == weightsValues[i]);
+        TEST_ASSERT(saveOrder[i] == saveOrderValues[i]);
+    }
+
+}
+void test_handle_message_assign_neuron_multiple_neurons(){
+    //DATA_MESSAGE NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    char receivedMessage[50] ="8 0 |3 2 1 2 2.0 2.0 1 |3 2 1 2 2.0 2.0 1";
     float weightsValues[2]={2.0,2.0}, bias=1;
     int saveOrderValues[2] ={1,2}, inputSize=2;
 
@@ -105,7 +121,8 @@ int main(int argc, char** argv){
     UNITY_BEGIN();
     RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
-    RUN_TEST(test_handle_message_assign_neuron);
+    RUN_TEST(test_handle_message_assign_neuron_one_neuron);
+    RUN_TEST(test_handle_message_assign_neuron_multiple_neurons);
     RUN_TEST(test_encode_message_assign_neuron);
     UNITY_END();
 }

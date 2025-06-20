@@ -455,7 +455,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             //13 6 [sender IP] |[node IP] [Published Topic List] [Subscribed Topics List] |[node IP] [Published Topic List] [Subscribed Topics List]...
             entry = strtok_r(infoPubSub, "|", &saveptr1);
 
-            while (entry != NULL) {
+            while (entry != nullptr) {
                 // Trim leading spaces
                 while (*entry == ' ') entry++;
 
