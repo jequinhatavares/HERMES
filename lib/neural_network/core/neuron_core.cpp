@@ -1,40 +1,12 @@
 #include "neuron_core.h"
 
 
-/***
- * Middleware Publish Subscribe table
- *
- * mTable[TableMaxSize] - An array where each element is a struct containing two pointers:
- *                         one to the key (used for indexing the metrics table) and another to the value (the corresponding entry).
- *
- * TTable - A struct that holds metadata for the metrics table, including:
- * * * .numberOfItems - The current number of entries in the metrics table.
- * * * .isEqual - A function pointer for comparing table keys (IP addresses).
-* * * .table - A pointer to the mTable.
- *
- * childrenTable - A pointer to TTable, used for accessing the children table.
- *
- * valuesPubSub[TableMaxSize] - Preallocated memory for storing the published and subscribed values of each node
- ***/
-TableEntry nTable[MAX_NEURONS];
-TableInfo NTable = {
-        .numberOfItems = 0,
-        .isEqual = isNeuronEqual,
-        .table = nTable,
-        .setKey = setNeuronID,
-        .setValue = setNeuronInfo,
-};
-TableInfo* neuronTable = &NTable;
-
-NeuronInfo neuronsInfo[MAX_NEURONS];
-
-
 int neuronIds[MAX_NEURONS];
-float* weights[MAX_NEURONS];     // Each neuron has its own weight array
-float* inputs[MAX_NEURONS];      // Each neuron has its own input buffer
-int* saveOrders[MAX_NEURONS];    // Each neuron has its own save order
-float biases[MAX_NEURONS];       // Each neuron has its own bias
-int inputSizes[MAX_NEURONS];     // Each neuron has its own input size
+float* weights[MAX_NEURONS];     // Each neuron has its own weight array allocated at weights[NeuronStorageIndex]
+float* inputs[MAX_NEURONS];      // Each neuron has its own input buffer allocated at weights[NeuronStorageIndex]
+int* saveOrders[MAX_NEURONS];    // Each neuron has its own save order allocated at weights[NeuronStorageIndex]
+float biases[MAX_NEURONS];       // Each neuron has its own bias allocated at weights[NeuronStorageIndex]
+int inputSizes[MAX_NEURONS];     // Each neuron has its own input size allocated at weights[NeuronStorageIndex]
 
 int neuronCount = 0;             //Number of neurons currently computed by this node
 
@@ -92,13 +64,21 @@ void configureNeuron(int neuronId, int receivedInputSize, float* receivedWeights
     neuronCount++;
 }
 
-void setInput(int neuronId, float inputValue, int inputID){
-    int inputStorageIndex = -1, neuronStorageIndex = -1;
+int getNeuronStorageIndex(int neuronId){
+    int neuronStorageIndex = -1;
 
     // Find the index in the local vectors (weights, inputs, saveOrder) where the neuron's parameters were stored
     for (int i = 0; i < neuronCount; i++) {
         if(neuronId == neuronIds[i]) neuronStorageIndex=i;
     }
+    return neuronStorageIndex;
+}
+
+void setInput(int neuronId, float inputValue, int inputID){
+    int inputStorageIndex = -1, neuronStorageIndex = -1;
+
+    // Find the index in the local vectors (weights, inputs, saveOrder) where the neuron's parameters were stored
+    neuronStorageIndex = getNeuronStorageIndex(neuronId);
 
     // Return if the neuron ID is not among those computed by this node
     if(neuronStorageIndex == -1){
@@ -129,9 +109,7 @@ float computeNeuronOutput(int neuronId){
     float sum = 0;
 
     // Find the index in the local vectors (weights, inputs, saveOrder) where the neuron's parameters were stored
-    for (int i = 0; i < neuronCount; i++) {
-        if(neuronId == neuronIds[i]) neuronStorageIndex=i;
-    }
+    neuronStorageIndex = getNeuronStorageIndex(neuronId);
 
     // Return if the neuron ID is not among those computed by this node
     if(neuronStorageIndex == -1){
@@ -149,6 +127,26 @@ float computeNeuronOutput(int neuronId){
 
     //Finally pass the sum result by the activation function
     return ReLu(sum);  // Activation function
+}
+
+void freeAllNeuronMemory() {
+    for (int i = 0; i < neuronCount; ++i) {
+        delete[] weights[i];
+        delete[] inputs[i];
+        delete[] saveOrders[i];
+
+        weights[i] = nullptr;
+        inputs[i] = nullptr;
+        saveOrders[i] = nullptr;
+
+        // Reset metadata
+        neuronIds[i] = -1;
+        biases[i] = 0.0f;
+        inputSizes[i] = 0;
+
+        //Reset the number of neurons computed by this node to zero
+        neuronCount = 0;
+    }
 }
 
 
