@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
+#include <cstdint>
 
 #include "neuron_core.h"
 #include "../message_types.h"

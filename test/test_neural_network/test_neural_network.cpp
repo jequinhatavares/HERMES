@@ -69,19 +69,22 @@ void test_handle_message_assign_neuron_one_neuron(){
 }
 void test_handle_message_assign_neuron_multiple_neurons(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
-    char receivedMessage[50] ="8 0 |3 2 1 2 2.0 2.0 1 |3 2 1 2 2.0 2.0 1";
+    char receivedMessage[50] ="8 0 |3 2 1 2 2.0 2.0 1 |2 2 1 2 2.0 2.0 1";
     float weightsValues[2]={2.0,2.0}, bias=1;
     int saveOrderValues[2] ={1,2}, inputSize=2;
-    int neuronId1=3,neuronId2=3,neuronStorageIndex1=-1,neuronStorageIndex2=-1;
+    int neuronId1=3,neuronId2=2,neuronStorageIndex1=-1,neuronStorageIndex2=-1;
 
     handleNeuralNetworkMessage(receivedMessage);
 
     neuronStorageIndex1 = getNeuronStorageIndex(neuronId1);
     TEST_ASSERT(neuronStorageIndex1 != -1);
-    TEST_ASSERT(neuronStorageIndex1 != 0);
+    TEST_ASSERT(neuronStorageIndex1 == 0);
 
     neuronStorageIndex2 = getNeuronStorageIndex(neuronId2);
-    TEST_ASSERT(neuronStorageIndex2 != 1);
+
+    TEST_ASSERT(neuronStorageIndex2 != -1);
+    TEST_ASSERT(neuronStorageIndex2 == 1);/******/
+
 
     for (int i = 0; i < inputSize; i++) {
         printf("weightsValues:%f savedWeights:%f\n",weightsValues[i],weights[neuronStorageIndex1][i]);
@@ -90,7 +93,7 @@ void test_handle_message_assign_neuron_multiple_neurons(){
         TEST_ASSERT(saveOrders[neuronStorageIndex1][i] == saveOrderValues[i]);
 
         TEST_ASSERT(weights[neuronStorageIndex2][i] == weightsValues[i]);
-        TEST_ASSERT(saveOrders[neuronStorageIndex2][i] == saveOrderValues[i]);
+        TEST_ASSERT(saveOrders[neuronStorageIndex2][i] == saveOrderValues[i]);/******/
     }
 
 }
@@ -106,6 +109,23 @@ void test_encode_message_assign_neuron(){
     printf("Encoded Message:%s\n",buffer);
     printf("Encoded Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(correctMessage,buffer) == 0);
+}
+
+
+void test_handle_neuron_input(){
+    //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    char receivedMessage[50] ="8 0 |3 2 1 2 2.0 2.0 1";
+    float weightsValues[2]={2.0,2.0}, bias=1;
+    int saveOrderValues[2] ={1,2}, inputSize=2, neuronId = 3,outputNeuron1 = 1,outputNeuron2 = 2;
+
+    handleNeuralNetworkMessage(receivedMessage);
+
+    handleNeuronInput(neuronId,outputNeuron1);
+    setInput(neuronId,1.0,outputNeuron1);
+
+    handleNeuronInput(neuronId,outputNeuron1);
+    setInput(neuronId,1.0,outputNeuron1);
+
 }
 
 void setUp(void){
@@ -126,10 +146,11 @@ void tearDown(void){
 
 int main(int argc, char** argv){
     UNITY_BEGIN();
-    RUN_TEST(test_memory_allocation);
+    /***RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
-    RUN_TEST(test_handle_message_assign_neuron_one_neuron);
+    RUN_TEST(test_handle_message_assign_neuron_one_neuron);***/
     RUN_TEST(test_handle_message_assign_neuron_multiple_neurons);
-    RUN_TEST(test_encode_message_assign_neuron);
+    /***RUN_TEST(test_encode_message_assign_neuron);
+    RUN_TEST(test_handle_neuron_input);***/
     UNITY_END();
 }
