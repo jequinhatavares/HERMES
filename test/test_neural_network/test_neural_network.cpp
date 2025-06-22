@@ -9,6 +9,13 @@
 
 //pio test -e native -f "test_neural_network" -v
 
+void printBitField(uint32_t bits, uint8_t size) {
+    for (int i = size - 1; i >= 0; --i) {
+        printf("%u", (bits >> i) & 1);
+    }
+    printf("\n");
+}
+
 
 /*** ****************************** Tests ****************************** ***/
 
@@ -65,6 +72,8 @@ void test_handle_message_assign_neuron_one_neuron(){
         TEST_ASSERT(weights[neuronStorageIndex][i] == weightsValues[i]);
         TEST_ASSERT(saveOrders[neuronStorageIndex][i] == saveOrderValues[i]);
     }
+    freeAllNeuronMemory();
+
 
 }
 void test_handle_message_assign_neuron_multiple_neurons(){
@@ -96,6 +105,8 @@ void test_handle_message_assign_neuron_multiple_neurons(){
         TEST_ASSERT(saveOrders[neuronStorageIndex2][i] == saveOrderValues[i]);/******/
     }
 
+    freeAllNeuronMemory();
+
 }
 
 void test_encode_message_assign_neuron(){
@@ -111,7 +122,6 @@ void test_encode_message_assign_neuron(){
     TEST_ASSERT(strcmp(correctMessage,buffer) == 0);
 }
 
-
 void test_handle_neuron_input(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[50] ="8 0 |3 2 1 2 2.0 2.0 1";
@@ -120,11 +130,45 @@ void test_handle_neuron_input(){
 
     handleNeuralNetworkMessage(receivedMessage);
 
-    handleNeuronInput(neuronId,outputNeuron1);
     setInput(neuronId,1.0,outputNeuron1);
+    handleNeuronInput(neuronId,outputNeuron1);
 
-    handleNeuronInput(neuronId,outputNeuron1);
-    setInput(neuronId,1.0,outputNeuron1);
+    setInput(neuronId,1.0,outputNeuron2);
+    handleNeuronInput(neuronId,outputNeuron2);
+
+    TEST_ASSERT(outputValue == 5);
+}
+
+
+void test_bit_fields(){
+    BitField& bits = receivedInputs[0];
+
+    // 1. Test resetAll
+    resetAll(bits);
+    TEST_ASSERT(bits == 0);
+
+    // 2. Test setBit
+    setBit(bits, 1);
+    setBit(bits, 3);
+    printBitField(bits, 5);  // Expected: 01010
+    TEST_ASSERT((bits & (1U << 1)) != 0);
+    TEST_ASSERT((bits & (1U << 3)) != 0);
+
+    // 3. Test countBits
+    uint8_t c = countBits(bits);
+    TEST_ASSERT(c == 2);
+
+    // 4. Test allBits
+    resetAll(bits);
+    setBit(bits, 0);
+    setBit(bits, 1);
+    setBit(bits, 2);
+    TEST_ASSERT(allBits(bits, 3));
+
+    // Final output
+    printBitField(bits, 5);
+
+    resetAll(bits);
 
 }
 
@@ -135,22 +179,22 @@ void setUp(void){
     enableModule(DEBUG_SERVER);
     enableModule(CLI);
     enableModule(MIDDLEWARE);
+    enableModule(APP);
 
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
 }
 
-void tearDown(void){
-
-}
+void tearDown(void){}
 
 int main(int argc, char** argv){
     UNITY_BEGIN();
-    /***RUN_TEST(test_memory_allocation);
+    RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
-    RUN_TEST(test_handle_message_assign_neuron_one_neuron);***/
+    RUN_TEST(test_handle_message_assign_neuron_one_neuron);
     RUN_TEST(test_handle_message_assign_neuron_multiple_neurons);
-    /***RUN_TEST(test_encode_message_assign_neuron);
-    RUN_TEST(test_handle_neuron_input);***/
+    RUN_TEST(test_encode_message_assign_neuron);/******/
+    RUN_TEST(test_handle_neuron_input);
+    RUN_TEST(test_bit_fields);
     UNITY_END();
 }

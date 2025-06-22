@@ -2,6 +2,9 @@
 
 BitField receivedInputs[MAX_NEURONS];
 
+
+float outputValue;
+
 void handleNeuralNetworkMessage(char* messageBuffer){
     NeuralNetworkMessageType type;
     sscanf(messageBuffer, "%*d %d",&type);
@@ -18,19 +21,19 @@ void handleNeuralNetworkMessage(char* messageBuffer){
             neuronEntry = strtok_r(NULL, "|",&saveptr1);
 
             while (neuronEntry != nullptr){
-                LOG(NETWORK,DEBUG," neuron entry token:%s\n",neuronEntry);
+                //LOG(NETWORK,DEBUG," neuron entry token:%s\n",neuronEntry);
 
                 // Position the spaceToken pointer at the beginning of the current neuron's data segment
                 spaceToken = strtok_r(neuronEntry, " ",&saveptr2);
 
                 //spaceToken now pointing to the Neuron number
                 neuronId = atoi(spaceToken);
-                LOG(NETWORK,DEBUG," neuronId token:%s\n",spaceToken);
+                //LOG(NETWORK,DEBUG," neuronId token:%s\n",spaceToken);
 
                 //spaceToken now pointing to the input size
                 spaceToken = strtok_r(NULL, " ", &saveptr2);
                 inputSize = atoi(spaceToken);
-                LOG(NETWORK,DEBUG," inputSize token:%s\n",spaceToken);
+                //LOG(NETWORK,DEBUG," inputSize token:%s\n",spaceToken);
 
                 inputIndexMap = new int[inputSize];
                 weightValues = new float[inputSize];
@@ -39,7 +42,7 @@ void handleNeuralNetworkMessage(char* messageBuffer){
                 spaceToken = strtok_r(NULL, " ", &saveptr2);
                 for (int i = 0; i < inputSize; ++i) {
                     inputIndexMap[i]= atoi(spaceToken);
-                    LOG(NETWORK,DEBUG," inputIndexMap token:%s\n",spaceToken);
+                    //LOG(NETWORK,DEBUG," inputIndexMap token:%s\n",spaceToken);
                     //Move on the next input to index map
                     spaceToken = strtok_r(NULL, " ", &saveptr2);
                 }
@@ -47,14 +50,14 @@ void handleNeuralNetworkMessage(char* messageBuffer){
                 //spaceToken now pointing to the weights Vector
                 for (int i = 0; i < inputSize; ++i) {
                     weightValues[i]=atof(spaceToken);
-                    LOG(NETWORK,DEBUG," weightValues token:%s\n",spaceToken);
+                    //LOG(NETWORK,DEBUG," weightValues token:%s\n",spaceToken);
                     //Move on the next input to index map
                     spaceToken = strtok_r(NULL, " ", &saveptr2);
                 }
 
                 //spaceToken now pointing to the bias value
                 bias=atof(spaceToken);
-                LOG(NETWORK,DEBUG," bias token:%s\n",spaceToken);
+                //LOG(NETWORK,DEBUG," bias token:%s\n",spaceToken);
 
                 //Save the parsed neuron parameters
                 configureNeuron(neuronId,inputSize,weightValues,bias, inputIndexMap);
@@ -99,7 +102,9 @@ void handleNeuronInput(int neuronId,int outputNeuronId){
 
     if(allBits(receivedInputs[neuronStorageIndex], inputSize)){
         neuronOutput = computeNeuronOutput(neuronId);
+        outputValue = neuronOutput;
 
+        //LOG(APP,DEBUG,"Output inside function:%f\n",neuronOutput);
         //reset the bit field for the next NN run
         resetAll(receivedInputs[neuronStorageIndex]);
 
@@ -108,46 +113,3 @@ void handleNeuronInput(int neuronId,int outputNeuronId){
 
 }
 
-/**
- * setBit
- * Sets the i-th bit (0-indexed from LSB) in the bit field
- *
- * @param bits - Reference to bit field to modify
- * @param i    - Bit position to set (0-indexed)
- **/
-inline void setBit(BitField& bits, uint8_t i) {
-    bits |= (1U << i); //1U is the unsigned integer value 1-> 0b00000001
-}
-
-/**
- * countBits
- * Counts the number of set bits in the bit field
- *
- * @param bits - Bit field to examine
- * @return Number of bits set to 1
- **/
-inline uint8_t countBits(BitField bits) {
-    return __builtin_popcount(bits); // GCC/Clang intrinsic, fast!
-}
-
-/**
- * allBits
- * Checks if the lowest n bits are all set in the bit field
- *
- * @param bits - Bit field to check
- * @param n    - Number of lowest bits to verify
- * @return True if all n bits are set, false otherwise
- **/
-inline bool allBits(BitField bits, uint8_t n) {
-    return bits == ((1U << n) - 1);// Check if the lowest 'n' bits are all set to 1 (i.e., bits == 2^n - 1)
-}
-
-/**
- * resetAll
- * Clears all bits in the bit field (sets to 0)
- *
- * @param bits - Reference to bit field to reset
- **/
-inline void resetAll(BitField& bits){
-    bits = 0;
-}

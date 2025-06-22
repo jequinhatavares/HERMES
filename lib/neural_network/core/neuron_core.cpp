@@ -137,9 +137,9 @@ void setInput(int neuronId, float inputValue, int sourceNodeId){
     // Locate the index in the inputs vector where the new input should be stored, as specified by the saveOrder vector
     inputStorageIndex = getInputStorageIndex(neuronId, sourceNodeId);
 
-    LOG(NETWORK,DEBUG,"save index:%i\n",inputStorageIndex);
     if(inputStorageIndex != -1){
         inputs[neuronStorageIndex][inputStorageIndex] = inputValue;
+        //LOG(APP,DEBUG,"input[%i][%i] = %f\n",neuronStorageIndex,inputStorageIndex,inputValue);
     }
 }
 
@@ -180,8 +180,11 @@ float computeNeuronOutput(int neuronId){
 
     //Then multiply each input by each corresponding weight
     for (int i = 0; i < inputSizes[neuronStorageIndex]; i++) {
+        //LOG(APP,DEBUG,"input:%f weights:%f\n",inputs[neuronStorageIndex][i],weights[neuronStorageIndex][i]);
         sum += inputs[neuronStorageIndex][i] * weights[neuronStorageIndex][i];
     }
+
+    //LOG(APP,DEBUG,"final value:%f\n",sum);
 
     //Finally pass the sum result by the activation function
     return ReLu(sum);  // Activation function
