@@ -72,6 +72,30 @@ int getNeuronStorageIndex(int neuronId){
 }
 
 /**
+ * getInputStorageIndex
+ * Locates the storage position for a specific input value within a neuron's input vector
+ *
+ * @param neuronId - Identifier of the target neuron
+ * @param inputId  - Identifier of the neuron that provided the input value.
+ * @return Index within the neuron's input vector where this input should be stored,
+ *         or -1 if the neuron is not managed by this node or if inputId is not found.
+ */
+int getInputStorageIndex(int neuronId, int inputId){
+    int neuronStorageIndex = -1, inputStorageIndex = -1;
+
+    // Find the index in the local vectors (weights, inputs, saveOrder) where the neuron's parameters were stored
+    neuronStorageIndex = getNeuronStorageIndex(neuronId);
+
+    // Locate the index in the inputs vector where the new input should be stored, as specified by the saveOrder vector
+    for (int i = 0; i < inputSizes[neuronStorageIndex]; i++) {
+        if(saveOrders[neuronStorageIndex][i]==inputId){
+            inputStorageIndex = i;
+        }
+    }
+    return inputStorageIndex;
+}
+
+/**
  * setInput
  * Stores an input value for a specific neuron at the correct buffer position
  *

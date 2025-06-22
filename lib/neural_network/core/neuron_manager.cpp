@@ -77,7 +77,10 @@ void handleNeuralNetworkMessage(char* messageBuffer){
     }
 }
 
-void handleNeuronInput(){
+void handleNeuronInput(int neuronId,int outputNeuronId){
+    int inputStorageIndex = -1;
+
+    inputStorageIndex = getInputStorageIndex(neuronId,outputNeuronId);
 
 }
 
