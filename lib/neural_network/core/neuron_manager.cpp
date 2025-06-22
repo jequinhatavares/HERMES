@@ -78,21 +78,49 @@ void handleNeuralNetworkMessage(char* messageBuffer){
 }
 
 void handleNeuronInput(int neuronId,int outputNeuronId){
-    int inputStorageIndex = -1;
+    int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1;
+    float neuronOutput;
 
+    // Find the index where the neuron is stored
+    neuronStorageIndex = getNeuronStorageIndex(neuronId);
+    // Find the storage index of this specific input value for the given neuron
     inputStorageIndex = getInputStorageIndex(neuronId,outputNeuronId);
+    //Find the input size of the neuron
+    inputSize = getInputSize(neuronId);
+
+    if(inputSize == -1 || inputStorageIndex == -1 || neuronStorageIndex == -1){
+        LOG(APP,ERROR,"ERROR: Invalid index detected: inputSize=%d, inputStorageIndex=%d, neuronStorageIndex=%d",
+            inputSize, inputStorageIndex, neuronStorageIndex);
+        return;
+    }
+
+    // Set the bit corresponding to the received input to 1
+    setBit(receivedInputs[neuronStorageIndex],inputStorageIndex);
+
+    if(allBits(receivedInputs[neuronStorageIndex], inputSize)){
+        neuronOutput = computeNeuronOutput(neuronId);
+
+        //reset the bit field for the next NN run
+        resetAll(receivedInputs[neuronStorageIndex]);
+
+        //TODO Send the output for the nodes that need him
+    }
 
 }
 
 
-inline void set(BitField& bits, uint8_t i) {
+inline void setBit(BitField& bits, uint8_t i) {
     bits |= (1U << i); //1U is the unsigned integer value 1-> 0b00000001
 }
 
-inline uint8_t count(BitField bits) {
+inline uint8_t countBits(BitField bits) {
     return __builtin_popcount(bits); // GCC/Clang intrinsic, fast!
 }
 
-inline bool all(BitField bits, uint8_t n) {
+inline bool allBits(BitField bits, uint8_t n) {
     return bits == ((1U << n) - 1);// Check if the lowest 'n' bits are all set to 1 (i.e., bits == 2^n - 1)
+}
+
+inline void resetAll(BitField& bits) {
+    bits = 0;
 }
