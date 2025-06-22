@@ -53,6 +53,7 @@ void (*decodeTopicValue)(char*,int8_t *) = nullptr;
 
 PubSubInfo valuesPubSub[TableMaxSize];
 
+// Global variable used to pass topic values to the function responsible for encoding PubSub messages
 int8_t topic;
 
 /**

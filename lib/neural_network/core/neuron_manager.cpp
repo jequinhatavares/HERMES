@@ -1,5 +1,6 @@
 #include "neuron_manager.h"
 
+BitField receivedInputs[MAX_NEURONS];
 
 void handleNeuralNetworkMessage(char* messageBuffer){
     NeuralNetworkMessageType type;
@@ -78,4 +79,17 @@ void handleNeuralNetworkMessage(char* messageBuffer){
 
 void handleNeuronInput(){
 
+}
+
+
+inline void set(BitField& bits, uint8_t i) {
+    bits |= (1U << i); //1U is the unsigned integer value 1-> 0b00000001
+}
+
+inline uint8_t count(BitField bits) {
+    return __builtin_popcount(bits); // GCC/Clang intrinsic, fast!
+}
+
+inline bool all(BitField bits, uint8_t n) {
+    return bits == ((1U << n) - 1);// Check if the lowest 'n' bits are all set to 1 (i.e., bits == 2^n - 1)
 }

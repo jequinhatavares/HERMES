@@ -9,6 +9,8 @@
 #include "../message_types.h"
 
 
+typedef uint32_t BitField;
+
 
 void handleNeuralNetworkMessage(char* messageBuffer);
 
