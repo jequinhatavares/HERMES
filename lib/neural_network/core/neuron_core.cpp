@@ -96,6 +96,24 @@ int getInputStorageIndex(int neuronId, int inputId){
 }
 
 /**
+ * getInputSize
+ * Returns the number of inputs for the specified neuron if managed by this node.
+ *
+ * @param neuronId - Identifier of the target neuron
+ * @return Number of inputs if neuron found, -1 if neuron not managed by this node
+ */
+int getInputSize(int neuronId){
+    int neuronStorageIndex = -1;
+
+    // Find the index in the local vectors (weights, inputs, saveOrder) where the neuron's parameters were stored
+    neuronStorageIndex = getNeuronStorageIndex(neuronId);
+
+    if(neuronStorageIndex == -1) return -1;
+
+    return inputSizes[neuronStorageIndex];
+}
+
+/**
  * setInput
  * Stores an input value for a specific neuron at the correct buffer position
  *
@@ -117,11 +135,7 @@ void setInput(int neuronId, float inputValue, int sourceNodeId){
     }
 
     // Locate the index in the inputs vector where the new input should be stored, as specified by the saveOrder vector
-    for (int i = 0; i < inputSizes[neuronStorageIndex]; i++) {
-        if(saveOrders[neuronStorageIndex][i]==sourceNodeId){
-            inputStorageIndex = i;
-        }
-    }
+    inputStorageIndex = getInputStorageIndex(neuronId, sourceNodeId);
 
     LOG(NETWORK,DEBUG,"save index:%i\n",inputStorageIndex);
     if(inputStorageIndex != -1){
