@@ -13,12 +13,12 @@
 
 
 #if defined(raspberrypi_3b)
-#define MAX_NEURONS 3
+#define MAX_NEURONS 100
 #endif
 
 
 #if defined(NATIVE)
-#define MAX_NEURONS 3
+#define MAX_NEURONS 2
 #endif
 
 

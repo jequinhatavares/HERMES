@@ -21,10 +21,6 @@ extern int* saveOrders[MAX_NEURONS];
 extern float biases[MAX_NEURONS];
 extern int inputSizes[MAX_NEURONS];
 
-bool isNeuronEqual(void* av, void* bv);
-void setNeuronID(void* av, void* bv);
-void setNeuronInfo(void* av, void* bv);
-
 
 void configureNeuron(int neuronId, int receivedInputSize, float* receivedWeights, float receivedBias, int* receivedOrder);
 int getNeuronStorageIndex(int neuronId);

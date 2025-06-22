@@ -8,7 +8,7 @@ int* saveOrders[MAX_NEURONS];    // Each neuron has its own save order allocated
 float biases[MAX_NEURONS];       // Each neuron has its own bias allocated at weights[NeuronStorageIndex]
 int inputSizes[MAX_NEURONS];     // Each neuron has its own input size allocated at weights[NeuronStorageIndex]
 
-int neuronCount = 0;             //Number of neurons currently computed by this node
+int neuronsCount = 0;             //Number of neurons currently computed by this node
 
 
 /**
@@ -25,32 +25,32 @@ int neuronCount = 0;             //Number of neurons currently computed by this 
  * @return void
  */
 void configureNeuron(int neuronId, int receivedInputSize, float* receivedWeights, float receivedBias, int* receivedOrder) {
-    if (neuronCount >= MAX_NEURONS) {
-        LOG(APP,ERROR, "ERROR: Exceeded max neurons per node.");
+    if (neuronsCount >= MAX_NEURONS) {
+        LOG(APP,ERROR, "ERROR: Exceeded max neurons per node.\n");
         return;
     }
 
     //Add the neuronId to the list of neurons computed by this node
-    neuronIds[neuronCount] = neuronId;
+    neuronIds[neuronsCount] = neuronId;
     //Add the inputSize of this neuron to the list
-    inputSizes[neuronCount] = receivedInputSize;
+    inputSizes[neuronsCount] = receivedInputSize;
 
     //Append the weights values to the list
-    weights[neuronCount] = new float[receivedInputSize];
-    memcpy(weights[neuronCount], receivedWeights, sizeof(float) * receivedInputSize);
+    weights[neuronsCount] = new float[receivedInputSize];
+    memcpy(weights[neuronsCount], receivedWeights, sizeof(float) * receivedInputSize);
 
     //Initialize the pointer to the memory where the inputs will be stored
-    inputs[neuronCount] = new float[receivedInputSize]; // uninitialized, filled during inference
+    inputs[neuronsCount] = new float[receivedInputSize]; // uninitialized, filled during inference
 
     //Append the saveInput order to the list
-    saveOrders[neuronCount] = new int[receivedInputSize];
-    memcpy(saveOrders[neuronCount], receivedOrder, sizeof(int) * receivedInputSize);
+    saveOrders[neuronsCount] = new int[receivedInputSize];
+    memcpy(saveOrders[neuronsCount], receivedOrder, sizeof(int) * receivedInputSize);
 
     //Initialize the node bias value
-    biases[neuronCount] = receivedBias;
+    biases[neuronsCount] = receivedBias;
 
     //Increment the number of computed neurons
-    neuronCount++;
+    neuronsCount++;
 }
 
 /**
@@ -65,7 +65,7 @@ int getNeuronStorageIndex(int neuronId){
     int neuronStorageIndex = -1;
 
     // Find the index in the local vectors (weights, inputs, saveOrder) where the neuron's parameters were stored
-    for (int i = 0; i < neuronCount; i++) {
+    for (int i = 0; i < neuronsCount; i++) {
         if(neuronId == neuronIds[i]) neuronStorageIndex=i;
     }
     return neuronStorageIndex;
@@ -130,7 +130,7 @@ void setInput(int neuronId, float inputValue, int sourceNodeId){
 
     // Return if the neuron ID is not among those computed by this node
     if(neuronStorageIndex == -1){
-        LOG(APP,ERROR, "ERROR: Neuron ID not found in the list of neurons computed by this node");
+        LOG(APP,ERROR, "ERROR: Neuron ID not found in the list of neurons computed by this node\n");
         return;
     }
 
@@ -171,7 +171,7 @@ float computeNeuronOutput(int neuronId){
 
     // Return if the neuron ID is not among those computed by this node
     if(neuronStorageIndex == -1){
-        LOG(APP,ERROR, "ERROR: Unable to compute neuron output: neuron ID not found among those handled by this node");
+        LOG(APP,ERROR, "ERROR: Unable to compute neuron output: neuron ID not found among those handled by this node\n");
         return -99999.9;
     }
 
@@ -197,7 +197,7 @@ float computeNeuronOutput(int neuronId){
  * @return void
  */
 void freeAllNeuronMemory() {
-    for (int i = 0; i < neuronCount; ++i) {
+    for (int i = 0; i < neuronsCount; ++i) {
         delete[] weights[i];
         delete[] inputs[i];
         delete[] saveOrders[i];
@@ -212,7 +212,7 @@ void freeAllNeuronMemory() {
         inputSizes[i] = 0;
 
         //Reset the number of neurons computed by this node to zero
-        neuronCount = 0;
+        neuronsCount = 0;
     }
 }
 

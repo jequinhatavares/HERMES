@@ -2,8 +2,7 @@
 
 BitField receivedInputs[MAX_NEURONS];
 
-
-float outputValue;
+float outputValue;//Variable used in the unit tests
 
 void handleNeuralNetworkMessage(char* messageBuffer){
     NeuralNetworkMessageType type;
