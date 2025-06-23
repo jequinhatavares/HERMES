@@ -97,7 +97,6 @@ void setup(){
         context->advertiseTopic(CAMERA);
     }***/
 
-    initMiddlewareCallbacks();
 
     middlewareSelectStrategy(STRATEGY_TOPOLOGY);
     initMiddlewareStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,chooseParentByProcessingCapacity);

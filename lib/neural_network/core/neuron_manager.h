@@ -40,7 +40,7 @@ inline void setBit(BitField& bits, uint8_t i) {
  * @return Number of bits set to 1
  **/
 inline uint8_t countBits(BitField bits) {
-    return __builtin_popcount(bits); // GCC/Clang intrinsic, fast!
+    return __builtin_popcount(bits); // GCC/Clang intrinsic
 }
 
 /**
