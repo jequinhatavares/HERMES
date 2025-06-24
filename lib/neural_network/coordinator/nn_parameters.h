@@ -44,7 +44,7 @@ typedef struct Layer{
     uint32_t numInputs;      // Input dimensions
     uint32_t numOutputs;     // Output dimensions (neurons)
     ActivationType activation; // Activation function
-    const float* weights;     // Weights (size: inputs × outputs)
+    const float** weights;     // Weights (size: inputs × outputs)
     const float* biases;      // Biases (size = outputs)
 } Layer;
 
@@ -66,37 +66,37 @@ extern const NeuralNetwork network;
 #ifdef NEURAL_NET_IMPL
 
 // --- Layer 0: Input (2) → Hidden (4) ---
-static const float _weights0[] = {
+static const float _weights0[4][2] = {
     // Weights for 2 inputs × 4 outputs (row-major)
     0.5f, -0.2f,   // Input 1 → Hidden 1, 2, 3, 4
     0.3f,  0.1f,
     -0.4f, 0.6f,
     0.8f, -0.7f
 };
-static const float _biases0[] = { 0.1f, -0.1f, 0.2f, -0.2f };
+static const float _biases0[4] = { 0.1f, -0.1f, 0.2f, -0.2f };
 
 // --- Layer 1: Hidden (4) → Hidden (4) ---
-static const float _weights1[] = {
+static const float _weights1[4][4] = {
     // Weights for 4 inputs × 4 outputs
     0.2f, -0.3f, 0.4f, -0.5f,
     0.1f,  0.6f, -0.7f, 0.8f,
     -0.9f, 0.5f, 0.3f, -0.1f,
     0.7f, -0.4f, 0.2f, 0.6f
 };
-static const float _biases1[] = { -0.3f, 0.4f, -0.5f, 0.6f };
+static const float _biases1[4] = { -0.3f, 0.4f, -0.5f, 0.6f };
 
 // --- Layer 2: Hidden (4) → Output (2) ---
-static const float _weights2[] = {
+static const float _weights2[4][2] = {
     // Weights for 4 inputs × 2 outputs
     0.9f, -0.8f,
     0.7f, -0.6f,
     0.5f, -0.4f,
     0.3f, -0.2f
 };
-static const float _biases2[] = { 0.1f, -0.1f };
+static const float _biases2[2] = { 0.1f, -0.1f };
 
 // Layer array
-static const Layer _layers[] = {
+static const Layer _layers[3] = {
     { // Layer 0 (Input → Hidden)
         .numInputs = 2,
         .numOutputs = 4,
