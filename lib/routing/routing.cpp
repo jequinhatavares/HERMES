@@ -225,64 +225,7 @@ uint8_t* findRouteToNode(uint8_t nodeIP[4]){
  * @param nodeIP - The IP address of the destination node.
  * @param newNode - A struct containing the next-hop IP address and the hop distance to the node.
  * @return (void)
- */
-/***
-void updateRoutingTable(int nodeIP[4], routingTableEntry newNode, int senderIP[4]){
-    //Serial.printf("1\n");
-    //The node is not yet in the table
-    //Serial.printf("2\n");
-    //routingTableEntry *ptr = (routingTableEntry*) findNode(routingTable, nodeIP);
-    //Serial.printf("Routing Table before inserting the new node\n");
-
-    LOG(NETWORK,DEBUG,"NodeIP: %i.%i.%i.%i\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
-
-
-     //If it is my IP, the hop distance is zero, and the next node is myself
-     if(isIPEqual(nodeIP, myIP)){
-         newNode.hopDistance = 0;
-         assignIP(newNode.nextHopIP, myIP);
-     }
-     //If the node is my parent, its hop distance is 1
-     else if(isIPEqual(nodeIP, parent)){
-         newNode.hopDistance = 1;
-         assignIP(newNode.nextHopIP, parent);
-     }
-     //If the node is my child, its hop distance is 1
-     else if(findNode(childrenTable,nodeIP) ){
-         newNode.hopDistance = 1;
-         assignIP(newNode.nextHopIP, nodeIP);
-     }
-     //If the next hop is my parent or child, increase the hop distance by 1
-     else if( (isIPEqual(newNode.nextHopIP, parent) || findNode(childrenTable,newNode.nextHopIP) != nullptr) && newNode.hopDistance != -1){
-         newNode.hopDistance = newNode.hopDistance + 1;
-     }
-     //If the next hop is myself and the node is not one of my direct children, then it belongs to the subnet of one of my children.
-     // In this case, do not update the value, keep the one previously updated by the corresponding child that informed me about this node.
-     else if(isIPEqual(newNode.nextHopIP, myIP) && findNode(childrenTable,nodeIP) == nullptr ){
-         return;
-     }else if(newNode.hopDistance == -1){ //the node is no longer reachable
-         newNode.hopDistance = -1;
-     }
-     //If the node is neither my parent nor my child (i.e., it belongs to another node in the network that is not directly connected to me)
-     // and the nextHopIP isn't myself update nextHopIP to the sender's IP
-     else {
-        assignIP(newNode.nextHopIP, senderIP);
-        newNode.hopDistance = newNode.hopDistance + 1;
-     }
-
-    if( findNode(routingTable, nodeIP) == nullptr){
-        //LOG(NETWORK,DEBUG,"Adding new node\n");
-        tableAdd(routingTable, nodeIP, &newNode);
-        //Serial.printf("Routing Table\n");
-    }else{//The node is already present in the table
-        //Serial.printf("4\n");
-        //LOG(NETWORK,DEBUG,"Updating node\n");
-        tableUpdate(routingTable, nodeIP, &newNode);
-        //Serial.printf("Routing Table\n");
-        //Serial.printf("5\n");
-    }
-}***/
-
+ **/
 bool updateRoutingTableSN(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, uint8_t senderIP[4]){
     routingTableEntry updatedEntry;
     routingTableEntry *nodeEntry = (routingTableEntry*) findNode(routingTable, nodeIP);
@@ -462,9 +405,30 @@ void updateMySequenceNumber(int newSequenceNumber){
     }
 }
 
+int getNumberOfActiveDevices(){
+    routingTableEntry* routingEntry;
+    int nNodes = 0;
+
+    /*** The value of routing.numberOfItems may not reflect the actual number of active nodes in the network,
+         since a node can still be listed in the routing table even if it is temporarily disconnected.***/
+
+    for (int i = 0; i < routingTable->numberOfItems; i++) {
+        routingEntry = (routingTableEntry*) tableValueAtIndex(routingTable, i);
+        if(routingEntry != nullptr){
+            // The node is active in the network if its distance is not -1 and its sequence number is even.
+            if(routingEntry->hopDistance != -1 && routingEntry->sequenceNumber % 2 == 0){
+                nNodes ++;
+            }
+        }
+    }
+
+    return nNodes;
+
+}
 void getIPFromMAC(uint8_t * MAC, uint8_t * IP){
     IP[0] = MAC[5];
     IP[1] = MAC[4];
     IP[2] = MAC[3];
     IP[3] = 1;
 }
+

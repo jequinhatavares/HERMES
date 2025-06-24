@@ -33,6 +33,7 @@ typedef struct TableInfo{
 TableInfo* tableCreate(bool (*)(void*, void*));  // DEPRECATED
 void tableInit(TableInfo * T, void* keys, void* values, size_t key_size, size_t value_size);
 void* tableKey(TableInfo * T, int index);
+void* tableValueAtIndex(TableInfo * T, int index);
 int tableFind(TableInfo* Table, void* key);
 void* tableRead(TableInfo*, void*);
 void tableAdd(TableInfo*, void* key, void* value);

@@ -45,6 +45,11 @@ void* tableKey(TableInfo * T, int index){
     if (index>=T->numberOfItems || index < 0){return nullptr;}
     return T->table[index].key;
 }
+
+void* tableValueAtIndex(TableInfo * T, int index){
+    if (index>=T->numberOfItems || index < 0){return nullptr;}
+    return T->table[index].value;
+}
 /**
  * tableFind
  * Searches for a key in the table and returns its index.
@@ -136,7 +141,7 @@ void tableUpdate(TableInfo* T, void* key, void* value){
  * @return void
  */
 void tableRemove(TableInfo* T, void* key){
-    int i, index = tableFind(T, key);
+    int index = tableFind(T, key);
     if(index == -1) return;
     //T->table[index].value = nullptr;
     for (int i = index; i < T->numberOfItems-1; i++) {
