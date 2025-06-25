@@ -42,11 +42,13 @@ bool isIPEqual(void* a, void* b);
 void assignIP(uint8_t destIP[4], uint8_t sourceIP[4]);
 void setIP(void* av, void* bv);
 void setValue(void* av, void* bv);
+
 void initTables();
 void printRoutingStruct(TableEntry* Table);
 void printRoutingTableHeader();
 void printChildStruct(TableEntry* Table);
 void printChildrenTableHeader();
+
 void* findNode(TableInfo* Table, uint8_t nodeIP[4]);
 uint8_t * findRouteToNode(uint8_t nodeIP[4]);
 bool updateRoutingTableSN(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, uint8_t senderIP[4]);
@@ -55,6 +57,7 @@ parentInfo chooseParent(parentInfo* possibleParents, int n);
 bool inMySubnet(uint8_t * nodeIP);
 void updateMySequenceNumber(int newSequenceNumber);
 int getNumberOfActiveDevices();
+bool isNodeReachable(uint8_t *nodeIP);
 void getIPFromMAC(uint8_t * MAC, uint8_t * IP);
 
 #endif //ROUTING_H

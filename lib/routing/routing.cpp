@@ -425,6 +425,16 @@ int getNumberOfActiveDevices(){
     return nNodes;
 
 }
+
+bool isNodeReachable(uint8_t *nodeIP){
+    routingTableEntry *entry = (routingTableEntry*) tableRead(routingTable,nodeIP);
+
+    if(entry == nullptr)return false;
+
+    // A node is considered reachable if it has a valid route (hopDistance != -1)
+    // and its sequence number is even (indicating a current/valid state)
+    return(entry->hopDistance != -1) && (entry->sequenceNumber % 2 == 0);
+}
 void getIPFromMAC(uint8_t * MAC, uint8_t * IP){
     IP[0] = MAC[5];
     IP[1] = MAC[4];
