@@ -42,11 +42,13 @@ void tableInit(TableInfo * T, void* keys, void* values, size_t key_size, size_t 
 }
 
 void* tableKey(TableInfo * T, int index){
+    // Safeguard: ensure the provided index is within the bounds of the table
     if (index>=T->numberOfItems || index < 0){return nullptr;}
     return T->table[index].key;
 }
 
 void* tableValueAtIndex(TableInfo * T, int index){
+    // Safeguard: ensure the provided index is within the bounds of the table
     if (index>=T->numberOfItems || index < 0){return nullptr;}
     return T->table[index].value;
 }
@@ -58,11 +60,14 @@ void* tableValueAtIndex(TableInfo * T, int index){
  * @param Key - The key to search for.
  * @return int - The index of the key if found, otherwise -1.
  */
-int tableFind(TableInfo* T, void* Key){
+int tableFind(TableInfo* T, void* key){
     int i;
+
+    // Safeguard: ensure the provided key pointer is not null before proceeding
+    if (key == nullptr) return -1;
+
     for(i=0; i<T->numberOfItems; i++){
-        //if(Table[i].key == Key)
-        bool result = T->isEqual(T->table[i].key, Key);
+        bool result = T->isEqual(T->table[i].key, key);
         if(result){
             //printf("tableFind Returned: %i\n",i);
             return i;
@@ -80,6 +85,10 @@ int tableFind(TableInfo* T, void* Key){
  * @return void* - A pointer to the associated value, or nullptr if the key is not found.
  */
 void* tableRead(TableInfo* T, void* key){
+
+    // Safeguard: ensure the provided key pointer is not null before proceeding
+    if (key== nullptr) return nullptr;
+
     int i = tableFind(T, key);
     if (i==-1) return nullptr;
     //printf("tableRead value: %i\n",((int*)T->table[i].value)[0]);
