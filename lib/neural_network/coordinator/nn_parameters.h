@@ -88,10 +88,8 @@ static const float _biases1[] = { -0.3f, 0.4f, -0.5f, 0.6f };
 // --- Layer 2: Hidden (4) → Output (2) ---
 static const float _weights2[] = {
     // Weights for 4 inputs × 2 outputs
-    0.9f, -0.8f,
-    0.7f, -0.6f,
-    0.5f, -0.4f,
-    0.3f, -0.2f
+    0.9f, -0.8f,0.7f, -0.6f,
+    0.5f, -0.4f,0.3f, -0.2f
 };
 static const float _biases2[2] = { 0.1f, -0.1f };
 

@@ -213,16 +213,14 @@ void test_bit_fields(){
 /***********************- Test on coordinator node side -*************************/
 
 void test_distribute_neurons(){
-    uint8_t nodes[6][4] = {
+    uint8_t nodes[4][4] = {
             {2,2,2,2},
             {3,3,3,3},
             {4,4,4,4},
             {5,5,5,5},
-            {6,6,6,6},
-            {7,7,7,7},
     };
 
-    distributeNeuralNetwork(&network, nodes,6);
+    distributeNeuralNetwork(&network, nodes,4);
 
 }
 
