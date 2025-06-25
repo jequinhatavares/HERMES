@@ -154,7 +154,7 @@ void test_encode_message_assign_neuron(){
     float weightsValues[2]={2.0,2.0}, bias=1;
     uint32_t saveOrderValues[2] ={1,2}, inputSize=2, neuronId = 3;
 
-    encodeAssignComputationMessage(buffer, sizeof(buffer),neuronId,inputSize,saveOrderValues,weightsValues,bias);
+    encodeAssignNeuronMessage(buffer, sizeof(buffer),neuronId,inputSize,saveOrderValues,weightsValues,bias);
 
     printf("Encoded Message:%s\n",buffer);
     printf("Encoded Message:%s\n",correctMessage);

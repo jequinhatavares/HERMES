@@ -41,7 +41,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
         // The root node is responsible for computing the output layer.
         if(i == net->numLayers - 1){
             //TODO this node computed the output layer
-            LOG(APP, INFO, "Layer %i reserved for root calculation\n",net->numHiddenLayers-1);
+            LOG(APP, INFO, "Layer nr:%i reserved for root calculation\n",net->numLayers-1);
             continue;
         }
 
@@ -49,7 +49,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
 
             LOG(APP, INFO, "Node IP: %i.%i.%i.%i\n",nodes[assignedDevices][0],nodes[assignedDevices][1],nodes[assignedDevices][2],nodes[assignedDevices][3]);
 
-            messageOffset += encodeAssignNeuronMessage(tmpBuffer, sizeof(tmpBuffer),
+            encodeAssignNeuronMessage(tmpBuffer, sizeof(tmpBuffer),
                                            currentNeuronId,net->layers[i].numInputs,inputIndexMap,
                                            &net->layers[i].weights[j * net->layers[i].numInputs],net->layers[i].biases[j]);
 
@@ -61,7 +61,8 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
 
             // When the number of neurons assigned to the current device reaches the expected amount, move on to the next device in the list.
             if(neuronPerNodeCount == neuronsPerNode){
-                assignedDevices ++;
+                // Move to the next node, except when all neurons have been assigned i.e., the last neuron of the final layer
+                if((j != net->layers[i].numOutputs - 1) || (i != net->numLayers-2)) assignedDevices ++;
                 neuronPerNodeCount = 0;
 
                 if(assignedDevices>=nrNodes){
@@ -71,14 +72,14 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
 
                 //TODO Send the message
                 LOG(APP, INFO, "Encoded Message: NN_ASSIGN_COMPUTATION [Neuron ID] [Input Size] [Input Save Order] [weights values] [bias]\n");
-                LOG(APP, INFO, "Encoded Message: %s\n",largeSendBuffer);
+                LOG(APP, INFO, "Encoded Message: %s size:%i\n",largeSendBuffer, strlen(largeSendBuffer));
 
-                // Reset the send buffer and message offset to prepare for the next node's neuron assignments                messageOffset = 0;
+                // Reset the send buffer and message offset to prepare for the next node's neuron assignments
+                messageOffset = 0;
                 strcpy(largeSendBuffer,"");
                 // Encode the message header for the next node’s neuron assignments
                 encodeMessageHeader(tmpBuffer, sizeof(tmpBuffer),NN_ASSIGN_COMPUTATION);
                 messageOffset += snprintf(largeSendBuffer, sizeof(largeSendBuffer),"%s",tmpBuffer);
-
             }
         }
 
@@ -88,7 +89,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
 }
 int encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type){
     if(type == NN_ASSIGN_COMPUTATION){
-        return snprintf(messageBuffer,bufferSize,"%i |",NN_ASSIGN_COMPUTATION);
+        return snprintf(messageBuffer,bufferSize,"%i ",NN_ASSIGN_COMPUTATION);
     }
     return 0;
 }
@@ -110,6 +111,9 @@ int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize, uint32_t n
     //Encode: NN_ASSIGN_COMPUTATION [Neuron Number 1] [Input Size]
     offset = snprintf(messageBuffer,bufferSize,"|");
 
+    //Encode the neuronID and inputSize
+    offset += snprintf(messageBuffer+ offset,bufferSize - offset,"%i %i ",neuronId,inputSize);
+
     //Encode the [Input Save Order] vector
     for (int i = 0; i < inputSize; i++) {
         offset += snprintf(messageBuffer + offset, bufferSize - offset,"%i ",inputSaveOrder[i]);
@@ -123,7 +127,6 @@ int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize, uint32_t n
     }
 
     offset += snprintf(messageBuffer + offset, bufferSize - offset,"%g",bias);
-
     return offset;
 
 }
