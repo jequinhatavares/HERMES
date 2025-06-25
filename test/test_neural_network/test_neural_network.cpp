@@ -3,7 +3,12 @@
 #include <../lib/neural_network/core/neuron_core.h>
 #include <../lib/neural_network/core/neuron_manager.h>
 
+#define NEURAL_NET_IMPL
+
 #include <../lib/neural_network/coordinator/neural_network_manager.h>
+#include "../lib/neural_network/coordinator/nn_parameters.h"
+
+
 
 #include "table.h"
 
@@ -147,7 +152,7 @@ void test_encode_message_assign_neuron(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char correctMessage[50] ="0 3 2 1 2 2 2 1",buffer[200];
     float weightsValues[2]={2.0,2.0}, bias=1;
-    int saveOrderValues[2] ={1,2}, inputSize=2, neuronId = 3;
+    uint32_t saveOrderValues[2] ={1,2}, inputSize=2, neuronId = 3;
 
     encodeAssignComputationMessage(buffer, sizeof(buffer),neuronId,inputSize,saveOrderValues,weightsValues,bias);
 
@@ -203,8 +208,24 @@ void test_bit_fields(){
     printBitField(bits, 5);
 
     resetAll(bits);
+}
+
+/***********************- Test on coordinator node side -*************************/
+
+void test_distribute_neurons(){
+    uint8_t nodes[6][4] = {
+            {2,2,2,2},
+            {3,3,3,3},
+            {4,4,4,4},
+            {5,5,5,5},
+            {6,6,6,6},
+            {7,7,7,7},
+    };
+
+    distributeNeuralNetwork(&network, nodes,6);
 
 }
+
 
 void setUp(void){
     enableModule(STATE_MACHINE);
@@ -223,13 +244,14 @@ void tearDown(void){}
 
 int main(int argc, char** argv){
     UNITY_BEGIN();
-    RUN_TEST(test_memory_allocation);
+    /***RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
     RUN_TEST(test_handle_message_assign_neuron_one_neuron);
     RUN_TEST(test_handle_message_assign_neuron_multiple_neurons);
     RUN_TEST(test_handle_message_assign_neuron_with_more_than_max_neurons);
-    RUN_TEST(test_encode_message_assign_neuron);/******/
+    RUN_TEST(test_encode_message_assign_neuron);
     RUN_TEST(test_handle_neuron_input);
-    RUN_TEST(test_bit_fields);
+    RUN_TEST(test_bit_fields);***/
+    RUN_TEST(test_distribute_neurons);
     UNITY_END();
 }

@@ -3,14 +3,11 @@
 #define NEURAL_NET_IMPL
 
 
-void distributeNeuralNetwork(const NeuralNetwork *net){
+void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_t nrNodes){
     uint32_t neuronPerNodeCount = 0,currentNeuronId= net->layers[0].numInputs,*inputIndexMap;
-    int assignedDevices = 0, nodeIP[4], assignedNeurons = 0;
-    int firstNeuronId = 0 ;
-    uint32_t numDevices = getNumberOfActiveDevices();
-    routingTableEntry *routingEntry;
+    int assignedDevices = 0;
 
-    uint32_t neuronsPerNode = ceil( net->numNeurons / numDevices);
+    uint32_t neuronsPerNode = ceil( net->numNeurons / nrNodes);
 
     LOG(APP, INFO, "Neural network initialized with %d neurons (avg. %d neurons per node)\n", net->numNeurons, neuronsPerNode);
 
@@ -27,30 +24,34 @@ void distributeNeuralNetwork(const NeuralNetwork *net){
             else inputIndexMap[j] = currentNeuronId+(j-net->layers[i].numInputs+1);
         }
 
+        // The root node is responsible for computing the output layer.
+        if(i == net->numHiddenLayers-1){
+            //TODO this node computed the output layer
+            continue;
+        }
+
         for (int j = 0; j < net->layers[i].numOutputs; j++) { // For each neuron in each layer
-            //Todo isto pode ser uma função no routing se tenho uma route para um nó
-            routingEntry = (routingTableEntry*) tableValueAtIndex(routingTable,assignedDevices);
-            if(routingEntry != nullptr){
-                // Neurons are only assigned to devices with an established route.
-                if(routingEntry->hopDistance != -1){
-                    encodeAssignComputationMessage(largeSendBuffer, sizeof(largeSendBuffer), currentNeuronId,net->layers[i].numInputs, inputIndexMap,net->layers[i].weights[neuronPerNodeCount],net->layers[i].biases[neuronPerNodeCount]);
-                    // Increment the total number of assigned neurons, the count of neurons assigned to this node, and the current NeuronID
-                    assignedNeurons ++;
-                    neuronPerNodeCount++;
-                    currentNeuronId ++;
-                }else{
-                    j-=1;
-                }
-            }else{
-                j-=1;
-            }
+
+            LOG(APP, INFO, "Node IP: %i.%i.%i.%i\n",nodes[assignedDevices][0],nodes[assignedDevices][1],nodes[assignedDevices][2],nodes[assignedDevices][3]);
+
+            encodeAssignComputationMessage(largeSendBuffer, sizeof(largeSendBuffer),
+                                           currentNeuronId,net->layers[i].numInputs,inputIndexMap,
+                                           &net->layers[i].weights[j * net->layers[i].numInputs],net->layers[i].biases[j]);
+
+            // Increment the count of neurons assigned to this node, and the current NeuronID
+            currentNeuronId ++;
+            neuronPerNodeCount++;
 
             // When the number of neurons assigned to the current device reaches the expected amount, move on to the next device in the list.
             if(neuronPerNodeCount == neuronsPerNode){
                 assignedDevices ++;
                 neuronPerNodeCount = 0;
-            }
 
+                if(assignedDevices>=nrNodes){
+                    LOG(APP, ERROR, "ERROR: The number of assigned devices exceeded the total available nodes for neuron assignment.\n");
+                    return;
+                }
+            }
         }
 
         delete [] inputIndexMap;
@@ -78,4 +79,6 @@ void encodeAssignComputationMessage(char* messageBuffer, size_t bufferSize, uint
     }
 
     offset += snprintf(messageBuffer + offset, bufferSize - offset,"%g",bias);
+
+    LOG(APP, INFO, "Encoded Message: %s\n",messageBuffer);
 }
