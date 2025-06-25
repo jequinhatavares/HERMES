@@ -1,13 +1,15 @@
 #include "neural_network_manager.h"
 #define NEURAL_NET_IMPL
 
+//char NNbuffer[500];
 
 void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_t nrNodes){
     uint32_t neuronPerNodeCount = 0,*inputIndexMap;
-    int assignedDevices = 0;
+    int assignedDevices = 0, messageOffset = 0;
     uint32_t numHiddenNeurons =0, neuronsPerNode;
     // Initialize the neuron ID to the first neuron in the first hidden layer (i.e., the first ID after the last input neuron)
     uint32_t currentNeuronId= net->layers[0].numInputs;
+    char tmpBuffer[150];
 
     // Count the neurons in the hidden layers, as only these will be assigned to nodes in the network
     for (int i = 0; i < net->numHiddenLayers; i++) {
@@ -16,6 +18,10 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
 
     // Calculate how many neurons will be assigned to each node
     neuronsPerNode = ceil( numHiddenNeurons / nrNodes);
+
+    // Encode the message header for the first node’s neuron assignments
+    encodeMessageHeader(tmpBuffer, sizeof(tmpBuffer),NN_ASSIGN_COMPUTATION);
+    messageOffset += snprintf(largeSendBuffer, sizeof(largeSendBuffer),"%s",tmpBuffer);
 
     LOG(APP, INFO, "Neural network initialized with %d neurons (avg. %d neurons per node)\n", net->numNeurons, neuronsPerNode);
 
@@ -43,9 +49,11 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
 
             LOG(APP, INFO, "Node IP: %i.%i.%i.%i\n",nodes[assignedDevices][0],nodes[assignedDevices][1],nodes[assignedDevices][2],nodes[assignedDevices][3]);
 
-            encodeAssignComputationMessage(largeSendBuffer, sizeof(largeSendBuffer),
+            messageOffset += encodeAssignNeuronMessage(tmpBuffer, sizeof(tmpBuffer),
                                            currentNeuronId,net->layers[i].numInputs,inputIndexMap,
                                            &net->layers[i].weights[j * net->layers[i].numInputs],net->layers[i].biases[j]);
+
+            messageOffset += snprintf(largeSendBuffer + messageOffset, sizeof(largeSendBuffer) - messageOffset,"%s",tmpBuffer);
 
             // Increment the count of neurons assigned to this node, and the current NeuronID
             currentNeuronId ++;
@@ -60,6 +68,17 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
                     LOG(APP, ERROR, "ERROR: The number of assigned devices exceeded the total available nodes for neuron assignment.\n");
                     return;
                 }
+
+                //TODO Send the message
+                LOG(APP, INFO, "Encoded Message: NN_ASSIGN_COMPUTATION [Neuron ID] [Input Size] [Input Save Order] [weights values] [bias]\n");
+                LOG(APP, INFO, "Encoded Message: %s\n",largeSendBuffer);
+
+                // Reset the send buffer and message offset to prepare for the next node's neuron assignments                messageOffset = 0;
+                strcpy(largeSendBuffer,"");
+                // Encode the message header for the next node’s neuron assignments
+                encodeMessageHeader(tmpBuffer, sizeof(tmpBuffer),NN_ASSIGN_COMPUTATION);
+                messageOffset += snprintf(largeSendBuffer, sizeof(largeSendBuffer),"%s",tmpBuffer);
+
             }
         }
 
@@ -67,13 +86,29 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
     }
 
 }
+int encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type){
+    if(type == NN_ASSIGN_COMPUTATION){
+        return snprintf(messageBuffer,bufferSize,"%i |",NN_ASSIGN_COMPUTATION);
+    }
+    return 0;
+}
+int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize, uint32_t neuronId, uint32_t inputSize, uint32_t * inputSaveOrder, const float* weightsValues, float bias){
+    /*** Estimated size of a message assigning a neuron, assuming:
+     - Neuron ID and input size each take 2 characters
+     - One space between each element
+     - Input size of 16
+     - Each weight and the bias are represented with 2 decimal places
+     Total size breakdown: 144
+     2 (Neuron ID) + 1 (space) + 2 (input size) + 1 (space) +
+     16*2 (input order indices, 2 chars each) + 16 (spaces) +
+     16*4 (weights, ~4 chars each including decimal) + 16 (spaces) +
+     4 (bias, ~4 chars)***/
 
-void encodeAssignComputationMessage(char* messageBuffer, size_t bufferSize, uint32_t neuronId, uint32_t inputSize, uint32_t * inputSaveOrder, const float* weightsValues, float bias){
-    //NN_ASSIGN_COMPUTATION [Neuron ID] [Input Size] [Input Save Order] [weights values] [bias]
+    //|[Neuron ID] [Input Size] [Input Save Order] [weights values] [bias]
     int offset = 0;
 
     //Encode: NN_ASSIGN_COMPUTATION [Neuron Number 1] [Input Size]
-    offset = snprintf(messageBuffer,bufferSize,"%i %i %i ",NN_ASSIGN_COMPUTATION,neuronId,inputSize);
+    offset = snprintf(messageBuffer,bufferSize,"|");
 
     //Encode the [Input Save Order] vector
     for (int i = 0; i < inputSize; i++) {
@@ -88,6 +123,7 @@ void encodeAssignComputationMessage(char* messageBuffer, size_t bufferSize, uint
     }
 
     offset += snprintf(messageBuffer + offset, bufferSize - offset,"%g",bias);
-    LOG(APP, INFO, "Encoded Message: NN_ASSIGN_COMPUTATION [Neuron ID] [Input Size] [Input Save Order] [weights values] [bias]\n");
-    LOG(APP, INFO, "Encoded Message: %s\n",messageBuffer);
+
+    return offset;
+
 }

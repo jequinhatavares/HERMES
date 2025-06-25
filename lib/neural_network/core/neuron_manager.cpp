@@ -14,7 +14,7 @@ void handleNeuralNetworkMessage(char* messageBuffer){
 
     switch (type) {
         case NN_ASSIGN_COMPUTATION:
-            //DATA_MESSAGE NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+            //DATA_MESSAGE NN_ASSIGN_COMPUTATION [destinationIP] |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
             neuronEntry = strtok_r(messageBuffer, "|",&saveptr1);
             //Discard the message types
             neuronEntry = strtok_r(NULL, "|",&saveptr1);
