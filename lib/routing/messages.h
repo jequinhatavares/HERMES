@@ -16,6 +16,8 @@
 //#include "lifecycle.h"
 #include "logger.h"
 #include "../net_viz/net_viz.h"
+#include <cstdio>
+#include <cstring>
 
 typedef struct messageParameters{
     uint8_t IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};
@@ -48,6 +50,8 @@ extern char smallSendBuffer[50];
 
 
 void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParameters parameters);
+void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *sourceIP,uint8_t *destinationIP){
+
 
 bool isMessageValid(int expectedMessageType,char* msg);
 

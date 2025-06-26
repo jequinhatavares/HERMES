@@ -1,10 +1,5 @@
 #include "messages.h"
 
-
-#include <cstdio>
-#include <cstring>
-
-
 char receiveBuffer[256] = "";
 char largeSendBuffer[255] = "";
 char smallSendBuffer[50] = "";
@@ -109,6 +104,12 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
         default:
             break;
     }
+}
+
+void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *sourceIP,uint8_t *destinationIP){
+    //11 [source node IP] [destination node IP] [message payload]
+    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",DATA_MESSAGE,sourceIP[0],sourceIP[1],
+             sourceIP[2],sourceIP[3],destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],payload);
 }
 
 bool isMessageValid(int expectedMessageType,char* msg){
@@ -689,4 +690,19 @@ void getSenderIP(char* messageBuffer, messageType type, uint8_t * senderIP){
     }
 }
 
+void sendMessageToNode(char* messageBuffer,uint8_t *destinationIP){
+    uint8_t *nextHopIP = findRouteToNode(destinationIP);
+    if(nextHopIP != nullptr){
+        sendMessage(destinationIP,messageBuffer);
+    }
+}
+
+
+void sendDataMessageToNode(char* messageBuffer,uint8_t *senderIP,uint8_t *destinationIP){
+    //encodeDataMessage(la,messageBuffer);
+    uint8_t *nextHopIP = findRouteToNode(destinationIP);
+    if(nextHopIP != nullptr){
+        sendMessage(destinationIP,messageBuffer);
+    }
+}
 
