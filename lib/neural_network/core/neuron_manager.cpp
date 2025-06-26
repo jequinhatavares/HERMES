@@ -69,17 +69,32 @@ void handleNeuralNetworkMessage(char* messageBuffer){
             }
             break;
 
-        case NN_NEURON_OUTPUT:
-            //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron Number] [Input Neuron Number] [Output Value]
-            sscanf(messageBuffer, "%*d %*d %d %d %f",&outputNeuron,&neuronId,&inputValue);
-            setInput(neuronId,inputValue,outputNeuron);
+        case NN_ASSIGN_OUTPUTS:
+            //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Input Neuron Number] [Output Value]
+
             break;
+
+        case NN_NEURON_OUTPUT:
+            //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Input Neuron Number] [Output Value]
+            sscanf(messageBuffer, "%*d %*d %d %d %f",&outputNeuron,&neuronId,&inputValue);
+            handleNeuronInput(neuronId,outputNeuron,inputValue);
+
+            break;
+
+
+        case NN_FORWARD:
+            break;
+        case NN_NACK:
+            break;
+        case NN_ACK:
+            break;
+
         default:
             break;
     }
 }
 
-void handleNeuronInput(int neuronId,int outputNeuronId){
+void handleNeuronInput(int neuronId,int outputNeuronId,float inputValue){
     int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1;
     float neuronOutput;
 
@@ -96,10 +111,15 @@ void handleNeuronInput(int neuronId,int outputNeuronId){
         return;
     }
 
+    //Save the input value in the input vector
+    setInput(neuronId,inputValue,outputNeuronId);
+
     // Set the bit corresponding to the received input to 1
     setBit(receivedInputs[neuronStorageIndex],inputStorageIndex);
 
+    // Check if all inputs required by that specific neuron have been received
     if(allBits(receivedInputs[neuronStorageIndex], inputSize)){
+        // If all inputs required by the neuron have been received, proceed with output computation
         neuronOutput = computeNeuronOutput(neuronId);
         outputValue = neuronOutput;
 

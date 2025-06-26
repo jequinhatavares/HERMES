@@ -19,7 +19,7 @@ extern BitField receivedInputs[MAX_NEURONS];
 
 
 void handleNeuralNetworkMessage(char* messageBuffer);
-void handleNeuronInput(int neuronId,int outputNeuronId);
+void handleNeuronInput(int neuronId,int outputNeuronId,float inputValue);
 
 /**
  * setBit
