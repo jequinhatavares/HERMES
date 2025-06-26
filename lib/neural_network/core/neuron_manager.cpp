@@ -2,7 +2,7 @@
 
 BitField receivedInputs[MAX_NEURONS];
 
-float outputValue;//Variable used in the unit tests
+float outputValues[MAX_NEURONS];
 
 void handleNeuralNetworkMessage(char* messageBuffer){
     NeuralNetworkMessageType type;
@@ -70,7 +70,7 @@ void handleNeuralNetworkMessage(char* messageBuffer){
             break;
 
         case NN_ASSIGN_OUTPUTS:
-            //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Input Neuron Number] [Output Value]
+            //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID 1] [Corresponding IP 1] [Output Neuron ID 2] [Corresponding IP 2]
 
             break;
 
@@ -78,15 +78,19 @@ void handleNeuralNetworkMessage(char* messageBuffer){
             //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Input Neuron Number] [Output Value]
             sscanf(messageBuffer, "%*d %*d %d %d %f",&outputNeuron,&neuronId,&inputValue);
             handleNeuronInput(neuronId,outputNeuron,inputValue);
-
             break;
-
 
         case NN_FORWARD:
+            //DATA_MESSAGE NN_FORWARD
             break;
+
         case NN_NACK:
+            //DATA_MESSAGE NN_NACK [Neuron ID with Missing Output] [Acknowledged Neuron ID 2] ...
+
             break;
         case NN_ACK:
+            //NN_ACK [Acknowledged Neuron ID 1] [Acknowledged Neuron ID 2]
+
             break;
 
         default:
@@ -121,7 +125,7 @@ void handleNeuronInput(int neuronId,int outputNeuronId,float inputValue){
     if(allBits(receivedInputs[neuronStorageIndex], inputSize)){
         // If all inputs required by the neuron have been received, proceed with output computation
         neuronOutput = computeNeuronOutput(neuronId);
-        outputValue = neuronOutput;
+        outputValues[neuronStorageIndex] = neuronOutput;
 
         //LOG(APP,DEBUG,"Output inside function:%f\n",neuronOutput);
         //reset the bit field for the next NN run
