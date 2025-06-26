@@ -3,7 +3,6 @@
 
 #include <cstring>
 #include <logger.h>
-#include <table.h>
 #include "../nn_configurations.h"
 
 typedef struct NeuronInfo{
