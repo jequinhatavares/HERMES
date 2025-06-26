@@ -156,11 +156,11 @@ void encodeNACKMessage(char* messageBuffer, size_t bufferSize,int* missingNeuron
     int offset = 0;
     //DATA_MESSAGE NN_NACK [Neuron ID with Missing Output] [Missing Output ID 1] [Missing Output ID 2] ...
 
-    offset = snprintf(messageBuffer,bufferSize,"%d ",NN_NACK);
+    offset = snprintf(messageBuffer,bufferSize,"%d",NN_NACK);
 
     // Encode the IDs of neurons whose required inputs are missing
     for (int i = 0; i < missingNeuronCount; i++) {
-        offset += snprintf(messageBuffer+offset,bufferSize-offset,"%d ",missingNeuronInputs[i]);
+        offset += snprintf(messageBuffer+offset,bufferSize-offset," %d",missingNeuronInputs[i]);
     }
 }
 

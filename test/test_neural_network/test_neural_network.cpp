@@ -1,4 +1,5 @@
 #include <unity.h>
+#include <stdio.h>
 #include <../lib/logger/logger.h>
 #include <../lib/neural_network/core/neuron_core.h>
 #include <../lib/neural_network/core/neuron_manager.h>
@@ -163,11 +164,42 @@ void test_encode_message_assign_neuron(){
 
 void test_encode_message_neuron_output(){
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Input Neuron Number 1] [Input Neuron Number 2] ... [Input Neuron Number N] [Output Value]
-    char correctMessage[50] ="2 1 2 3 4 5 2.0",buffer[200];
+    char correctMessage[50],buffer[200];
     int outputNeuronId = 1, inputNeuronsIds[4]={2,3,4,5};
     float neuronOutput = 2.0;
 
+    snprintf(correctMessage, sizeof(correctMessage),"%d %d %d %d %d %d %g", NN_NEURON_OUTPUT,outputNeuronId,inputNeuronsIds[0],inputNeuronsIds[1],inputNeuronsIds[2],inputNeuronsIds[3],neuronOutput);
+
     encodeNeuronOutputMessage(buffer, sizeof(buffer),outputNeuronId, neuronOutput,inputNeuronsIds,4);
+
+    printf("Encoded Message:%s\n",buffer);
+    printf("Encoded Message:%s\n",correctMessage);
+    TEST_ASSERT(strcmp(correctMessage,buffer) == 0);
+}
+
+void test_encode_NACK_message(){
+    //DATA_MESSAGE NN_NACK [Neuron ID with Missing Output] [Missing Output ID 1] [Missing Output ID 2] ...
+    char correctMessage[50],buffer[200];
+    int outputNeuronId = 1, missingInputs[4]={2,3,4,5};
+    float neuronOutput = 2.0;
+
+    snprintf(correctMessage, sizeof(correctMessage),"%d %d %d %d %d", NN_NACK, missingInputs[0],missingInputs[1],missingInputs[2],missingInputs[3]);
+
+    encodeNACKMessage(buffer, sizeof(buffer),missingInputs,4);
+
+    printf("Encoded Message:%s\n",buffer);
+    printf("Encoded Message:%s\n",correctMessage);
+    TEST_ASSERT(strcmp(correctMessage,buffer) == 0);
+}
+
+void test_encode_ACK_message(){
+    //NN_ACK [Acknowledged Neuron ID 1] [Acknowledged Neuron ID 2]...
+    char correctMessage[50],buffer[200];
+    int ackInputs[4]={2,3,4,5};
+
+    snprintf(correctMessage, sizeof(correctMessage),"%d %d %d %d %d", NN_NACK, ackInputs[0],ackInputs[1],ackInputs[2],ackInputs[3]);
+
+    encodeNACKMessage(buffer, sizeof(buffer),ackInputs,4);
 
     printf("Encoded Message:%s\n",buffer);
     printf("Encoded Message:%s\n",correctMessage);
@@ -260,12 +292,17 @@ int main(int argc, char** argv){
     UNITY_BEGIN();
     RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
+
     RUN_TEST(test_handle_message_assign_neuron_one_neuron);
     RUN_TEST(test_handle_message_assign_neuron_multiple_neurons);
     RUN_TEST(test_handle_message_assign_neuron_with_more_than_max_neurons);/******/
+    RUN_TEST(test_handle_neuron_input);
+
     RUN_TEST(test_encode_message_assign_neuron);
     RUN_TEST(test_encode_message_neuron_output);
-    RUN_TEST(test_handle_neuron_input);
+    RUN_TEST(test_encode_NACK_message);
+    RUN_TEST(test_encode_ACK_message);
+
     RUN_TEST(test_bit_fields);
     RUN_TEST(test_distribute_neurons);/******/
     UNITY_END();
