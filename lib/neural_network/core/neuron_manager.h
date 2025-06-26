@@ -12,7 +12,7 @@
 
 typedef uint32_t BitField;
 
-extern float outputValue;
+extern float outputValues[MAX_NEURONS];
 
 extern BitField receivedInputs[MAX_NEURONS];
 
@@ -20,6 +20,10 @@ extern BitField receivedInputs[MAX_NEURONS];
 
 void handleNeuralNetworkMessage(char* messageBuffer);
 void handleNeuronInput(int neuronId,int outputNeuronId,float inputValue);
+
+void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int outputNeuronId, float neuronOutput,int* inputNeuronsIds,int nNeurons);
+void encodeNACKMessage(char* messageBuffer, size_t bufferSize,int* missingNeuronInputs, int missingNeuronCount);
+void encodeACKMessage(char* messageBuffer, size_t bufferSize,int* neuronAckList, int ackNeuronCount);
 
 /**
  * setBit

@@ -150,7 +150,7 @@ void test_handle_message_assign_neuron_with_more_than_max_neurons(){
 }
 void test_encode_message_assign_neuron(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
-    char correctMessage[50] ="0 3 2 1 2 2 2 1",buffer[200];
+    char correctMessage[50] ="|3 2 1 2 2 2 1",buffer[200];
     float weightsValues[2]={2.0,2.0}, bias=1;
     uint32_t saveOrderValues[2] ={1,2}, inputSize=2, neuronId = 3;
 
@@ -161,21 +161,37 @@ void test_encode_message_assign_neuron(){
     TEST_ASSERT(strcmp(correctMessage,buffer) == 0);
 }
 
+void test_encode_message_neuron_output(){
+    //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Input Neuron Number 1] [Input Neuron Number 2] ... [Input Neuron Number N] [Output Value]
+    char correctMessage[50] ="2 1 2 3 4 5 2.0",buffer[200];
+    int outputNeuronId = 1, inputNeuronsIds[4]={2,3,4,5};
+    float neuronOutput = 2.0;
+
+    encodeNeuronOutputMessage(buffer, sizeof(buffer),outputNeuronId, neuronOutput,inputNeuronsIds,4);
+
+    printf("Encoded Message:%s\n",buffer);
+    printf("Encoded Message:%s\n",correctMessage);
+    TEST_ASSERT(strcmp(correctMessage,buffer) == 0);
+}
+
+
 void test_handle_neuron_input(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[50] ="8 0 |3 2 1 2 2.0 2.0 1";
     float weightsValues[2]={2.0,2.0}, bias=1;
     int saveOrderValues[2] ={1,2}, inputSize=2, neuronId = 3,outputNeuron1 = 1,outputNeuron2 = 2;
+    int neuronStorageIndex = -1;
 
     handleNeuralNetworkMessage(receivedMessage);
 
-    setInput(neuronId,1.0,outputNeuron1);
-    handleNeuronInput(neuronId,outputNeuron1);
+    neuronStorageIndex = getNeuronStorageIndex(neuronId);
 
-    setInput(neuronId,1.0,outputNeuron2);
-    handleNeuronInput(neuronId,outputNeuron2);
+    handleNeuronInput(neuronId,outputNeuron1,1.0);
 
-    TEST_ASSERT(outputValue == 5);
+    handleNeuronInput(neuronId,outputNeuron2,1.0);
+
+    TEST_ASSERT(neuronStorageIndex  != -1);
+    TEST_ASSERT(outputValues[neuronStorageIndex] == 5);
 }
 
 
@@ -242,14 +258,15 @@ void tearDown(void){}
 
 int main(int argc, char** argv){
     UNITY_BEGIN();
-    /***RUN_TEST(test_memory_allocation);
+    RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
     RUN_TEST(test_handle_message_assign_neuron_one_neuron);
     RUN_TEST(test_handle_message_assign_neuron_multiple_neurons);
-    RUN_TEST(test_handle_message_assign_neuron_with_more_than_max_neurons);
+    RUN_TEST(test_handle_message_assign_neuron_with_more_than_max_neurons);/******/
     RUN_TEST(test_encode_message_assign_neuron);
+    RUN_TEST(test_encode_message_neuron_output);
     RUN_TEST(test_handle_neuron_input);
-    RUN_TEST(test_bit_fields);***/
-    RUN_TEST(test_distribute_neurons);
+    RUN_TEST(test_bit_fields);
+    RUN_TEST(test_distribute_neurons);/******/
     UNITY_END();
 }
