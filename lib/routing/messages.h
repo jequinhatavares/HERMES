@@ -50,8 +50,7 @@ extern char smallSendBuffer[50];
 
 
 void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParameters parameters);
-void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *sourceIP,uint8_t *destinationIP){
-
+void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *sourceIP,uint8_t *destinationIP);
 
 bool isMessageValid(int expectedMessageType,char* msg);
 
