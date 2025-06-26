@@ -93,6 +93,7 @@ int encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMess
     }
     return 0;
 }
+
 int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize, uint32_t neuronId, uint32_t inputSize, uint32_t * inputSaveOrder, const float* weightsValues, float bias){
     /*** Estimated size of a message assigning a neuron, assuming:
      - Neuron ID and input size each take 2 characters

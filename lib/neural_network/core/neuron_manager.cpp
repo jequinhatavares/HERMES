@@ -85,11 +85,11 @@ void handleNeuralNetworkMessage(char* messageBuffer){
             break;
 
         case NN_NACK:
-            //DATA_MESSAGE NN_NACK [Neuron ID with Missing Output] [Acknowledged Neuron ID 2] ...
+            //DATA_MESSAGE NN_NACK [Neuron ID with Missing Output] [Missing Output ID 1] [Missing Output ID 2] ...
 
             break;
         case NN_ACK:
-            //NN_ACK [Acknowledged Neuron ID 1] [Acknowledged Neuron ID 2]
+            //NN_ACK [Acknowledged Neuron ID 1] [Acknowledged Neuron ID 2]...
 
             break;
 
@@ -136,3 +136,31 @@ void handleNeuronInput(int neuronId,int outputNeuronId,float inputValue){
 
 }
 
+void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int outputNeuronId, float neuronOutput,int* inputNeuronsIds,int nNeurons){
+    int offset = 0;
+    //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Input Neuron Number 1] [Input Neuron Number 2] ... [Input Neuron Number N] [Output Value]
+    //Encode the neuron id that generated this output
+    offset = snprintf(messageBuffer,bufferSize,"%d %d ",NN_NEURON_OUTPUT,outputNeuronId);
+
+    // Encode the IDs of the input neurons that require this output
+    for (int i = 0; i < nNeurons; i++) {
+        offset += snprintf(messageBuffer+offset,bufferSize-offset,"%d ",inputNeuronsIds[i]);
+    }
+
+    // Encode the computed output value
+    offset += snprintf(messageBuffer+offset,bufferSize-offset,"%g",neuronOutput);
+
+}
+
+void encodeNACKMessage(char* messageBuffer, size_t bufferSize,int* missingNeuronInputs, int missingNeuronCount){
+    int offset = 0;
+    //DATA_MESSAGE NN_NACK [Neuron ID with Missing Output] [Missing Output ID 1] [Missing Output ID 2] ...
+
+    offset = snprintf(messageBuffer,bufferSize,"%d ",NN_NACK);
+
+    // Encode the IDs of neurons whose required inputs are missing
+    for (int i = 0; i < missingNeuronCount; i++) {
+        offset += snprintf(messageBuffer+offset,bufferSize-offset,"%d ",missingNeuronInputs[i]);
+    }
+
+}
