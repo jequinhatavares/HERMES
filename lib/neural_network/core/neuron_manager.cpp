@@ -162,5 +162,17 @@ void encodeNACKMessage(char* messageBuffer, size_t bufferSize,int* missingNeuron
     for (int i = 0; i < missingNeuronCount; i++) {
         offset += snprintf(messageBuffer+offset,bufferSize-offset,"%d ",missingNeuronInputs[i]);
     }
+}
+
+void encodeACKMessage(char* messageBuffer, size_t bufferSize,int* neuronAckList, int ackNeuronCount){
+    int offset = 0;
+    //NN_ACK [Acknowledged Neuron ID 1] [Acknowledged Neuron ID 2]...
+
+    offset = snprintf(messageBuffer,bufferSize,"%d ",NN_ACK);
+
+    // Encode the IDs of neurons whose required inputs are missing
+    for (int i = 0; i < ackNeuronCount; i++) {
+        offset += snprintf(messageBuffer+offset,bufferSize-offset,"%d ",neuronAckList[i]);
+    }
 
 }
