@@ -218,9 +218,9 @@ void test_handle_neuron_input(){
 
     neuronStorageIndex = getNeuronStorageIndex(neuronId);
 
-    handleNeuronInput(neuronId,outputNeuron1,1.0);
+    handleNeuronInput(outputNeuron1,1.0);
 
-    handleNeuronInput(neuronId,outputNeuron2,1.0);
+    handleNeuronInput(outputNeuron2,1.0);
 
     TEST_ASSERT(neuronStorageIndex  != -1);
     TEST_ASSERT(outputValues[neuronStorageIndex] == 5);

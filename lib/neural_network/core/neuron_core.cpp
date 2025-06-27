@@ -1,7 +1,7 @@
 #include "neuron_core.h"
 
 
-int neuronIds[MAX_NEURONS];
+int neuronsId[MAX_NEURONS];
 float* weights[MAX_NEURONS];     // Each neuron has its own weight array allocated at weights[NeuronStorageIndex]
 float* inputs[MAX_NEURONS];      // Each neuron has its own input buffer allocated at weights[NeuronStorageIndex]
 int* saveOrders[MAX_NEURONS];    // Each neuron has its own save order allocated at weights[NeuronStorageIndex]
@@ -31,7 +31,7 @@ void configureNeuron(int neuronId, int receivedInputSize, float* receivedWeights
     }
 
     //Add the neuronId to the list of neurons computed by this node
-    neuronIds[neuronsCount] = neuronId;
+    neuronsId[neuronsCount] = neuronId;
     //Add the inputSize of this neuron to the list
     inputSizes[neuronsCount] = receivedInputSize;
 
@@ -66,7 +66,7 @@ int getNeuronStorageIndex(int neuronId){
 
     // Find the index in the local vectors (weights, inputs, saveOrder) where the neuron's parameters were stored
     for (int i = 0; i < neuronsCount; i++) {
-        if(neuronId == neuronIds[i]) neuronStorageIndex=i;
+        if(neuronId == neuronsId[i]) neuronStorageIndex=i;
     }
     return neuronStorageIndex;
 }
@@ -85,6 +85,8 @@ int getInputStorageIndex(int neuronId, int inputId){
 
     // Find the index in the local vectors (weights, inputs, saveOrder) where the neuron's parameters were stored
     neuronStorageIndex = getNeuronStorageIndex(neuronId);
+
+    if(neuronStorageIndex == -1) return -1;
 
     // Locate the index in the inputs vector where the new input should be stored, as specified by the saveOrder vector
     for (int i = 0; i < inputSizes[neuronStorageIndex]; i++) {
@@ -234,7 +236,7 @@ void freeAllNeuronMemory() {
         saveOrders[i] = nullptr;
 
         // Reset metadata
-        neuronIds[i] = -1;
+        neuronsId[i] = -1;
         biases[i] = 0.0f;
         inputSizes[i] = 0;
 

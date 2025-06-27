@@ -13,18 +13,21 @@ typedef struct NeuronInfo{
     int inputSize = 0;
 }NeuronInfo;
 
-extern int neuronIds[MAX_NEURONS];
+extern int neuronsId[MAX_NEURONS];
 extern float* weights[MAX_NEURONS];
 extern float* inputs[MAX_NEURONS];
 extern int* saveOrders[MAX_NEURONS];
 extern float biases[MAX_NEURONS];
 extern int inputSizes[MAX_NEURONS];
 
+extern int neuronsCount;
+
 
 void configureNeuron(int neuronId, int receivedInputSize, float* receivedWeights, float receivedBias, int* receivedOrder);
 int getNeuronStorageIndex(int neuronId);
 int getInputStorageIndex(int neuronId, int inputId);
 int getInputSize(int neuronId);
+bool isInputRequired(int neuronId,int inputId);
 void setInput(int neuronId,float inputValue, int sourceNodeId);
 float computeNeuronOutput(int neuronId);
 void freeAllNeuronMemory();

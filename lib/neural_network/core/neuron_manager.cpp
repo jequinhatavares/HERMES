@@ -70,14 +70,14 @@ void handleNeuralNetworkMessage(char* messageBuffer){
             break;
 
         case NN_ASSIGN_OUTPUTS:
-            //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID 1] [Corresponding IP 1] [Output Neuron ID 2] [Corresponding IP 2]
+            //DATA_MESSAGE NN_ASSIGN_OUTPUT [Output Neuron ID 1] [Corresponding IP 1] [Output Neuron ID 2] [Corresponding IP 2]
 
             break;
 
         case NN_NEURON_OUTPUT:
-            //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Input Neuron Number] [Output Value]
-            sscanf(messageBuffer, "%*d %*d %d %d %f",&outputNeuron,&neuronId,&inputValue);
-            handleNeuronInput(neuronId,outputNeuron,inputValue);
+            //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
+            sscanf(messageBuffer, "%*d %*d %d %f",&outputNeuron,&inputValue);
+            handleNeuronInput(outputNeuron,inputValue);
             break;
 
         case NN_FORWARD:
@@ -98,41 +98,49 @@ void handleNeuralNetworkMessage(char* messageBuffer){
     }
 }
 
-void handleNeuronInput(int neuronId,int outputNeuronId,float inputValue){
-    int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1;
+void handleNeuronInput(int outputNeuronId, float inputValue){
+    int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1, neuronId = 0;
     float neuronOutput;
 
-    // Find the index where the neuron is stored
-    neuronStorageIndex = getNeuronStorageIndex(neuronId);
-    // Find the storage index of this specific input value for the given neuron
-    inputStorageIndex = getInputStorageIndex(neuronId,outputNeuronId);
-    //Find the input size of the neuron
-    inputSize = getInputSize(neuronId);
+    for (int i = 0; i < neuronsCount; i++) {
+       neuronId = neuronsId[i];
 
-    if(inputSize == -1 || inputStorageIndex == -1 || neuronStorageIndex == -1){
-        LOG(APP,ERROR,"ERROR: Invalid index detected: inputSize=%d, inputStorageIndex=%d, neuronStorageIndex=%d",
-            inputSize, inputStorageIndex, neuronStorageIndex);
-        return;
+        // Check if the current neuron requires the input produced by outputNeuronId
+       if(isInputRequired(neuronId,outputNeuronId)){
+           // Find the index where the neuron is stored
+           neuronStorageIndex = getNeuronStorageIndex(neuronId);
+           // Find the storage index of this specific input value for the given neuron
+           inputStorageIndex = getInputStorageIndex(neuronId,outputNeuronId);
+           //Find the input size of the neuron
+           inputSize = getInputSize(neuronId);
+
+           if(inputSize == -1 || inputStorageIndex == -1 || neuronStorageIndex == -1){
+               LOG(APP,ERROR,"ERROR: Invalid index detected: inputSize=%d, inputStorageIndex=%d, neuronStorageIndex=%d",
+                   inputSize, inputStorageIndex, neuronStorageIndex);
+               return;
+           }
+
+           //Save the input value in the input vector
+           setInput(neuronId,inputValue,outputNeuronId);
+
+           // Set the bit corresponding to the received input to 1
+           setBit(receivedInputs[neuronStorageIndex],inputStorageIndex);
+
+           // Check if all inputs required by that specific neuron have been received
+           if(allBits(receivedInputs[neuronStorageIndex], inputSize)){
+               // If all inputs required by the neuron have been received, proceed with output computation
+               neuronOutput = computeNeuronOutput(neuronId);
+               outputValues[neuronStorageIndex] = neuronOutput;
+
+               //LOG(APP,DEBUG,"Output inside function:%f\n",neuronOutput);
+               //reset the bit field for the next NN run
+               resetAll(receivedInputs[neuronStorageIndex]);
+
+               //TODO Send the output for the nodes that need him
+           }
+       }
     }
 
-    //Save the input value in the input vector
-    setInput(neuronId,inputValue,outputNeuronId);
-
-    // Set the bit corresponding to the received input to 1
-    setBit(receivedInputs[neuronStorageIndex],inputStorageIndex);
-
-    // Check if all inputs required by that specific neuron have been received
-    if(allBits(receivedInputs[neuronStorageIndex], inputSize)){
-        // If all inputs required by the neuron have been received, proceed with output computation
-        neuronOutput = computeNeuronOutput(neuronId);
-        outputValues[neuronStorageIndex] = neuronOutput;
-
-        //LOG(APP,DEBUG,"Output inside function:%f\n",neuronOutput);
-        //reset the bit field for the next NN run
-        resetAll(receivedInputs[neuronStorageIndex]);
-
-        //TODO Send the output for the nodes that need him
-    }
 
 }
 

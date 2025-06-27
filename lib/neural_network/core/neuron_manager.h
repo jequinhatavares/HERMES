@@ -19,7 +19,7 @@ extern BitField receivedInputs[MAX_NEURONS];
 
 
 void handleNeuralNetworkMessage(char* messageBuffer);
-void handleNeuronInput(int neuronId,int outputNeuronId,float inputValue);
+void handleNeuronInput(int outputNeuronId,float inputValue);
 
 void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int outputNeuronId, float neuronOutput,int* inputNeuronsIds,int nNeurons);
 void encodeNACKMessage(char* messageBuffer, size_t bufferSize,int* missingNeuronInputs, int missingNeuronCount);
