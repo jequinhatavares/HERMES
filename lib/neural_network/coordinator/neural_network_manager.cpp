@@ -76,6 +76,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
     // Initialize the neuron ID to the first neuron in the first hidden layer (i.e., the first ID after the last input neuron)
     uint32_t currentNeuronId= net->layers[0].numInputs;
     char tmpBuffer[150];
+    NeuronMap neuronEntry;
 
     // Count the neurons in the hidden layers, as only these will be assigned to nodes in the network
     for (int i = 0; i < net->numHiddenLayers; i++) {
@@ -120,6 +121,12 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
                                            &net->layers[i].weights[j * net->layers[i].numInputs],net->layers[i].biases[j]);
 
             messageOffset += snprintf(largeSendBuffer + messageOffset, sizeof(largeSendBuffer) - messageOffset,"%s",tmpBuffer);
+
+            // Add the neuron-to-node mapping to the table
+            assignIP(neuronEntry.nodeIP,nodes[assignedDevices]);
+            neuronEntry.layer = i;
+            neuronEntry.indexInLayer = j;
+            tableAdd(neuronToNodeTable,&currentNeuronId,&neuronEntry);
 
             // Increment the count of neurons assigned to this node, and the current NeuronID
             currentNeuronId ++;

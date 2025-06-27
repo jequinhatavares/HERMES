@@ -17,7 +17,6 @@ extern float outputValues[MAX_NEURONS];
 extern BitField receivedInputs[MAX_NEURONS];
 
 
-
 void handleNeuralNetworkMessage(char* messageBuffer);
 void handleNeuronInput(int outputNeuronId,float inputValue);
 
