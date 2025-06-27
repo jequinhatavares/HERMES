@@ -144,16 +144,11 @@ void handleNeuronInput(int outputNeuronId, float inputValue){
 
 }
 
-void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int outputNeuronId, float neuronOutput,int* inputNeuronsIds,int nNeurons){
+void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int outputNeuronId, float neuronOutput){
     int offset = 0;
-    //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Input Neuron Number 1] [Input Neuron Number 2] ... [Input Neuron Number N] [Output Value]
+    //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
     //Encode the neuron id that generated this output
     offset = snprintf(messageBuffer,bufferSize,"%d %d ",NN_NEURON_OUTPUT,outputNeuronId);
-
-    // Encode the IDs of the input neurons that require this output
-    for (int i = 0; i < nNeurons; i++) {
-        offset += snprintf(messageBuffer+offset,bufferSize-offset,"%d ",inputNeuronsIds[i]);
-    }
 
     // Encode the computed output value
     offset += snprintf(messageBuffer+offset,bufferSize-offset,"%g",neuronOutput);

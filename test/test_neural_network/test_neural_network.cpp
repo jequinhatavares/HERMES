@@ -163,14 +163,14 @@ void test_encode_message_assign_neuron(){
 }
 
 void test_encode_message_neuron_output(){
-    //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Input Neuron Number 1] [Input Neuron Number 2] ... [Input Neuron Number N] [Output Value]
+    //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
     char correctMessage[50],buffer[200];
-    int outputNeuronId = 1, inputNeuronsIds[4]={2,3,4,5};
+    int outputNeuronId = 1;
     float neuronOutput = 2.0;
 
-    snprintf(correctMessage, sizeof(correctMessage),"%d %d %d %d %d %d %g", NN_NEURON_OUTPUT,outputNeuronId,inputNeuronsIds[0],inputNeuronsIds[1],inputNeuronsIds[2],inputNeuronsIds[3],neuronOutput);
+    snprintf(correctMessage, sizeof(correctMessage),"%d %d %g", NN_NEURON_OUTPUT,outputNeuronId,neuronOutput);
 
-    encodeNeuronOutputMessage(buffer, sizeof(buffer),outputNeuronId, neuronOutput,inputNeuronsIds,4);
+    encodeNeuronOutputMessage(buffer, sizeof(buffer),outputNeuronId, neuronOutput);
 
     printf("Encoded Message:%s\n",buffer);
     printf("Encoded Message:%s\n",correctMessage);
