@@ -1,5 +1,5 @@
+#define NEURAL_NET_IMPL // Put the #define before the include to have access to the NN parameters
 #include "neural_network_manager.h"
-#define NEURAL_NET_IMPL
 
 
 /***
@@ -17,7 +17,7 @@
  *
  * valuesPubSub[TableMaxSize] - Preallocated memory for storing the published and subscribed values of each node
  ***/
-TableEntry ntnTable[TableMaxSize];
+TableEntry ntnTable[TOTAL_NEURONS];
 TableInfo NTNTable = {
         .numberOfItems = 0,
         .isEqual = isIDEqual,
@@ -26,6 +26,11 @@ TableInfo NTNTable = {
         .setValue = setNeuronMap,
 };
 TableInfo* neuronToNodeTable  = &NTNTable;
+
+int neurons[TOTAL_NEURONS];
+NeuronMap neuronMap[TOTAL_NEURONS];
+
+
 
 bool isIDEqual(void* av, void* bv) {
     int *a = (int*) av;
@@ -60,6 +65,9 @@ void setNeuronMap(void* av, void* bv){
     a->indexInLayer = b->indexInLayer;
 }
 
+void initNeuralNetwork(){
+    tableInit(neuronToNodeTable,neurons,neuronMap, sizeof(int),sizeof(NeuronMap));
+}
 
 void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_t nrNodes){
     uint32_t neuronPerNodeCount = 0,*inputIndexMap;

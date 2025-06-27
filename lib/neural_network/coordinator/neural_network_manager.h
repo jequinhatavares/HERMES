@@ -20,6 +20,8 @@ void setNeuronId(void* av, void* bv);
 void setID(void* av, void* bv);
 void setNeuronMap(void* av, void* bv);
 
+void initNeuralNetwork();
+
 void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_t nrNodes);
 
 int encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type);
