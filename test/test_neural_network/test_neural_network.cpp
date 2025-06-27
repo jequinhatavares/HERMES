@@ -6,6 +6,7 @@
 
 #define NEURAL_NET_IMPL
 
+
 #include <../lib/neural_network/coordinator/neural_network_manager.h>
 #include "../lib/neural_network/coordinator/nn_parameters.h"
 
@@ -268,7 +269,15 @@ void test_distribute_neurons(){
             {5,5,5,5},
     };
 
+    initNeuralNetwork();
     distributeNeuralNetwork(&network, nodes,4);
+
+    NeuronEntry* neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,0);
+    tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
+    /***TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[0]));
+    TEST_ASSERT(neuronEntry->layer == 1);
+    TEST_ASSERT(neuronEntry->indexInLayer == 0);***/
 
 }
 

@@ -9,16 +9,22 @@
 #include "routing.h"
 #include "messages.h"
 
-typedef struct NeuronMap{
+
+extern TableInfo* neuronToNodeTable;
+
+typedef struct NeuronEntry{
     uint8_t nodeIP[4];
     uint8_t layer;
     uint8_t indexInLayer;
-}NeuronMap;
+}NeuronEntry;
 
 bool isIDEqual(void* av, void* bv);
 void setNeuronId(void* av, void* bv);
 void setID(void* av, void* bv);
-void setNeuronMap(void* av, void* bv);
+void setNeuronEntry(void* av, void* bv);
+
+void printNeuronEntry(TableEntry* Table);
+void printNeuronTableHeader();
 
 void initNeuralNetwork();
 

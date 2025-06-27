@@ -1,6 +1,11 @@
+#ifdef NEURAL_NET_IMPL
 #define NEURAL_NET_IMPL // Put the #define before the include to have access to the NN parameters
+#endif
+
 #include "neural_network_manager.h"
 
+
+#define TOTAL_NEURONS 12
 
 /***
  * Neural Network Computations Assignment table
@@ -23,38 +28,33 @@ TableInfo NTNTable = {
         .isEqual = isIDEqual,
         .table = ntnTable,
         .setKey = setNeuronId,
-        .setValue = setNeuronMap,
+        .setValue = setNeuronEntry,
 };
 TableInfo* neuronToNodeTable  = &NTNTable;
 
-int neurons[TOTAL_NEURONS];
-NeuronMap neuronMap[TOTAL_NEURONS];
+uint32_t neurons[TOTAL_NEURONS];
+NeuronEntry neuronMap[TOTAL_NEURONS];
 
 
 
 bool isIDEqual(void* av, void* bv) {
-    int *a = (int*) av;
-    int *b = (int*) bv;
+    uint32_t *a = (uint32_t *) av;
+    uint32_t *b = (uint32_t *) bv;
     if(a == b)return true;
 
     return false;
 }
 
 void setNeuronId(void* av, void* bv){
-    int *a = (int*) av;
-    int *b = (int*) bv;
-    a = b;
+    uint32_t *a = (uint32_t *) av;
+    uint32_t *b = (uint32_t *) bv;
+    *a = *b;
 }
 
-void setID(void* av, void* bv){
-    int *a = (int*) av;
-    int *b = (int*) bv;
-    a = b;
-}
 
-void setNeuronMap(void* av, void* bv){
-    NeuronMap *a = (NeuronMap*) av;
-    NeuronMap *b = (NeuronMap*) bv;
+void setNeuronEntry(void* av, void* bv){
+    NeuronEntry *a = (NeuronEntry*) av;
+    NeuronEntry *b = (NeuronEntry*) bv;
 
     a->nodeIP[0] = b->nodeIP[0];
     a->nodeIP[1] = b->nodeIP[1];
@@ -66,9 +66,20 @@ void setNeuronMap(void* av, void* bv){
 }
 
 void initNeuralNetwork(){
-    tableInit(neuronToNodeTable,neurons,neuronMap, sizeof(int),sizeof(NeuronMap));
+    tableInit(neuronToNodeTable,neurons,neuronMap, sizeof(int),sizeof(NeuronEntry));
 }
 
+void printNeuronEntry(TableEntry* Table){
+    LOG(APP,INFO,"Neuron %hhu → NodeIP[%hhu.%hhu.%hhu.%hhu] (Layer: %hhu) (Index in Layer: %hhu) \n",
+         (uint32_t *)Table->key,((NeuronEntry *)Table->value)->nodeIP[0],((NeuronEntry *)Table->value)->nodeIP[1]
+        ,((NeuronEntry *)Table->value)->nodeIP[2],((NeuronEntry *)Table->value)->nodeIP[3],
+        ((NeuronEntry *)Table->value)->layer,((NeuronEntry *)Table->value)->indexInLayer);
+}
+
+void printNeuronTableHeader(){
+    LOG(APP,INFO,"((((((((((((((((((((((( Neuron To Node Table )))))))))))))))))))))))))))\n");
+
+}
 void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_t nrNodes){
     uint32_t neuronPerNodeCount = 0,*inputIndexMap;
     int assignedDevices = 0, messageOffset = 0;
@@ -76,7 +87,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
     // Initialize the neuron ID to the first neuron in the first hidden layer (i.e., the first ID after the last input neuron)
     uint32_t currentNeuronId= net->layers[0].numInputs;
     char tmpBuffer[150];
-    NeuronMap neuronEntry;
+    NeuronEntry neuronEntry;
 
     // Count the neurons in the hidden layers, as only these will be assigned to nodes in the network
     for (int i = 0; i < net->numHiddenLayers; i++) {
@@ -126,6 +137,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
             assignIP(neuronEntry.nodeIP,nodes[assignedDevices]);
             neuronEntry.layer = i;
             neuronEntry.indexInLayer = j;
+            LOG(APP,INFO,"currentNeuron id: %i\n",currentNeuronId);
             tableAdd(neuronToNodeTable,&currentNeuronId,&neuronEntry);
 
             // Increment the count of neurons assigned to this node, and the current NeuronID
