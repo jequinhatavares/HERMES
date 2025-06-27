@@ -9,6 +9,16 @@
 #include "routing.h"
 #include "messages.h"
 
+typedef struct NeuronMap{
+    uint8_t nodeIP[4];
+    uint8_t layer;
+    uint8_t indexInLayer;
+}NeuronMap;
+
+bool isIDEqual(void* av, void* bv);
+void setNeuronId(void* av, void* bv);
+void setID(void* av, void* bv);
+void setNeuronMap(void* av, void* bv);
 
 void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_t nrNodes);
 

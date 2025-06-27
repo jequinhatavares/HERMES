@@ -1,7 +1,65 @@
 #include "neural_network_manager.h"
 #define NEURAL_NET_IMPL
 
-//char NNbuffer[500];
+
+/***
+ * Neural Network Computations Assignment table
+ *
+ * mTable[TableMaxSize] - An array where each element is a struct containing two pointers:
+ *                         one to the key (used for indexing the metrics table) and another to the value (the corresponding entry).
+ *
+ * TTable - A struct that holds metadata for the metrics table, including:
+ * * * .numberOfItems - The current number of entries in the metrics table.
+ * * * .isEqual - A function pointer for comparing table keys (IP addresses).
+* * * .table - A pointer to the mTable.
+ *
+ * childrenTable - A pointer to TTable, used for accessing the children table.
+ *
+ * valuesPubSub[TableMaxSize] - Preallocated memory for storing the published and subscribed values of each node
+ ***/
+TableEntry ntnTable[TableMaxSize];
+TableInfo NTNTable = {
+        .numberOfItems = 0,
+        .isEqual = isIDEqual,
+        .table = ntnTable,
+        .setKey = setNeuronId,
+        .setValue = setNeuronMap,
+};
+TableInfo* neuronToNodeTable  = &NTNTable;
+
+bool isIDEqual(void* av, void* bv) {
+    int *a = (int*) av;
+    int *b = (int*) bv;
+    if(a == b)return true;
+
+    return false;
+}
+
+void setNeuronId(void* av, void* bv){
+    int *a = (int*) av;
+    int *b = (int*) bv;
+    a = b;
+}
+
+void setID(void* av, void* bv){
+    int *a = (int*) av;
+    int *b = (int*) bv;
+    a = b;
+}
+
+void setNeuronMap(void* av, void* bv){
+    NeuronMap *a = (NeuronMap*) av;
+    NeuronMap *b = (NeuronMap*) bv;
+
+    a->nodeIP[0] = b->nodeIP[0];
+    a->nodeIP[1] = b->nodeIP[1];
+    a->nodeIP[2] = b->nodeIP[2];
+    a->nodeIP[3] = b->nodeIP[3];
+
+    a->layer = b->layer;
+    a->indexInLayer = b->indexInLayer;
+}
+
 
 void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_t nrNodes){
     uint32_t neuronPerNodeCount = 0,*inputIndexMap;
@@ -87,6 +145,13 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
     }
 
 }
+
+
+void distributeOutputs(){
+
+}
+
+
 int encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type){
     if(type == NN_ASSIGN_COMPUTATION){
         return snprintf(messageBuffer,bufferSize,"%i ",NN_ASSIGN_COMPUTATION);
