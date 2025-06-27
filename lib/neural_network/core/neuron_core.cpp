@@ -114,6 +114,33 @@ int getInputSize(int neuronId){
 }
 
 /**
+ * isInputRequired
+ * Checks if a specific input is required by a neuron
+ *
+ * @param neuronId The ID of the neuron to check
+ * @param inputId The ID of the input to verify
+ * @return true If the neuron requires the specified input
+ *         false If the neuron doesn't require the input or doesn't exist
+ */
+bool isInputRequired(int neuronId,int inputId){
+    int neuronStorageIndex = -1, inputSize = 0;
+
+    // Find the index in the local vectors (weights, inputs, saveOrder) where the neuron's parameters were stored
+    neuronStorageIndex = getNeuronStorageIndex(neuronId);
+
+    if(neuronStorageIndex == -1) return false;
+
+    // Check if the input ID exists in the saveOrder list
+    inputSize = inputSizes[neuronStorageIndex];
+    for(int i = 0; i < inputSize; i++) {
+        if(saveOrders[neuronStorageIndex][i] == inputId) return true;
+    }
+
+    return false;
+}
+
+
+/**
  * setInput
  * Stores an input value for a specific neuron at the correct buffer position
  *
