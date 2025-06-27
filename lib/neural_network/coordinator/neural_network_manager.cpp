@@ -131,3 +131,45 @@ int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize, uint32_t n
     return offset;
 
 }
+
+void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, int* outputNeuronIds, int nNeurons, uint8_t IPs[][4], uint8_t nNodes){
+    int offset = 0;
+    //[neuron ID1] [neuron ID2] ... [IP Address 1] [IP Address 2] ...
+
+    // Encode the IDs of neurons whose outputs should be sent to specific IP addresses
+    for (int i = 0; i < nNeurons; i++) {
+        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d ",outputNeuronIds[i]);
+    }
+
+    // Encode the target IP addresses for the outputs of the specified neuron IDs
+    for (int i = 0; i < nNeurons; i++) {
+        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d.%d.%d.%d ",IPs[i][0],IPs[i][1],IPs[i][2],IPs[i][3]);
+    }
+}
+
+void encodePubSubInfo(char* messageBuffer, size_t bufferSize, int* neuronIds, int nNeurons, int* subTopics, int nSubTopics, int* pubTopics, int nPubTopics ){
+    int offset = 0;
+    // [neuron ID1] [neuron ID2] ... [Number of Subscriptions] [Subscription 1] [Subscription 2] ... [Number of Publications] [Pub 1] [Pub 2] ...
+
+    // Encode the IDs of neurons that the Pub/sub info is about
+    for (int i = 0; i < nNeurons; i++) {
+        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d ",neuronIds[i]);
+    }
+
+    // Encode the total number of subscriptions
+    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d ",nSubTopics);
+
+    // Encode the list of subscriptions
+    for (int i = 0; i < nSubTopics; i++) {
+        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d ",subTopics[i]);
+    }
+
+    // Encode the total number of published topics
+    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d ",nPubTopics);
+
+    // Encode the list of published topics
+    for (int i = 0; i < nPubTopics; i++) {
+        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d ",pubTopics[i]);
+    }
+
+}
