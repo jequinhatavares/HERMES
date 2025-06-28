@@ -31,8 +31,8 @@ void initNeuralNetwork();
 void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_t nrNodes);
 
 int encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type);
-int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize,uint32_t neuronId, uint32_t inputSize, uint32_t * inputSaveOrder,const float*weightsValues, float bias);
-void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, int* outputNeuronIds, int nNeurons, uint8_t IPs[][4], uint8_t nNodes);
+int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize,uint8_t neuronId, uint8_t inputSize, uint8_t * inputSaveOrder,const float*weightsValues, float bias);
+void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes);
 
 
 #endif //NEURAL_NETWORK_MANAGER_H

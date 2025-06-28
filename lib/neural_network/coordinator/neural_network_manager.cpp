@@ -32,22 +32,22 @@ TableInfo NTNTable = {
 };
 TableInfo* neuronToNodeTable  = &NTNTable;
 
-uint32_t neurons[TOTAL_NEURONS];
+uint8_t neurons[TOTAL_NEURONS];
 NeuronEntry neuronMap[TOTAL_NEURONS];
 
 
 
 bool isIDEqual(void* av, void* bv) {
-    uint32_t *a = (uint32_t *) av;
-    uint32_t *b = (uint32_t *) bv;
-    if(a == b)return true;
+    uint8_t *a = (uint8_t *) av;
+    uint8_t *b = (uint8_t *) bv;
+    if(*a == *b)return true;
 
     return false;
 }
 
 void setNeuronId(void* av, void* bv){
-    uint32_t *a = (uint32_t *) av;
-    uint32_t *b = (uint32_t *) bv;
+    uint8_t *a = (uint8_t *) av;
+    uint8_t *b = (uint8_t *) bv;
     *a = *b;
 }
 
@@ -71,7 +71,7 @@ void initNeuralNetwork(){
 
 void printNeuronEntry(TableEntry* Table){
     LOG(APP,INFO,"Neuron %hhu → NodeIP[%hhu.%hhu.%hhu.%hhu] (Layer: %hhu) (Index in Layer: %hhu) \n",
-         (uint32_t *)Table->key,((NeuronEntry *)Table->value)->nodeIP[0],((NeuronEntry *)Table->value)->nodeIP[1]
+         *(uint8_t*)Table->key,((NeuronEntry *)Table->value)->nodeIP[0],((NeuronEntry *)Table->value)->nodeIP[1]
         ,((NeuronEntry *)Table->value)->nodeIP[2],((NeuronEntry *)Table->value)->nodeIP[3],
         ((NeuronEntry *)Table->value)->layer,((NeuronEntry *)Table->value)->indexInLayer);
 }
@@ -81,11 +81,11 @@ void printNeuronTableHeader(){
 
 }
 void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_t nrNodes){
-    uint32_t neuronPerNodeCount = 0,*inputIndexMap;
+    uint8_t neuronPerNodeCount = 0,*inputIndexMap;
     int assignedDevices = 0, messageOffset = 0;
-    uint32_t numHiddenNeurons =0, neuronsPerNode;
+    uint8_t numHiddenNeurons =0, neuronsPerNode;
     // Initialize the neuron ID to the first neuron in the first hidden layer (i.e., the first ID after the last input neuron)
-    uint32_t currentNeuronId= net->layers[0].numInputs;
+    uint8_t currentNeuronId= net->layers[0].numInputs;
     char tmpBuffer[150];
     NeuronEntry neuronEntry;
 
@@ -103,13 +103,13 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
 
     LOG(APP, INFO, "Neural network initialized with %d neurons (avg. %d neurons per node)\n", net->numNeurons, neuronsPerNode);
 
-    for (int i = 0; i < net->numLayers; i++) { //For each hidden layer
+    for (uint8_t i = 0; i < net->numLayers; i++) { //For each hidden layer
 
         /***Initialize the input index mapping before processing each layer. The inputIndexMapping specifies the order
          in which the node should store input values. It corresponds to an ordered list of neuron IDs from the previous
          layer, since those neurons serve as inputs to the current layer.***/
-        inputIndexMap = new uint32_t[net->layers[i].numInputs];
-        for (int j = 0; j < net->layers[i].numInputs ; j++){
+        inputIndexMap = new uint8_t [net->layers[i].numInputs];
+        for (uint8_t j = 0; j < net->layers[i].numInputs ; j++){
             // For the first hidden layer, the input index mapping corresponds to the neuron IDs of the input layer (ranging from 0 to nrInputs - 1).
             //if(i == 0)inputIndexMap[j] = j;
             // For subsequent hidden layers range from (currentNeuronId - (neuronsInPreviousLayer)) to (currentNeuronId)
@@ -123,7 +123,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
             continue;
         }
 
-        for (int j = 0; j < net->layers[i].numOutputs; j++) { // For each neuron in each layer
+        for (uint8_t j = 0; j < net->layers[i].numOutputs; j++) { // For each neuron in each layer
 
             LOG(APP, INFO, "Node IP: %i.%i.%i.%i\n",nodes[assignedDevices][0],nodes[assignedDevices][1],nodes[assignedDevices][2],nodes[assignedDevices][3]);
 
@@ -137,7 +137,6 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
             assignIP(neuronEntry.nodeIP,nodes[assignedDevices]);
             neuronEntry.layer = i;
             neuronEntry.indexInLayer = j;
-            LOG(APP,INFO,"currentNeuron id: %i\n",currentNeuronId);
             tableAdd(neuronToNodeTable,&currentNeuronId,&neuronEntry);
 
             // Increment the count of neurons assigned to this node, and the current NeuronID
@@ -186,7 +185,7 @@ int encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMess
     return 0;
 }
 
-int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize, uint32_t neuronId, uint32_t inputSize, uint32_t * inputSaveOrder, const float* weightsValues, float bias){
+int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize, uint8_t neuronId, uint8_t inputSize, uint8_t * inputSaveOrder, const float* weightsValues, float bias){
     /*** Estimated size of a message assigning a neuron, assuming:
      - Neuron ID and input size each take 2 characters
      - One space between each element
@@ -205,15 +204,15 @@ int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize, uint32_t n
     offset = snprintf(messageBuffer,bufferSize,"|");
 
     //Encode the neuronID and inputSize
-    offset += snprintf(messageBuffer+ offset,bufferSize - offset,"%i %i ",neuronId,inputSize);
+    offset += snprintf(messageBuffer+ offset,bufferSize - offset,"%hhu %hhu ",neuronId,inputSize);
 
     //Encode the [Input Save Order] vector
-    for (int i = 0; i < inputSize; i++) {
-        offset += snprintf(messageBuffer + offset, bufferSize - offset,"%i ",inputSaveOrder[i]);
+    for (uint8_t i = 0; i < inputSize; i++) {
+        offset += snprintf(messageBuffer + offset, bufferSize - offset,"%hhu ",inputSaveOrder[i]);
     }
 
     //Encode the [weights values] vector
-    for (int i = 0; i < inputSize; i++) {
+    for (uint8_t i = 0; i < inputSize; i++) {
         //%g format specifier automatically chooses the most compact representation, removing unnecessary trailing zeros
         //2.0 -> 2 , 2.1->2.1
         offset += snprintf(messageBuffer + offset, bufferSize - offset,"%g ",weightsValues[i]);
@@ -224,44 +223,44 @@ int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize, uint32_t n
 
 }
 
-void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, int* outputNeuronIds, int nNeurons, uint8_t IPs[][4], uint8_t nNodes){
+void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes){
     int offset = 0;
     //[neuron ID1] [neuron ID2] ... [IP Address 1] [IP Address 2] ...
 
     // Encode the IDs of neurons whose outputs should be sent to specific IP addresses
-    for (int i = 0; i < nNeurons; i++) {
-        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d ",outputNeuronIds[i]);
+    for (uint8_t i = 0; i < nNeurons; i++) {
+        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",outputNeuronIds[i]);
     }
 
     // Encode the target IP addresses for the outputs of the specified neuron IDs
-    for (int i = 0; i < nNeurons; i++) {
-        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d.%d.%d.%d ",IPs[i][0],IPs[i][1],IPs[i][2],IPs[i][3]);
+    for (uint8_t i = 0; i < nNeurons; i++) {
+        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu.%hhu.%hhu.%hhu ",IPs[i][0],IPs[i][1],IPs[i][2],IPs[i][3]);
     }
 }
 
-void encodePubSubInfo(char* messageBuffer, size_t bufferSize, int* neuronIds, int nNeurons, int* subTopics, int nSubTopics, int* pubTopics, int nPubTopics ){
+void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronIds, uint8_t nNeurons, uint8_t * subTopics, uint8_t nSubTopics, uint8_t * pubTopics, uint8_t nPubTopics ){
     int offset = 0;
     // [neuron ID1] [neuron ID2] ... [Number of Subscriptions] [Subscription 1] [Subscription 2] ... [Number of Publications] [Pub 1] [Pub 2] ...
 
     // Encode the IDs of neurons that the Pub/sub info is about
-    for (int i = 0; i < nNeurons; i++) {
-        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d ",neuronIds[i]);
+    for (uint8_t i = 0; i < nNeurons; i++) {
+        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",neuronIds[i]);
     }
 
     // Encode the total number of subscriptions
-    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d ",nSubTopics);
+    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",nSubTopics);
 
     // Encode the list of subscriptions
-    for (int i = 0; i < nSubTopics; i++) {
-        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d ",subTopics[i]);
+    for (uint8_t i = 0; i < nSubTopics; i++) {
+        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",subTopics[i]);
     }
 
     // Encode the total number of published topics
-    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d ",nPubTopics);
+    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",nPubTopics);
 
     // Encode the list of published topics
-    for (int i = 0; i < nPubTopics; i++) {
-        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d ",pubTopics[i]);
+    for (uint8_t i = 0; i < nPubTopics; i++) {
+        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",pubTopics[i]);
     }
 
 }

@@ -154,7 +154,7 @@ void test_encode_message_assign_neuron(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char correctMessage[50] ="|3 2 1 2 2 2 1",buffer[200];
     float weightsValues[2]={2.0,2.0}, bias=1;
-    uint32_t saveOrderValues[2] ={1,2}, inputSize=2, neuronId = 3;
+    uint8_t saveOrderValues[2] ={1,2}, inputSize=2, neuronId = 3;
 
     encodeAssignNeuronMessage(buffer, sizeof(buffer),neuronId,inputSize,saveOrderValues,weightsValues,bias);
 
