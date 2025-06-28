@@ -14,7 +14,8 @@
 
 #include "table.h"
 
-//pio test -e native -f "test_neural_network" -v
+//pio test -e native -f "test_neural_network" -v //verbose mode all prints appear
+//pio test -e native -f "test_neural_network" // to just see the test results
 
 void printBitField(uint32_t bits, uint8_t size) {
     for (int i = size - 1; i >= 0; --i) {
@@ -269,15 +270,61 @@ void test_distribute_neurons(){
             {5,5,5,5},
     };
 
+    uint8_t neuron2=2,neuron3=3,neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9;
+
     initNeuralNetwork();
     distributeNeuralNetwork(&network, nodes,4);
 
-    NeuronEntry* neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,0);
-    tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
-    /***TEST_ASSERT(neuronEntry != nullptr);
+    NeuronEntry* neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron2);
+    //tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
+    TEST_ASSERT(neuronEntry != nullptr);
     TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[0]));
+    TEST_ASSERT(neuronEntry->layer == 0);
+    TEST_ASSERT(neuronEntry->indexInLayer == 0);/******/
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron3);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[0]));
+    TEST_ASSERT(neuronEntry->layer == 0);
+    TEST_ASSERT(neuronEntry->indexInLayer == 1);/******/
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron4);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[1]));
+    TEST_ASSERT(neuronEntry->layer == 0);
+    TEST_ASSERT(neuronEntry->indexInLayer == 2);/******/
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron5);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[1]));
+    TEST_ASSERT(neuronEntry->layer == 0);
+    TEST_ASSERT(neuronEntry->indexInLayer == 3);/******/
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron6);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[2]));
     TEST_ASSERT(neuronEntry->layer == 1);
-    TEST_ASSERT(neuronEntry->indexInLayer == 0);***/
+    TEST_ASSERT(neuronEntry->indexInLayer == 0);/******/
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron7);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[2]));
+    TEST_ASSERT(neuronEntry->layer == 1);
+    TEST_ASSERT(neuronEntry->indexInLayer == 1);/******/
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron8);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[3]));
+    TEST_ASSERT(neuronEntry->layer == 1);
+    TEST_ASSERT(neuronEntry->indexInLayer == 2);/******/
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron9);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[3]));
+    TEST_ASSERT(neuronEntry->layer == 1);
+    TEST_ASSERT(neuronEntry->indexInLayer == 3);/******/
+
+    tableClean(neuronToNodeTable);
 
 }
 
