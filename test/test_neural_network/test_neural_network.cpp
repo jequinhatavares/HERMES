@@ -328,6 +328,20 @@ void test_distribute_neurons(){
 
 }
 
+void test_distribute_outputs() {
+    uint8_t nodes[4][4] = {
+            {2, 2, 2, 2},
+            {3, 3, 3, 3},
+            {4, 4, 4, 4},
+            {5, 5, 5, 5},
+    };
+
+    uint8_t neuron2 = 2, neuron3 = 3, neuron4 = 4, neuron5 = 5, neuron6 = 6, neuron7 = 7, neuron8 = 8, neuron9 = 9;
+
+    initNeuralNetwork();
+    distributeNeuralNetwork(&network, nodes, 4);
+    distributeOutputsV2(nodes,4);
+}
 
 void setUp(void){
     enableModule(STATE_MACHINE);
@@ -361,5 +375,6 @@ int main(int argc, char** argv){
 
     RUN_TEST(test_bit_fields);
     RUN_TEST(test_distribute_neurons);/******/
+    RUN_TEST(test_distribute_outputs);/******/
     UNITY_END();
 }

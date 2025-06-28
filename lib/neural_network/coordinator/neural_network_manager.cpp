@@ -173,8 +173,164 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
 }
 
 
-void distributeOutputs(){
+void distributeOutputsV2(uint8_t nodes[][4],uint8_t nrNodes){
+    uint8_t currentIP[4]={0,0,0,0}, lastIP[4] ={0,0,0,0},*neuronId, *neuronId2;
+    NeuronEntry *neuronEntry,*neuronEntry2;
+    uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
+    uint8_t inputNodesIPs[TableMaxSize][4], nNodes = 0;
+    uint8_t lastLayer=0,currentLayer=0;
 
+
+    for (int i = 0; i < neuronToNodeTable->numberOfItems; i++) {
+        neuronId = (uint8_t*)tableKey(neuronToNodeTable,i);
+        neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
+
+        if (neuronEntry != nullptr){ //Safe Guard against nullptr
+
+            assignIP(currentIP,neuronEntry->nodeIP);
+            currentLayer = neuronEntry->layer;
+
+            //If the node that computes the current neuron is equal to the last node that computed the last neuron and the
+            //current node is situated in the same layer as the last Neuron then those outputs can be aggregated because are going
+            //to be set to neurons of the next layer
+            if(isIPEqual(currentIP,lastIP) && currentLayer == lastLayer){
+                outputNeurons[nNeurons] = *neuronId;
+                nNeurons++;
+            }else{
+
+                for (int j = 0; j < neuronToNodeTable->numberOfItems; j++){
+                    neuronId2 = (uint8_t*)tableKey(neuronToNodeTable,j);
+                    neuronEntry2 = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
+
+                    if (neuronEntry2 != nullptr){
+                        if(neuronEntry2->layer == lastLayer + 1){
+                            assignIP(inputNodesIPs[nNodes],neuronEntry2->nodeIP);
+                            nNodes++;
+                        }
+                    }
+                }
+
+                //Todo encode the message
+
+                encodeAssignOutputMessage(largeSendBuffer,sizeof(largeSendBuffer),outputNeurons,nNeurons,inputNodesIPs,nNodes);
+            }
+        }
+    }
+
+}
+
+
+void distributeOutputs(uint8_t nodes[][4],uint8_t nrNodes){
+    uint8_t *neuronId;
+    NeuronEntry *neuronEntry;
+    uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
+    uint8_t inputNodesIPs[TableMaxSize][4], nNodes = 0;
+
+
+    /***  The messages in this function are sent layer by layer.  At each node, messages are aggregated based on the
+     * neurons computed in the same layer, since these neurons need to send their outputs to the same neurons or nodes
+     * in the next layer. ***/
+    for (uint8_t i = 0; i < network.numLayers; i++) {
+
+        LOG(APP,INFO,"Layer: %hhu\n",i);
+
+        /*** The neurons in the next layer require the outputs of the current layer as input. Therefore, we need to
+         * identify which nodes are responsible for computing the next layer's neurons. These are the nodes to which
+         * the current layer's neurons must send their outputs. ***/
+        for (int l = 0; l < neuronToNodeTable->numberOfItems; l++) {
+            neuronId = (uint8_t*)tableKey(neuronToNodeTable,l);
+            neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
+            if(neuronEntry != nullptr){
+                // Check if the current node is responsible for computing a neuron in the next layer and is not already in the list
+                if(!isIPinList(neuronEntry->nodeIP,inputNodesIPs,nNodes) && (neuronEntry->layer == i+1)){
+                    assignIP(inputNodesIPs[nNodes],neuronEntry->nodeIP);
+                    LOG(APP,INFO,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
+                    nNodes++;
+                }
+            }
+        }
+
+        /*** For each node in the current layer, check which neurons it computes and send a message containing the
+         * IP addresses of the neurons that require its output.***/
+        for (uint8_t j = 0; j < nrNodes; j++) {
+            LOG(APP,INFO,"Current IP: %hhu.%hhu.%hhu.%hhu computes:\n",nodes[j][0],nodes[j][1],nodes[j][2],nodes[j][3]);
+
+            //Search in the neuronToNodeTable for the neurons at a specific computed by a specif node
+            for (int k = 0; k < neuronToNodeTable->numberOfItems; ++k) {
+                neuronId = (uint8_t*)tableKey(neuronToNodeTable,k);
+                neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
+
+                if(neuronEntry != nullptr){
+                    if(isIPEqual(neuronEntry->nodeIP,nodes[j]) && neuronEntry->layer == i){
+                        LOG(APP,INFO,"Neuron ID: %hhu \n",*neuronId);
+                        outputNeurons[nNeurons] = *neuronId;
+                        nNeurons ++;
+                    }
+                }
+            }
+            LOG(APP,DEBUG,"number of neurons: %hhu number of nodes: %hhu\n",nNeurons,nNodes);
+            encodeAssignOutputMessage(largeSendBuffer,sizeof(largeSendBuffer),outputNeurons,nNeurons,inputNodesIPs,nNodes);
+            LOG(APP,INFO,"Encoded message: %s\n",largeSendBuffer);
+            //Todo send Message for the node
+
+            nNeurons = 0;
+        }
+
+        nNodes = 0;
+    }
+
+}
+
+void distributeOutputsByNode(uint8_t targetNodeIP[4]){
+    uint8_t currentIP[4]={0,0,0,0}, lastIP[4] ={0,0,0,0},*neuronId, *neuronId2;
+    NeuronEntry *neuronEntry,*neuronEntry2;
+    uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
+    uint8_t inputNodesIPs[TableMaxSize][4], nNodes = 0;
+    uint8_t lastLayer=0,currentLayer=0;
+
+
+    for (uint8_t i = 0; i < network.numLayers; i++) {
+
+        LOG(APP,INFO,"Layer: %hhu\n",i);
+
+        for (int l = 0; l < neuronToNodeTable->numberOfItems; l++) {
+            neuronId = (uint8_t*)tableKey(neuronToNodeTable,l);
+            neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
+            if(neuronEntry != nullptr){
+                if(!isIPinList(neuronEntry->nodeIP,inputNodesIPs,nNodes) && (neuronEntry->layer == i+1)){
+                    assignIP(inputNodesIPs[nNodes],neuronEntry->nodeIP);
+                    LOG(APP,INFO,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
+                    nNodes++;
+                }
+            }
+        }
+
+
+        LOG(APP,INFO,"Current IP: %hhu.%hhu.%hhu.%hhu computes:\n",targetNodeIP[0],targetNodeIP[1],targetNodeIP[2],targetNodeIP[3]);
+
+        for (int k = 0; k < neuronToNodeTable->numberOfItems; ++k) {
+            neuronId = (uint8_t*)tableKey(neuronToNodeTable,k);
+            neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
+
+            if(neuronEntry != nullptr){
+
+                if(isIPEqual(neuronEntry->nodeIP,targetNodeIP) && neuronEntry->layer == i){
+                    LOG(APP,INFO,"Neuron ID: %hhu \n",*neuronId);
+                    outputNeurons[nNeurons] = *neuronId;
+                    nNeurons ++;
+                }
+            }
+        }
+        LOG(APP,DEBUG,"number of neurons: %hhu number of targetNodeIP: %hhu\n",nNeurons,nNodes);
+        encodeAssignOutputMessage(largeSendBuffer,sizeof(largeSendBuffer),outputNeurons,nNeurons,inputNodesIPs,nNodes);
+        LOG(APP,INFO,"Encoded message: %s\n",largeSendBuffer);
+        //Todo send Message for the node
+
+        nNeurons = 0;
+
+
+        nNodes = 0;
+    }
 }
 
 
@@ -227,13 +383,15 @@ void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t *
     int offset = 0;
     //[neuron ID1] [neuron ID2] ... [IP Address 1] [IP Address 2] ...
 
+    offset = snprintf(messageBuffer, bufferSize, "%i ",NN_NEURON_OUTPUT);
+
     // Encode the IDs of neurons whose outputs should be sent to specific IP addresses
     for (uint8_t i = 0; i < nNeurons; i++) {
         offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",outputNeuronIds[i]);
     }
 
     // Encode the target IP addresses for the outputs of the specified neuron IDs
-    for (uint8_t i = 0; i < nNeurons; i++) {
+    for (uint8_t i = 0; i < nNodes; i++) {
         offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu.%hhu.%hhu.%hhu ",IPs[i][0],IPs[i][1],IPs[i][2],IPs[i][3]);
     }
 }
@@ -263,4 +421,14 @@ void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronId
         offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",pubTopics[i]);
     }
 
+}
+
+
+bool isIPinList(uint8_t *searchIP,uint8_t list[][4],uint8_t nElements){
+    for (uint8_t i = 0; i < nElements; i++) {
+        if(isIPEqual(list[i],searchIP)){
+            return true;
+        }
+    }
+    return false;
 }
