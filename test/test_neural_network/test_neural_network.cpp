@@ -353,9 +353,9 @@ void test_distribute_outputs() {
 
     initNeuralNetwork();
     distributeNeuralNetwork(&network, nodes, 4);
-    //distributeOutputs(nodes,4);
+    //assignOutputTargetsToNetwork(nodes,4);
 
-    distributeOutputsByNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[0]);
+    assignOutputTargetsToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[0]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, neuron2,neuron3
              ,nodes[2][0],nodes[2][1],nodes[2][3],nodes[2][3]
              ,nodes[3][0],nodes[3][1],nodes[3][3],nodes[3][3]);
@@ -363,7 +363,7 @@ void test_distribute_outputs() {
     printf("Encoded Message:%s\n",largeSendBuffer);
     TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);
 
-    distributeOutputsByNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[1]);
+    assignOutputTargetsToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[1]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, neuron4,neuron5
             ,nodes[2][0],nodes[2][1],nodes[2][3],nodes[2][3]
             ,nodes[3][0],nodes[3][1],nodes[3][3],nodes[3][3]);
@@ -371,7 +371,7 @@ void test_distribute_outputs() {
     printf("Encoded Message:%s\n",largeSendBuffer);
     TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);
 
-    /***distributeOutputsByNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[2]);
+    /***assignOutputTargetsToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[2]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, neuron4,neuron4
             ,nodes[2][0],nodes[2][1],nodes[2][3],nodes[2][3]
             ,nodes[3][0],nodes[3][1],nodes[3][3],nodes[3][3]);

@@ -117,20 +117,18 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
         }
 
 
-        for (uint8_t j = 0; j < net->layers[i].numOutputs; j++) { // For each neuron in each layer
+        for (uint8_t j = 0; j < net->layers[i].numOutputs; j++){ // For each neuron in each layer
 
             // The root node (the node running this algorithm) is responsible for computing the output layer.
             if(i == net->numLayers - 1){
-                //TODO this node computed the output layer
-                LOG(APP,DEBUG,"neuronToNodeTable Size: %i\n",neuronToNodeTable->numberOfItems);
-                LOG(APP,DEBUG,"neuron id:%hhu MyIP:%hhu.%hhu.%hhu.%hhu Layer:%hhu Index in Layer:%hhu\n",currentNeuronId,myIP[0],myIP[1],myIP[2],myIP[3],i,j);
+                // Add the neuron-to-node mapping to the table
                 assignIP(neuronEntry.nodeIP,myIP);
                 neuronEntry.layer = i;
                 neuronEntry.indexInLayer = j;
                 tableAdd(neuronToNodeTable,&currentNeuronId,&neuronEntry);
+
                 // Increment the count of neurons assigned to this node, and the current NeuronID
                 currentNeuronId ++;
-                neuronPerNodeCount++;/******/
                 continue;
             }
 
@@ -180,54 +178,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
 }
 
 
-void distributeOutputsV2(uint8_t nodes[][4],uint8_t nrNodes){
-    uint8_t currentIP[4]={0,0,0,0}, lastIP[4] ={0,0,0,0},*neuronId, *neuronId2;
-    NeuronEntry *neuronEntry,*neuronEntry2;
-    uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
-    uint8_t inputNodesIPs[TableMaxSize][4], nNodes = 0;
-    uint8_t lastLayer=0,currentLayer=0;
-
-
-    for (int i = 0; i < neuronToNodeTable->numberOfItems; i++) {
-        neuronId = (uint8_t*)tableKey(neuronToNodeTable,i);
-        neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
-
-        if (neuronEntry != nullptr){ //Safe Guard against nullptr
-
-            assignIP(currentIP,neuronEntry->nodeIP);
-            currentLayer = neuronEntry->layer;
-
-            //If the node that computes the current neuron is equal to the last node that computed the last neuron and the
-            //current node is situated in the same layer as the last Neuron then those outputs can be aggregated because are going
-            //to be set to neurons of the next layer
-            if(isIPEqual(currentIP,lastIP) && currentLayer == lastLayer){
-                outputNeurons[nNeurons] = *neuronId;
-                nNeurons++;
-            }else{
-
-                for (int j = 0; j < neuronToNodeTable->numberOfItems; j++){
-                    neuronId2 = (uint8_t*)tableKey(neuronToNodeTable,j);
-                    neuronEntry2 = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
-
-                    if (neuronEntry2 != nullptr){
-                        if(neuronEntry2->layer == lastLayer + 1){
-                            assignIP(inputNodesIPs[nNodes],neuronEntry2->nodeIP);
-                            nNodes++;
-                        }
-                    }
-                }
-
-                //Todo encode the message
-
-                encodeAssignOutputMessage(largeSendBuffer,sizeof(largeSendBuffer),outputNeurons,nNeurons,inputNodesIPs,nNodes);
-            }
-        }
-    }
-
-}
-
-
-void distributeOutputs(uint8_t nodes[][4],uint8_t nrNodes){
+void assignOutputTargetsToNetwork(uint8_t nodes[][4],uint8_t nrNodes){
     uint8_t *neuronId;
     NeuronEntry *neuronEntry;
     uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
@@ -288,7 +239,7 @@ void distributeOutputs(uint8_t nodes[][4],uint8_t nrNodes){
 
 }
 
-void distributeOutputsByNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]){
+void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]){
     uint8_t *neuronId;
     NeuronEntry *neuronEntry;
     uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
@@ -352,6 +303,52 @@ void distributeOutputsByNode(char* messageBuffer,size_t bufferSize,uint8_t targe
 
 }
 
+void assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]){
+    uint8_t *neuronId;
+    NeuronEntry *neuronEntry;
+    uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
+    int offset = 0;
+    char tmpBuffer[50];
+    size_t tmpBufferSize = sizeof(tmpBuffer);
+
+    encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_OUTPUTS);
+    offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
+
+    /***  The messages in this function are constructed layer by layer. Messages are made based on aggregation of the
+     * neurons computed in the same layer, since these neurons need to send their outputs to the same neurons or nodes
+     * in the next layer. ***/
+    for (uint8_t i = 0; i < network.numLayers; i++) {
+
+        /*** Identify the neurons computed by the target node at the current layer and build a message
+           * with the subscriptions ad publications that the node does ***/
+        for (int k = 0; k < neuronToNodeTable->numberOfItems; ++k) {
+            neuronId = (uint8_t*)tableKey(neuronToNodeTable,k);
+            neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
+
+            if(neuronEntry != nullptr){
+                //Search in the neuronToNodeTable for the neurons at a specific layer computed by a specif node
+                if(isIPEqual(neuronEntry->nodeIP,targetNodeIP) && neuronEntry->layer == i){
+                    //LOG(APP,INFO,"Neuron ID: %hhu \n",*neuronId);
+                    outputNeurons[nNeurons] = *neuronId;
+                    nNeurons ++;
+                }
+            }
+        }
+
+        // If the node computes any neurons in this layer, include its information in the message along with the IPs to which it should forward the computation
+        if(nNeurons != 0){
+            //LOG(APP,DEBUG,"number of neurons: %hhu number of targetNodeIP: %hhu\n",nNeurons,nNodes);
+            /*** Neurons in a given layer will publish to a topic corresponding to their layer number,
+                and subscribe to the topics published by neurons in the previous layer.***/
+            encodePubSubInfo(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,i,i+1);
+            offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
+            //Todo send Message for the node
+        }
+
+        nNeurons = 0;
+    }
+
+}
 
 void encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type){
     if(type == NN_ASSIGN_COMPUTATION){
@@ -417,9 +414,13 @@ void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t *
     }
 }
 
-void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronIds, uint8_t nNeurons, uint8_t * subTopics, uint8_t nSubTopics, uint8_t * pubTopics, uint8_t nPubTopics ){
+void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronIds, uint8_t nNeurons, uint8_t subTopic, uint8_t pubTopic){
     int offset = 0;
-    // [neuron ID1] [neuron ID2] ... [Number of Subscriptions] [Subscription 1] [Subscription 2] ... [Number of Publications] [Pub 1] [Pub 2] ...
+    // |[neuron ID1] [neuron ID2] ... [Number of Subscriptions] [Subscription 1] [Subscription 2] ... [Number of Publications] [Pub 1] [Pub 2] ...
+
+    offset = snprintf(messageBuffer, bufferSize, "|");
+
+    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",nNeurons);
 
     // Encode the IDs of neurons that the Pub/sub info is about
     for (uint8_t i = 0; i < nNeurons; i++) {
@@ -427,21 +428,17 @@ void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronId
     }
 
     // Encode the total number of subscriptions
-    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",nSubTopics);
+    //offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",nSubTopics);
 
-    // Encode the list of subscriptions
-    for (uint8_t i = 0; i < nSubTopics; i++) {
-        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",subTopics[i]);
-    }
+
+    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",subTopic);
+
 
     // Encode the total number of published topics
-    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",nPubTopics);
+    //offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",nPubTopics);
 
-    // Encode the list of published topics
-    for (uint8_t i = 0; i < nPubTopics; i++) {
-        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",pubTopics[i]);
-    }
 
+    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu",pubTopic);
 }
 
 
