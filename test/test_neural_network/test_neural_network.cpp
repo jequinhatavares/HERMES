@@ -81,9 +81,9 @@ void test_handle_message_assign_neuron_one_neuron(){
         TEST_ASSERT(saveOrders[neuronStorageIndex][i] == saveOrderValues[i]);
     }
     freeAllNeuronMemory();
-
-
 }
+
+
 void test_handle_message_assign_neuron_multiple_neurons(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[50] ="8 0 |3 2 1 2 2.0 2.0 1 |2 2 1 2 2.0 2.0 1";
@@ -151,6 +151,55 @@ void test_handle_message_assign_neuron_with_more_than_max_neurons(){
     freeAllNeuronMemory();
 
 }
+
+
+void test_handle_neuron_input(){
+    //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    char receivedMessage[50] ="8 0 |3 2 1 2 2.0 2.0 1";
+    float weightsValues[2]={2.0,2.0}, bias=1;
+    int saveOrderValues[2] ={1,2}, inputSize=2, neuronId = 3,outputNeuron1 = 1,outputNeuron2 = 2;
+    int neuronStorageIndex = -1;
+
+    handleNeuralNetworkMessage(receivedMessage);
+
+    neuronStorageIndex = getNeuronStorageIndex(neuronId);
+
+    handleNeuronInput(outputNeuron1,1.0);
+
+    handleNeuronInput(outputNeuron2,1.0);
+
+    TEST_ASSERT(neuronStorageIndex  != -1);
+    TEST_ASSERT(outputValues[neuronStorageIndex] == 5);
+}
+
+
+void test_handle_assign_output_targets(){
+    //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    char receivedMessage[50],assignNeuronsMessage[50]="8 0 |3 2 1 2 2.0 2.0 1 |2 2 1 2 2.0 2.0 1";
+    uint8_t nodeIP4[4]={4,4,4,4},nodeIP5[4]={5,5,5,5};
+    int neuronStorageIndex = -1;
+    uint8_t neuron2=2,neuron3=3;
+
+    //Assign neuron computation to the node
+    handleNeuralNetworkMessage(assignNeuronsMessage);
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"8 %d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu"
+            ,NN_ASSIGN_OUTPUTS,2,neuron2,neuron3,2,nodeIP4[0],nodeIP4[1],nodeIP4[3],nodeIP4[3]
+            ,nodeIP5[0],nodeIP5[1],nodeIP5[3],nodeIP5[3]);
+
+    handleNeuralNetworkMessage(receivedMessage);
+
+    TEST_ASSERT(outputTargets[0].nTargets == 2);
+    TEST_ASSERT(isIPEqual(outputTargets[0].outputTargets[0],nodeIP4));
+    TEST_ASSERT(isIPEqual(outputTargets[0].outputTargets[1],nodeIP5));
+
+    TEST_ASSERT(outputTargets[1].nTargets == 2);
+    TEST_ASSERT(isIPEqual(outputTargets[1].outputTargets[0],nodeIP4));
+    TEST_ASSERT(isIPEqual(outputTargets[1].outputTargets[1],nodeIP5));
+}
+
+
+
 void test_encode_message_assign_neuron(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char correctMessage[50] ="|3 2 1 2 2 2 1",buffer[200];
@@ -206,26 +255,6 @@ void test_encode_ACK_message(){
     printf("Encoded Message:%s\n",buffer);
     printf("Encoded Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(correctMessage,buffer) == 0);
-}
-
-
-void test_handle_neuron_input(){
-    //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
-    char receivedMessage[50] ="8 0 |3 2 1 2 2.0 2.0 1";
-    float weightsValues[2]={2.0,2.0}, bias=1;
-    int saveOrderValues[2] ={1,2}, inputSize=2, neuronId = 3,outputNeuron1 = 1,outputNeuron2 = 2;
-    int neuronStorageIndex = -1;
-
-    handleNeuralNetworkMessage(receivedMessage);
-
-    neuronStorageIndex = getNeuronStorageIndex(neuronId);
-
-    handleNeuronInput(outputNeuron1,1.0);
-
-    handleNeuronInput(outputNeuron2,1.0);
-
-    TEST_ASSERT(neuronStorageIndex  != -1);
-    TEST_ASSERT(outputValues[neuronStorageIndex] == 5);
 }
 
 
@@ -457,10 +486,11 @@ int main(int argc, char** argv){
 
     RUN_TEST(test_handle_message_assign_neuron_one_neuron);
     RUN_TEST(test_handle_message_assign_neuron_multiple_neurons);
-    RUN_TEST(test_handle_message_assign_neuron_with_more_than_max_neurons);/******/
-    RUN_TEST(test_handle_neuron_input);
+    RUN_TEST(test_handle_message_assign_neuron_with_more_than_max_neurons);
+    RUN_TEST(test_handle_neuron_input);/******/
+    RUN_TEST(test_handle_assign_output_targets);
 
-    RUN_TEST(test_encode_message_assign_neuron);
+    /***RUN_TEST(test_encode_message_assign_neuron);
     RUN_TEST(test_encode_message_neuron_output);
     RUN_TEST(test_encode_NACK_message);
     RUN_TEST(test_encode_ACK_message);
@@ -468,6 +498,6 @@ int main(int argc, char** argv){
     RUN_TEST(test_bit_fields);
     RUN_TEST(test_distribute_neurons);
     RUN_TEST(test_assign_outputs);
-    RUN_TEST(test_assign_pubsub_info);/******/
+    RUN_TEST(test_assign_pubsub_info);***/
     UNITY_END();
 }

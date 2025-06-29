@@ -7,6 +7,7 @@
 #include <cstdint>
 
 #include "neuron_core.h"
+#include "routing.h"
 #include "../message_types.h"
 
 
@@ -23,18 +24,25 @@ extern float outputValues[MAX_NEURONS];
 
 typedef struct OutputTarget{
     uint8_t outputTargets[MAX_TARGET_OUTPUTS][4];
-    uint8_t nTargets;
+    uint8_t nTargets = 0;
 }OutputTarget;
 
 extern BitField receivedInputs[MAX_NEURONS];
 
 
+extern OutputTarget outputTargets[MAX_NEURONS];
+
 void handleNeuralNetworkMessage(char* messageBuffer);
+void handleAssignOutput(char* messageBuffer);
+
 void handleNeuronInput(int outputNeuronId,float inputValue);
+void updateTargetOutputs(uint8_t nNeurons, uint8_t *neuronIDs, uint8_t targetIP[4]);
 
 void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int outputNeuronId, float neuronOutput);
 void encodeNACKMessage(char* messageBuffer, size_t bufferSize,int* missingNeuronInputs, int missingNeuronCount);
 void encodeACKMessage(char* messageBuffer, size_t bufferSize,int* neuronAckList, int ackNeuronCount);
+
+bool isIPinList(uint8_t *searchIP,uint8_t list[][4],uint8_t nElements); //TODO por esta função num sitio melhor
 
 /**
  * setBit
@@ -81,3 +89,5 @@ inline void resetAll(BitField& bits){
 }
 
 #endif //NEURON_MANAGER_H
+
+

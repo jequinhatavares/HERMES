@@ -448,11 +448,3 @@ void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronId
 }
 
 
-bool isIPinList(uint8_t *searchIP,uint8_t list[][4],uint8_t nElements){
-    for (uint8_t i = 0; i < nElements; i++) {
-        if(isIPEqual(list[i],searchIP)){
-            return true;
-        }
-    }
-    return false;
-}

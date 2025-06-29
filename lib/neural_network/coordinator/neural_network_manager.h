@@ -4,10 +4,11 @@
 #include <cstdio>
 #include <cmath>
 #include "../message_types.h"
-#include "nn_parameters.h"
-#include "../nn_configurations.h"
 #include "routing.h"
 #include "messages.h"
+#include "nn_parameters.h"
+#include "../nn_configurations.h"
+#include "../core/neuron_manager.h"
 
 
 extern TableInfo* neuronToNodeTable;
@@ -44,6 +45,5 @@ int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize,uint8_t neu
 void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes);
 void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronIds, uint8_t nNeurons, uint8_t subTopic, uint8_t pubTopic);
 
-bool isIPinList(uint8_t *searchIP,uint8_t list[][4],uint8_t nElements);
 
 #endif //NEURAL_NETWORK_MANAGER_H

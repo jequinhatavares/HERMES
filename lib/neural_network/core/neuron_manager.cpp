@@ -7,14 +7,16 @@ BitField receivedInputs[MAX_NEURONS];
 // Store the output value of each neuron
 float outputValues[MAX_NEURONS];
 
+
 OutputTarget outputTargets[MAX_NEURONS];
 
 void handleNeuralNetworkMessage(char* messageBuffer){
     NeuralNetworkMessageType type;
     sscanf(messageBuffer, "%*d %d",&type);
     int neuronId,inputSize,*inputIndexMap,outputNeuron;
+    uint8_t nNeurons,nTargets,neuronID[MAX_NEURONS];
     float bias, *weightValues,inputValue;
-    char* token, *spaceToken,*neuronEntry;
+    char *spaceToken,*neuronEntry;
     char *saveptr1, *saveptr2;
 
     switch (type) {
@@ -75,53 +77,7 @@ void handleNeuralNetworkMessage(char* messageBuffer){
             break;
 
         case NN_ASSIGN_OUTPUTS:
-            //DATA_MESSAGE NN_ASSIGN_OUTPUT |[Output Neuron ID 1] [Output Neuron ID 2].. [Target IP 1] [Target ID 2]... |
-            neuronEntry = strtok_r(messageBuffer, "|",&saveptr1);
-            //Discard the message types
-            neuronEntry = strtok_r(NULL, "|",&saveptr1);
-
-            while (neuronEntry != nullptr){
-                // Position the spaceToken pointer at the beginning of the current neuron's data segment
-                spaceToken = strtok_r(neuronEntry, " ",&saveptr2);
-
-                //spaceToken now pointing to the Neuron number
-                neuronId = atoi(spaceToken);
-                //LOG(NETWORK,DEBUG," neuronId token:%s\n",spaceToken);
-
-                //spaceToken now pointing to the input size
-                spaceToken = strtok_r(NULL, " ", &saveptr2);
-                inputSize = atoi(spaceToken);
-                //LOG(NETWORK,DEBUG," inputSize token:%s\n",spaceToken);
-
-
-                //spaceToken now pointing to the Input Save Order Vector
-                spaceToken = strtok_r(NULL, " ", &saveptr2);
-                for (int i = 0; i < inputSize; ++i) {
-                    inputIndexMap[i]= atoi(spaceToken);
-                    //LOG(NETWORK,DEBUG," inputIndexMap token:%s\n",spaceToken);
-                    //Move on the next input to index map
-                    spaceToken = strtok_r(NULL, " ", &saveptr2);
-                }
-
-                //spaceToken now pointing to the weights Vector
-                for (int i = 0; i < inputSize; ++i) {
-                    weightValues[i]=atof(spaceToken);
-                    //LOG(NETWORK,DEBUG," weightValues token:%s\n",spaceToken);
-                    //Move on the next input to index map
-                    spaceToken = strtok_r(NULL, " ", &saveptr2);
-                }
-
-                //spaceToken now pointing to the bias value
-                bias=atof(spaceToken);
-                //LOG(NETWORK,DEBUG," bias token:%s\n",spaceToken);
-
-                //Save the parsed neuron parameters
-                configureNeuron(neuronId,inputSize,weightValues,bias, inputIndexMap);
-
-                //Move on to the next neuron
-                neuronEntry = strtok_r(NULL, "|",&saveptr1);
-            }
-
+            handleAssignOutput(messageBuffer);
             break;
 
         case NN_NEURON_OUTPUT:
@@ -148,6 +104,76 @@ void handleNeuralNetworkMessage(char* messageBuffer){
     }
 }
 
+
+
+void handleAssignOutput(char* messageBuffer){
+    NeuralNetworkMessageType type;
+    sscanf(messageBuffer, "%*d %d",&type);
+    uint8_t nNeurons,nTargets,neuronID[MAX_NEURONS],targetIP[4];
+    char *spaceToken,*neuronEntry;
+    char *saveptr1, *saveptr2;
+
+    //DATA_MESSAGE NN_ASSIGN_OUTPUT |[Number of neurons] [Output Neuron ID 1] [Output Neuron ID 2]...[Number of targets] [Target IP 1] [Target IP 2]... |
+    neuronEntry = strtok_r(messageBuffer, "|",&saveptr1);
+    //Discard the message types
+    neuronEntry = strtok_r(NULL, "|",&saveptr1);
+
+    while (neuronEntry != nullptr){
+        // Position the spaceToken pointer at the beginning of the current neuron's data segment
+        spaceToken = strtok_r(neuronEntry, " ",&saveptr2);
+
+        //spaceToken now pointing to the number of Neurons
+        nNeurons = atoi(spaceToken);
+        LOG(NETWORK,DEBUG," number of neurons: %hhu\n",nNeurons);
+
+        //spaceToken now pointing to the list of neuron Ids
+        spaceToken = strtok_r(NULL, " ", &saveptr2);
+        for (int i = 0; i < nNeurons; i++) {
+            neuronID[i]= atoi(spaceToken);
+            LOG(NETWORK,DEBUG," neuronID: %hhu\n",neuronID[i]);
+            //Move on the next input to index map
+            spaceToken = strtok_r(NULL, " ", &saveptr2);
+        }
+
+        //spaceToken now pointing to the number of Neurons
+        nTargets = atoi(spaceToken);
+        LOG(NETWORK,DEBUG,"Nr targets: %hhu\n",nTargets);
+
+
+        //spaceToken now pointing to the list of target nodes
+        spaceToken = strtok_r(NULL, " ", &saveptr2);
+        for (int i = 0; i < nTargets; i++) {
+            sscanf(spaceToken,"%hhu.%hhu.%hhu.%hhu",&targetIP[0],&targetIP[1],&targetIP[2],&targetIP[3]);
+            LOG(NETWORK,DEBUG,"IP: %hhu.%hhu.%hhu.%hhu\n",targetIP[0],targetIP[1],targetIP[2],targetIP[3]);
+            // Update the list of target nodes associated with the parsed neurons
+            updateTargetOutputs(nNeurons, neuronID, targetIP);
+            //Move on the next input to index map
+            spaceToken = strtok_r(NULL, " ", &saveptr2);
+        }
+
+        //Move on to the next layer neurons
+        neuronEntry = strtok_r(NULL, "|",&saveptr1);
+    }
+}
+
+void updateTargetOutputs(uint8_t nNeurons, uint8_t *neuronIDs, uint8_t targetIP[4]){
+    int neuronStorageIndex = -1;
+    for (int i = 0; i < nNeurons; i++) {
+        // For each neuron in the provided list, determine where it should be stored
+        neuronStorageIndex = getNeuronStorageIndex(neuronIDs[i]);
+
+        // Skip if the targetIP is already in the list of target devices
+        if(isIPinList(targetIP,outputTargets[neuronStorageIndex].outputTargets,outputTargets[neuronStorageIndex].nTargets)){
+            continue;
+        }
+        // Add the new targetIP to the first available slot in the list
+        for (int j = 0; j < 4; ++j) {
+            outputTargets[neuronStorageIndex].outputTargets[outputTargets[neuronStorageIndex].nTargets][j] = targetIP[j];
+        }
+        //Increment the number of target nodes
+        outputTargets[neuronStorageIndex].nTargets++;
+    }
+}
 void handleNeuronInput(int outputNeuronId, float inputValue){
     int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1, neuronId = 0;
     float neuronOutput;
@@ -228,4 +254,14 @@ void encodeACKMessage(char* messageBuffer, size_t bufferSize,int* neuronAckList,
         offset += snprintf(messageBuffer+offset,bufferSize-offset,"%d ",neuronAckList[i]);
     }
 
+}
+
+
+bool isIPinList(uint8_t *searchIP,uint8_t list[][4],uint8_t nElements){
+    for (uint8_t i = 0; i < nElements; i++) {
+        if(isIPEqual(list[i],searchIP)){
+            return true;
+        }
+    }
+    return false;
 }
