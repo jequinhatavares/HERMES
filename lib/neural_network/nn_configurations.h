@@ -22,4 +22,6 @@
 #endif
 
 
+#define MAX_TARGET_OUTPUTS 4
+
 #endif //NN_CONFIGURATIONS_H

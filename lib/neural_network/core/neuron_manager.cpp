@@ -1,8 +1,13 @@
 #include "neuron_manager.h"
 
+/*** Each node has a bitfield that indicates which inputs have been received during the current forward propagation
+  *  step of the neural network.receivedInputs[neuronIndex][inputIndex] == 1 means the input was received. ***/
 BitField receivedInputs[MAX_NEURONS];
 
+// Store the output value of each neuron
 float outputValues[MAX_NEURONS];
+
+OutputTarget outputTargets[MAX_NEURONS];
 
 void handleNeuralNetworkMessage(char* messageBuffer){
     NeuralNetworkMessageType type;
@@ -70,7 +75,52 @@ void handleNeuralNetworkMessage(char* messageBuffer){
             break;
 
         case NN_ASSIGN_OUTPUTS:
-            //DATA_MESSAGE NN_ASSIGN_OUTPUT [Output Neuron ID 1] [Corresponding IP 1] [Output Neuron ID 2] [Corresponding IP 2]
+            //DATA_MESSAGE NN_ASSIGN_OUTPUT |[Output Neuron ID 1] [Output Neuron ID 2].. [Target IP 1] [Target ID 2]... |
+            neuronEntry = strtok_r(messageBuffer, "|",&saveptr1);
+            //Discard the message types
+            neuronEntry = strtok_r(NULL, "|",&saveptr1);
+
+            while (neuronEntry != nullptr){
+                // Position the spaceToken pointer at the beginning of the current neuron's data segment
+                spaceToken = strtok_r(neuronEntry, " ",&saveptr2);
+
+                //spaceToken now pointing to the Neuron number
+                neuronId = atoi(spaceToken);
+                //LOG(NETWORK,DEBUG," neuronId token:%s\n",spaceToken);
+
+                //spaceToken now pointing to the input size
+                spaceToken = strtok_r(NULL, " ", &saveptr2);
+                inputSize = atoi(spaceToken);
+                //LOG(NETWORK,DEBUG," inputSize token:%s\n",spaceToken);
+
+
+                //spaceToken now pointing to the Input Save Order Vector
+                spaceToken = strtok_r(NULL, " ", &saveptr2);
+                for (int i = 0; i < inputSize; ++i) {
+                    inputIndexMap[i]= atoi(spaceToken);
+                    //LOG(NETWORK,DEBUG," inputIndexMap token:%s\n",spaceToken);
+                    //Move on the next input to index map
+                    spaceToken = strtok_r(NULL, " ", &saveptr2);
+                }
+
+                //spaceToken now pointing to the weights Vector
+                for (int i = 0; i < inputSize; ++i) {
+                    weightValues[i]=atof(spaceToken);
+                    //LOG(NETWORK,DEBUG," weightValues token:%s\n",spaceToken);
+                    //Move on the next input to index map
+                    spaceToken = strtok_r(NULL, " ", &saveptr2);
+                }
+
+                //spaceToken now pointing to the bias value
+                bias=atof(spaceToken);
+                //LOG(NETWORK,DEBUG," bias token:%s\n",spaceToken);
+
+                //Save the parsed neuron parameters
+                configureNeuron(neuronId,inputSize,weightValues,bias, inputIndexMap);
+
+                //Move on to the next neuron
+                neuronEntry = strtok_r(NULL, "|",&saveptr1);
+            }
 
             break;
 
