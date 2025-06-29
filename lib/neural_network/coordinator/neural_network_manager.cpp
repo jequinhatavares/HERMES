@@ -116,13 +116,23 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
             inputIndexMap[j] = currentNeuronId+(j-net->layers[i].numInputs);
         }
 
-        // The root node is responsible for computing the output layer.
-        if(i == net->numLayers - 1){
-            //TODO this node computed the output layer
-            continue;
-        }
 
         for (uint8_t j = 0; j < net->layers[i].numOutputs; j++) { // For each neuron in each layer
+
+            // The root node (the node running this algorithm) is responsible for computing the output layer.
+            if(i == net->numLayers - 1){
+                //TODO this node computed the output layer
+                LOG(APP,DEBUG,"neuronToNodeTable Size: %i\n",neuronToNodeTable->numberOfItems);
+                LOG(APP,DEBUG,"neuron id:%hhu MyIP:%hhu.%hhu.%hhu.%hhu Layer:%hhu Index in Layer:%hhu\n",currentNeuronId,myIP[0],myIP[1],myIP[2],myIP[3],i,j);
+                assignIP(neuronEntry.nodeIP,myIP);
+                neuronEntry.layer = i;
+                neuronEntry.indexInLayer = j;
+                tableAdd(neuronToNodeTable,&currentNeuronId,&neuronEntry);
+                // Increment the count of neurons assigned to this node, and the current NeuronID
+                currentNeuronId ++;
+                neuronPerNodeCount++;/******/
+                continue;
+            }
 
             encodeAssignNeuronMessage(tmpBuffer, sizeof(tmpBuffer),
                                            currentNeuronId,net->layers[i].numInputs,inputIndexMap,
