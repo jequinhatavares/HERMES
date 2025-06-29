@@ -340,7 +340,7 @@ void test_distribute_neurons(){
 
 }
 
-void test_distribute_outputs() {
+void test_assign_outputs() {
     char correctMessage[100];
     uint8_t nodes[4][4] = {
             {2, 2, 2, 2},
@@ -371,13 +371,65 @@ void test_distribute_outputs() {
     printf("Encoded Message:%s\n",largeSendBuffer);
     TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);
 
-    /***assignOutputTargetsToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[2]);
-    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, neuron4,neuron4
-            ,nodes[2][0],nodes[2][1],nodes[2][3],nodes[2][3]
-            ,nodes[3][0],nodes[3][1],nodes[3][3],nodes[3][3]);
+    assignOutputTargetsToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[2]);
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, neuron6,neuron7
+            ,myIP[0],myIP[1],myIP[3],myIP[3]);
     printf("Correct Message:%s\n",correctMessage);
     printf("Encoded Message:%s\n",largeSendBuffer);
-    TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);***/
+    TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);/******/
+
+    assignOutputTargetsToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[3]);
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, neuron8,neuron9
+            ,myIP[0],myIP[1],myIP[3],myIP[3]);
+    printf("Correct Message:%s\n",correctMessage);
+    printf("Encoded Message:%s\n",largeSendBuffer);
+    TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);
+
+    tableClean(neuronToNodeTable);
+}
+
+
+
+void test_assign_pubsub_info() {
+    char correctMessage[100];
+    uint8_t nodes[4][4] = {
+            {2, 2, 2, 2},
+            {3, 3, 3, 3},
+            {4, 4, 4, 4},
+            {5, 5, 5, 5},
+    };
+
+    uint8_t neuron2 = 2, neuron3 = 3, neuron4 = 4, neuron5 = 5, neuron6 = 6, neuron7 = 7, neuron8 = 8, neuron9 = 9;
+
+    initNeuralNetwork();
+    distributeNeuralNetwork(&network, nodes, 4);
+    //assignOutputTargetsToNetwork(nodes,4);
+
+    assignPubSubInfoToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[0]);
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron2,neuron3,0,1);
+    printf("Correct Message:%s\n",correctMessage);
+    printf("Encoded Message:%s\n",largeSendBuffer);
+    TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);
+
+    assignPubSubInfoToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[1]);
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron4,neuron5,0,1);
+    printf("Correct Message:%s\n",correctMessage);
+    printf("Encoded Message:%s\n",largeSendBuffer);
+    TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);
+
+    assignPubSubInfoToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[2]);
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron6,neuron7,1,2);
+    printf("Correct Message:%s\n",correctMessage);
+    printf("Encoded Message:%s\n",largeSendBuffer);
+    TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);
+
+    assignPubSubInfoToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[3]);
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron8,neuron9,1,2);
+    printf("Correct Message:%s\n",correctMessage);
+    printf("Encoded Message:%s\n",largeSendBuffer);
+    TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);/******/
+
+    tableClean(neuronToNodeTable);
 }
 
 void setUp(void){
@@ -414,7 +466,8 @@ int main(int argc, char** argv){
     RUN_TEST(test_encode_ACK_message);
 
     RUN_TEST(test_bit_fields);
-    RUN_TEST(test_distribute_neurons);/******/
-    //RUN_TEST(test_distribute_outputs);/******/
+    RUN_TEST(test_distribute_neurons);
+    RUN_TEST(test_assign_outputs);
+    RUN_TEST(test_assign_pubsub_info);/******/
     UNITY_END();
 }

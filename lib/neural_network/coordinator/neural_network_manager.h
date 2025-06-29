@@ -36,6 +36,7 @@ void initNeuralNetwork();
 void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_t nrNodes);
 void assignOutputTargetsToNetwork(uint8_t nodes[][4],uint8_t nrNodes);
 void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]);
+void assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]);
 
 
 void encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type);
