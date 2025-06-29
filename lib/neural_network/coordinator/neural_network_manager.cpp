@@ -402,10 +402,16 @@ void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t *
 
     offset = snprintf(messageBuffer, bufferSize, "|");
 
+    //Encode the number of neurons
+    offset += snprintf(messageBuffer+offset, bufferSize-offset, "%hhu ",nNeurons);
+
     // Encode the IDs of neurons whose outputs should be sent to specific IP addresses
     for (uint8_t i = 0; i < nNeurons; i++) {
         offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",outputNeuronIds[i]);
     }
+
+    //Encode the number of node IPs
+    offset += snprintf(messageBuffer + offset, bufferSize-offset, "%hhu ",nNodes);
 
     // Encode the target IP addresses for the outputs of the specified neuron IDs
     for (uint8_t i = 0; i < nNodes; i++) {
