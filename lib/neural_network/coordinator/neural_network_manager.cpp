@@ -32,22 +32,22 @@ TableInfo NTNTable = {
 };
 TableInfo* neuronToNodeTable  = &NTNTable;
 
-uint8_t neurons[TOTAL_NEURONS];
+NeuronId neurons[TOTAL_NEURONS];
 NeuronEntry neuronMap[TOTAL_NEURONS];
 
 
 
 bool isIDEqual(void* av, void* bv) {
-    uint8_t *a = (uint8_t *) av;
-    uint8_t *b = (uint8_t *) bv;
+    NeuronId *a = (NeuronId *) av;
+    NeuronId *b = (NeuronId *) bv;
     if(*a == *b)return true;
 
     return false;
 }
 
 void setNeuronId(void* av, void* bv){
-    uint8_t *a = (uint8_t *) av;
-    uint8_t *b = (uint8_t *) bv;
+    NeuronId *a = (NeuronId *) av;
+    NeuronId *b = (NeuronId *) bv;
     *a = *b;
 }
 
@@ -66,12 +66,12 @@ void setNeuronEntry(void* av, void* bv){
 }
 
 void initNeuralNetwork(){
-    tableInit(neuronToNodeTable,neurons,neuronMap, sizeof(uint8_t),sizeof(NeuronEntry));
+    tableInit(neuronToNodeTable,neurons,neuronMap, sizeof(NeuronId),sizeof(NeuronEntry));
 }
 
 void printNeuronEntry(TableEntry* Table){
     LOG(APP,INFO,"Neuron %hhu → NodeIP[%hhu.%hhu.%hhu.%hhu] (Layer: %hhu) (Index in Layer: %hhu) \n",
-         *(uint8_t*)Table->key,((NeuronEntry *)Table->value)->nodeIP[0],((NeuronEntry *)Table->value)->nodeIP[1]
+         *(NeuronId*)Table->key,((NeuronEntry *)Table->value)->nodeIP[0],((NeuronEntry *)Table->value)->nodeIP[1]
         ,((NeuronEntry *)Table->value)->nodeIP[2],((NeuronEntry *)Table->value)->nodeIP[3],
         ((NeuronEntry *)Table->value)->layer,((NeuronEntry *)Table->value)->indexInLayer);
 }
