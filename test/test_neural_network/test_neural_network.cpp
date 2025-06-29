@@ -270,7 +270,7 @@ void test_distribute_neurons(){
             {5,5,5,5},
     };
 
-    uint8_t neuron2=2,neuron3=3,neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9;
+    uint8_t neuron2=2,neuron3=3,neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
 
     initNeuralNetwork();
     distributeNeuralNetwork(&network, nodes,4);
@@ -279,7 +279,7 @@ void test_distribute_neurons(){
     NeuronEntry* neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron2);
     TEST_ASSERT(neuronEntry != nullptr);
     TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[0]));
-   /*** TEST_ASSERT(neuronEntry->layer == 0);
+    TEST_ASSERT(neuronEntry->layer == 0);
     TEST_ASSERT(neuronEntry->indexInLayer == 0);
 
     neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron3);
@@ -322,7 +322,19 @@ void test_distribute_neurons(){
     TEST_ASSERT(neuronEntry != nullptr);
     TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[3]));
     TEST_ASSERT(neuronEntry->layer == 1);
-    TEST_ASSERT(neuronEntry->indexInLayer == 3);***/
+    TEST_ASSERT(neuronEntry->indexInLayer == 3);/******/
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron10);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,myIP));
+    TEST_ASSERT(neuronEntry->layer == 2);
+    TEST_ASSERT(neuronEntry->indexInLayer == 0);/******/
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron11);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,myIP));
+    TEST_ASSERT(neuronEntry->layer == 2);
+    TEST_ASSERT(neuronEntry->indexInLayer == 1);/******/
 
     tableClean(neuronToNodeTable);
 

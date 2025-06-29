@@ -66,7 +66,7 @@ void setNeuronEntry(void* av, void* bv){
 }
 
 void initNeuralNetwork(){
-    tableInit(neuronToNodeTable,neurons,neuronMap, sizeof(int),sizeof(NeuronEntry));
+    tableInit(neuronToNodeTable,neurons,neuronMap, sizeof(uint8_t),sizeof(NeuronEntry));
 }
 
 void printNeuronEntry(TableEntry* Table){
