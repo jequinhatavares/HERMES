@@ -6,13 +6,17 @@ bool nackTriggered= false;
 unsigned long firstInputTimestamp;
 bool forwardPassRunning = false;
 
-
+bool allInputsReceived = false;
+        
 /*** Each node has a bitfield that indicates which inputs have been received during the current forward propagation
   *  step of the neural network.receivedInputs[neuronIndex][inputIndex] == 1 means the input was received. ***/
-BitField receivedInputs[MAX_NEURONS];
+BitField receivedInputs[MAX_NEURONS] = {0};
 
 // Store the output value of each neuron
 float outputValues[MAX_NEURONS];
+
+// Indicates whether the output of a given neuron has already been computed
+bool isOutputComputed[MAX_NEURONS]={ false};
 
 
 OutputTarget outputTargets[MAX_NEURONS];
@@ -209,6 +213,10 @@ void handleAssignPubSubInfo(char* messageBuffer){
     }
 }
 
+void handleNACKMessage(char*messageBuffer){
+
+}
+
 void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]){
     int neuronStorageIndex = -1;
     for (int i = 0; i < nNeurons; i++) {
@@ -270,6 +278,7 @@ void handleNeuronInput(int outputNeuronId, float inputValue){
                //reset the bit field for the next NN run
                resetAll(receivedInputs[neuronStorageIndex]);
 
+               isOutputComputed[neuronStorageIndex] = true;
                //TODO Send the output for the nodes that need him
            }
        }
@@ -277,8 +286,12 @@ void handleNeuronInput(int outputNeuronId, float inputValue){
 
 
 }
-
-void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int outputNeuronId, float neuronOutput){
+void encodeMessageHeader(char* messageBuffer,size_t bufferSize,NeuralNetworkMessageType type){
+    if(type == NN_NACK){
+        snprintf(messageBuffer,bufferSize,"%d",NN_NACK);
+    }
+}
+void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId outputNeuronId, float neuronOutput){
     int offset = 0;
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
     //Encode the neuron id that generated this output
@@ -289,27 +302,25 @@ void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int outputN
 
 }
 
-void encodeNACKMessage(char* messageBuffer, size_t bufferSize,int* missingNeuronInputs, int missingNeuronCount){
+void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId  missingNeuron){
     int offset = 0;
     //DATA_MESSAGE NN_NACK [Neuron ID with Missing Output] [Missing Output ID 1] [Missing Output ID 2] ...
 
-    offset = snprintf(messageBuffer,bufferSize,"%d",NN_NACK);
+    //offset = snprintf(messageBuffer,bufferSize,"%d",NN_NACK);
 
-    // Encode the IDs of neurons whose required inputs are missing
-    for (int i = 0; i < missingNeuronCount; i++) {
-        offset += snprintf(messageBuffer+offset,bufferSize-offset," %d",missingNeuronInputs[i]);
-    }
+    // Encode the missing input
+    offset += snprintf(messageBuffer+offset,bufferSize-offset," %d",missingNeuron);
 }
 
-void encodeACKMessage(char* messageBuffer, size_t bufferSize,int* neuronAckList, int ackNeuronCount){
+void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount){
     int offset = 0;
     //NN_ACK [Acknowledged Neuron ID 1] [Acknowledged Neuron ID 2]...
 
-    offset = snprintf(messageBuffer,bufferSize,"%d ",NN_ACK);
+    //offset = snprintf(messageBuffer,bufferSize,"%d ",NN_ACK);
 
     // Encode the IDs of neurons whose required inputs are missing
     for (int i = 0; i < ackNeuronCount; i++) {
-        offset += snprintf(messageBuffer+offset,bufferSize-offset,"%d ",neuronAckList[i]);
+        offset += snprintf(messageBuffer+offset,bufferSize-offset,"%hhu ",neuronAckList[i]);
     }
 
 }
@@ -328,8 +339,8 @@ void manageNeuron(){
     unsigned long currentTime = getCurrentTime();
 
     // Check if the expected time for input arrival has already passed
-    if((currentTime-firstInputTimestamp) >= INPUT_WAIT_TIMEOUT && forwardPassRunning){
-
+    if((currentTime-firstInputTimestamp) >= INPUT_WAIT_TIMEOUT && forwardPassRunning && !allInputsReceived){
+        onInputWaitTimeout();
     }
 
     // Check if any sent NACKs have timed out, meaning the corresponding inputs should have arrived by now but didn’t
@@ -341,9 +352,43 @@ void manageNeuron(){
 }
 
 void onInputWaitTimeout(){
+    int neuronStorageIndex = -1,offset=0;
+    uint8_t inputSize = -1;
+    NeuronId neuronId;
+    char tmpBuffer[20];
+    size_t tmpBufferSize = sizeof(tmpBuffer),sendBufferSize=sizeof(smallSendBuffer);
 
-    //Search the missing inputs
-    //encodeNACKMessage()
+    // The message aggregates the missing inputs from all neurons into a single message
+    offset += snprintf(smallSendBuffer+offset,sendBufferSize-offset,"%d ",NN_NACK);
+
+    // Iterate through all neurons to determine which have incomplete input sets and identify the missing inputs
+    // Since the IDs of neurons missing inputs are irrelevant to the nodes providing those inputs, the neuron IDs are not included in the message.
+    for (int i = 0; i < neuronsCount; i++) {
+
+        neuronId = neuronIds[i];
+        neuronStorageIndex = getNeuronStorageIndex(neuronIds[i]);
+        if(neuronStorageIndex == -1) continue;
+
+        inputSize = inputSizes[neuronStorageIndex];
+
+        // Check whether each neuron has received all its expected inputs and thus computed its output
+        if(!isOutputComputed[neuronStorageIndex]){
+            // Identify inputs that have not yet been received
+            for (int j = 0; j < inputSize; j++) {
+                // If the bit is not set, it means the input has not been received yet
+                if(!isBitSet(receivedInputs[neuronStorageIndex],j)){
+                    encodeNACKMessage(tmpBuffer, tmpBufferSize,saveOrders[neuronStorageIndex][j]);
+                    offset += snprintf(smallSendBuffer+offset,sendBufferSize-offset,"%s",tmpBuffer);
+                }
+            }
+        }
+    }
+    //TODO BroadCast the message to the network
+
+    //Set up the NACK control variables
+    nackTriggered = true;
+    nackTriggerTime = getCurrentTime();
+
 }
 
 void onNackTimeout(){

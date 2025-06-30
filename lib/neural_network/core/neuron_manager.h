@@ -8,6 +8,7 @@
 
 #include "neuron_core.h"
 #include "time_hal.h"
+#include "messages.h"
 #include "routing.h"
 #include "../nn_types.h"
 
@@ -40,9 +41,12 @@ void handleAssignPubSubInfo(char* messageBuffer);
 void handleNeuronInput(int outputNeuronId,float inputValue);
 void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]);
 
-void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int outputNeuronId, float neuronOutput);
-void encodeNACKMessage(char* messageBuffer, size_t bufferSize,int* missingNeuronInputs, int missingNeuronCount);
-void encodeACKMessage(char* messageBuffer, size_t bufferSize,int* neuronAckList, int ackNeuronCount);
+void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId outputNeuronId, float neuronOutput);
+void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId missingNeuron);
+void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId * neuronAckList, int ackNeuronCount);
+
+void onInputWaitTimeout();
+void onNackTimeout();
 
 bool isIPinList(uint8_t *searchIP,uint8_t list[][4],uint8_t nElements); //TODO por esta função num sitio melhor
 
@@ -55,6 +59,10 @@ bool isIPinList(uint8_t *searchIP,uint8_t list[][4],uint8_t nElements); //TODO p
  **/
 inline void setBit(BitField& bits, uint8_t i) {
     bits |= (1U << i); //1U is the unsigned integer value 1-> 0b00000001
+}
+
+inline bool isBitSet(BitField bits, uint8_t i) {
+    return (bits & (1U << i)) != 0;
 }
 
 /**
