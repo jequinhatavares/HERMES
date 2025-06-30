@@ -145,7 +145,7 @@ void handleAssignOutput(char* messageBuffer){
             sscanf(spaceToken,"%hhu.%hhu.%hhu.%hhu",&targetIP[0],&targetIP[1],&targetIP[2],&targetIP[3]);
             //LOG(NETWORK,DEBUG,"IP: %hhu.%hhu.%hhu.%hhu\n",targetIP[0],targetIP[1],targetIP[2],targetIP[3]);
             // Update the list of target nodes associated with the parsed neurons
-            updateTargetOutputs(nNeurons, neuronID, targetIP);
+            updateOutputTargets(nNeurons, neuronID, targetIP);
             //Move on the next input to index map
             spaceToken = strtok_r(NULL, " ", &saveptr2);
         }
@@ -201,11 +201,14 @@ void handleAssignPubSubInfo(char* messageBuffer){
     }
 }
 
-void updateTargetOutputs(uint8_t nNeurons, uint8_t *neuronIDs, uint8_t targetIP[4]){
+void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronIDs, uint8_t targetIP[4]){
     int neuronStorageIndex = -1;
     for (int i = 0; i < nNeurons; i++) {
         // For each neuron in the provided list, determine where it should be stored
         neuronStorageIndex = getNeuronStorageIndex(neuronIDs[i]);
+
+        //Skit if the neuron is not managed by this node
+        if(neuronStorageIndex == -1)continue;
 
         // Skip if the targetIP is already in the list of target devices
         if(isIPinList(targetIP,outputTargets[neuronStorageIndex].outputTargets,outputTargets[neuronStorageIndex].nTargets)){
@@ -311,4 +314,8 @@ bool isIPinList(uint8_t *searchIP,uint8_t list[][4],uint8_t nElements){
         }
     }
     return false;
+}
+
+void manageNeuron(){
+
 }

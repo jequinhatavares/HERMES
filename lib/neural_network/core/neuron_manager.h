@@ -37,7 +37,7 @@ void handleAssignOutput(char* messageBuffer);
 void handleAssignPubSubInfo(char* messageBuffer);
 
 void handleNeuronInput(int outputNeuronId,float inputValue);
-void updateTargetOutputs(uint8_t nNeurons, uint8_t *neuronIDs, uint8_t targetIP[4]);
+void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronIDs, uint8_t targetIP[4]);
 
 void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int outputNeuronId, float neuronOutput);
 void encodeNACKMessage(char* messageBuffer, size_t bufferSize,int* missingNeuronInputs, int missingNeuronCount);

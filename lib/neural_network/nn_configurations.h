@@ -21,7 +21,12 @@
 #define MAX_NEURONS 2
 #endif
 
-
 #define MAX_TARGET_OUTPUTS 4
+
+#define NACK_TIMEOUT 3000
+
+#define INPUT_WAIT_TIMEOUT 3000
+
+
 
 #endif //NN_CONFIGURATIONS_H
