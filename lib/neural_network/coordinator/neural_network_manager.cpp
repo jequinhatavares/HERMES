@@ -422,7 +422,7 @@ void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t *
 
 void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronIds, uint8_t nNeurons, uint8_t subTopic, uint8_t pubTopic){
     int offset = 0;
-    // |[neuron ID1] [neuron ID2] ... [Number of Subscriptions] [Subscription 1] [Subscription 2] ... [Number of Publications] [Pub 1] [Pub 2] ...
+    // |[Number of Neurons] [neuron ID1] [neuron ID2] [Subscription 1] [Pub 1]
 
     offset = snprintf(messageBuffer, bufferSize, "|");
 

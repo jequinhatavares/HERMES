@@ -34,6 +34,7 @@ extern OutputTarget outputTargets[MAX_NEURONS];
 
 void handleNeuralNetworkMessage(char* messageBuffer);
 void handleAssignOutput(char* messageBuffer);
+void handleAssignPubSubInfo(char* messageBuffer);
 
 void handleNeuronInput(int outputNeuronId,float inputValue);
 void updateTargetOutputs(uint8_t nNeurons, uint8_t *neuronIDs, uint8_t targetIP[4]);

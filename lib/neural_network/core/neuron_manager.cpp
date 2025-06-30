@@ -124,27 +124,26 @@ void handleAssignOutput(char* messageBuffer){
 
         //spaceToken now pointing to the number of Neurons
         nNeurons = atoi(spaceToken);
-        LOG(NETWORK,DEBUG," number of neurons: %hhu\n",nNeurons);
+        //LOG(NETWORK,DEBUG," number of neurons: %hhu\n",nNeurons);
 
         //spaceToken now pointing to the list of neuron Ids
         spaceToken = strtok_r(NULL, " ", &saveptr2);
         for (int i = 0; i < nNeurons; i++) {
             neuronID[i]= atoi(spaceToken);
-            LOG(NETWORK,DEBUG," neuronID: %hhu\n",neuronID[i]);
+            //LOG(NETWORK,DEBUG," neuronID: %hhu\n",neuronID[i]);
             //Move on the next input to index map
             spaceToken = strtok_r(NULL, " ", &saveptr2);
         }
 
         //spaceToken now pointing to the number of Neurons
         nTargets = atoi(spaceToken);
-        LOG(NETWORK,DEBUG,"Nr targets: %hhu\n",nTargets);
-
+        //LOG(NETWORK,DEBUG,"Nr targets: %hhu\n",nTargets);
 
         //spaceToken now pointing to the list of target nodes
         spaceToken = strtok_r(NULL, " ", &saveptr2);
         for (int i = 0; i < nTargets; i++) {
             sscanf(spaceToken,"%hhu.%hhu.%hhu.%hhu",&targetIP[0],&targetIP[1],&targetIP[2],&targetIP[3]);
-            LOG(NETWORK,DEBUG,"IP: %hhu.%hhu.%hhu.%hhu\n",targetIP[0],targetIP[1],targetIP[2],targetIP[3]);
+            //LOG(NETWORK,DEBUG,"IP: %hhu.%hhu.%hhu.%hhu\n",targetIP[0],targetIP[1],targetIP[2],targetIP[3]);
             // Update the list of target nodes associated with the parsed neurons
             updateTargetOutputs(nNeurons, neuronID, targetIP);
             //Move on the next input to index map
@@ -153,6 +152,52 @@ void handleAssignOutput(char* messageBuffer){
 
         //Move on to the next layer neurons
         neuronEntry = strtok_r(NULL, "|",&saveptr1);
+    }
+}
+
+
+void handleAssignPubSubInfo(char* messageBuffer){
+    NeuralNetworkMessageType type;
+    sscanf(messageBuffer, "%*d %d",&type);
+    uint8_t nNeurons,neuronID[MAX_NEURONS];
+    char *spaceToken,*neuronEntry;
+    char *saveptr1, *saveptr2;
+    int pubTopic,subTopic;
+    // |[Number of Neurons] [neuron ID1] [neuron ID2] [Subscription 1] [Pub 1]
+
+    neuronEntry = strtok_r(messageBuffer, "|",&saveptr1);
+    //Discard the message types
+    neuronEntry = strtok_r(NULL, "|",&saveptr1);
+
+    while (neuronEntry != nullptr) {
+        // Position the spaceToken pointer at the beginning of the current neuron's data segment
+        spaceToken = strtok_r(neuronEntry, " ", &saveptr2);
+
+        //spaceToken now pointing to the number of Neurons
+        nNeurons = atoi(spaceToken);
+        //LOG(NETWORK, DEBUG, " number of neurons: %hhu\n", nNeurons);
+
+        //spaceToken now pointing to the list of neuron Ids
+        spaceToken = strtok_r(NULL, " ", &saveptr2);
+        for (int i = 0; i < nNeurons; i++) {
+            neuronID[i] = atoi(spaceToken);
+            //LOG(NETWORK, DEBUG, " neuronID: %hhu\n", neuronID[i]);
+            //Move on the next input to index map
+            spaceToken = strtok_r(NULL, " ", &saveptr2);
+        }
+
+        //spaceToken now pointing to the subTopic
+        subTopic = atoi(spaceToken);
+        //LOG(NETWORK, DEBUG, "subTopic: %i\n", subTopic);
+
+        //spaceToken now pointing to the pubTopic
+        spaceToken = strtok_r(NULL, " ", &saveptr2);
+        pubTopic = atoi(spaceToken);
+        //LOG(NETWORK, DEBUG, "pubTopic: %i\n", pubTopic);
+
+        //Move on to the next layer neurons
+        neuronEntry = strtok_r(NULL, "|", &saveptr1);
+
     }
 }
 
@@ -174,6 +219,8 @@ void updateTargetOutputs(uint8_t nNeurons, uint8_t *neuronIDs, uint8_t targetIP[
         outputTargets[neuronStorageIndex].nTargets++;
     }
 }
+
+
 void handleNeuronInput(int outputNeuronId, float inputValue){
     int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1, neuronId = 0;
     float neuronOutput;
