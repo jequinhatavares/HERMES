@@ -11,5 +11,7 @@ typedef enum NeuralNetworkMessageType{
     NN_ACK,                //5 Message from a node acknowledging receipt of neuron assignment from the coordinator
 }NeuralNetworkMessageType;
 
+typedef uint8_t NeuronId;
+
 
 #endif //MESSAGE_TYPES_H
