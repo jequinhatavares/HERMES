@@ -3,7 +3,7 @@
 
 #include <cstdio>
 #include <cmath>
-#include "../message_types.h"
+#include "../nn_types.h"
 #include "routing.h"
 #include "messages.h"
 #include "nn_parameters.h"
@@ -16,7 +16,6 @@ extern TableInfo* neuronToNodeTable;
 /*** NeuronId is defined as a uint8_t, allowing up to 256 neurons with IDs ranging from 0 to 255.
     To support a larger neural network (more than 256 neurons), simply change the type of this variable
     to uint16_t, uint32_t, or uint64_t as needed — the rest of the code will continue to function correctly.***/
-typedef uint8_t NeuronId;
 
 typedef struct NeuronEntry{
     uint8_t nodeIP[4];

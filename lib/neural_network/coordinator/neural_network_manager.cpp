@@ -240,7 +240,7 @@ void assignOutputTargetsToNetwork(uint8_t nodes[][4],uint8_t nrNodes){
 }
 
 void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]){
-    uint8_t *neuronId;
+    NeuronId *neuronId;
     NeuronEntry *neuronEntry;
     uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
     uint8_t inputNodesIPs[TableMaxSize][4], nNodes = 0;
@@ -376,7 +376,7 @@ int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize, uint8_t ne
     //Encode: NN_ASSIGN_COMPUTATION [Neuron Number 1] [Input Size]
     offset = snprintf(messageBuffer,bufferSize,"|");
 
-    //Encode the neuronID and inputSize
+    //Encode the neuronId and inputSize
     offset += snprintf(messageBuffer+ offset,bufferSize - offset,"%hhu %hhu ",neuronId,inputSize);
 
     //Encode the [Input Save Order] vector

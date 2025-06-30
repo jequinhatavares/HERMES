@@ -29,7 +29,7 @@ void printBitField(uint32_t bits, uint8_t size) {
 
 void test_memory_allocation(){
     float weightsValues[3]={1.0,2.0,3.0}, bias=1;
-    int inputSize = 3,saveOrderValues[3] ={1,2,3},neuronId = 1,neuronStorageIndex = -1;
+    uint8_t inputSize = 3,saveOrderValues[3] ={1,2,3},neuronId = 1,neuronStorageIndex = -1;
 
     configureNeuron(neuronId,inputSize, weightsValues,bias,saveOrderValues);
 
@@ -47,7 +47,7 @@ void test_memory_allocation(){
 
 void test_neuron_output_calculation(){
     float weightsValues[3]={1.0,2.0,3.0}, bias=1, neuronOutput, correctNeuronOutput=15;
-    int inputSize = 3,saveOrderValues[3] ={1,2,3},neuronId = 1;
+    uint8_t inputSize = 3,saveOrderValues[3] ={1,2,3},neuronId = 1;
 
     configureNeuron(neuronId, inputSize, weightsValues,bias,saveOrderValues);
 

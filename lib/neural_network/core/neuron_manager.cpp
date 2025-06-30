@@ -20,8 +20,8 @@ OutputTarget outputTargets[MAX_NEURONS];
 void handleNeuralNetworkMessage(char* messageBuffer){
     NeuralNetworkMessageType type;
     sscanf(messageBuffer, "%*d %d",&type);
-    int neuronId,inputSize,*inputIndexMap,outputNeuron;
-    uint8_t nNeurons,nTargets,neuronID[MAX_NEURONS];
+    uint8_t nNeurons,nTargets,inputSize;
+    NeuronId neuronID,outputNeuron,*inputIndexMap;
     float bias, *weightValues,inputValue;
     char *spaceToken,*neuronEntry;
     char *saveptr1, *saveptr2;
@@ -40,7 +40,7 @@ void handleNeuralNetworkMessage(char* messageBuffer){
                 spaceToken = strtok_r(neuronEntry, " ",&saveptr2);
 
                 //spaceToken now pointing to the Neuron number
-                neuronId = atoi(spaceToken);
+                neuronID = atoi(spaceToken);
                 //LOG(NETWORK,DEBUG," neuronId token:%s\n",spaceToken);
 
                 //spaceToken now pointing to the input size
@@ -48,7 +48,7 @@ void handleNeuralNetworkMessage(char* messageBuffer){
                 inputSize = atoi(spaceToken);
                 //LOG(NETWORK,DEBUG," inputSize token:%s\n",spaceToken);
 
-                inputIndexMap = new int[inputSize];
+                inputIndexMap = new NeuronId [inputSize];
                 weightValues = new float[inputSize];
 
                 //spaceToken now pointing to the Input Save Order Vector
@@ -73,7 +73,7 @@ void handleNeuralNetworkMessage(char* messageBuffer){
                 //LOG(NETWORK,DEBUG," bias token:%s\n",spaceToken);
 
                 //Save the parsed neuron parameters
-                configureNeuron(neuronId,inputSize,weightValues,bias, inputIndexMap);
+                configureNeuron(neuronID,inputSize,weightValues,bias, inputIndexMap);
 
                 delete[] inputIndexMap;
                 delete[] weightValues;
@@ -89,7 +89,7 @@ void handleNeuralNetworkMessage(char* messageBuffer){
 
         case NN_NEURON_OUTPUT:
             //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
-            sscanf(messageBuffer, "%*d %*d %d %f",&outputNeuron,&inputValue);
+            sscanf(messageBuffer, "%*d %*d %hhu %f",&outputNeuron,&inputValue);
             handleNeuronInput(outputNeuron,inputValue);
             break;
 
@@ -116,7 +116,8 @@ void handleNeuralNetworkMessage(char* messageBuffer){
 void handleAssignOutput(char* messageBuffer){
     NeuralNetworkMessageType type;
     sscanf(messageBuffer, "%*d %d",&type);
-    uint8_t nNeurons,nTargets,neuronID[MAX_NEURONS],targetIP[4];
+    uint8_t nNeurons,nTargets,targetIP[4];
+    NeuronId neuronID[MAX_NEURONS];
     char *spaceToken,*neuronEntry;
     char *saveptr1, *saveptr2;
 
@@ -208,11 +209,11 @@ void handleAssignPubSubInfo(char* messageBuffer){
     }
 }
 
-void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronIDs, uint8_t targetIP[4]){
+void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]){
     int neuronStorageIndex = -1;
     for (int i = 0; i < nNeurons; i++) {
         // For each neuron in the provided list, determine where it should be stored
-        neuronStorageIndex = getNeuronStorageIndex(neuronIDs[i]);
+        neuronStorageIndex = getNeuronStorageIndex(neuronId[i]);
 
         //Skit if the neuron is not managed by this node
         if(neuronStorageIndex == -1)continue;
@@ -232,20 +233,20 @@ void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronIDs, uint8_t targetIP[
 
 
 void handleNeuronInput(int outputNeuronId, float inputValue){
-    int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1, neuronId = 0;
+    int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1, currentNeuronID = 0;
     float neuronOutput;
 
     for (int i = 0; i < neuronsCount; i++) {
-       neuronId = neuronsId[i];
+        currentNeuronID = neuronIds[i];
 
         // Check if the current neuron requires the input produced by outputNeuronId
-       if(isInputRequired(neuronId,outputNeuronId)){
+       if(isInputRequired(currentNeuronID,outputNeuronId)){
            // Find the index where the neuron is stored
-           neuronStorageIndex = getNeuronStorageIndex(neuronId);
+           neuronStorageIndex = getNeuronStorageIndex(currentNeuronID);
            // Find the storage index of this specific input value for the given neuron
-           inputStorageIndex = getInputStorageIndex(neuronId,outputNeuronId);
+           inputStorageIndex = getInputStorageIndex(currentNeuronID,outputNeuronId);
            //Find the input size of the neuron
-           inputSize = getInputSize(neuronId);
+           inputSize = getInputSize(currentNeuronID);
 
            if(inputSize == -1 || inputStorageIndex == -1 || neuronStorageIndex == -1){
                LOG(APP,ERROR,"ERROR: Invalid index detected: inputSize=%d, inputStorageIndex=%d, neuronStorageIndex=%d",
@@ -254,7 +255,7 @@ void handleNeuronInput(int outputNeuronId, float inputValue){
            }
 
            //Save the input value in the input vector
-           setInput(neuronId,inputValue,outputNeuronId);
+           setInput(currentNeuronID,inputValue,outputNeuronId);
 
            // Set the bit corresponding to the received input to 1
            setBit(receivedInputs[neuronStorageIndex],inputStorageIndex);
@@ -262,7 +263,7 @@ void handleNeuronInput(int outputNeuronId, float inputValue){
            // Check if all inputs required by that specific neuron have been received
            if(allBits(receivedInputs[neuronStorageIndex], inputSize)){
                // If all inputs required by the neuron have been received, proceed with output computation
-               neuronOutput = computeNeuronOutput(neuronId);
+               neuronOutput = computeNeuronOutput(currentNeuronID);
                outputValues[neuronStorageIndex] = neuronOutput;
 
                //LOG(APP,DEBUG,"Output inside function:%f\n",neuronOutput);
@@ -341,6 +342,8 @@ void manageNeuron(){
 
 void onInputWaitTimeout(){
 
+    //Search the missing inputs
+    //encodeNACKMessage()
 }
 
 void onNackTimeout(){

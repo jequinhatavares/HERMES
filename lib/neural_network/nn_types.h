@@ -1,6 +1,7 @@
 #ifndef MESSAGE_TYPES_H
 #define MESSAGE_TYPES_H
 
+#include <cstdint>
 
 typedef enum NeuralNetworkMessageType{
     NN_ASSIGN_COMPUTATION, //O Message from the coordinator assigning neurons to nodes

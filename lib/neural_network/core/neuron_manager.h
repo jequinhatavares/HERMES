@@ -9,7 +9,7 @@
 #include "neuron_core.h"
 #include "time_hal.h"
 #include "routing.h"
-#include "../message_types.h"
+#include "../nn_types.h"
 
 
 typedef uint32_t BitField;
@@ -38,7 +38,7 @@ void handleAssignOutput(char* messageBuffer);
 void handleAssignPubSubInfo(char* messageBuffer);
 
 void handleNeuronInput(int outputNeuronId,float inputValue);
-void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronIDs, uint8_t targetIP[4]);
+void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]);
 
 void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int outputNeuronId, float neuronOutput);
 void encodeNACKMessage(char* messageBuffer, size_t bufferSize,int* missingNeuronInputs, int missingNeuronCount);
