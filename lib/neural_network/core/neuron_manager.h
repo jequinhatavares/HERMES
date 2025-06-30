@@ -7,6 +7,7 @@
 #include <cstdint>
 
 #include "neuron_core.h"
+#include "time_hal.h"
 #include "routing.h"
 #include "../message_types.h"
 

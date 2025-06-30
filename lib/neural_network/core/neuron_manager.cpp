@@ -1,5 +1,12 @@
 #include "neuron_manager.h"
 
+unsigned long nackTriggerTime;
+bool nackTriggered= false;
+
+unsigned long firstInputTimestamp;
+bool forwardPassRunning = false;
+
+
 /*** Each node has a bitfield that indicates which inputs have been received during the current forward propagation
   *  step of the neural network.receivedInputs[neuronIndex][inputIndex] == 1 means the input was received. ***/
 BitField receivedInputs[MAX_NEURONS];
@@ -317,5 +324,25 @@ bool isIPinList(uint8_t *searchIP,uint8_t list[][4],uint8_t nElements){
 }
 
 void manageNeuron(){
+    unsigned long currentTime = getCurrentTime();
+
+    // Check if the expected time for input arrival has already passed
+    if((currentTime-firstInputTimestamp) >= INPUT_WAIT_TIMEOUT && forwardPassRunning){
+
+    }
+
+    // Check if any sent NACKs have timed out, meaning the corresponding inputs should have arrived by now but didn’t
+    if((currentTime - nackTriggerTime) >= NACK_TIMEOUT  &&  nackTriggered){
+
+
+        nackTriggered = false;
+    }
+}
+
+void onInputWaitTimeout(){
+
+}
+
+void onNackTimeout(){
 
 }
