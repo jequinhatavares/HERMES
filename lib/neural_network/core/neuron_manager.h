@@ -62,8 +62,27 @@ inline void setBit(BitField& bits, uint8_t i) {
     bits |= (1U << i); //1U is the unsigned integer value 1-> 0b00000001
 }
 
+/**
+ * isBitSet
+ * Checks if the specified bit is set in the given bit field.
+ *
+ * @param bits - The bit field to check
+ * @param i - The index of the bit to check
+ * @return True if the bit is set, false otherwise
+ */
 inline bool isBitSet(BitField bits, uint8_t i) {
     return (bits & (1U << i)) != 0;
+}
+
+/**
+ * allBitsZero
+ * Checks if all bits in the given bit field are zero (unset).
+ *
+ * @param bits - The bit field to check
+ * @return True if all bits are zero, false otherwise
+ */
+inline bool allBitsZero(BitField bits) {
+    return bits == 0;
 }
 
 /**

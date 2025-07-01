@@ -277,6 +277,7 @@ void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4
 void handleNeuronInput(int outputNeuronId, float inputValue){
     int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1, currentNeuronID = 0;
     float neuronOutput;
+    bool allOutputsComputed=true;
 
     for (int i = 0; i < neuronsCount; i++) {
         currentNeuronID = neuronIds[i];
@@ -316,6 +317,15 @@ void handleNeuronInput(int outputNeuronId, float inputValue){
                //TODO Send the output for the nodes that need him
            }
        }
+    }
+
+    /*** If a NACK is triggered, check whether the newly received input value completes the set of missing inputs.
+     * If all required inputs have now been received, the NACK process can be stopped.*/
+    if(nackTriggered){
+        for (int i = 0; i < neuronsCount; i++) {
+            allOutputsComputed = isOutputComputed[i] && allOutputsComputed;
+        }
+        nackTriggered = allOutputsComputed;
     }
 
 
