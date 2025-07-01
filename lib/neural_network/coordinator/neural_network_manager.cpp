@@ -7,6 +7,12 @@
 
 #define TOTAL_NEURONS 12
 
+unsigned long neuronAssignmentTime;
+
+bool areNeuronsAssigned = false;
+
+bool receivedAllNeuronAcks = false;
+
 /***
  * Neural Network Computations Assignment table
  *
@@ -63,6 +69,7 @@ void setNeuronEntry(void* av, void* bv){
 
     a->layer = b->layer;
     a->indexInLayer = b->indexInLayer;
+    a->isAcknowledged = b->isAcknowledged;
 }
 
 void initNeuralNetwork(){
@@ -125,6 +132,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
                 assignIP(neuronEntry.nodeIP,myIP);
                 neuronEntry.layer = i;
                 neuronEntry.indexInLayer = j;
+                neuronEntry.isAcknowledged = false;
                 tableAdd(neuronToNodeTable,&currentNeuronId,&neuronEntry);
 
                 // Increment the count of neurons assigned to this node, and the current NeuronID
@@ -142,6 +150,8 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
             assignIP(neuronEntry.nodeIP,nodes[assignedDevices]);
             neuronEntry.layer = i;
             neuronEntry.indexInLayer = j;
+            neuronEntry.isAcknowledged = false;
+
             tableAdd(neuronToNodeTable,&currentNeuronId,&neuronEntry);
 
             // Increment the count of neurons assigned to this node, and the current NeuronID
@@ -175,6 +185,8 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
         delete [] inputIndexMap;
     }
 
+    neuronAssignmentTime = getCurrentTime();
+    areNeuronsAssigned = true;
 }
 
 
@@ -451,3 +463,23 @@ void encodeForwardMessage(char*messageBuffer, size_t bufferSize, int inferenceId
     snprintf(messageBuffer, bufferSize, "%d %i",NN_FORWARD,inferenceId);
 }
 
+
+void manageNeuralNetwork(){
+    unsigned long currentTime = getCurrentTime();
+    // Check if the expected time for ack arrival from all nodes had passed
+    if((currentTime-neuronAssignmentTime) >= ACK_TIMEOUT && areNeuronsAssigned && !receivedAllNeuronAcks){
+        onACKTimeOut();
+    }
+}
+
+void onACKTimeOut(){
+    NeuronId *currentId;
+    NeuronEntry *neuronEntry;
+    for(int i=0; i< neuronToNodeTable->numberOfItems;i++){
+        currentId = (NeuronId*)tableKey(neuronToNodeTable,i);
+        neuronEntry = (NeuronEntry*)tableRead(neuronToNodeTable,currentId);
+        if(!neuronEntry->isAcknowledged){
+
+        }
+    }
+}

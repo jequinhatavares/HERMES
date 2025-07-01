@@ -27,6 +27,8 @@
 
 #define INPUT_WAIT_TIMEOUT 3000
 
+#define ACK_TIMEOUT 3000
+
 
 
 #endif //NN_CONFIGURATIONS_H

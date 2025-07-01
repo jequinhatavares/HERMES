@@ -33,7 +33,7 @@ typedef struct NeuralNetwork{
     const Layer* layers;      // Layer array
 } NeuralNetwork;
 
-// Declare network reference (extern)
+// Declare network reference
 extern const NeuralNetwork network;
 
 // Implementation section (define when NEURAL_NET_IMPL is set) to avoid link time errors of multiple definitions

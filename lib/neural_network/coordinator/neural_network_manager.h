@@ -13,14 +13,12 @@
 
 extern TableInfo* neuronToNodeTable;
 
-/*** NeuronId is defined as a uint8_t, allowing up to 256 neurons with IDs ranging from 0 to 255.
-    To support a larger neural network (more than 256 neurons), simply change the type of this variable
-    to uint16_t, uint32_t, or uint64_t as needed — the rest of the code will continue to function correctly.***/
 
 typedef struct NeuronEntry{
     uint8_t nodeIP[4];
     uint8_t layer;
     uint8_t indexInLayer;
+    bool isAcknowledged = false;
 }NeuronEntry;
 
 
@@ -38,11 +36,14 @@ void assignOutputTargetsToNetwork(uint8_t nodes[][4],uint8_t nrNodes);
 void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]);
 void assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]);
 
-
 void encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type);
 int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize,uint8_t neuronId, uint8_t inputSize, uint8_t * inputSaveOrder,const float*weightsValues, float bias);
 void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes);
 void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronIds, uint8_t nNeurons, uint8_t subTopic, uint8_t pubTopic);
 
+void encodeForwardMessage(char*messageBuffer, size_t bufferSize, int inferenceId);
+
+void manageNeuralNetwork();
+void onACKTimeOut();
 
 #endif //NEURAL_NETWORK_MANAGER_H
