@@ -447,4 +447,7 @@ void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronId
     offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu",pubTopic);
 }
 
+void encodeForwardMessage(char*messageBuffer, size_t bufferSize, int inferenceId){
+    snprintf(messageBuffer, bufferSize, "%d %i",NN_FORWARD,inferenceId);
+}
 
