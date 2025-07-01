@@ -206,7 +206,6 @@ void test_handle_assign_output_targets(){
 }
 
 void test_handle_assign_pubsub_info(){
-    //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[50],assignNeuronsMessage[50]="8 0 |3 2 1 2 2.0 2.0 1 |2 2 1 2 2.0 2.0 1";
     int pubTopic=1,subTopic=0;
     uint8_t neuron2=2,neuron3=3;
@@ -222,6 +221,32 @@ void test_handle_assign_pubsub_info(){
     freeAllNeuronMemory();
 }
 
+void test_handle_NACK(){
+    char receivedMessage[50],assignNeuronsMessage[50]="8 0 |2 2 1 2 2.0 2.0 1 |3 2 1 2 2.0 2.0 1";
+    //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
+    char correctMessage[50];
+    int pubTopic=1,subTopic=0;
+    uint8_t neuron2=2,neuron3=3;
+    float outputValue = 1.0;
+
+    //Assign neuron computation to the node
+    handleNeuralNetworkMessage(assignNeuronsMessage);
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"8 %d %hhu",NN_NACK,neuron2);
+
+    //Init the output value
+    outputValues[0] = 1.0;
+
+    snprintf(correctMessage, sizeof(correctMessage),"%d %hhu %g",NN_NEURON_OUTPUT,neuron2,outputValue);
+
+    handleNeuralNetworkMessage(receivedMessage);
+
+    printf("Encoded Message:%s\n",smallSendBuffer);
+    printf("Encoded Message:%s\n",correctMessage);
+    TEST_ASSERT(strcmp(smallSendBuffer,correctMessage) == 0);
+    freeAllNeuronMemory();
+}
+
 
 void test_encode_message_assign_neuron(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
@@ -232,7 +257,7 @@ void test_encode_message_assign_neuron(){
     encodeAssignNeuronMessage(buffer, sizeof(buffer),neuronId,inputSize,saveOrderValues,weightsValues,bias);
 
     printf("Encoded Message:%s\n",buffer);
-    printf("Encoded Message:%s\n",correctMessage);
+    printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(correctMessage,buffer) == 0);
 }
 
@@ -247,36 +272,36 @@ void test_encode_message_neuron_output(){
     encodeNeuronOutputMessage(buffer, sizeof(buffer),outputNeuronId, neuronOutput);
 
     printf("Encoded Message:%s\n",buffer);
-    printf("Encoded Message:%s\n",correctMessage);
+    printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(correctMessage,buffer) == 0);
 }
 
 void test_encode_NACK_message(){
     //DATA_MESSAGE NN_NACK [Neuron ID with Missing Output] [Missing Output ID 1] [Missing Output ID 2] ...
     char correctMessage[50],buffer[200];
-    int outputNeuronId = 1, missingInputs[4]={2,3,4,5};
+    int outputNeuronId = 1, missingInput= 2;
     float neuronOutput = 2.0;
 
-    snprintf(correctMessage, sizeof(correctMessage),"%d %d %d %d %d", NN_NACK, missingInputs[0],missingInputs[1],missingInputs[2],missingInputs[3]);
+    snprintf(correctMessage, sizeof(correctMessage)," %d", missingInput);
 
-    encodeNACKMessage(buffer, sizeof(buffer),missingInputs,4);
+    encodeNACKMessage(buffer, sizeof(buffer),missingInput);
 
     printf("Encoded Message:%s\n",buffer);
-    printf("Encoded Message:%s\n",correctMessage);
+    printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(correctMessage,buffer) == 0);
 }
 
 void test_encode_ACK_message(){
     //NN_ACK [Acknowledged Neuron ID 1] [Acknowledged Neuron ID 2]...
     char correctMessage[50],buffer[200];
-    int ackInputs[4]={2,3,4,5};
+    NeuronId ackInputs[4]={2,3,4,5};
 
-    snprintf(correctMessage, sizeof(correctMessage),"%d %d %d %d %d", NN_NACK, ackInputs[0],ackInputs[1],ackInputs[2],ackInputs[3]);
+    snprintf(correctMessage, sizeof(correctMessage),"%d %d %d %d %d ", NN_ACK, ackInputs[0],ackInputs[1],ackInputs[2],ackInputs[3]);
 
-    encodeNACKMessage(buffer, sizeof(buffer),ackInputs,4);
+    encodeACKMessage(buffer, sizeof(buffer),ackInputs,4);
 
     printf("Encoded Message:%s\n",buffer);
-    printf("Encoded Message:%s\n",correctMessage);
+    printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(correctMessage,buffer) == 0);
 }
 
@@ -513,6 +538,7 @@ int main(int argc, char** argv){
     RUN_TEST(test_handle_neuron_input);
     RUN_TEST(test_handle_assign_output_targets);/******/
     RUN_TEST(test_handle_assign_pubsub_info);
+    RUN_TEST(test_handle_NACK);
 
     RUN_TEST(test_encode_message_assign_neuron);
     RUN_TEST(test_encode_message_neuron_output);
