@@ -40,7 +40,7 @@ void configureNeuron(NeuronId neuronID, uint8_t receivedInputSize, float* receiv
     memcpy(weights[neuronsCount], receivedWeights, sizeof(float) * receivedInputSize);
 
     //Initialize the pointer to the memory where the inputs will be stored
-    inputs[neuronsCount] = new float[receivedInputSize]; // uninitialized, filled during inference
+    inputs[neuronsCount] = new float[receivedInputSize](); // initialized with zeros
 
     //Append the saveInput order to the list
     saveOrders[neuronsCount] = new NeuronId[receivedInputSize];
