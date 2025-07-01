@@ -53,6 +53,7 @@ void configureNeuron(NeuronId neuronID, uint8_t receivedInputSize, float* receiv
     neuronsCount++;
 }
 
+
 /**
  * getNeuronStorageIndex
  * Searches for the specified neuron ID among the neurons managed by this node and returns
@@ -70,6 +71,7 @@ int getNeuronStorageIndex(NeuronId neuronID){
     }
     return neuronStorageIndex;
 }
+
 
 /**
  * getInputStorageIndex
@@ -97,6 +99,7 @@ int getInputStorageIndex(NeuronId neuronId, NeuronId inputId){
     return inputStorageIndex;
 }
 
+
 /**
  * getInputSize
  * Returns the number of inputs for the specified neuron if managed by this node.
@@ -114,6 +117,7 @@ int getInputSize(NeuronId neuronId){
 
     return inputSizes[neuronStorageIndex];
 }
+
 
 /**
  * isInputRequired

@@ -1,7 +1,7 @@
 #include "neuron_manager.h"
 
 unsigned long nackTriggerTime;
-bool nackTriggered= false;
+bool nackTriggered = false;
 
 unsigned long firstInputTimestamp;
 bool forwardPassRunning = false;
@@ -214,6 +214,39 @@ void handleAssignPubSubInfo(char* messageBuffer){
 }
 
 void handleNACKMessage(char*messageBuffer){
+    //NN_NACK [Neuron ID with Missing Output 1] [Neuron ID with Missing Output 2] ...
+    char *saveptr1, *token;
+    NeuronId currentId;
+    int neuronStorageIndex = -1;
+    bool ownsNeuronInNack=false;
+    token = strtok_r(messageBuffer, " ",&saveptr1);
+
+    //Skip the message header
+    token = strtok_r(NULL, " ",&saveptr1);
+
+    while(token != nullptr){
+        // Extract the ID of the neuron whose output is currently missing
+        currentId = atoi(token);
+
+        neuronStorageIndex = getNeuronStorageIndex(currentId);
+
+        // If this node manages the neuron in the NACK, process the NACK
+        // If the output is not yet computed, the node will send it to the respective destinations once it is
+        if(neuronStorageIndex != -1) {
+            // If the output is already computed, resend it to the neuron that missed it
+            if(isOutputComputed[neuronStorageIndex]){
+                //Encode the message containing the neuron output value
+                encodeNeuronOutputMessage(smallSendBuffer,sizeof(smallSendBuffer),currentId,outputValues[neuronStorageIndex]);
+                //TODO send the message
+            }
+
+            ownsNeuronInNack = true;
+        }
+
+        token = strtok_r(NULL, " ",&saveptr1);
+    }
+
+    //TODO broadCast the NACK: With our without my computed neurons
 
 }
 
@@ -345,8 +378,7 @@ void manageNeuron(){
 
     // Check if any sent NACKs have timed out, meaning the corresponding inputs should have arrived by now but didn’t
     if((currentTime - nackTriggerTime) >= NACK_TIMEOUT  &&  nackTriggered){
-
-
+        onNackTimeout();
         nackTriggered = false;
     }
 }
