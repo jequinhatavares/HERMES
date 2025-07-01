@@ -155,7 +155,7 @@ void test_handle_message_assign_neuron_with_more_than_max_neurons(){
 
 void test_handle_neuron_input(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
-    char receivedMessage[50] ="8 0 |3 2 1 2 2.0 2.0 1";
+    char receivedMessage[50] ="8 0 |3 2 1 2 2.0 2.0 1", messageWithInput[50];
     float weightsValues[2]={2.0,2.0}, bias=1;
     int saveOrderValues[2] ={1,2}, inputSize=2, neuronId = 3,outputNeuron1 = 1,outputNeuron2 = 2;
     int neuronStorageIndex = -1;
@@ -165,11 +165,19 @@ void test_handle_neuron_input(){
 
     neuronStorageIndex = getNeuronStorageIndex(neuronId);
 
-    handleNeuronInput(outputNeuron1,1.0);
+    snprintf(messageWithInput, sizeof(messageWithInput),"8 %d %i %hhu %g"
+            ,NN_NEURON_OUTPUT,0,outputNeuron1,1.0);
 
-    handleNeuronInput(outputNeuron2,1.0);
+    handleNeuralNetworkMessage(messageWithInput);
+
+    snprintf(messageWithInput, sizeof(messageWithInput),"8 %d %i %hhu %g"
+            ,NN_NEURON_OUTPUT,0,outputNeuron2,1.0);
+
+    handleNeuralNetworkMessage(messageWithInput);
 
     TEST_ASSERT(neuronStorageIndex  != -1);
+    printf("Calculated Output:%f\n",outputValues[neuronStorageIndex]);
+
     TEST_ASSERT(outputValues[neuronStorageIndex] == 5);
 
     freeAllNeuronMemory();
@@ -237,12 +245,12 @@ void test_handle_NACK(){
     //Init the output value
     outputValues[0] = 1.0;
 
-    snprintf(correctMessage, sizeof(correctMessage),"%d %hhu %g",NN_NEURON_OUTPUT,neuron2,outputValue);
+    snprintf(correctMessage, sizeof(correctMessage),"%d %i %hhu %g",NN_NEURON_OUTPUT,0,neuron2,outputValue);
 
     handleNeuralNetworkMessage(receivedMessage);
 
     printf("Encoded Message:%s\n",smallSendBuffer);
-    printf("Encoded Message:%s\n",correctMessage);
+    printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(smallSendBuffer,correctMessage) == 0);
     freeAllNeuronMemory();
 }
@@ -267,7 +275,7 @@ void test_encode_message_neuron_output(){
     int outputNeuronId = 1;
     float neuronOutput = 2.0;
 
-    snprintf(correctMessage, sizeof(correctMessage),"%d %d %g", NN_NEURON_OUTPUT,outputNeuronId,neuronOutput);
+    snprintf(correctMessage, sizeof(correctMessage),"%d %i %d %g",NN_NEURON_OUTPUT,0,outputNeuronId,neuronOutput);
 
     encodeNeuronOutputMessage(buffer, sizeof(buffer),outputNeuronId, neuronOutput);
 
@@ -536,8 +544,8 @@ int main(int argc, char** argv){
     RUN_TEST(test_handle_message_assign_neuron_multiple_neurons);
     RUN_TEST(test_handle_message_assign_neuron_with_more_than_max_neurons);
     RUN_TEST(test_handle_neuron_input);
-    RUN_TEST(test_handle_assign_output_targets);/******/
-    RUN_TEST(test_handle_assign_pubsub_info);
+    RUN_TEST(test_handle_assign_output_targets);
+    RUN_TEST(test_handle_assign_pubsub_info);/******/
     RUN_TEST(test_handle_NACK);
 
     RUN_TEST(test_encode_message_assign_neuron);
