@@ -39,8 +39,8 @@ void handleNeuralNetworkMessage(char* messageBuffer);
 void handleAssignOutput(char* messageBuffer);
 void handleAssignPubSubInfo(char* messageBuffer);
 void handleNACKMessage(char*messageBuffer);
+void handleNeuronOutputMessage(char*messageBuffer);
 
-void handleNeuronInput(int outputNeuronId,float inputValue);
 void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]);
 
 void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId outputNeuronId, float neuronOutput);

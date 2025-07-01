@@ -6,7 +6,7 @@ bool nackTriggered = false;
 
 // Timestamp marking the start of the current forward propagation cycle
 unsigned long firstInputTimestamp;
-// Variable to track if a NN foward pass is currently running
+// Variable to track if a NN forward pass is currently running
 bool forwardPassRunning = false;
 
 // Indicates whether all outputs of the neurons owned by this node have been computed
@@ -26,7 +26,7 @@ bool isOutputComputed[MAX_NEURONS]={ false};
 OutputTarget outputTargets[MAX_NEURONS];
 
 // Identifier of the current inference cycle, assigned by the root node
-int currentInferenceId;
+int currentInferenceId = 0;
 
 void handleNeuralNetworkMessage(char* messageBuffer){
     NeuralNetworkMessageType type;
@@ -49,8 +49,7 @@ void handleNeuralNetworkMessage(char* messageBuffer){
 
         case NN_NEURON_OUTPUT:
             //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
-            sscanf(messageBuffer, "%*d %*d %hhu %f",&outputNeuron,&inputValue);
-            handleNeuronInput(outputNeuron,inputValue);
+            handleNeuronOutputMessage(messageBuffer);
             break;
 
         case NN_FORWARD:
@@ -247,6 +246,8 @@ void handleForwardMessage(char *messageBuffer){
     nackTriggered = false;
 
 }
+
+
 void handleNACKMessage(char*messageBuffer){
     //NN_NACK [Neuron ID with Missing Output 1] [Neuron ID with Missing Output 2] ...
     char *saveptr1, *token;
@@ -307,10 +308,21 @@ void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4
 }
 
 
-void handleNeuronInput(int outputNeuronId, float inputValue){
-    int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1, currentNeuronID = 0;
-    float neuronOutput;
+void handleNeuronOutputMessage(char*messageBuffer){
+    int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1, currentNeuronID = 0, inferenceId;
+    float neuronOutput, inputValue;
     bool outputsComputed=true;
+    NeuronId outputNeuronId;
+
+    sscanf(messageBuffer, "%*d %*d %i %hhu %f",&inferenceId,&outputNeuronId,&inputValue);
+
+    /***If the inferenceId received in the message is lower than the current inferenceId, the message belongs to
+     * an outdated inference cycle and should be discarded ***/
+    if(inferenceId < currentInferenceId) return;
+    /*** If the inferenceId from another neuron's output message is greater than the one currently stored,
+     it means this node's sequence is outdated, possibly due to missing the coordinator's message
+     that signaled the start of the forward propagation cycle.***/
+    else if(inferenceId > currentNeuronID) currentNeuronID = inferenceId;
 
     for (int i = 0; i < neuronsCount; i++) {
         currentNeuronID = neuronIds[i];
@@ -366,12 +378,12 @@ void handleNeuronInput(int outputNeuronId, float inputValue){
 
 void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId outputNeuronId, float neuronOutput){
     int offset = 0;
-    //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
+    //DATA_MESSAGE NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
     //Encode the neuron id that generated this output
-    offset = snprintf(messageBuffer,bufferSize,"%d %d ",NN_NEURON_OUTPUT,outputNeuronId);
+    offset = snprintf(messageBuffer,bufferSize,"%d %i %d ",NN_NEURON_OUTPUT,currentInferenceId,outputNeuronId);
 
     // Encode the computed output value
-    offset += snprintf(messageBuffer+offset,bufferSize-offset,"%g",neuronOutput);
+    snprintf(messageBuffer+offset,bufferSize-offset,"%g",neuronOutput);
 
 }
 
