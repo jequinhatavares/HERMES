@@ -6,7 +6,7 @@ bool nackTriggered = false;
 unsigned long firstInputTimestamp;
 bool forwardPassRunning = false;
 
-bool allInputsReceived = false;
+bool allOutputsComputed = false;
         
 /*** Each node has a bitfield that indicates which inputs have been received during the current forward propagation
   *  step of the neural network.receivedInputs[neuronIndex][inputIndex] == 1 means the input was received. ***/
@@ -277,7 +277,7 @@ void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4
 void handleNeuronInput(int outputNeuronId, float inputValue){
     int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1, currentNeuronID = 0;
     float neuronOutput;
-    bool allOutputsComputed=true;
+    bool outputsComputed=true;
 
     for (int i = 0; i < neuronsCount; i++) {
         currentNeuronID = neuronIds[i];
@@ -311,7 +311,7 @@ void handleNeuronInput(int outputNeuronId, float inputValue){
 
                //LOG(APP,DEBUG,"Output inside function:%f\n",neuronOutput);
                //reset the bit field for the next NN run
-               resetAll(receivedInputs[neuronStorageIndex]);
+               resetAll(receivedInputs[neuronStorageIndex]);//TODO PASS THIS FOR WHE THE FOWARD MESSAGE IS RECEIVED
 
                isOutputComputed[neuronStorageIndex] = true;
                //TODO Send the output for the nodes that need him
@@ -319,14 +319,16 @@ void handleNeuronInput(int outputNeuronId, float inputValue){
        }
     }
 
-    /*** If a NACK is triggered, check whether the newly received input value completes the set of missing inputs.
-     * If all required inputs have now been received, the NACK process can be stopped.*/
-    if(nackTriggered){
-        for (int i = 0; i < neuronsCount; i++) {
-            allOutputsComputed = isOutputComputed[i] && allOutputsComputed;
-        }
-        nackTriggered = allOutputsComputed;
+    // Check whether the newly received input value completes the set of missing inputs.
+    for (int i = 0; i < neuronsCount; i++) {
+        outputsComputed = isOutputComputed[i] && outputsComputed;
     }
+
+    // If the NACK mechanism was triggered but all missing inputs have now arrived (and all outputs are computed),the NACK process can be stopped.
+    if(nackTriggered) nackTriggered = outputsComputed;
+
+    allOutputsComputed = outputsComputed;
+
 
 
 }
@@ -379,14 +381,13 @@ void manageNeuron(){
     unsigned long currentTime = getCurrentTime();
 
     // Check if the expected time for input arrival has already passed
-    if((currentTime-firstInputTimestamp) >= INPUT_WAIT_TIMEOUT && forwardPassRunning && !allInputsReceived){
+    if((currentTime-firstInputTimestamp) >= INPUT_WAIT_TIMEOUT && forwardPassRunning && !allOutputsComputed){
         onInputWaitTimeout();
     }
 
     // Check if any sent NACKs have timed out, meaning the corresponding inputs should have arrived by now but didn’t
     if((currentTime - nackTriggerTime) >= NACK_TIMEOUT  &&  nackTriggered){
-        onNackTimeout();
-        nackTriggered = false;
+        onNACKTimeout();
     }
 }
 
@@ -430,6 +431,22 @@ void onInputWaitTimeout(){
 
 }
 
-void onNackTimeout(){
+void onNACKTimeout(){
+    float outputValue;
+    // Search for outputs that have not been computed yet and compute them, filling in any missing inputs with the values from the last inference.
+    for (int i = 0; i < neuronsCount; i++) {
+        if(!isOutputComputed[i]){
+            //Compute the neuron Output value
+            outputValue = computeNeuronOutput(neuronIds[i]);
+            outputValues[i] = outputValue;
+
+            //Mark the output as computed
+            isOutputComputed[i] = true;
+            //TODO Send the output for the nodes that need him
+
+            allOutputsComputed = true;
+            nackTriggered = false;
+        }
+    }
 
 }

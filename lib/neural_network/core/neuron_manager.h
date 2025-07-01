@@ -47,7 +47,7 @@ void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId missingNe
 void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount);
 
 void onInputWaitTimeout();
-void onNackTimeout();
+void onNACKTimeout();
 
 bool isIPinList(uint8_t *searchIP,uint8_t list[][4],uint8_t nElements); //TODO por esta função num sitio melhor
 
