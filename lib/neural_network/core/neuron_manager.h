@@ -34,6 +34,7 @@ extern BitField receivedInputs[MAX_NEURONS];
 
 extern OutputTarget outputTargets[MAX_NEURONS];
 
+void handleAssignComputationsMessage(char*messageBuffer);
 void handleNeuralNetworkMessage(char* messageBuffer);
 void handleAssignOutput(char* messageBuffer);
 void handleAssignPubSubInfo(char* messageBuffer);
