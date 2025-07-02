@@ -54,7 +54,7 @@ void handleNeuralNetworkMessage(char* messageBuffer){
 
         case NN_FORWARD:
             //DATA_MESSAGE NN_FORWARD
-
+            handleForwardMessage(messageBuffer);
             break;
 
         case NN_NACK:
@@ -285,28 +285,6 @@ void handleNACKMessage(char*messageBuffer){
 
 }
 
-void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]){
-    int neuronStorageIndex = -1;
-    for (int i = 0; i < nNeurons; i++) {
-        // For each neuron in the provided list, determine where it should be stored
-        neuronStorageIndex = getNeuronStorageIndex(neuronId[i]);
-
-        //Skit if the neuron is not managed by this node
-        if(neuronStorageIndex == -1)continue;
-
-        // Skip if the targetIP is already in the list of target devices
-        if(isIPinList(targetIP,outputTargets[neuronStorageIndex].outputTargets,outputTargets[neuronStorageIndex].nTargets)){
-            continue;
-        }
-        // Add the new targetIP to the first available slot in the list
-        for (int j = 0; j < 4; ++j) {
-            outputTargets[neuronStorageIndex].outputTargets[outputTargets[neuronStorageIndex].nTargets][j] = targetIP[j];
-        }
-        //Increment the number of target nodes
-        outputTargets[neuronStorageIndex].nTargets++;
-    }
-}
-
 
 void handleNeuronOutputMessage(char*messageBuffer){
     int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1, currentNeuronID = 0, inferenceId;
@@ -322,7 +300,13 @@ void handleNeuronOutputMessage(char*messageBuffer){
     /*** If the inferenceId from another neuron's output message is greater than the one currently stored,
      it means this node's sequence is outdated, possibly due to missing the coordinator's message
      that signaled the start of the forward propagation cycle.***/
-    else if(inferenceId > currentNeuronID) currentNeuronID = inferenceId;
+    else if(inferenceId > currentNeuronID){
+        currentInferenceId = inferenceId;
+        // Also reset other variables that should have been reset when the new forward message arrived
+        forwardPassRunning = true;
+        allOutputsComputed = false;
+        firstInputTimestamp = getCurrentTime();
+    }
 
     for (int i = 0; i < neuronsCount; i++) {
         currentNeuronID = neuronIds[i];
@@ -374,6 +358,31 @@ void handleNeuronOutputMessage(char*messageBuffer){
 
     allOutputsComputed = outputsComputed;
 
+    // If all outputs have been computed, the forward pass has ended at this node.
+    if(allOutputsComputed) forwardPassRunning = false;
+
+}
+
+void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]){
+    int neuronStorageIndex = -1;
+    for (int i = 0; i < nNeurons; i++) {
+        // For each neuron in the provided list, determine where it should be stored
+        neuronStorageIndex = getNeuronStorageIndex(neuronId[i]);
+
+        //Skit if the neuron is not managed by this node
+        if(neuronStorageIndex == -1)continue;
+
+        // Skip if the targetIP is already in the list of target devices
+        if(isIPinList(targetIP,outputTargets[neuronStorageIndex].outputTargets,outputTargets[neuronStorageIndex].nTargets)){
+            continue;
+        }
+        // Add the new targetIP to the first available slot in the list
+        for (int j = 0; j < 4; ++j) {
+            outputTargets[neuronStorageIndex].outputTargets[outputTargets[neuronStorageIndex].nTargets][j] = targetIP[j];
+        }
+        //Increment the number of target nodes
+        outputTargets[neuronStorageIndex].nTargets++;
+    }
 }
 
 void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId outputNeuronId, float neuronOutput){
@@ -437,7 +446,6 @@ void manageNeuron(){
 void onInputWaitTimeout(){
     int neuronStorageIndex = -1,offset=0;
     uint8_t inputSize = -1;
-    NeuronId neuronId;
     char tmpBuffer[20];
     size_t tmpBufferSize = sizeof(tmpBuffer),sendBufferSize=sizeof(smallSendBuffer);
 
@@ -448,7 +456,6 @@ void onInputWaitTimeout(){
     // Since the IDs of neurons missing inputs are irrelevant to the nodes providing those inputs, the neuron IDs are not included in the message.
     for (int i = 0; i < neuronsCount; i++) {
 
-        neuronId = neuronIds[i];
         neuronStorageIndex = getNeuronStorageIndex(neuronIds[i]);
         if(neuronStorageIndex == -1) continue;
 
@@ -487,9 +494,15 @@ void onNACKTimeout(){
             isOutputComputed[i] = true;
             //TODO Send the output for the nodes that need him
 
-            allOutputsComputed = true;
-            nackTriggered = false;
+            //reset the bit field for the next NN run
+            resetAll(receivedInputs[i]);
+
         }
     }
 
+    allOutputsComputed = true;
+    nackTriggered = false;
+
+    // If all outputs have been computed, the forward pass has ended at this node.
+     forwardPassRunning = false;
 }

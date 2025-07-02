@@ -40,6 +40,7 @@ void handleAssignOutput(char* messageBuffer);
 void handleAssignPubSubInfo(char* messageBuffer);
 void handleNACKMessage(char*messageBuffer);
 void handleNeuronOutputMessage(char*messageBuffer);
+void handleForwardMessage(char *messageBuffer);
 
 void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]);
 
