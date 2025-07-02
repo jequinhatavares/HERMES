@@ -512,7 +512,6 @@ void onNACKTimeout(){
 
             //reset the bit field for the next NN run
             resetAll(receivedInputs[i]);
-
         }
     }
 

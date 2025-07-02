@@ -304,7 +304,7 @@ void test_encode_ACK_message(){
     char correctMessage[50],buffer[200];
     NeuronId ackInputs[4]={2,3,4,5};
 
-    snprintf(correctMessage, sizeof(correctMessage),"%d %d %d %d %d ", NN_ACK, ackInputs[0],ackInputs[1],ackInputs[2],ackInputs[3]);
+    snprintf(correctMessage, sizeof(correctMessage),"%d %d %d %d ", ackInputs[0],ackInputs[1],ackInputs[2],ackInputs[3]);
 
     encodeACKMessage(buffer, sizeof(buffer),ackInputs,4);
 
