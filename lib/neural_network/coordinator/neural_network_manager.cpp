@@ -475,11 +475,68 @@ void manageNeuralNetwork(){
 void onACKTimeOut(){
     NeuronId *currentId;
     NeuronEntry *neuronEntry;
+    uint8_t layer, indexInLayer,*inputIndexMap;
+    char tmpBuffer[50];
+    size_t tmpBufferSize = sizeof(tmpBuffer);
+
     for(int i=0; i< neuronToNodeTable->numberOfItems;i++){
         currentId = (NeuronId*)tableKey(neuronToNodeTable,i);
         neuronEntry = (NeuronEntry*)tableRead(neuronToNodeTable,currentId);
+
+        /*** If the neuron was not acknowledged by the node that was supposed to compute it,
+             the message assigning the neurons to that node must be resent and renamed.***/
         if(!neuronEntry->isAcknowledged){
+            layer = neuronEntry->layer;
+            indexInLayer = neuronEntry->indexInLayer;
+
+            //Remake the part of the message that maps the inputs into the input vector
+            inputIndexMap = new uint8_t [network.layers[layer].numInputs];
+            for (uint8_t j = 0; j < network.layers[layer].numInputs ; j++){
+                inputIndexMap[j] = *currentId+(j-network.layers[layer].numInputs);
+            }
+
+            encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,
+                                      *currentId,network.layers[layer].numInputs,inputIndexMap,
+                                      &network.layers[indexInLayer].weights[indexInLayer * network.layers[layer].numInputs],network.layers[layer].biases[indexInLayer]);
+
+            //TODO SEND the message to the node
+            delete [] inputIndexMap;
 
         }
     }
+}
+
+
+void handleACKMessage(char* messageBuffer){
+    // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
+    char *saveptr1, *token;
+    NeuronId currentId;
+    NeuronEntry *neuronEntry;
+    bool isNetworkAcknowledge = true;
+
+    token = strtok_r(messageBuffer, " ",&saveptr1);
+
+    //Skip the message header
+    token = strtok_r(NULL, " ",&saveptr1);
+
+    while(token != nullptr){
+        // Extract the ID of the neuron
+        currentId = atoi(token);
+
+        neuronEntry = (NeuronEntry*)tableRead(neuronToNodeTable,&currentId);
+        if(neuronEntry != nullptr){
+            neuronEntry->isAcknowledged = true;
+        }
+        token = strtok_r(NULL, " ",&saveptr1);
+    }
+
+    for (int i = 0; i < neuronToNodeTable->numberOfItems; i++) {
+        neuronEntry = (NeuronEntry*)tableValueAtIndex(neuronToNodeTable,i);
+        if(neuronEntry != nullptr){
+            isNetworkAcknowledge =neuronEntry->isAcknowledged && isNetworkAcknowledge;
+        }
+    }
+
+    receivedAllNeuronAcks = isNetworkAcknowledge;
+
 }
