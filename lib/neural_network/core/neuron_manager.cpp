@@ -138,8 +138,15 @@ void handleAssignOutput(char* messageBuffer){
     sscanf(messageBuffer, "%*d %d",&type);
     uint8_t nNeurons,nTargets,targetIP[4];
     NeuronId neuronID[MAX_NEURONS];
+    char tmpBuffer[10];
+    size_t tmpBufferSize = sizeof(tmpBuffer);
     char *spaceToken,*neuronEntry;
     char *saveptr1, *saveptr2;
+    int offset=0;
+
+    //Encode the message header of the ACK message
+    offset += snprintf(smallSendBuffer+offset, sizeof(smallSendBuffer)-offset,"%d ",NN_ACK);
+
 
     //DATA_MESSAGE NN_ASSIGN_OUTPUT |[Number of neurons] [Output Neuron ID 1] [Output Neuron ID 2]...[Number of targets] [Target IP 1] [Target IP 2]... |
     neuronEntry = strtok_r(messageBuffer, "|",&saveptr1);
@@ -178,9 +185,18 @@ void handleAssignOutput(char* messageBuffer){
             spaceToken = strtok_r(NULL, " ", &saveptr2);
         }
 
+        for (int i = 0; i < nNeurons; i++) {
+            encodeACKMessage(tmpBuffer,tmpBufferSize,neuronID,nNeurons);
+            offset += snprintf(smallSendBuffer+offset, sizeof(smallSendBuffer)-offset,"%s",tmpBuffer);
+        }
+
         //Move on to the next layer neurons
         neuronEntry = strtok_r(NULL, "|",&saveptr1);
     }
+
+    //TODO send the ACK to the root node
+
+
 }
 
 
@@ -410,7 +426,7 @@ void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAck
     int offset = 0;
     //NN_ACK [Acknowledged Neuron ID 1] [Acknowledged Neuron ID 2]...
 
-    offset = snprintf(messageBuffer,bufferSize,"%d ",NN_ACK);
+    //offset = snprintf(messageBuffer,bufferSize,"%d ",NN_ACK);
 
     // Encode the IDs of neurons whose required inputs are missing
     for (int i = 0; i < ackNeuronCount; i++) {
