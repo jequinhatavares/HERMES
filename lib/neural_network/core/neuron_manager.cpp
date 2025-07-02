@@ -28,13 +28,15 @@ OutputTarget outputTargets[MAX_NEURONS];
 // Identifier of the current inference cycle, assigned by the root node
 int currentInferenceId = 0;
 
+
+/**
+ * handleNeuralNetworkMessage
+ * Processes all incoming neural network related messages
+ *
+ * @param messageBuffer - Buffer containing the received message
+ */
 void handleNeuralNetworkMessage(char* messageBuffer){
     NeuralNetworkMessageType type;
-    uint8_t nNeurons,nTargets,inputSize;
-    NeuronId neuronID,outputNeuron,*inputIndexMap;
-    float bias, *weightValues,inputValue;
-    char *spaceToken,*neuronEntry;
-    char *saveptr1, *saveptr2;
 
     sscanf(messageBuffer, "%*d %d",&type);
 
@@ -71,6 +73,14 @@ void handleNeuralNetworkMessage(char* messageBuffer){
     }
 }
 
+
+/**
+ * handleAssignComputationsMessage
+ * Processes NN_ASSIGN_COMPUTATION messages to configure neuron parameters (neuronId,inputs,weights and biases)
+ *
+ * @param messageBuffer - Buffer containing computation assignment data
+ * Format: |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+ */
 void handleAssignComputationsMessage(char*messageBuffer){
     uint8_t inputSize;
     NeuronId neuronID,*inputIndexMap;
@@ -133,6 +143,15 @@ void handleAssignComputationsMessage(char*messageBuffer){
     }
 }
 
+
+/**
+ * handleAssignOutput
+ * Processes NN_ASSIGN_OUTPUT messages to configure output targets for neurons (i.e., specifying which
+ * nodes the output values should be sent to)
+ *
+ * @param messageBuffer - Buffer containing output assignment data
+ * Format: |[Number of neurons] [Output Neuron IDs...] [Number of targets] [Target IPs...]
+ */
 void handleAssignOutput(char* messageBuffer){
     NeuralNetworkMessageType type;
     sscanf(messageBuffer, "%*d %d",&type);
@@ -200,6 +219,14 @@ void handleAssignOutput(char* messageBuffer){
 }
 
 
+/**
+ * handleAssignPubSubInfo
+ * Processes messages from the coordinator node containing Pub/Sub topic assignments
+ * related to the PubSub strategy for this node.
+ *
+ * @param messageBuffer - Buffer containing pub/sub data
+ * Format: |[Number of Neurons] [neuron IDs...] [Subscription] [Publication]
+ */
 void handleAssignPubSubInfo(char* messageBuffer){
     NeuralNetworkMessageType type;
     sscanf(messageBuffer, "%*d %d",&type);
@@ -244,6 +271,15 @@ void handleAssignPubSubInfo(char* messageBuffer){
 
     }
 }
+
+
+/**
+ * handleForwardMessage
+ * Processes the message that initiates the forward propagation of the neural network,
+ * initializing the relevant variables and storing the current inferenceId set by the coordinator.
+ *
+ * @param messageBuffer - Buffer containing forward pass command
+ */
 void handleForwardMessage(char *messageBuffer){
     int inferenceId;
     sscanf(messageBuffer, "%*d %*d %i",&inferenceId);
@@ -263,7 +299,15 @@ void handleForwardMessage(char *messageBuffer){
 
 }
 
-
+/**
+ * handleNACKMessage
+ * Processes NN_NACK messages that indicate missing neuron outputs.
+ * Parses all neuron IDs from the message and if any correspond to neurons computed by this node,
+ * sends their output values (if already available).
+ *
+ * @param messageBuffer - Buffer containing NACK information
+ * Format: [Neuron ID with Missing Output 1] [Neuron ID with Missing Output 2]...
+ */
 void handleNACKMessage(char*messageBuffer){
     //NN_NACK [Neuron ID with Missing Output 1] [Neuron ID with Missing Output 2] ...
     char *saveptr1, *token;
@@ -302,6 +346,14 @@ void handleNACKMessage(char*messageBuffer){
 }
 
 
+/**
+ * handleNeuronOutputMessage
+ * Processes NN_NEURON_OUTPUT messages containing computed neuron output values that serve as inputs for neurons on this node.
+ * Stores the inputs for the relevant neurons, and if all required inputs have arrived, computes the corresponding outputs and sends them.
+ *
+ * @param messageBuffer - Buffer containing neuron output data
+ * Format: [Inference Id] [Output Neuron ID] [Output Value]
+ */
 void handleNeuronOutputMessage(char*messageBuffer){
     int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1, currentNeuronID = 0, inferenceId;
     float neuronOutput, inputValue;
@@ -379,6 +431,15 @@ void handleNeuronOutputMessage(char*messageBuffer){
 
 }
 
+
+/**
+ * updateOutputTargets
+ * Updates the list of target nodes for specified output neurons.
+ *
+ * @param nNeurons - Number of neurons to update
+ * @param neuronId - Array of neuron IDs
+ * @param targetIP - IP address of the target node (IPv4 format)
+ */
 void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]){
     int neuronStorageIndex = -1;
     for (int i = 0; i < nNeurons; i++) {
@@ -401,6 +462,16 @@ void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4
     }
 }
 
+
+/**
+ * encodeNeuronOutputMessage
+ * Formats a message containing a neuron's output value.
+ *
+ * @param messageBuffer - Output buffer for the message
+ * @param bufferSize - Size of the output buffer
+ * @param outputNeuronId - ID of the neuron producing the output
+ * @param neuronOutput - Computed output value
+ */
 void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId outputNeuronId, float neuronOutput){
     int offset = 0;
     //DATA_MESSAGE NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
@@ -412,6 +483,15 @@ void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId ou
 
 }
 
+
+/**
+ * encodeNACKMessage
+ * Formats a NACK message containing the IDs of neurons whose output values are missing.
+ *
+ * @param messageBuffer - Output buffer for the message
+ * @param bufferSize - Size of the output buffer
+ * @param missingNeuron - ID of the neuron with missing output
+ */
 void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId  missingNeuron){
     int offset = 0;
     //DATA_MESSAGE NN_NACK [Neuron ID with Missing Output] [Missing Output ID 1] [Missing Output ID 2] ...
@@ -422,6 +502,16 @@ void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId  missingN
     offset += snprintf(messageBuffer+offset,bufferSize-offset," %d",missingNeuron);
 }
 
+
+/**
+ * encodeACKMessage
+ * Formats an ACK message acknowledging the specified neurons.
+ *
+ * @param messageBuffer - Output buffer for the message
+ * @param bufferSize - Size of the output buffer
+ * @param neuronAckList - Array of acknowledged neuron IDs
+ * @param ackNeuronCount - Number of neurons in the ACK list
+ */
 void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount){
     int offset = 0;
     //NN_ACK [Acknowledged Neuron ID 1] [Acknowledged Neuron ID 2]...
@@ -435,7 +525,15 @@ void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAck
 
 }
 
-
+/**
+ * isIPinList
+ * Checks if an IP address exists in a list of IPs.
+ *
+ * @param searchIP - IP address to search for (IPv4 format)
+ * @param list - 2D array of IP addresses to search
+ * @param nElements - Number of IPs in the list
+ * @return True if IP is found, false otherwise
+ */
 bool isIPinList(uint8_t *searchIP,uint8_t list[][4],uint8_t nElements){
     for (uint8_t i = 0; i < nElements; i++) {
         if(isIPEqual(list[i],searchIP)){
@@ -445,6 +543,12 @@ bool isIPinList(uint8_t *searchIP,uint8_t list[][4],uint8_t nElements){
     return false;
 }
 
+
+/**
+ * manageNeuron
+ * Main neuron management function that handles NeuralNetwork timeouts.
+ * Should be called regularly in the main loop.
+ */
 void manageNeuron(){
     unsigned long currentTime = getCurrentTime();
 
@@ -459,6 +563,11 @@ void manageNeuron(){
     }
 }
 
+/**
+ * onInputWaitTimeout
+ * Handles situations where not all inputs arrive before the established timeout.
+ * Triggers NACK messages containing the IDs of the missing input neurons.
+ */
 void onInputWaitTimeout(){
     int neuronStorageIndex = -1,offset=0;
     uint8_t inputSize = -1;
@@ -497,6 +606,12 @@ void onInputWaitTimeout(){
 
 }
 
+/**
+ * onNACKTimeout
+ * Handles the NACK timeout ,that is, when inputs do not arrive between the NACK trigger and the timeout limit.
+ * In this case, the node proceeds with output calculations using the received inputs,
+ * substituting any missing inputs with values from the previous iteration.
+ */
 void onNACKTimeout(){
     float outputValue;
     // Search for outputs that have not been computed yet and compute them, filling in any missing inputs with the values from the last inference.
