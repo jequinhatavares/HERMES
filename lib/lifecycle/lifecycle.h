@@ -25,7 +25,7 @@ extern void (*middlewareOnNetworkEventCallback)(int,uint8_t *);
 extern parentInfo (*middlewareChooseParentCallback)(parentInfo *,int);
 
 
-State initNode(Event event);
+State init(Event event);
 State search(Event event);
 State joinNetwork(Event event);
 State idle(Event event);
@@ -67,11 +67,12 @@ extern uint8_t gateway[4];
 extern uint8_t subnet[4];
 extern uint8_t dns[4];
 
-extern int consecutiveSearchCount;
 extern bool lostParent;
 
 void parseMAC(const char* macStr, int* macArray);
 void setIPs(const uint8_t * MAC);
 void handleTimers();
+
+void filterReachableNetworks();
 #endif //LIFECYCLE_H
 

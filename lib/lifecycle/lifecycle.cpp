@@ -5,7 +5,6 @@ uint8_t gateway[4];
 uint8_t subnet[4];
 uint8_t dns[4];
 
-int consecutiveSearchCount = 0;
 bool lostParent = false;
 
 unsigned long lastApplicationProcessingTime = 0;
@@ -22,7 +21,7 @@ parentInfo (*middlewareChooseParentCallback)(parentInfo *,int) = chooseParent;
 StateMachine SM_ = {
         .current_state = sInit,
         .TransitionTable = {
-                [sInit] = initNode,
+                [sInit] = init,
                 [sSearch] = search,
                 [sChooseParent] = joinNetwork,
                 [sIdle] = idle,
@@ -64,7 +63,7 @@ bool isChildRegistered(uint8_t * MAC){
     return false;
 }
 
-State initNode(Event event){
+State init(Event event){
     uint8_t MAC[6];
     char strMAC[30], ssid[256]; // Make sure this buffer is large enough to hold the entire SSID
     routingTableEntry me;
@@ -121,8 +120,7 @@ State initNode(Event event){
 
 State search(Event event){
     LOG(STATE_MACHINE,INFO,"Search State\n");
-    int i, k;
-    uint8_t MAC[6],nodeIP[4];
+    int i;
 
     // Clear reachableNetworks before rescanning
     for (i = 0; i < reachableNetworks.len; ++i) {
@@ -136,39 +134,19 @@ State search(Event event){
     }while(reachableNetworks.len == 0 );
 
     //Remove from the reachableNetworks all nodes that belong to my subnetwork (to avoid connecting to them and forming loops)
-    LOG(NETWORK,DEBUG, "Found %i Wi-Fi networks.\n", reachableNetworks.len);
-    for (i=0; i<reachableNetworks.len; i++){
-        LOG(NETWORK,INFO,"Found SSID: %s\n", reachableNetworks.item[i]);
-        sscanf(reachableNetworks.item[i], "JessicaNode%hhu:%hhu:%hhu:%hhu:%hhu:%hhu",&MAC[0],&MAC[1],&MAC[2],&MAC[3],&MAC[4],&MAC[5]);
-        getIPFromMAC(MAC, nodeIP);
-        if(inMySubnet(nodeIP)){
-            LOG(NETWORK,DEBUG,"Removed ssid from list: %s\n",reachableNetworks.item[i]);
-            LOG(NETWORK,DEBUG,"NodeIP: %hhu.%hhu.%hhu.%hhu\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
-            //Remove nodes that are part of my subnetwork of the reachableNetworks List
-            for (k = i; k < reachableNetworks.len-1; k++) {
-                strcpy( reachableNetworks.item[k] , reachableNetworks.item[k+1]);
-            }
-            i = i-1;
-            reachableNetworks.len --;
-        }
-    }
+    filterReachableNetworks();
 
-    if(lostParent == true){
-        if(consecutiveSearchCount == 3){
-            insertFirst(stateMachineEngine, eRestart);
-            return sForceRestart;
-        }
-        consecutiveSearchCount ++;
-    }
     //If the search after filtering returns a non-empty list, proceed to the choose parent state
-    if(reachableNetworks.len > 0){
+    /***if(reachableNetworks.len > 0){
         consecutiveSearchCount = 0;
         insertFirst(stateMachineEngine, eSuccess);
         return sChooseParent;
     }else{//If not continuing searching
         insertFirst(stateMachineEngine, eSearch);
         return sSearch;
-    }
+    }***/
+
+    return sChooseParent;
 
 }
 
@@ -378,6 +356,7 @@ State handleMessages(Event event){
 }
 
 State parentRecovery(Event event){
+    int i, consecutiveSearchCount = 0;
     uint8_t * STAIP= nullptr;
     messageParameters parameters;
 
@@ -409,7 +388,37 @@ State parentRecovery(Event event){
 
     lostParent = true;
 
-    insertLast(stateMachineEngine, eSearch);
+
+
+    /*** Search for other parents (reachableNetworks) until finding one or reaching the maximum number of consecutive
+       * scans, after which the node releases its direct children so they can find another connection to the main tree ***/
+    do{
+        searchAP(SSID_PREFIX);
+
+        //Remove from the reachableNetworks all nodes that belong to my subnetwork (to avoid connecting to them and forming loops)
+        filterReachableNetworks();
+
+        if(reachableNetworks.len > 0){
+            // Clear reachableNetworks before rescanning
+            for (i = 0; i < reachableNetworks.len; i++) {
+                strcpy(reachableNetworks.item[reachableNetworks.len], "");
+            }
+            reachableNetworks.len = 0;
+        }
+
+        consecutiveSearchCount ++;
+
+    }while(reachableNetworks.len == 0 && consecutiveSearchCount<=3);
+
+
+    // If the maximum number of scans is reached, transition to the Parent Restart state
+    if(consecutiveSearchCount == 3){
+        insertFirst(stateMachineEngine, eRestart);
+        return sForceRestart;
+    }
+
+
+
     return sSearch;
 }
 
@@ -630,5 +639,30 @@ void setIPs(const uint8_t * MAC){
 
     subnet[0] = 255;subnet[1] = 255;
     subnet[2] = 255;subnet[3] =0;
+}
+
+
+void filterReachableNetworks(){
+    int i, k;
+    uint8_t MAC[6],nodeIP[4];
+
+    //Remove from the reachableNetworks all nodes that belong to my subnetwork (to avoid connecting to them and forming loops)
+    LOG(NETWORK,DEBUG, "Found %i Wi-Fi networks.\n", reachableNetworks.len);
+    for (i=0; i<reachableNetworks.len; i++){
+        LOG(NETWORK,INFO,"Found SSID: %s\n", reachableNetworks.item[i]);
+        sscanf(reachableNetworks.item[i], "JessicaNode%hhu:%hhu:%hhu:%hhu:%hhu:%hhu",&MAC[0],&MAC[1],&MAC[2],&MAC[3],&MAC[4],&MAC[5]);
+        getIPFromMAC(MAC, nodeIP);
+        //Verify if the node is in my subnetwork
+        if(inMySubnet(nodeIP)){
+            LOG(NETWORK,DEBUG,"Removed ssid from list: %s\n",reachableNetworks.item[i]);
+            LOG(NETWORK,DEBUG,"NodeIP: %hhu.%hhu.%hhu.%hhu\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
+            //Remove nodes that are part of my subnetwork of the reachableNetworks List
+            for (k = i; k < reachableNetworks.len-1; k++) {
+                strcpy( reachableNetworks.item[k] , reachableNetworks.item[k+1]);
+            }
+            i = i-1;
+            reachableNetworks.len --;
+        }
+    }
 }
 
