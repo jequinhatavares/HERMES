@@ -133,7 +133,7 @@ State search(Event event){
     //Find nodes in the network
     do{
         searchAP(SSID_PREFIX);
-    }while ( reachableNetworks.len == 0 );
+    }while(reachableNetworks.len == 0 );
 
     //Remove from the reachableNetworks all nodes that belong to my subnetwork (to avoid connecting to them and forming loops)
     LOG(NETWORK,DEBUG, "Found %i Wi-Fi networks.\n", reachableNetworks.len);
@@ -253,11 +253,6 @@ State joinNetwork(Event event){
         encodeMessage(smallSendBuffer, sizeof(smallSendBuffer), CHILD_REGISTRATION_REQUEST, params);
         sendMessage(parent, smallSendBuffer);
 
-        /***startTime = getCurrentTime();
-        currentTime = startTime;
-        while(((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=3000)){
-            currentTime = getCurrentTime();
-        }***/
 
         //Wait for the parent to respond with his routing table information
         receivedFRTU = waitForMessage(FULL_ROUTING_TABLE_UPDATE,parent,3000);
@@ -507,6 +502,7 @@ State forceRestart(Event event){
     uint8_t invalidIP[4] = {0,0,0,0};
     messageParameters parameters;
     routingTableEntry me;
+
     // If the node has children, notify them that its parent (this node) is restarting.
     // This means it will no longer be their parent, and they should start searching for a new one.
     for (int i = 0; i < childrenTable->numberOfItems; ++i) {

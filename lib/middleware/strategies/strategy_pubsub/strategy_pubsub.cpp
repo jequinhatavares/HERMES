@@ -892,7 +892,7 @@ void* getContextStrategyPubSub(){
 void decodeTopic(char* dataMessage, int8_t * topicType){
     topicTypes type;
     char topicString[20];
-    sscanf(dataMessage,"%s", &topicString);
+    sscanf(dataMessage,"%s", topicString);
     if(strcmp(topicString,"TEMPERATURE") == 0){
         *topicType = TEMPERATURE;
     }else if(strcmp(topicString,"HUMIDITY") == 0){

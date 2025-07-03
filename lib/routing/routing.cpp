@@ -155,7 +155,7 @@ void printRoutingStruct(TableEntry* Table){
 }
 
 void printRoutingTableHeader(){
-    LOG(NETWORK,INFO,"========================| Routing Table |=======================\n");
+    LOG(NETWORK,INFO,"==================================| Routing Table |=================================\n");
 }
 
 void printChildStruct(TableEntry* Table){
@@ -165,7 +165,7 @@ void printChildStruct(TableEntry* Table){
 }
 
 void printChildrenTableHeader(){
-    LOG(NETWORK,INFO,"========================| Children Table |=======================\n");
+    LOG(NETWORK,INFO,"==================================| Children Table |=================================\n");
 }
 /**
  * findNode
@@ -435,10 +435,10 @@ bool isNodeReachable(uint8_t *nodeIP){
     // and its sequence number is even (indicating a current/valid state)
     return(entry->hopDistance != -1) && (entry->sequenceNumber % 2 == 0);
 }
-void getIPFromMAC(uint8_t * MAC, uint8_t * IP){
-    IP[0] = MAC[5];
-    IP[1] = MAC[4];
-    IP[2] = MAC[3];
-    IP[3] = 1;
+void getIPFromMAC(uint8_t * MAC, uint8_t * IPAddr){
+    IPAddr[0] = MAC[5];
+    IPAddr[1] = MAC[4];
+    IPAddr[2] = MAC[3];
+    IPAddr[3] = 1;
 }
 
