@@ -32,7 +32,7 @@ State idle(Event event);
 State handleMessages(Event event);
 State parentRecovery(Event event);
 State childRecovery(Event event);
-State forceRestart(Event event);
+State parentRestart(Event event);
 State executeTask(Event event);
 
 void requestTaskExecution();
@@ -41,11 +41,11 @@ void requestTaskExecution();
 #define sInit ((State) 0)
 #define sSearch ((State) 1)
 #define sJoinNetwork ((State) 2)
-#define sIdle ((State) 3)
+#define sActive ((State) 3)
 #define sHandleMessages ((State) 4)
 #define sParentRecovery ((State) 5)
 #define sChildRecovery ((State) 6)
-#define sForceRestart ((State) 7)
+#define sParentRestart ((State) 7)
 #define sExecuteTask ((State) 8)
 #define sError ((State) 9)
 

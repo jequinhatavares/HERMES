@@ -24,11 +24,11 @@ StateMachine SM_ = {
                 [sInit] = init,
                 [sSearch] = search,
                 [sJoinNetwork] = joinNetwork,
-                [sIdle] = idle,
+                [sActive] = idle,
                 [sHandleMessages] = handleMessages,
                 [sParentRecovery] = parentRecovery,
                 [sChildRecovery] = childRecovery,
-                [sForceRestart] = forceRestart,
+                [sParentRestart] = parentRestart,
                 [sExecuteTask] = executeTask,
         },
 };
@@ -114,7 +114,7 @@ State init(Event event){
         assignIP(rootIP,myIP);
         reportNewNodeToViz(myIP,invalidIP);
 
-        return sIdle;
+        return sActive;
     };
 }
 
@@ -131,10 +131,11 @@ State search(Event event){
     //Find nodes in the network
     do{
         searchAP(SSID_PREFIX);
+
+        //Remove from the reachableNetworks all nodes that belong to my subnetwork (to avoid connecting to them and forming loops)
+        filterReachableNetworks();
     }while(reachableNetworks.len == 0 );
 
-    //Remove from the reachableNetworks all nodes that belong to my subnetwork (to avoid connecting to them and forming loops)
-    filterReachableNetworks();
 
     //If the search after filtering returns a non-empty list, proceed to the choose parent state
     /***if(reachableNetworks.len > 0){
@@ -174,7 +175,7 @@ State joinNetwork(Event event){
     reachableNetworks.len = 0 ;
     LOG(NETWORK,INFO,"----------- Node successfully added to the network ------------\n");
     changeWifiMode(3);
-    return sIdle;
+    return sActive;
 }
 
 State idle(Event event){
@@ -190,12 +191,12 @@ State idle(Event event){
         return sChildRecovery;
     }else if(event == eRestart){
         insertFirst(stateMachineEngine, eRestart);
-        return sForceRestart;
+        return sParentRestart;
     }else if(event == eExecuteTask){
         insertFirst(stateMachineEngine, eExecuteTask);
         return sExecuteTask;
     }
-    return sIdle;
+    return sActive;
 }
 
 State handleMessages(Event event){
@@ -206,7 +207,7 @@ State handleMessages(Event event){
     sscanf(receiveBuffer, "%d", &messageType);
     if(!isMessageValid(messageType, receiveBuffer)){
         LOG(MESSAGES,ERROR,"Error: received message is invalid or malformed \"%s\"\n", receiveBuffer);
-        return sIdle;
+        return sActive;
     }
     switch (messageType) {
         case PARENT_DISCOVERY_REQUEST:
@@ -263,7 +264,7 @@ State handleMessages(Event event){
             break;
     }
 
-    return sIdle;
+    return sActive;
 }
 
 State parentRecovery(Event event){
@@ -272,10 +273,9 @@ State parentRecovery(Event event){
     messageParameters parameters;
     parentInfo possibleParents[10];
 
-    if(iamRoot) return sIdle;
+    if(iamRoot) return sActive;
 
     LOG(STATE_MACHINE,INFO,"Parent Recovery State\n");
-
 
     // Disconnect permanently from the current parent to stop disconnection events and enable connection to a new one
     LOG(NETWORK,INFO,"Disconnecting permanently from parent node\n");
@@ -324,7 +324,7 @@ State parentRecovery(Event event){
     // If the maximum number of scans is reached, transition to the Parent Restart state
     if(consecutiveSearchCount == 3){
         insertFirst(stateMachineEngine, eRestart);
-        return sForceRestart;
+        return sParentRestart;
     }
 
     nrOfPossibleParents = parentHandshakeProcedure(possibleParents);
@@ -333,7 +333,7 @@ State parentRecovery(Event event){
     if(nrOfPossibleParents == 0){
         LOG(NETWORK,DEBUG,"None of the parents Responded\n");
         insertLast(stateMachineEngine, eRestart);
-        return sForceRestart;
+        return sParentRestart;
     }
 
     //With all the information gathered from the potential parents, select the preferred parent
@@ -427,10 +427,10 @@ State childRecovery(Event event){
     }
 
     //insertLast(stateMachineEngine, eSearch);
-    return sIdle;
+    return sActive;
 }
 
-State forceRestart(Event event){
+State parentRestart(Event event){
     LOG(STATE_MACHINE,INFO,"Force Restart State\n");
     uint8_t *childAPIP, *childSTAIP, *nodeIP;
     uint8_t invalidIP[4] = {0,0,0,0};
@@ -477,6 +477,10 @@ State forceRestart(Event event){
     return sSearch;
 }
 
+State recoveryAwait(Event event) {
+    return sSearch;
+}
+
 State executeTask(Event event){
     messageParameters parameters;
     LOG(STATE_MACHINE,INFO,"Execute Task State\n");
@@ -491,8 +495,7 @@ State executeTask(Event event){
     encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),DATA_MESSAGE,parameters);
     if(middlewareInfluenceRoutingCallback != nullptr)middlewareInfluenceRoutingCallback(largeSendBuffer);
 
-
-    return sIdle;
+    return sActive;
 }
 void handleTimers(){
     int* MAC;
@@ -649,6 +652,12 @@ void establishParentConnection(parentInfo preferredParent){
     messageParameters params;
     bool receivedFRTU=false;
 
+    /***
+     * This function establishes a connection with the chosen parent: the node connects to the parent's Wi-Fi network,
+     * sends a CHILD_REGISTRATION_REQUEST to register as a child, then receives the parent's routing table and if the
+     * node has its own subnetwork, it sends its routing table back to the parent.
+     ***/
+
     //Connect to the preferred parent
     connectToAP(preferredParent.ssid, PASS);
 
@@ -695,6 +704,5 @@ void establishParentConnection(parentInfo preferredParent){
 
     // Callback to notify the middleware layer of successfully joining the network with a permanent connection
     if(middlewareOnNetworkEventCallback != nullptr)middlewareOnNetworkEventCallback(0,parent);
-
 
 }
