@@ -75,5 +75,6 @@ void handleTimers();
 
 void filterReachableNetworks();
 int parentHandshakeProcedure(parentInfo *possibleParents);
+void establishParentConnection(parentInfo preferredParent);
 #endif //LIFECYCLE_H
 
