@@ -303,11 +303,6 @@ State parentRecovery(Event event){
     /*** Search for other parents (reachableNetworks) until finding one or reaching the maximum number of consecutive
        * scans, after which the node releases its direct children so they can find another connection to the main tree ***/
     do{
-        searchAP(SSID_PREFIX);
-
-        //Remove from the reachableNetworks all nodes that belong to my subnetwork (to avoid connecting to them and forming loops)
-        filterReachableNetworks();
-
         if(reachableNetworks.len > 0){
             // Clear reachableNetworks before rescanning
             for (i = 0; i < reachableNetworks.len; i++) {
@@ -315,10 +310,14 @@ State parentRecovery(Event event){
             }
             reachableNetworks.len = 0;
         }
+        searchAP(SSID_PREFIX);
+
+        //Remove from the reachableNetworks all nodes that belong to my subnetwork (to avoid connecting to them and forming loops)
+        filterReachableNetworks();
 
         consecutiveSearchCount ++;
 
-    }while(reachableNetworks.len == 0 && consecutiveSearchCount<=3);
+    }while(reachableNetworks.len == 0 && consecutiveSearchCount<3);
 
 
     // If the maximum number of scans is reached, transition to the Parent Restart state
@@ -344,7 +343,7 @@ State parentRecovery(Event event){
 
     //Todo: Avisar os filhos que a conexão á árvore já está estabelecida
 
-    return sSearch;
+    return sActive;
 }
 
 
