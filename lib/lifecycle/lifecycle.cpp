@@ -477,6 +477,11 @@ State parentRestart(Event event){
 }
 
 State recoveryAwait(Event event) {
+    int packetSize;
+    bool receivedTRN=false,receivedCRN=false;
+    while(!receivedCRN || !receivedTRN){
+        packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer));
+    }
     return sSearch;
 }
 
