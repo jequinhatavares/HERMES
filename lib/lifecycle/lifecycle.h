@@ -40,7 +40,7 @@ void requestTaskExecution();
 //s before the name means state and e means event
 #define sInit ((State) 0)
 #define sSearch ((State) 1)
-#define sChooseParent ((State) 2)
+#define sJoinNetwork ((State) 2)
 #define sIdle ((State) 3)
 #define sHandleMessages ((State) 4)
 #define sParentRecovery ((State) 5)
@@ -74,5 +74,6 @@ void setIPs(const uint8_t * MAC);
 void handleTimers();
 
 void filterReachableNetworks();
+int parentHandshakeProcedure(parentInfo *possibleParents);
 #endif //LIFECYCLE_H
 

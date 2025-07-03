@@ -23,7 +23,7 @@ StateMachine SM_ = {
         .TransitionTable = {
                 [sInit] = init,
                 [sSearch] = search,
-                [sChooseParent] = joinNetwork,
+                [sJoinNetwork] = joinNetwork,
                 [sIdle] = idle,
                 [sHandleMessages] = handleMessages,
                 [sParentRecovery] = parentRecovery,
@@ -140,125 +140,84 @@ State search(Event event){
     /***if(reachableNetworks.len > 0){
         consecutiveSearchCount = 0;
         insertFirst(stateMachineEngine, eSuccess);
-        return sChooseParent;
+        return sJoinNetwork;
     }else{//If not continuing searching
         insertFirst(stateMachineEngine, eSearch);
         return sSearch;
     }***/
 
-    return sChooseParent;
+    return sJoinNetwork;
 
 }
 
 State joinNetwork(Event event){
     LOG(STATE_MACHINE,INFO,"Join Network State\n");
-    int packetSize = 0;
-    uint8_t connectedParentIP[4];
-    unsigned long currentTime, startTime;
     uint8_t mySTAIP[4];
     int nrOfPossibleParents = 0;
     messageParameters params;
-    bool receivedPIR = false, receivedFRTU=false;
+    bool receivedFRTU=false;
     parentInfo possibleParents[10];
 
-    if(reachableNetworks.len != 0){
-        //Connect to each parent to request their information in order to select the preferred parent.
-        for (int i = 0; i < reachableNetworks.len; i++) {
-            //LOG(NETWORK,DEBUG,"Before connecting to AP\n");
-            LOG(NETWORK,INFO,"Connecting to AP\n");
-            connectToAP(reachableNetworks.item[i], PASS);
-            //LOG(NETWORK,INFO,"→ Connected to Potential Parent: %s\n", getGatewayIP().toString().c_str());
-            getMySTAIP(mySTAIP);
 
-            //Send a Parent Discovery Request to the connected parent
-            params.IP1[0] = mySTAIP[0]; params.IP1[1] = mySTAIP[1]; params.IP1[2] = mySTAIP[2]; params.IP1[3] = mySTAIP[3];
-            encodeMessage(smallSendBuffer,sizeof (smallSendBuffer),PARENT_DISCOVERY_REQUEST, params);
+    nrOfPossibleParents = parentHandshakeProcedure(possibleParents);
 
-            getGatewayIP(connectedParentIP);
-            LOG(NETWORK,INFO, "Connected to parent: %hhu.%hhu.%hhu.%hhu\n",connectedParentIP[0],connectedParentIP[1],connectedParentIP[2],connectedParentIP[3]);
-            sendMessage(connectedParentIP, smallSendBuffer);
-
-            /***startTime = getCurrentTime();
-            currentTime = startTime;
-            while( ((packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer))) == 0) && ((currentTime - startTime) <=3000) ){
-                currentTime = getCurrentTime();
-            }***/
-
-            //Wait for the parent to respond with his parent information
-            receivedPIR = waitForMessage(PARENT_INFO_RESPONSE,connectedParentIP,3000);
-
-            if (receivedPIR){
-                LOG(MESSAGES,INFO,"Parent [Parent Info Response]: %s\n", receiveBuffer);
-                handleParentInfoResponse(receiveBuffer, possibleParents, nrOfPossibleParents);
-                possibleParents[nrOfPossibleParents].ssid = reachableNetworks.item[i];
-                nrOfPossibleParents ++;
-            }
-
-
-            LOG(NETWORK,INFO,"Disconnecting from AP\n");
-            disconnectFromAP();
-
-            //Set the bool value to false for the next iteration parent PIR
-            receivedPIR = false;
-        }
-
-        //If none of the parents respond return to search state
-        if(nrOfPossibleParents == 0){
-            LOG(NETWORK,DEBUG,"None of the parents Responded\n");
-            insertLast(stateMachineEngine, eSearch);
-            return sSearch;
-        }
-
-        //With all the information gathered from the potential parents, select the preferred parent
-        parentInfo preferredParent = middlewareChooseParentCallback(possibleParents,nrOfPossibleParents);
-
-        //Connect to the preferred parent
-        connectToAP(preferredParent.ssid, PASS);
-
-        LOG(NETWORK,INFO,"Selected Parent -> IP: %i.%i.%i.%i | Children: %i | RootHopDist: %i\n",preferredParent.parentIP[0], preferredParent.parentIP[1], preferredParent.parentIP[2], preferredParent.parentIP[3], preferredParent.nrOfChildren, preferredParent.rootHopDistance);
-
-        //Update parent information on global variable
-        parent[0] = preferredParent.parentIP[0]; parent[1] = preferredParent.parentIP[1];
-        parent[2] = preferredParent.parentIP[2]; parent[3] = preferredParent.parentIP[3];
-        rootHopDistance = preferredParent.rootHopDistance + 1;
-        hasParent = true;
-
-        //Send a Child Registration Request to the parent
-        getMySTAIP(mySTAIP);
-        params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
-        params.IP2[0] = mySTAIP[0]; params.IP2[1] = mySTAIP[1]; params.IP2[2] = mySTAIP[2]; params.IP2[3] = mySTAIP[3];
-        params.sequenceNumber = mySequenceNumber;
-        encodeMessage(smallSendBuffer, sizeof(smallSendBuffer), CHILD_REGISTRATION_REQUEST, params);
-        sendMessage(parent, smallSendBuffer);
-
-
-        //Wait for the parent to respond with his routing table information
-        receivedFRTU = waitForMessage(FULL_ROUTING_TABLE_UPDATE,parent,3000);
-
-        //Process the routing table update
-        if (receivedFRTU){
-            LOG(MESSAGES,INFO,"Parent [Full Routing Update] Response: %s\n", receiveBuffer);
-            if(isMessageValid(FULL_ROUTING_TABLE_UPDATE,receiveBuffer)){
-                //LOG(MESSAGES,INFO,"Full Routing Update valid: %s\n", receiveBuffer);
-                handleFullRoutingTableUpdate(receiveBuffer);
-                LOG(NETWORK,INFO,"Routing Table Updated:\n");
-                tablePrint(routingTable,printRoutingTableHeader,printRoutingStruct);
-            }
-        }else{
-            LOG(NETWORK,ERROR,"❌ ERROR: No routing table data received from parent.\n");
-        }
-
-        // If the joining node has children (i.e., his subnetwork has nodes), it must also send its routing table to its new parent.
-        // This ensures that the rest of the network becomes aware of the entire subtree associated with the new node
-        if(childrenTable->numberOfItems > 0){
-            encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),FULL_ROUTING_TABLE_UPDATE, params);
-            sendMessage(parent, largeSendBuffer);
-            lastRoutingUpdateTime = getCurrentTime();
-        }
-
-        if(middlewareOnNetworkEventCallback != nullptr)middlewareOnNetworkEventCallback(0,parent);
-
+    //If none of the parents respond return to search state
+    if(nrOfPossibleParents == 0){
+        LOG(NETWORK,DEBUG,"None of the parents Responded\n");
+        insertLast(stateMachineEngine, eSearch);
+        return sSearch;
     }
+
+    //With all the information gathered from the potential parents, select the preferred parent
+    parentInfo preferredParent = middlewareChooseParentCallback(possibleParents,nrOfPossibleParents);
+
+    //Connect to the preferred parent
+    connectToAP(preferredParent.ssid, PASS);
+
+    LOG(NETWORK,INFO,"Selected Parent -> IP: %i.%i.%i.%i | Children: %i | RootHopDist: %i\n",preferredParent.parentIP[0], preferredParent.parentIP[1], preferredParent.parentIP[2], preferredParent.parentIP[3], preferredParent.nrOfChildren, preferredParent.rootHopDistance);
+
+    //Update parent information on global variable
+    parent[0] = preferredParent.parentIP[0]; parent[1] = preferredParent.parentIP[1];
+    parent[2] = preferredParent.parentIP[2]; parent[3] = preferredParent.parentIP[3];
+    rootHopDistance = preferredParent.rootHopDistance + 1;
+    hasParent = true;
+
+    //Send a Child Registration Request to the parent
+    getMySTAIP(mySTAIP);
+    params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
+    params.IP2[0] = mySTAIP[0]; params.IP2[1] = mySTAIP[1]; params.IP2[2] = mySTAIP[2]; params.IP2[3] = mySTAIP[3];
+    params.sequenceNumber = mySequenceNumber;
+    encodeMessage(smallSendBuffer, sizeof(smallSendBuffer), CHILD_REGISTRATION_REQUEST, params);
+    sendMessage(parent, smallSendBuffer);
+
+
+    //Wait for the parent to respond with his routing table information
+    receivedFRTU = waitForMessage(FULL_ROUTING_TABLE_UPDATE,parent,3000);
+
+    //Process the routing table update
+    if (receivedFRTU){
+        LOG(MESSAGES,INFO,"Parent [Full Routing Update] Response: %s\n", receiveBuffer);
+        if(isMessageValid(FULL_ROUTING_TABLE_UPDATE,receiveBuffer)){
+            //LOG(MESSAGES,INFO,"Full Routing Update valid: %s\n", receiveBuffer);
+            handleFullRoutingTableUpdate(receiveBuffer);
+            LOG(NETWORK,INFO,"Routing Table Updated:\n");
+            tablePrint(routingTable,printRoutingTableHeader,printRoutingStruct);
+        }
+    }else{
+        LOG(NETWORK,ERROR,"❌ ERROR: No routing table data received from parent.\n");
+    }
+
+    // If the joining node has children (i.e., his subnetwork has nodes), it must also send its routing table to its new parent.
+    // This ensures that the rest of the network becomes aware of the entire subtree associated with the new node
+    if(childrenTable->numberOfItems > 0){
+        encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),FULL_ROUTING_TABLE_UPDATE, params);
+        sendMessage(parent, largeSendBuffer);
+        lastRoutingUpdateTime = getCurrentTime();
+    }
+
+    if(middlewareOnNetworkEventCallback != nullptr)middlewareOnNetworkEventCallback(0,parent);
+
+
 
     reachableNetworks.len = 0 ;
     LOG(NETWORK,INFO,"-------- Node successfully added to the network --------\n");
@@ -356,7 +315,7 @@ State handleMessages(Event event){
 }
 
 State parentRecovery(Event event){
-    int i, consecutiveSearchCount = 0;
+    int i, consecutiveSearchCount = 0, nrOfPossibleParents = 0;
     uint8_t * STAIP= nullptr;
     messageParameters parameters;
 
@@ -416,6 +375,9 @@ State parentRecovery(Event event){
         insertFirst(stateMachineEngine, eRestart);
         return sForceRestart;
     }
+
+    nrOfPossibleParents = parentHandshakeProcedure(possibleParents);
+
 
 
 
@@ -547,7 +509,6 @@ State forceRestart(Event event){
     numberOfChildren = 0;
 
     lostParent = false;
-    consecutiveSearchCount = 0;
 
     insertLast(stateMachineEngine, eSearch);
     return sSearch;
@@ -664,5 +625,58 @@ void filterReachableNetworks(){
             reachableNetworks.len --;
         }
     }
+}
+
+int parentHandshakeProcedure(parentInfo *possibleParents){
+    uint8_t connectedParentIP[4];
+    uint8_t mySTAIP[4];
+    int nrOfPossibleParents = 0;
+    messageParameters params;
+    bool receivedPIR = false;
+
+    /***
+     * The parent handshake consists of connecting to each potential parent found in the list of scanned APs
+     * and requesting its parent information using a PARENT_DISCOVERY_REQUEST. The node then waits for a
+     * PARENT_INFO_RESPONSE.
+     *
+     * This procedure also helps exclude illegal parents from the scanned list, that is, nodes that are not
+     * properly connected to the network, are partially disconnected or have exceeded the allowed number of children.
+    ***/
+
+    //Connect to each parent to request their information in order to select the preferred parent.
+    for (int i = 0; i < reachableNetworks.len; i++) {
+        //LOG(NETWORK,DEBUG,"Before connecting to AP\n");
+        LOG(NETWORK,INFO,"Connecting to AP\n");
+        connectToAP(reachableNetworks.item[i], PASS);
+        //LOG(NETWORK,INFO,"→ Connected to Potential Parent: %s\n", getGatewayIP().toString().c_str());
+        getMySTAIP(mySTAIP);
+
+        //Send a Parent Discovery Request to the connected parent
+        params.IP1[0] = mySTAIP[0]; params.IP1[1] = mySTAIP[1]; params.IP1[2] = mySTAIP[2]; params.IP1[3] = mySTAIP[3];
+        encodeMessage(smallSendBuffer,sizeof (smallSendBuffer),PARENT_DISCOVERY_REQUEST, params);
+
+        getGatewayIP(connectedParentIP);
+        LOG(NETWORK,INFO, "Connected to parent: %hhu.%hhu.%hhu.%hhu\n",connectedParentIP[0],connectedParentIP[1],connectedParentIP[2],connectedParentIP[3]);
+        sendMessage(connectedParentIP, smallSendBuffer);
+
+        //Wait for the parent to respond with his parent information
+        receivedPIR = waitForMessage(PARENT_INFO_RESPONSE,connectedParentIP,3000);
+
+        if (receivedPIR){
+            LOG(MESSAGES,INFO,"Parent [Parent Info Response]: %s\n", receiveBuffer);
+            handleParentInfoResponse(receiveBuffer, possibleParents, nrOfPossibleParents);
+            possibleParents[nrOfPossibleParents].ssid = reachableNetworks.item[i];
+            nrOfPossibleParents ++;
+        }
+
+        LOG(NETWORK,INFO,"Disconnecting from AP\n");
+        disconnectFromAP();
+
+        //Set the bool value to false for the next iteration parent PIR
+        receivedPIR = false;
+    }
+
+     return nrOfPossibleParents;
+
 }
 
