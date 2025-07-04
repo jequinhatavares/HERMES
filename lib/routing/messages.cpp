@@ -310,7 +310,7 @@ void handleChildRegistrationRequest(char * msg){
     newNode.hopDistance = 0;
     newNode.sequenceNumber = sequenceNumber;
     //updateRoutingTable(childAPIP, newNode, childAPIP);
-    updateRoutingTableSN(childAPIP,0,sequenceNumber,childAPIP);
+    updateRoutingTable(childAPIP,0,sequenceNumber,childAPIP);
 
     LOG(NETWORK,INFO, "New child connected.\n");
 
@@ -363,8 +363,8 @@ void handleFullRoutingTableUpdate(char * msg){
         //Serial.printf("Parsed IP values: nodeIP %d.%d.%d.%d nextHopIp %d.%d.%d.%d hopDistance %d\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],
                      // nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3], hopDistance);
         //Update the Routing Table
-        //updateRoutingTableSN(nodeIP,newNode,sourceIP);
-        isRoutingEntryChanged = updateRoutingTableSN(nodeIP,hopDistance,sequenceNumber,sourceIP);
+        //updateRoutingTable(nodeIP,newNode,sourceIP);
+        isRoutingEntryChanged = updateRoutingTable(nodeIP,hopDistance,sequenceNumber,sourceIP);
         // If the node's routing entry was modified, add it to the list of nodes to include in the Partial routing update
         if(isRoutingEntryChanged == true){
             assignIP(parameters.IP[nrOfChanges], nodeIP);
@@ -416,7 +416,7 @@ void handlePartialRoutingUpdate(char *msg){
         //Serial.printf("Token: %s\n", token);
 
         //Update the Routing Table
-        isRoutingEntryChanged = updateRoutingTableSN(nodeIP,hopDistance,sequenceNumber,senderIP);
+        isRoutingEntryChanged = updateRoutingTable(nodeIP,hopDistance,sequenceNumber,senderIP);
         // If the node's routing entry was modified, add it to the list of nodes to include in the Partial routing update
         if(isRoutingEntryChanged == true){
             assignIP(parameters.IP[nrOfChanges],nodeIP);
@@ -445,11 +445,17 @@ void handlePartialRoutingUpdate(char *msg){
 }
 
 void handleTopologyBreakAlert(char *msg){
-    //TODO set a variable as to my tree broken
     int type;
     uint8_t senderIP[4];
     sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu",&type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
-    // Propagate the message to my children
+    // Once reconnected, propagate a message to inform them that the tree is restored and they can transition to the active state.
+    propagateMessage(msg, senderIP);
+}
+
+void handleTopologyRestoredNotice(char *msg){
+    uint8_t senderIP[4];
+    sscanf(msg, "%*d %hhu.%hhu.%hhu.%hhu",&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
+    // Notify child nodes that the tree has been restored and they can transition to the active state.
     propagateMessage(msg, senderIP);
 }
 
