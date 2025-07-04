@@ -110,6 +110,70 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
             break;
     }
 }
+void encodeParentDiscoveryRequest(char* messageBuffer, size_t bufferSize,uint8_t *STAIP) {
+    //PARENT_DISCOVERY_REQUEST [mySTAIP]
+    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu",PARENT_DISCOVERY_REQUEST,STAIP[0],STAIP[1],STAIP[2],STAIP[3]);
+}
+
+void encodeParentInfoResponse(char* messageBuffer, size_t bufferSize,uint8_t *APIP,int hopDistance,int childrenNumber){
+    //PARENT_INFO_RESPONSE [my AP IP] [my hop distance to the root] [my number of children]
+    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %i %i",PARENT_INFO_RESPONSE,APIP[0],APIP[1],APIP[2],APIP[3],
+             hopDistance, childrenNumber);
+}
+
+void encodeChildRegistrationRequest(char* messageBuffer, size_t bufferSize,uint8_t *APIP,uint8_t *STAIP,int sequenceNumber) {
+    //CHILD_REGISTRATION_REQUEST [my AP IP] [my STA IP] [my sequence number]
+    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",CHILD_REGISTRATION_REQUEST,APIP[0],APIP[1],APIP[2],APIP[3],
+             STAIP[0],STAIP[1],STAIP[2],STAIP[3], sequenceNumber);
+}
+
+void encodeFullRoutingTableUpdate(char* messageBuffer, size_t bufferSize){
+    char tempMsg[40] = "";//35
+    //FULL_ROUTING_TABLE_UPDATE [senderIP] [rootIP] |[node1 IP] [hopDistance] [Sequence Number1]|[node2 IP] [hopDistance] [Sequence Number2]|....
+    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu |",FULL_ROUTING_TABLE_UPDATE,myIP[0],myIP[1],myIP[2],
+             myIP[3],rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
+
+    for (int i = 0; i < routingTable->numberOfItems; i++) {
+        snprintf(tempMsg,sizeof(tempMsg),"%hhu.%hhu.%hhu.%hhu %i %i|",((uint8_t *)routingTable->table[i].key)[0],
+                 ((uint8_t *)routingTable->table[i].key)[1],((uint8_t *)routingTable->table[i].key)[2],
+                 ((uint8_t *)routingTable->table[i].key)[3],((routingTableEntry *)routingTable->table[i].value)->hopDistance,
+                 ((routingTableEntry *)routingTable->table[i].value)->sequenceNumber);
+
+        strcat(messageBuffer, tempMsg);
+        strcpy(tempMsg , "");
+    }
+}
+
+void encodePartialRoutingUpdate(char* messageBuffer, size_t bufferSize,uint8_t nodeIPs[][4],int nrNodes){
+    char tempMsg[40] = "";//35
+    routingTableEntry *nodeRoutingEntry;
+
+    //PARTIAL_ROUTING_TABLE_UPDATE [senderIP] |[node1 IP] [hopDistance] [sequenceNumber]| [node2 IP] [hopDistance] [sequenceNumber] ...
+    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu |",PARTIAL_ROUTING_TABLE_UPDATE,myIP[0],myIP[1],myIP[2],myIP[3]);
+    for (int i = 0; i < nrNodes; i++){
+        nodeRoutingEntry = (routingTableEntry*)tableRead(routingTable, nodeIPs[i]);
+        if(nodeRoutingEntry != nullptr){
+            snprintf(tempMsg,sizeof(tempMsg),"%hhu.%hhu.%hhu.%hhu %i %i |",nodeIPs[i][0],nodeIPs[i][1],nodeIPs[i][2],nodeIPs[i][3],nodeRoutingEntry->hopDistance, nodeRoutingEntry->sequenceNumber);
+            strcat(messageBuffer, tempMsg);
+            strcpy(tempMsg , "");
+        }
+    }
+}
+
+void encodeTopologyBreakAlert(char* messageBuffer, size_t bufferSize){
+    //TOPOLOGY_BREAK_ALERT [senderIP]
+    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu",TOPOLOGY_BREAK_ALERT,myIP[0],myIP[1],myIP[2],myIP[3]);
+}
+
+void encodeTopologyRestoredNotice(char* messageBuffer, size_t bufferSize){
+    //TOPOLOGY_RESTORED_NOTICE [senderIP]
+    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu",TOPOLOGY_RESTORED_NOTICE,myIP[0],myIP[1],myIP[2],myIP[3]);
+}
+
+void encodeParentResetNotification(char* messageBuffer, size_t bufferSize){
+    //TOPOLOGY_RESTORED_NOTICE
+    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu",PARENT_RESET_NOTIFICATION,myIP[0],myIP[1],myIP[2],myIP[3]);
+}
 
 void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *sourceIP,uint8_t *destinationIP){
     //11 [source node IP] [destination node IP] [message payload]
@@ -117,11 +181,6 @@ void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint
              sourceIP[2],sourceIP[3],destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],payload);
 }
 
-void encodeTopologyBreakAlert(char* messageBuffer, size_t bufferSize){
-    //TOPOLOGY_BREAK_ALERT [senderIP]
-    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu",TOPOLOGY_BREAK_ALERT,myIP[0],myIP[1],
-             myIP[2],myIP[3]);
-}
 
 bool isMessageValid(int expectedMessageType,char* msg){
     int type, parsedFields=0;
