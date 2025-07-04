@@ -76,6 +76,11 @@ void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParam
             snprintf(msg,bufferSize,"%i %hhu.%hhu.%hhu.%hhu",type,myIP[0],myIP[1],myIP[2],myIP[3]);
             break;
 
+        case TOPOLOGY_RESTORED_NOTICE:
+            //7 [senderIP]
+            snprintf(msg,bufferSize,"%i %hhu.%hhu.%hhu.%hhu",type,myIP[0],myIP[1],myIP[2],myIP[3]);
+            break;
+
         case PARENT_RESET_NOTIFICATION:
             //8 [senderIP]
             snprintf(msg,bufferSize,"%i",type);
@@ -110,6 +115,12 @@ void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint
     //11 [source node IP] [destination node IP] [message payload]
     snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",DATA_MESSAGE,sourceIP[0],sourceIP[1],
              sourceIP[2],sourceIP[3],destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],payload);
+}
+
+void encodeTopologyBreakAlert(char* messageBuffer, size_t bufferSize){
+    //TOPOLOGY_BREAK_ALERT [senderIP]
+    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu",TOPOLOGY_BREAK_ALERT,myIP[0],myIP[1],
+             myIP[2],myIP[3]);
 }
 
 bool isMessageValid(int expectedMessageType,char* msg){
@@ -186,9 +197,14 @@ bool isMessageValid(int expectedMessageType,char* msg){
             break;
         }
         case TOPOLOGY_BREAK_ALERT: {
-            /***int IP[4];
-            return (sscanf(msg, "%d %d.%d.%d.%d", &type, &IP[0], &IP[1], &IP[2], &IP[3]) == 5);***/
-            return true;
+            /******/int IP[4];
+            return (sscanf(msg, "%d %d.%d.%d.%d", &type, &IP[0], &IP[1], &IP[2], &IP[3]) == 5);
+            break;
+        }
+
+        case TOPOLOGY_RESTORED_NOTICE: {
+            /******/int IP[4];
+            return (sscanf(msg, "%d %d.%d.%d.%d", &type, &IP[0], &IP[1], &IP[2], &IP[3]) == 5);
             break;
         }
         case PARENT_RESET_NOTIFICATION:
