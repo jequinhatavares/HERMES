@@ -262,6 +262,9 @@ State handleMessages(Event event){
             LOG(MESSAGES,INFO,"Received [Middleware] message: \"%s\"\n", receiveBuffer);
             if(middlewareHandleMessageCallback != nullptr)middlewareHandleMessageCallback(receiveBuffer, sizeof(receiveBuffer));
             break;
+
+        default:
+            break;
     }
 
     return sActive;
@@ -478,11 +481,69 @@ State parentRestart(Event event){
 
 State recoveryAwait(Event event) {
     int packetSize;
-    bool receivedTRN=false,receivedCRN=false;
-    while(!receivedCRN || !receivedTRN){
+    unsigned long currentTime = getCurrentTime();
+    messageType messageType;
+    bool receivedTRN=false,receivedPRN=false;
+    messageParameters parameters;
+
+    while(!receivedPRN && !receivedTRN){
         packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer));
+        if (packetSize > 0){
+            sscanf(receiveBuffer, "%d", &messageType);
+            if(!isMessageValid(messageType, receiveBuffer)){
+                LOG(MESSAGES,ERROR,"Error: received message is invalid or malformed \"%s\"\n", receiveBuffer);
+                continue;
+            }
+            switch (messageType) {
+                case FULL_ROUTING_TABLE_UPDATE:
+                    LOG(MESSAGES,INFO,"Received [Full Routing Update] message: \"%s\"\n", receiveBuffer);
+                    handleFullRoutingTableUpdate(receiveBuffer);
+                    break;
+
+                case PARTIAL_ROUTING_TABLE_UPDATE:
+                    LOG(MESSAGES,INFO,"Received [Partial Routing Update] message: \"%s\"\n", receiveBuffer);
+                    handlePartialRoutingUpdate(receiveBuffer);
+                    break;
+
+                case TOPOLOGY_BREAK_ALERT:
+                    LOG(MESSAGES,INFO,"Received [Topology Break Alert] message: \"%s\"\n", receiveBuffer);
+                    handleTopologyBreakAlert(receiveBuffer);
+                    break;
+
+                case TOPOLOGY_RESTORED_NOTICE:
+                    LOG(MESSAGES,INFO,"Received [Topology Restored Notice] message: \"%s\"\n", receiveBuffer);
+                    receivedTRN = true;
+                    insertLast(stateMachineEngine, eLostParentConnection);
+                    break;
+
+                case PARENT_RESET_NOTIFICATION:
+                    LOG(MESSAGES,INFO,"Received [Parent Reset Notification] message: \"%s\"\n", receiveBuffer);
+                    //handleParentResetNotification(receiveBuffer);
+                    receivedPRN = true;
+                    insertLast(stateMachineEngine, eLostParentConnection);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        // Continue sending periodic routing updates, but indicate that the node is currently disconnected from the main tree.
+        if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
+            LOG(NETWORK,INFO,"Sending a Periodic Routing Update to my Neighbors\n");
+            mySequenceNumber = mySequenceNumber + 2;
+            //Update my sequence number
+            updateMySequenceNumber(mySequenceNumber);
+            encodeMessage(largeSendBuffer, sizeof(largeSendBuffer),FULL_ROUTING_TABLE_UPDATE,parameters);
+            propagateMessage(largeSendBuffer,myIP);
+            lastRoutingUpdateTime = currentTime;
+        }
     }
-    return sSearch;
+
+    if(receivedPRN) return sParentRecovery;
+    if(receivedTRN) return sActive;
+
+    return sActive;
 }
 
 State executeTask(Event event){
@@ -515,10 +576,10 @@ void handleTimers(){
         }
     }
     if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
-        LOG(NETWORK,INFO,"Sending a Periodic Update to my Neighbors\n");
+        LOG(NETWORK,INFO,"Sending a Periodic Routing Update to my Neighbors\n");
         mySequenceNumber = mySequenceNumber + 2;
-        updateMySequenceNumber(mySequenceNumber);
         //Update my sequence number
+        updateMySequenceNumber(mySequenceNumber);
         encodeMessage(largeSendBuffer, sizeof(largeSendBuffer),FULL_ROUTING_TABLE_UPDATE,parameters);
         propagateMessage(largeSendBuffer,myIP);
         lastRoutingUpdateTime = currentTime;

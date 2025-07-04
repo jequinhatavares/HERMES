@@ -51,7 +51,7 @@ void printChildrenTableHeader();
 
 void* findNode(TableInfo* Table, uint8_t nodeIP[4]);
 uint8_t * findRouteToNode(uint8_t nodeIP[4]);
-bool updateRoutingTableSN(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, uint8_t senderIP[4]);
+bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, uint8_t senderIP[4]);
 void updateChildrenTable(uint8_t APIP[4], uint8_t STAIP[4]);
 parentInfo chooseParent(parentInfo* possibleParents, int n);
 bool inMySubnet(uint8_t * nodeIP);

@@ -218,6 +218,7 @@ uint8_t* findRouteToNode(uint8_t nodeIP[4]){
     //Serial.printf("other option\n");
     return entry->nextHopIP;
 }
+
 /**
  * updateRoutingTable
  * Adds or updates an entry in the routing table for a given node.
@@ -226,7 +227,7 @@ uint8_t* findRouteToNode(uint8_t nodeIP[4]){
  * @param newNode - A struct containing the next-hop IP address and the hop distance to the node.
  * @return (void)
  **/
-bool updateRoutingTableSN(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, uint8_t senderIP[4]){
+bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, uint8_t senderIP[4]){
     routingTableEntry updatedEntry;
     routingTableEntry *nodeEntry = (routingTableEntry*) findNode(routingTable, nodeIP);
 
@@ -292,6 +293,18 @@ void updateChildrenTable(uint8_t APIP[4], uint8_t STAIP[4]){
         tableUpdate(childrenTable, APIP, STAIP);
     }
 }
+
+/***void routingOnTimer(unsigned long currentTime ){
+    if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
+        LOG(NETWORK,INFO,"Sending a Periodic Routing Update to my Neighbors\n");
+        mySequenceNumber = mySequenceNumber + 2;
+        //Update my sequence number
+        updateMySequenceNumber(mySequenceNumber);
+        encodeMessage(largeSendBuffer, sizeof(largeSendBuffer),FULL_ROUTING_TABLE_UPDATE,parameters);
+        propagateMessage(largeSendBuffer,myIP);
+        lastRoutingUpdateTime = currentTime;
+    }
+}****/
 
 /**
  * chooseParent
