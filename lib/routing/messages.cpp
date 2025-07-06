@@ -778,6 +778,18 @@ void sendMessageToNode(char* messageBuffer,uint8_t *destinationIP){
     }
 }
 
+void sendMessageToChildren(char* messageBuffer){
+    uint8_t *childSTAIP;
+    for (int i = 0; i < childrenTable->numberOfItems; i++) {
+        // When broadcasting a message to all children, we can directly use as the nextHopIp the child's STA IP from the childrenTable.
+        childSTAIP = (uint8_t *)tableValueAtIndex(childrenTable,i);
+        if(childSTAIP != nullptr){
+            sendMessage(childSTAIP,messageBuffer);
+        }
+    }
+
+}
+
 
 void sendDataMessageToNode(char* messageBuffer,uint8_t *senderIP,uint8_t *destinationIP){
     //encodeDataMessage(la,messageBuffer);

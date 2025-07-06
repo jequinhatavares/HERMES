@@ -52,6 +52,16 @@ extern char smallSendBuffer[50];
 
 
 void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParameters parameters);
+
+void encodeParentInfoResponse(char* messageBuffer, size_t bufferSize,uint8_t *APIP,int hopDistance,int childrenNumber);
+void encodeChildRegistrationRequest(char* messageBuffer, size_t bufferSize,uint8_t *APIP,uint8_t *STAIP,int sequenceNumber);
+void encodeFullRoutingTableUpdate(char* messageBuffer, size_t bufferSize);
+void encodePartialRoutingUpdate(char* messageBuffer, size_t bufferSize,uint8_t nodeIPs[][4],int nrNodes);
+void encodeTopologyBreakAlert(char* messageBuffer, size_t bufferSize);
+void encodeTopologyRestoredNotice(char* messageBuffer, size_t bufferSize);
+void encodeParentResetNotification(char* messageBuffer, size_t bufferSize);
+void encodeParentDiscoveryRequest(char* messageBuffer, size_t bufferSize,uint8_t *STAIP);
+
 void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *sourceIP,uint8_t *destinationIP);
 
 bool isMessageValid(int expectedMessageType,char* msg);
@@ -77,5 +87,6 @@ void getSenderIP(char* messageBuffer, messageType type, uint8_t * senderIP);
 
 void sendMessageToNode(char* messageBuffer,uint8_t *destinationIP);
 void sendDataMessageToNode(char* messageBuffer,uint8_t *senderIP,uint8_t *destinationIP);
+void sendMessageToChildren(char* messageBuffer);
 
 #endif //MESSAGES_H

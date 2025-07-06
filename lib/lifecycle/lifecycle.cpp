@@ -235,6 +235,7 @@ State handleMessages(Event event){
         case TOPOLOGY_BREAK_ALERT:
             LOG(MESSAGES,INFO,"Received [Topology Break Alert] message: \"%s\"\n", receiveBuffer);
             handleTopologyBreakAlert(receiveBuffer);
+            //TODO transition to recovery wait
             break;
 
         case PARENT_RESET_NOTIFICATION:
@@ -242,7 +243,6 @@ State handleMessages(Event event){
             handleParentResetNotification(receiveBuffer);
             insertLast(stateMachineEngine, eLostParentConnection);
             break;
-
 
         case DEBUG_MESSAGE:
             handleDebugMessage(receiveBuffer);
@@ -324,7 +324,7 @@ State parentRecovery(Event event){
 
 
     // If the maximum number of scans is reached, transition to the Parent Restart state
-    if(consecutiveSearchCount == 3){
+    if(consecutiveSearchCount == MAX_PARENT_SEARCH_ATTEMPTS){
         insertFirst(stateMachineEngine, eRestart);
         return sParentRestart;
     }
@@ -344,7 +344,9 @@ State parentRecovery(Event event){
     // Connect to the chosen parent, send CHILD_REGISTRATION_REQUEST, and receive their routing table
     establishParentConnection(preferredParent);
 
-    //Todo: Avisar os filhos que a conexão á árvore já está estabelecida
+    // Notify the children that the main tree connection has been reestablished
+    encodeTopologyRestoredNotice(smallSendBuffer, sizeof(smallSendBuffer));
+    sendMessageToChildren(smallSendBuffer);
 
     return sActive;
 }
@@ -570,7 +572,7 @@ void handleTimers(){
     for (int i = 0; i < lostChildrenTable->numberOfItems; i++) {
         MAC = (int*) tableKey(lostChildrenTable, i);
         childConnectionStatus *status = (childConnectionStatus*)tableRead(lostChildrenTable, MAC);
-        if(currentTime - status->childDisconnectionTime >= 3000){
+        if(currentTime - status->childDisconnectionTime >= CHILD_RECONNECT_TIMEOUT){
             status->childTimedOut = true;
             insertLast(stateMachineEngine, eLostChildConnection);
         }
