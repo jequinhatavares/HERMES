@@ -46,6 +46,7 @@ void setup(){
     enableModule(DEBUG_SERVER);
     enableModule(CLI);
     enableModule(MIDDLEWARE);
+    enableModule(APP);
 
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
@@ -122,7 +123,6 @@ void setup(){
 
 void loop(){
     int packetSize;
-
     //Wait for incoming requests
     packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer));
     if (packetSize > 0){
@@ -133,6 +133,7 @@ void loop(){
 
     }
 
+    // Handle all timers: routing periodic updates, child disconnection timeouts, middleware timer callbacks and any application-level periodic tasks
     handleTimers();
 
     if(stateMachineEngine->size != 0){
@@ -176,6 +177,8 @@ void setup(){
     enableModule(DEBUG_SERVER);
     enableModule(CLI);
     enableModule(MIDDLEWARE);
+    enableModule(APP);
+    
 
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;

@@ -231,9 +231,7 @@ bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, 
     routingTableEntry updatedEntry;
     routingTableEntry *nodeEntry = (routingTableEntry*) findNode(routingTable, nodeIP);
 
-    //LOG(NETWORK,DEBUG,"NodeIP: %i.%i.%i.%i\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
-    //Serial.printf("NodeIP\n");//Isto não deu erro
-    //Serial.printf("In routing Update NodeIP: %i.%i.%i.%i\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);//Isto não deu erro
+
     if( nodeEntry == nullptr){ // If the node is not in the table add it
         // Check the parity of the sequence number. If it's odd (indicating a issue with the node),
         // retain the advertised distance as -1 instead of incrementing it.
@@ -263,7 +261,7 @@ bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, 
             return true;
         }
         else if(sequenceNumber == nodeEntry->sequenceNumber){
-            //If the new path has a lower cost update the routing with the new information containing the shorter pathh
+            //If the new path has a lower cost update the routing with the new information containing the shorter path
             if(hopDistance + 1 < nodeEntry->hopDistance){
                 //LOG(NETWORK,DEBUG,"lowerHop Count\n");
                 assignIP(updatedEntry.nextHopIP ,senderIP);
