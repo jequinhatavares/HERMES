@@ -178,7 +178,7 @@ void setup(){
     enableModule(CLI);
     enableModule(MIDDLEWARE);
     enableModule(APP);
-    
+
 
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;

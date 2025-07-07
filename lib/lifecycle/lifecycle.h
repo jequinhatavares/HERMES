@@ -18,6 +18,12 @@
 #define PASS     		        "123456789"
 #define APPLICATION_PROCESSING_INTERVAL 120000
 
+#define CHILD_RECONNECT_TIMEOUT 3000
+
+#define MAIN_TREE_RECONNECT_TIMEOUT 3000
+
+#define MAX_PARENT_SEARCH_ATTEMPTS 3
+
 extern void (*middlewareOnTimerCallback)();
 extern void (*middlewareHandleMessageCallback)(char*,size_t);
 extern void (*middlewareInfluenceRoutingCallback)(char*);
@@ -28,7 +34,7 @@ extern parentInfo (*middlewareChooseParentCallback)(parentInfo *,int);
 State init(Event event);
 State search(Event event);
 State joinNetwork(Event event);
-State idle(Event event);
+State active(Event event);
 State handleMessages(Event event);
 State parentRecovery(Event event);
 State childRecovery(Event event);
@@ -67,7 +73,6 @@ extern uint8_t gateway[4];
 extern uint8_t subnet[4];
 extern uint8_t dns[4];
 
-extern bool lostParent;
 
 void parseMAC(const char* macStr, int* macArray);
 void setIPs(const uint8_t * MAC);

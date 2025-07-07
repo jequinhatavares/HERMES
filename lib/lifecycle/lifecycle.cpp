@@ -495,54 +495,36 @@ State recoveryAwait(Event event) {
     messageParameters parameters;
 
     if (event == eMessage){
-
-    }
-    while(!receivedPRN && !receivedTRN && (currentTime-startTime)>=MAIN_TREE_RECONNECT_TIMEOUT){
-        packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer));
-        if (packetSize > 0){
-            sscanf(receiveBuffer, "%d", &messageType);
-            if(!isMessageValid(messageType, receiveBuffer)){
-                LOG(MESSAGES,ERROR,"Error: received message is invalid or malformed \"%s\"\n", receiveBuffer);
-                continue;
-            }
-            switch (messageType) {
-                case TOPOLOGY_BREAK_ALERT:
-                    LOG(MESSAGES,INFO,"Received [Topology Break Alert] message: \"%s\"\n", receiveBuffer);
-                    handleTopologyBreakAlert(receiveBuffer);
-                    startTime = getCurrentTime();
-                    break;
-
-                case TOPOLOGY_RESTORED_NOTICE:
-                    LOG(MESSAGES,INFO,"Received [Topology Restored Notice] message: \"%s\"\n", receiveBuffer);
-                    receivedTRN = true;
-                    connectedToMainTree = true;
-                    //insertLast(stateMachineEngine, eLostParentConnection);
-                    break;
-
-                case PARENT_RESET_NOTIFICATION:
-                    LOG(MESSAGES,INFO,"Received [Parent Reset Notification] message: \"%s\"\n", receiveBuffer);
-                    //handleParentResetNotification(receiveBuffer);
-                    receivedPRN = true;
-                    insertLast(stateMachineEngine, eLostParentConnection);
-                    break;
-
-                default:
-                    break;
-            }
+        sscanf(receiveBuffer, "%d", &messageType);
+        if(!isMessageValid(messageType, receiveBuffer)){
+            LOG(MESSAGES,ERROR,"Error: received message is invalid or malformed \"%s\"\n", receiveBuffer);
+            //return sRecoveryAwait;
         }
 
-        // Continue sending periodic routing updates, but indicate that the node is currently disconnected from the main tree.
-        if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
-            LOG(NETWORK,INFO,"Sending a Periodic Routing Update to my Neighbors\n");
-            mySequenceNumber = mySequenceNumber + 2;
-            //Update my sequence number
-            updateMySequenceNumber(mySequenceNumber);
-            encodeMessage(largeSendBuffer, sizeof(largeSendBuffer),FULL_ROUTING_TABLE_UPDATE,parameters);
-            propagateMessage(largeSendBuffer,myIP);
-            lastRoutingUpdateTime = currentTime;
-        }
+        switch (messageType){
+            case TOPOLOGY_BREAK_ALERT:
+                LOG(MESSAGES,INFO,"Received [Topology Break Alert] message: \"%s\"\n", receiveBuffer);
+                handleTopologyBreakAlert(receiveBuffer);
+                startTime = getCurrentTime();
+                break;
 
-        currentTime = getCurrentTime();
+            case TOPOLOGY_RESTORED_NOTICE:
+                LOG(MESSAGES,INFO,"Received [Topology Restored Notice] message: \"%s\"\n", receiveBuffer);
+                receivedTRN = true;
+                connectedToMainTree = true;
+                //insertLast(stateMachineEngine, eLostParentConnection);
+                break;
+
+            case PARENT_RESET_NOTIFICATION:
+                LOG(MESSAGES,INFO,"Received [Parent Reset Notification] message: \"%s\"\n", receiveBuffer);
+                //handleParentResetNotification(receiveBuffer);
+                receivedPRN = true;
+                insertLast(stateMachineEngine, eLostParentConnection);
+                break;
+
+            default:
+                break;
+        }
     }
 
     if(receivedPRN) return sParentRecovery;
@@ -594,8 +576,10 @@ void handleTimers(){
         lastRoutingUpdateTime = currentTime;
     }
 
+    // Handle middleware related periodic events
     if(middlewareOnTimerCallback != nullptr && connectedToMainTree)middlewareOnTimerCallback();
 
+    // Handle APP related periodic events
     if((currentTime-lastApplicationProcessingTime) >=APPLICATION_PROCESSING_INTERVAL && connectedToMainTree){
         requestTaskExecution();
         lastApplicationProcessingTime = currentTime;
