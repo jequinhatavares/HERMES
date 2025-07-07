@@ -39,6 +39,7 @@ State handleMessages(Event event);
 State parentRecovery(Event event);
 State childRecovery(Event event);
 State parentRestart(Event event);
+State recoveryAwait(Event event);
 State executeTask(Event event);
 
 void requestTaskExecution();
@@ -52,8 +53,9 @@ void requestTaskExecution();
 #define sParentRecovery ((State) 5)
 #define sChildRecovery ((State) 6)
 #define sParentRestart ((State) 7)
-#define sExecuteTask ((State) 8)
-#define sError ((State) 9)
+#define sRecoveryWait ((State) 8)
+#define sExecuteTask ((State) 9)
+#define sError ((State) 10)
 
 #define eSuccess ((Event) 0)
 #define eSearch ((Event) 1)

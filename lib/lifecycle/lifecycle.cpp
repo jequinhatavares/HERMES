@@ -9,6 +9,8 @@ bool connectedToMainTree = false;
 
 unsigned long lastApplicationProcessingTime = 0;
 
+unsigned long recoveryWaitStartTime  = 0;
+
 void (*middlewareOnTimerCallback)() = nullptr;
 void (*middlewareHandleMessageCallback)(char*,size_t) = nullptr;
 void (*middlewareInfluenceRoutingCallback)(char*) = nullptr;
@@ -29,6 +31,7 @@ StateMachine SM_ = {
                 [sParentRecovery] = parentRecovery,
                 [sChildRecovery] = childRecovery,
                 [sParentRestart] = parentRestart,
+                [sRecoveryWait] = recoveryAwait,
                 [sExecuteTask] = executeTask,
         },
 };
@@ -488,8 +491,6 @@ State parentRestart(Event event){
 }
 
 State recoveryAwait(Event event) {
-    int packetSize;
-    unsigned long currentTime = getCurrentTime(),startTime=currentTime;
     messageType messageType;
     bool receivedTRN=false,receivedPRN=false;
     messageParameters parameters;
@@ -498,21 +499,20 @@ State recoveryAwait(Event event) {
         sscanf(receiveBuffer, "%d", &messageType);
         if(!isMessageValid(messageType, receiveBuffer)){
             LOG(MESSAGES,ERROR,"Error: received message is invalid or malformed \"%s\"\n", receiveBuffer);
-            //return sRecoveryAwait;
+            return sRecoveryWait;
         }
 
-        switch (messageType){
+        switch(messageType){
             case TOPOLOGY_BREAK_ALERT:
                 LOG(MESSAGES,INFO,"Received [Topology Break Alert] message: \"%s\"\n", receiveBuffer);
                 handleTopologyBreakAlert(receiveBuffer);
-                startTime = getCurrentTime();
                 break;
 
             case TOPOLOGY_RESTORED_NOTICE:
                 LOG(MESSAGES,INFO,"Received [Topology Restored Notice] message: \"%s\"\n", receiveBuffer);
                 receivedTRN = true;
                 connectedToMainTree = true;
-                //insertLast(stateMachineEngine, eLostParentConnection);
+                return sActive;
                 break;
 
             case PARENT_RESET_NOTIFICATION:
@@ -520,18 +520,24 @@ State recoveryAwait(Event event) {
                 //handleParentResetNotification(receiveBuffer);
                 receivedPRN = true;
                 insertLast(stateMachineEngine, eLostParentConnection);
+                return sParentRecovery;
                 break;
 
+            /*** Reject all other message types (e.g., PARENT_DISCOVERY_REQUEST, CHILD_REGISTRATION_REQUEST,
+                ROUTING_TABLE_UPDATE, DATA_MESSAGE, etc.) since the node is not in an active state. ***/
             default:
                 break;
+
         }
+    }else if(event == eLostChildConnection){
+        //Todo call the function of the lost child
+    }else if (event ==eLostParentConnection){
+        return sParentRecovery;
     }
 
-    if(receivedPRN) return sParentRecovery;
-    if(receivedTRN) return sActive;
-    if(currentTime-startTime>=MAIN_TREE_RECONNECT_TIMEOUT)return sParentRestart;
+    //if(currentTime-startTime>=MAIN_TREE_RECONNECT_TIMEOUT)return sParentRestart;
 
-    return sActive;
+    return sRecoveryWait;
 }
 
 State executeTask(Event event){
@@ -583,6 +589,11 @@ void handleTimers(){
     if((currentTime-lastApplicationProcessingTime) >=APPLICATION_PROCESSING_INTERVAL && connectedToMainTree){
         requestTaskExecution();
         lastApplicationProcessingTime = currentTime;
+    }
+
+    // Handle the timeout for the recovery wait state (i.e., the node has been waiting too long for the tree to reconnect to the main root).
+    if(currentTime-recoveryWaitStartTime>=MAIN_TREE_RECONNECT_TIMEOUT && SM->current_state == sRecoveryWait){
+
     }
 }
 void requestTaskExecution(){
