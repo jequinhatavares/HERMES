@@ -5,7 +5,7 @@ uint8_t gateway[4];
 uint8_t subnet[4];
 uint8_t dns[4];
 
-bool lostParent = false;
+bool connectedToMainTree = false;
 
 unsigned long lastApplicationProcessingTime = 0;
 
@@ -24,7 +24,7 @@ StateMachine SM_ = {
                 [sInit] = init,
                 [sSearch] = search,
                 [sJoinNetwork] = joinNetwork,
-                [sActive] = idle,
+                [sActive] = active,
                 [sHandleMessages] = handleMessages,
                 [sParentRecovery] = parentRecovery,
                 [sChildRecovery] = childRecovery,
@@ -49,6 +49,7 @@ CircularBuffer* stateMachineEngine = &cb_;
 void onParentDisconnect(){
     LOG(NETWORK, DEBUG,"onParentDisconnect callback!\n");
     insertLast(stateMachineEngine, eLostParentConnection);
+    connectedToMainTree = false;
 }
 bool isChildRegistered(uint8_t * MAC){
     uint8_t nodeIP[4];
@@ -131,7 +132,6 @@ State search(Event event){
     //Find nodes in the network
     do{
         searchAP(SSID_PREFIX);
-
         //Remove from the reachableNetworks all nodes that belong to my subnetwork (to avoid connecting to them and forming loops)
         filterReachableNetworks();
     }while(reachableNetworks.len == 0 );
@@ -174,12 +174,15 @@ State joinNetwork(Event event){
 
     reachableNetworks.len = 0 ;
     LOG(NETWORK,INFO,"----------- Node successfully added to the network ------------\n");
+    connectedToMainTree = true;
     changeWifiMode(3);
     return sActive;
 }
 
-State idle(Event event){
+State active(Event event){
     LOG(STATE_MACHINE,INFO,"Active State\n");
+
+
     if (event == eMessage){
         insertFirst(stateMachineEngine, eMessage);
         return sHandleMessages;
@@ -196,6 +199,8 @@ State idle(Event event){
         insertFirst(stateMachineEngine, eExecuteTask);
         return sExecuteTask;
     }
+
+    //insertFirst(stateMachineEngine, eSuccess);
     return sActive;
 }
 
@@ -234,6 +239,7 @@ State handleMessages(Event event){
 
         case TOPOLOGY_BREAK_ALERT:
             LOG(MESSAGES,INFO,"Received [Topology Break Alert] message: \"%s\"\n", receiveBuffer);
+            connectedToMainTree = false;
             handleTopologyBreakAlert(receiveBuffer);
             //TODO transition to recovery wait
             break;
@@ -278,6 +284,8 @@ State parentRecovery(Event event){
 
     if(iamRoot) return sActive;
 
+    //connectedToMainTree = false;
+
     LOG(STATE_MACHINE,INFO,"Parent Recovery State\n");
 
     // Disconnect permanently from the current parent to stop disconnection events and enable connection to a new one
@@ -301,7 +309,6 @@ State parentRecovery(Event event){
     mySequenceNumber = mySequenceNumber + 2;
     updateMySequenceNumber(mySequenceNumber);
 
-    lostParent = true;
 
     /*** Search for other parents (reachableNetworks) until finding one or reaching the maximum number of consecutive
        * scans, after which the node releases its direct children so they can find another connection to the main tree ***/
@@ -324,7 +331,7 @@ State parentRecovery(Event event){
 
 
     // If the maximum number of scans is reached, transition to the Parent Restart state
-    if(consecutiveSearchCount == MAX_PARENT_SEARCH_ATTEMPTS){
+    if(consecutiveSearchCount == MAX_PARENT_SEARCH_ATTEMPTS && reachableNetworks.len == 0){
         insertFirst(stateMachineEngine, eRestart);
         return sParentRestart;
     }
@@ -475,7 +482,6 @@ State parentRestart(Event event){
     rootHopDistance = -1;
     numberOfChildren = 0;
 
-    lostParent = false;
 
     insertLast(stateMachineEngine, eSearch);
     return sSearch;
@@ -483,12 +489,15 @@ State parentRestart(Event event){
 
 State recoveryAwait(Event event) {
     int packetSize;
-    unsigned long currentTime = getCurrentTime();
+    unsigned long currentTime = getCurrentTime(),startTime=currentTime;
     messageType messageType;
     bool receivedTRN=false,receivedPRN=false;
     messageParameters parameters;
 
-    while(!receivedPRN && !receivedTRN){
+    if (event == eMessage){
+
+    }
+    while(!receivedPRN && !receivedTRN && (currentTime-startTime)>=MAIN_TREE_RECONNECT_TIMEOUT){
         packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer));
         if (packetSize > 0){
             sscanf(receiveBuffer, "%d", &messageType);
@@ -497,25 +506,17 @@ State recoveryAwait(Event event) {
                 continue;
             }
             switch (messageType) {
-                case FULL_ROUTING_TABLE_UPDATE:
-                    LOG(MESSAGES,INFO,"Received [Full Routing Update] message: \"%s\"\n", receiveBuffer);
-                    handleFullRoutingTableUpdate(receiveBuffer);
-                    break;
-
-                case PARTIAL_ROUTING_TABLE_UPDATE:
-                    LOG(MESSAGES,INFO,"Received [Partial Routing Update] message: \"%s\"\n", receiveBuffer);
-                    handlePartialRoutingUpdate(receiveBuffer);
-                    break;
-
                 case TOPOLOGY_BREAK_ALERT:
                     LOG(MESSAGES,INFO,"Received [Topology Break Alert] message: \"%s\"\n", receiveBuffer);
                     handleTopologyBreakAlert(receiveBuffer);
+                    startTime = getCurrentTime();
                     break;
 
                 case TOPOLOGY_RESTORED_NOTICE:
                     LOG(MESSAGES,INFO,"Received [Topology Restored Notice] message: \"%s\"\n", receiveBuffer);
                     receivedTRN = true;
-                    insertLast(stateMachineEngine, eLostParentConnection);
+                    connectedToMainTree = true;
+                    //insertLast(stateMachineEngine, eLostParentConnection);
                     break;
 
                 case PARENT_RESET_NOTIFICATION:
@@ -540,10 +541,13 @@ State recoveryAwait(Event event) {
             propagateMessage(largeSendBuffer,myIP);
             lastRoutingUpdateTime = currentTime;
         }
+
+        currentTime = getCurrentTime();
     }
 
     if(receivedPRN) return sParentRecovery;
     if(receivedTRN) return sActive;
+    if(currentTime-startTime>=MAIN_TREE_RECONNECT_TIMEOUT)return sParentRestart;
 
     return sActive;
 }
@@ -577,7 +581,10 @@ void handleTimers(){
             insertLast(stateMachineEngine, eLostChildConnection);
         }
     }
-    if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
+
+    // Periodically send routing updates to neighbors, but only if connected to the main tree
+    // (i.e., the node has an uplink connection that ultimately leads to the root).
+    if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL && connectedToMainTree){
         LOG(NETWORK,INFO,"Sending a Periodic Routing Update to my Neighbors\n");
         mySequenceNumber = mySequenceNumber + 2;
         //Update my sequence number
@@ -587,9 +594,9 @@ void handleTimers(){
         lastRoutingUpdateTime = currentTime;
     }
 
-    if(middlewareOnTimerCallback != nullptr)middlewareOnTimerCallback();
+    if(middlewareOnTimerCallback != nullptr && connectedToMainTree)middlewareOnTimerCallback();
 
-    if( (currentTime-lastApplicationProcessingTime) >=APPLICATION_PROCESSING_INTERVAL){
+    if((currentTime-lastApplicationProcessingTime) >=APPLICATION_PROCESSING_INTERVAL && connectedToMainTree){
         requestTaskExecution();
         lastApplicationProcessingTime = currentTime;
     }
