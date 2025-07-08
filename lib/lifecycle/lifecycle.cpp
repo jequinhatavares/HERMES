@@ -177,7 +177,7 @@ State joinNetwork(Event event){
     establishParentConnection(preferredParent);
 
     reachableNetworks.len = 0 ;
-    LOG(NETWORK,INFO,"----------- Node successfully added to the network ------------\n");
+    LOG(NETWORK,INFO,"------------------ Node successfully added to the network -------------------\n");
     connectedToMainTree = true;
     changeWifiMode(3);
     return sActive;
@@ -250,6 +250,7 @@ State handleMessages(Event event){
             handleTopologyBreakAlert(receiveBuffer);
             connectedToMainTree = false;
             recoveryWaitStartTime = getCurrentTime();
+            //LOG(NETWORK,INFO,"In Handle recoveryWaitStartTime:%lu\n",recoveryWaitStartTime);
             insertLast(stateMachineEngine, eLostTreeConnection);
             break;
 
@@ -360,6 +361,9 @@ State parentRecovery(Event event){
     // Connect to the chosen parent, send CHILD_REGISTRATION_REQUEST, and receive their routing table
     establishParentConnection(preferredParent);
 
+    // Set the flag to true to indicate that the node is connected to the main tree
+    connectedToMainTree = true;
+
     // Notify the children that the main tree connection has been reestablished
     encodeTopologyRestoredNotice(smallSendBuffer, sizeof(smallSendBuffer));
     sendMessageToChildren(smallSendBuffer);
@@ -415,10 +419,7 @@ State parentRestart(Event event){
 
 State recoveryAwait(Event event) {
     LOG(STATE_MACHINE,INFO,"Recovery Await State\n");
-
     messageType messageType;
-    bool receivedTRN=false,receivedPRN=false;
-    messageParameters parameters;
 
     if (event == eMessage){
         sscanf(receiveBuffer, "%d", &messageType);
@@ -437,7 +438,6 @@ State recoveryAwait(Event event) {
 
             case TOPOLOGY_RESTORED_NOTICE:
                 LOG(MESSAGES,INFO,"Received [Topology Restored Notice] message: \"%s\"\n", receiveBuffer);
-                receivedTRN = true;
                 connectedToMainTree = true;
                 return sActive;
                 break;
@@ -445,7 +445,6 @@ State recoveryAwait(Event event) {
             case PARENT_RESET_NOTIFICATION:
                 LOG(MESSAGES,INFO,"Received [Parent Reset Notification] message: \"%s\"\n", receiveBuffer);
                 //handleParentResetNotification(receiveBuffer);
-                receivedPRN = true;
                 insertLast(stateMachineEngine, eLostParentConnection);
                 return sParentRecovery;
                 break;
@@ -522,7 +521,9 @@ void handleTimers(){
     }
 
     // Handle the timeout for the recovery wait state (i.e., the node has been waiting too long for the tree to reconnect to the main root).
-    if(currentTime-recoveryWaitStartTime>=MAIN_TREE_RECONNECT_TIMEOUT && SM->current_state == sRecoveryWait){
+    if( (currentTime-recoveryWaitStartTime)>=MAIN_TREE_RECONNECT_TIMEOUT && SM->current_state == sRecoveryWait){
+        LOG(NETWORK,INFO,"Entered in RecoveryWait time out. recoveryWaitStartTime:%lu currentTime:%lu\n",recoveryWaitStartTime,currentTime);
+        LOG(NETWORK,INFO,"currentTime-recoveryWaitStartTime:%lu\n",(currentTime-recoveryWaitStartTime));
         insertLast(stateMachineEngine, eRecoveryWaitTimeOut);
     }
 }
