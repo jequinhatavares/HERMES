@@ -51,11 +51,11 @@ void requestTaskExecution();
 #define sActive ((State) 3)
 #define sHandleMessages ((State) 4)
 #define sParentRecovery ((State) 5)
-#define sChildRecovery ((State) 6)
-#define sParentRestart ((State) 7)
-#define sRecoveryWait ((State) 8)
-#define sExecuteTask ((State) 9)
-#define sError ((State) 10)
+//#define sChildRecovery ((State) 6)
+#define sParentRestart ((State) 6)
+#define sRecoveryWait ((State) 7)
+#define sExecuteTask ((State) 8)
+#define sError ((State) 9)
 
 #define eSuccess ((Event) 0)
 #define eSearch ((Event) 1)
@@ -81,6 +81,7 @@ void setIPs(const uint8_t * MAC);
 void handleTimers();
 
 void filterReachableNetworks();
+void lostChildProcedure();
 int parentHandshakeProcedure(parentInfo *possibleParents);
 void establishParentConnection(parentInfo preferredParent);
 #endif //LIFECYCLE_H
