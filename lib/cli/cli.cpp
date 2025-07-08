@@ -112,12 +112,10 @@ void cliInteraction(){
                     break;
 
                 case 2:
-                    LOG(CLI,INFO,"---------------------------- Routing Table ----------------------------\n");
                     tablePrint(routingTable,printRoutingTableHeader, printRoutingStruct);
                     break;
 
                 case 3:
-                    LOG(CLI,INFO,"---------------------------- Children Table ----------------------------\n");
                     tablePrint(childrenTable, printChildrenTableHeader,printChildStruct);
                     break;
 
