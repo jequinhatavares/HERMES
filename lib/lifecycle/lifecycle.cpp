@@ -366,11 +366,14 @@ State childRecovery(Event event){
     LOG(STATE_MACHINE,INFO,"Child Recovery State\n");
     int i, subNetSize = 0;
     uint8_t lostChildIP[4];
-    uint8_t lostNodeSubnetwork[routingTable->numberOfItems][4];
+    uint8_t lostNodeSubnetwork[TableMaxSize][4];
     uint8_t *nodeIP,*MAC;
     messageParameters parameters;
     routingTableEntry unreachableEntry, *lostNodeTableEntry;
 
+    /*** Iterate over the list of disconnected children. For each child that has exceeded the drop connection timeout
+        (i.e., considered permanently disconnected), identify all nodes in its subtree and mark them as unreachable
+        by setting their hop distance to -1 and incrementing their sequence number by 1 ***/
     for (int k = 0; k <lostChildrenTable->numberOfItems ; k++) {
         MAC = (uint8_t *) tableKey(lostChildrenTable, k);
         if(MAC != nullptr){
@@ -416,10 +419,14 @@ State childRecovery(Event event){
                     lostNodeTableEntry = (routingTableEntry*)tableRead(routingTable, lostNodeSubnetwork[i]);
                     LOG(NETWORK,DEBUG,"Updating Node: %hhu.%hhu.%hhu.%hhu from my routing Table\n",lostNodeSubnetwork[i][0],lostNodeSubnetwork[i][1],lostNodeSubnetwork[i][2],lostNodeSubnetwork[i][3]);
                     assignIP(unreachableEntry.nextHopIP,lostNodeSubnetwork[i]);
-                    // Increment the lost child’s sequence number by 1, symbolizing that this route is now invalid due to the loss of connectivity
-                    unreachableEntry.sequenceNumber = lostNodeTableEntry->sequenceNumber + 1;
-                    unreachableEntry.hopDistance = -1;
-                    tableUpdate(routingTable, lostNodeSubnetwork[i],&unreachableEntry);
+
+                    // If the node is not already marked as unreachable (i.e., it has an even sequence number),
+                    // increment the lost child’s sequence number by 1 to indicate that the route is now invalid due to lost connectivity.
+                    if(lostNodeTableEntry->sequenceNumber%2==0){
+                        unreachableEntry.sequenceNumber = lostNodeTableEntry->sequenceNumber + 1;
+                        unreachableEntry.hopDistance = -1;
+                        tableUpdate(routingTable, lostNodeSubnetwork[i],&unreachableEntry);
+                    }
 
                     // Notify the rest of the network about nodes that are no longer reachable.
                     encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),PARTIAL_ROUTING_TABLE_UPDATE, parameters);
@@ -440,7 +447,6 @@ State childRecovery(Event event){
 
     }
 
-    //insertLast(stateMachineEngine, eSearch);
     return sActive;
 }
 
