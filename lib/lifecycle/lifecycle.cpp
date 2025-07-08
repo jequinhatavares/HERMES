@@ -114,6 +114,7 @@ State init(Event event){
         return sSearch;
     }else{
         rootHopDistance = 0;
+        connectedToMainTree = true;
         assignIP(parent, invalidIP);
         assignIP(rootIP,myIP);
         reportNewNodeToViz(myIP,invalidIP);
@@ -413,6 +414,8 @@ State parentRestart(Event event){
 }
 
 State recoveryAwait(Event event) {
+    LOG(STATE_MACHINE,INFO,"Recovery Await State\n");
+
     messageType messageType;
     bool receivedTRN=false,receivedPRN=false;
     messageParameters parameters;
