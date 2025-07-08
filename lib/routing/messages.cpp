@@ -523,15 +523,19 @@ void handleTopologyBreakAlert(char *msg){
     int type;
     uint8_t senderIP[4];
     sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu",&type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
-    // Once reconnected, propagate a message to inform them that the tree is restored and they can transition to the active state.
-    propagateMessage(msg, senderIP);
+    //Encode a TOPOLOGY_BREAK_ALERT message where the sender IP is this node IP
+    encodeTopologyBreakAlert(smallSendBuffer, sizeof(smallSendBuffer));
+    // Notify child nodes of a tree disconnection so they can initiate recovery procedures
+    propagateMessage(smallSendBuffer, senderIP);
 }
 
 void handleTopologyRestoredNotice(char *msg){
     uint8_t senderIP[4];
     sscanf(msg, "%*d %hhu.%hhu.%hhu.%hhu",&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
+    //Encode a TOPOLOGY_RESTORED_NOTICE message where the sender IP is this node IP
+    encodeTopologyRestoredNotice(smallSendBuffer, sizeof(smallSendBuffer));
     // Notify child nodes that the tree has been restored and they can transition to the active state.
-    propagateMessage(msg, senderIP);
+    propagateMessage(smallSendBuffer, senderIP);
 }
 
 void handleParentResetNotification(char *msg){
