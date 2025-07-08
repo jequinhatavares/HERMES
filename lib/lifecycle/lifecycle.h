@@ -66,6 +66,8 @@ void requestTaskExecution();
 #define eLostChildConnection ((Event) 6)
 #define eExecuteTask ((Event) 7)
 #define eRestart ((Event) 8)
+#define eLostTreeConnection ((Event) 9)
+#define eRecoveryWaitTimeOut ((Event) 10)
 
 extern StateMachine* SM;
 extern CircularBuffer* stateMachineEngine;

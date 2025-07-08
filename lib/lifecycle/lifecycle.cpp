@@ -197,6 +197,8 @@ State active(Event event){
         //return sChildRecovery;
         lostChildProcedure();
         return sActive;
+    }else if(event == eLostTreeConnection){
+        return sRecoveryWait;
     }else if(event == eRestart){
         insertFirst(stateMachineEngine, eRestart);
         return sParentRestart;
@@ -244,9 +246,10 @@ State handleMessages(Event event){
 
         case TOPOLOGY_BREAK_ALERT:
             LOG(MESSAGES,INFO,"Received [Topology Break Alert] message: \"%s\"\n", receiveBuffer);
-            connectedToMainTree = false;
             handleTopologyBreakAlert(receiveBuffer);
-            //TODO transition to recovery wait
+            connectedToMainTree = false;
+            recoveryWaitStartTime = getCurrentTime();
+            insertLast(stateMachineEngine, eLostTreeConnection);
             break;
 
         case PARENT_RESET_NOTIFICATION:
@@ -425,6 +428,8 @@ State recoveryAwait(Event event) {
             case TOPOLOGY_BREAK_ALERT:
                 LOG(MESSAGES,INFO,"Received [Topology Break Alert] message: \"%s\"\n", receiveBuffer);
                 handleTopologyBreakAlert(receiveBuffer);
+                recoveryWaitStartTime = getCurrentTime();
+                connectedToMainTree = false;
                 break;
 
             case TOPOLOGY_RESTORED_NOTICE:
@@ -451,7 +456,9 @@ State recoveryAwait(Event event) {
     }else if(event == eLostChildConnection){
         //Todo call the function of the lost child
         lostChildProcedure();
-    }else if (event ==eLostParentConnection){
+    }else if (event == eLostParentConnection){
+        return sParentRecovery;
+    }else if (event == eRecoveryWaitTimeOut){
         return sParentRecovery;
     }
 
@@ -513,7 +520,7 @@ void handleTimers(){
 
     // Handle the timeout for the recovery wait state (i.e., the node has been waiting too long for the tree to reconnect to the main root).
     if(currentTime-recoveryWaitStartTime>=MAIN_TREE_RECONNECT_TIMEOUT && SM->current_state == sRecoveryWait){
-
+        insertLast(stateMachineEngine, eRecoveryWaitTimeOut);
     }
 }
 void requestTaskExecution(){
