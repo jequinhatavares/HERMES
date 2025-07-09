@@ -677,7 +677,7 @@ int parentHandshakeProcedure(parentInfo *possibleParents){
     uint8_t connectedParentIP[4];
     uint8_t mySTAIP[4];
     int nrOfPossibleParents = 0;
-    bool receivedPIR = false;
+    bool receivedPIR = false,connectedToParent=false;
 
     /***
      * The parent handshake consists of connecting to each potential parent found in the list of scanned APs
@@ -692,7 +692,11 @@ int parentHandshakeProcedure(parentInfo *possibleParents){
     for (int i = 0; i < reachableNetworks.len; i++) {
         //LOG(NETWORK,DEBUG,"Before connecting to AP\n");
         LOG(NETWORK,INFO,"Connecting to AP\n");
-        connectToAP(reachableNetworks.item[i], PASS);
+
+        /*** Attempt to connect to the parent node's Wi-Fi network. If the connection fails
+         * (e.g., SSID unavailable, parent unreachable, or out of range), proceed to the next candidate parent. ***/
+        if(!connectToAP(reachableNetworks.item[i], PASS)) continue;
+
         //LOG(NETWORK,INFO,"→ Connected to Potential Parent: %s\n", getGatewayIP().toString().c_str());
         getMySTAIP(mySTAIP);
 
@@ -706,7 +710,7 @@ int parentHandshakeProcedure(parentInfo *possibleParents){
         //Wait for the parent to respond with his parent information
         receivedPIR = waitForMessage(PARENT_INFO_RESPONSE,connectedParentIP,3000);
 
-        if (receivedPIR){
+        if(receivedPIR){
             LOG(MESSAGES,INFO,"Parent [Parent Info Response]: %s\n", receiveBuffer);
             handleParentInfoResponse(receiveBuffer, possibleParents, nrOfPossibleParents);
             possibleParents[nrOfPossibleParents].ssid = reachableNetworks.item[i];
