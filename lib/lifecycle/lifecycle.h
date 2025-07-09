@@ -24,6 +24,8 @@
 
 #define MAX_PARENT_SEARCH_ATTEMPTS 3
 
+#define CHILD_REGISTRATION_RETRY_COUNT 3
+
 extern void (*middlewareOnTimerCallback)();
 extern void (*middlewareHandleMessageCallback)(char*,size_t);
 extern void (*middlewareInfluenceRoutingCallback)(char*);
@@ -87,6 +89,6 @@ void handleTimers();
 void filterReachableNetworks();
 void lostChildProcedure();
 int parentHandshakeProcedure(parentInfo *possibleParents);
-void establishParentConnection(parentInfo preferredParent);
+bool establishParentConnection(parentInfo preferredParent);
 #endif //LIFECYCLE_H
 
