@@ -110,7 +110,7 @@ State init(Event event){
 
 
     if (!iamRoot){
-        insertFirst(stateMachineEngine, eSuccess);
+        insertFirst(stateMachineEngine, eInitSuccess);
         return sSearch;
     }else{
         rootHopDistance = 0;
@@ -150,7 +150,7 @@ State search(Event event){
         return sSearch;
     }***/
 
-    insertFirst(stateMachineEngine, eSuccess);
+    insertFirst(stateMachineEngine, eFoundParents);
     return sJoinNetwork;
 
 }
@@ -166,7 +166,7 @@ State joinNetwork(Event event){
     // If none of the parents responded, it means none are available, so return to the search state
     if(nrOfPossibleParents == 0){
         LOG(NETWORK,DEBUG,"None of the parents Responded\n");
-        insertLast(stateMachineEngine, eSearch);
+        insertLast(stateMachineEngine, eParentSelectionFailed);
         return sSearch;
     }
 
@@ -191,7 +191,7 @@ State active(Event event){
         insertFirst(stateMachineEngine, eMessage);
         return sHandleMessages;
     }else if(event == eLostParentConnection){
-        insertFirst(stateMachineEngine, eMessage);
+        insertFirst(stateMachineEngine, eLostParentConnection);
         return sParentRecovery;
     }else if(event == eLostChildConnection){
         //insertFirst(stateMachineEngine, eLostChildConnection);
@@ -200,15 +200,14 @@ State active(Event event){
         return sActive;
     }else if(event == eLostTreeConnection){
         return sRecoveryWait;
-    }else if(event == eRestart){
-        insertFirst(stateMachineEngine, eRestart);
+    }else if(event == eNodeRestart){
+        insertFirst(stateMachineEngine, eNodeRestart);
         return sParentRestart;
     }else if(event == eExecuteTask){
         insertFirst(stateMachineEngine, eExecuteTask);
         return sExecuteTask;
     }
 
-    //insertFirst(stateMachineEngine, eSuccess);
     return sActive;
 }
 
@@ -305,7 +304,7 @@ State parentRecovery(Event event){
     //Tell my children that i lost connection to my parent
     encodeMessage(smallSendBuffer,sizeof(smallSendBuffer),TOPOLOGY_BREAK_ALERT,parameters);
     LOG(MESSAGES,INFO,"Informing my children about the lost connection\n");
-    for (int i = 0; i < childrenTable->numberOfItems; ++i) {
+    for (i = 0; i < childrenTable->numberOfItems; ++i) {
         STAIP = (uint8_t *) findNode(childrenTable, (uint8_t *) childrenTable->table[i].key);
         if(STAIP != nullptr){
             sendMessage(STAIP,smallSendBuffer);
@@ -342,7 +341,7 @@ State parentRecovery(Event event){
 
     // If the maximum number of scans is reached, transition to the Parent Restart state
     if(consecutiveSearchCount == MAX_PARENT_SEARCH_ATTEMPTS && reachableNetworks.len == 0){
-        insertFirst(stateMachineEngine, eRestart);
+        insertFirst(stateMachineEngine, eNodeRestart);
         return sParentRestart;
     }
 
@@ -351,7 +350,7 @@ State parentRecovery(Event event){
     // If none of the parents responded, it means none are available, so go to the Parent Restart state
     if(nrOfPossibleParents == 0){
         LOG(NETWORK,DEBUG,"None of the parents Responded\n");
-        insertLast(stateMachineEngine, eRestart);
+        insertLast(stateMachineEngine, eNodeRestart);
         return sParentRestart;
     }
 
@@ -413,7 +412,7 @@ State parentRestart(Event event){
     numberOfChildren = 0;
 
 
-    insertLast(stateMachineEngine, eSearch);
+    insertLast(stateMachineEngine, eRestartSuccess);
     return sSearch;
 }
 
@@ -456,11 +455,8 @@ State recoveryAwait(Event event) {
 
         }
     }else if(event == eLostChildConnection){
-        //Todo call the function of the lost child
         lostChildProcedure();
-    }else if (event == eLostParentConnection){
-        return sParentRecovery;
-    }else if (event == eRecoveryWaitTimeOut){
+    }else if (event == eLostParentConnection || event == eRecoveryWaitTimeOut){
         return sParentRecovery;
     }
 

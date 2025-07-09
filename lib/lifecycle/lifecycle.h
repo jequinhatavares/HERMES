@@ -58,16 +58,18 @@ void requestTaskExecution();
 #define sError ((State) 9)
 
 #define eSuccess ((Event) 0)
-#define eSearch ((Event) 1)
-#define eMessage ((Event) 2)
-#define eError ((Event) 3)
-#define eLostParentConnection ((Event) 4)
-#define eParentUnreachable ((Event) 5)
+#define eInitSuccess ((Event) 1)
+#define eFoundParents ((Event) 2)
+#define eParentSelectionFailed ((Event) 3)
+#define eMessage ((Event) 4)
+#define eLostParentConnection ((Event) 5)
 #define eLostChildConnection ((Event) 6)
-#define eExecuteTask ((Event) 7)
-#define eRestart ((Event) 8)
+#define eNodeRestart ((Event) 7)
+#define eRestartSuccess ((Event) 8)
 #define eLostTreeConnection ((Event) 9)
 #define eRecoveryWaitTimeOut ((Event) 10)
+#define eExecuteTask ((Event) 11)
+#define eError ((Event) 12)
 
 extern StateMachine* SM;
 extern CircularBuffer* stateMachineEngine;
