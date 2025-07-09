@@ -19,15 +19,6 @@
 #include <cstdio>
 #include <cstring>
 
-typedef struct messageParameters{
-    uint8_t IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};
-    int nrOfNodes = 0;
-    uint8_t IP[10][4];
-    int hopDistance = -1;
-    int sequenceNumber = 0;
-    int childrenNumber = -1;
-    char payload[200] = "";
-}messageParameters;
 
 
 typedef enum messageType{

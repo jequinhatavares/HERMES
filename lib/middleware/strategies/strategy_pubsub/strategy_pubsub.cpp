@@ -583,7 +583,6 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
     uint8_t *nextHopIP, *nodeIP;
     int8_t topicType;
     bool publisher = false;
-    messageParameters parameters;
     int nChars = 0;
     char payload[100];
 

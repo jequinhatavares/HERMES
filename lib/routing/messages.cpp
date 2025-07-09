@@ -234,11 +234,11 @@ bool isMessageValid(int expectedMessageType,char* msg){
             if(sscanf(msgCopy, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],&IP2[0], &IP2[1], &IP2[2], &IP2[3]) != 9)return false;
             char* token = strtok(msgCopy, "|");
 
-            token = strtok(NULL, "|");
+            token = strtok(nullptr, "|");
 
-            while (token != NULL) {
+            while (token != nullptr) {
                 if(sscanf(token, "%hhu.%hhu.%hhu.%hhu %d %d",&IP1[0],&IP1[1],&IP1[2],&IP1[3],&hopDistance,&sequenceNumber) != 6) return false;
-                token = strtok(NULL, "|");
+                token = strtok(nullptr, "|");
             }
             return true;
             break;
@@ -251,11 +251,11 @@ bool isMessageValid(int expectedMessageType,char* msg){
             if(sscanf(msgCopy, "%d %hhu.%hhu.%hhu.%hhu", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3]) != 5)return false;
             char* token = strtok(msgCopy, "|");
 
-            token = strtok(NULL, "|");
+            token = strtok(nullptr, "|");
 
-            while (token != NULL) {
+            while (token != nullptr) {
                 if(sscanf(token, "%hhu.%hhu.%hhu.%hhu %d %d",&IP1[0],&IP1[1],&IP1[2],&IP1[3],&hopDistance,&sequenceNumber) != 6) return false;
-                token = strtok(NULL, "|");
+                token = strtok(nullptr, "|");
             }
             return true;
             break;
@@ -424,9 +424,9 @@ void handleFullRoutingTableUpdate(char * msg){
     char* token = strtok(msg, "|");
 
     //To discard the message type and ensure the token points to the first routing table update entry
-    token = strtok(NULL, "|");
+    token = strtok(nullptr, "|");
 
-    while (token != NULL) {
+    while (token != nullptr) {
         sscanf(token, "%hhu.%hhu.%hhu.%hhu %d %d",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&hopDistance,&sequenceNumber);
         //Serial.printf("Token: %s\n", token);
 
@@ -441,7 +441,7 @@ void handleFullRoutingTableUpdate(char * msg){
             nrOfChanges ++;
         }
         isRoutingTableChanged = isRoutingTableChanged || isRoutingEntryChanged ;
-        token = strtok(NULL, "|");
+        token = strtok(nullptr, "|");
     }
 
     if (isRoutingTableChanged){
@@ -477,7 +477,7 @@ void handlePartialRoutingUpdate(char *msg){
     char* token = strtok(msg, "|");
 
     //To discard the message type and ensure the token points to the first routing table update entry
-    token = strtok(NULL, "|");
+    token = strtok(nullptr, "|");
 
     while (token != NULL) {
         sscanf(token, "%hhu.%hhu.%hhu.%hhu %d %d",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&hopDistance,&sequenceNumber);
@@ -492,7 +492,7 @@ void handlePartialRoutingUpdate(char *msg){
         }
         //updateRoutingTable(nodeIP,newNode,sourceIP);
         isRoutingTableChanged = isRoutingTableChanged || isRoutingEntryChanged ;
-        token = strtok(NULL, "|");
+        token = strtok(nullptr, "|");
     }
 
     // If the routing update caused a change in my routing table, propagate the updated information to the rest of the network
@@ -576,7 +576,6 @@ void handleDataMessage(char *msg){
     uint8_t *nextHopPtr = nullptr;
     char payload[200];
     bool isTunneled = false;
-    messageParameters parameters;
 
     sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&type, &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
         &destinationIP[0],&destinationIP[1],&destinationIP[2],&destinationIP[3],&nChars);
@@ -634,7 +633,6 @@ void handleAckMessage(char *msg){
     uint8_t nextHopIP[4], sourceIP[4], destinationIP[4];
     uint8_t *nextHopPtr = nullptr;
 
-
     sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",&type, &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
            &destinationIP[0],&destinationIP[1],&destinationIP[2],&destinationIP[3]);
     //Serial.printf("Message %s received from %d.%d.%d.%d to %d.%d.%d.%d", payload, senderIP[0],senderIP[1],senderIP[2],senderIP[3],
@@ -662,7 +660,6 @@ void handleAckMessage(char *msg){
  * @return void
  */
 void handleDebugRegistrationRequest(char* msg){
-    int type;
     //sscanf(msg, "%d %d.%d.%d.%d",&type, &debugServerIP[0],&debugServerIP[1],&debugServerIP[2],&debugServerIP[3]);
 }
 

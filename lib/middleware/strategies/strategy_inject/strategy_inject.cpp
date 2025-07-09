@@ -276,7 +276,6 @@ void influenceRoutingStrategyInject(char* dataMessage){
     void* bestMetric = nullptr, *currentMetric;
     uint8_t *IP, bestMetricIP[4], *nextHopIP, originalDestination[4];
     bool findBestMetric=false;
-    messageParameters params;
 
     // In the metricsTable, find the node with the best metric using the user-provided comparison function
     for (int i = 0; i < metricsTable->numberOfItems ; i++) {
