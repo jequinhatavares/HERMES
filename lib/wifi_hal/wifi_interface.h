@@ -37,7 +37,7 @@ const char* getWifiStatus(int Status);
 void startWifiSTA(int* localIP, int* gateway, int* subnet, int* dns);
 void startWifiAP(const char* SSID, const char* Pass, uint8_t* localIP, uint8_t* gateway, uint8_t* subnet);
 void searchAP(const char*);
-void connectToAP(const char*, const char*);
+bool connectToAP(const char*, const char*);
 void stopWifiAP();
 void disconnectFromAP();
 int numberOfSTAConnected();

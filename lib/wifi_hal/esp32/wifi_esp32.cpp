@@ -283,7 +283,7 @@ void searchAP(const char* SSID){
  * @param SSID - The SSID of the Wi-Fi network to connect to.
  * @return void
  */
-void connectToAP(const char * SSID, const char * PASS) {
+bool connectToAP(const char * SSID, const char * PASS) {
     unsigned long startTime, currentTime;
     WiFi.mode(WIFI_AP_STA); //AP
     WiFi.begin(SSID, PASS);
@@ -295,6 +295,12 @@ void connectToAP(const char * SSID, const char * PASS) {
         Serial.println(getWifiStatus(WiFi.status()));
         delay(150);
         currentTime = getCurrentTime();
+    }
+
+    if(WiFi.status() == WL_CONNECTED) return true;
+    else{// If the Wi-Fi connection was not established, stop the connection attempt and return false
+        disconnectFromAP();
+        return false;
     }
 
     //LOG(NETWORK,DEBUG,"WiFi connect time:%lu\n",endTime-startTime);

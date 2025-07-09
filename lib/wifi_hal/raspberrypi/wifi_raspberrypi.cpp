@@ -641,20 +641,18 @@ int numberOfSTAConnected(){
     return 1;
 }
 
-void connectToAP(const char * SSID, const char * PASS){
+bool connectToAP(const char * SSID, const char * PASS){
     char command[256];
-    snprintf(command, sizeof(command),
-             "nmcli dev wifi connect '%s' password '%s' ifname wlan0 2>&1",
-             SSID, PASS);
+    char outputLine[256];
+    bool success = false;
+
+    snprintf(command, sizeof(command),"nmcli dev wifi connect '%s' password '%s' ifname wlan0 2>&1",SSID, PASS);
 
     FILE *fp = popen(command, "r");
     if (fp == NULL) {
         perror("popen failed");
         return;
     }
-
-    char outputLine[256];
-    bool success = false;
 
     while (fgets(outputLine, sizeof(outputLine), fp) != NULL) {
         printf("%s", outputLine); // optional: show the output
@@ -668,10 +666,10 @@ void connectToAP(const char * SSID, const char * PASS){
     int status = pclose(fp);
     if (status == -1) {
         perror("pclose failed");
-        return ;
+        return success;
     }
 
-    return;
+    return success;
 }
 
 void disconnectFromAP() {

@@ -286,7 +286,7 @@ void searchAP(const char* SSID){
  * @param SSID - The SSID of the Wi-Fi network to connect to.
  * @return void
  */
-void connectToAP(const char * SSID, const char * PASS) {
+bool connectToAP(const char * SSID, const char * PASS) {
     unsigned long startTime, currentTime;
     WiFi.mode(WIFI_AP_STA);// changed were the wifi mode to WIFI_(AP)_STA
     WiFi.begin(SSID, PASS);
@@ -301,6 +301,11 @@ void connectToAP(const char * SSID, const char * PASS) {
         currentTime = getCurrentTime();
     }
 
+    if(WiFi.status() == WL_CONNECTED) return true;
+    else{// If the Wi-Fi connection was not established, stop the connection attempt and return false
+        disconnectFromAP();
+        return false;
+    }
 }
 /**
  * stopWifiAP
