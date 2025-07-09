@@ -631,10 +631,7 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
                 if(containsTopic(nodePubSubInfo->subscribedTopics,topicType)){
 
                     // Encode the DATA_MESSAGE to send to the subscriber
-                    assignIP(parameters.IP1,myIP);
-                    assignIP(parameters.IP2,nodeIP);
-                    strncpy(parameters.payload,payload, sizeof(parameters.payload));
-                    encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),DATA_MESSAGE,parameters);
+                    encodeDataMessage(largeSendBuffer,sizeof(largeSendBuffer),payload,myIP,nodeIP);
 
                     // Send the published topic to the subscriber node
                     nextHopIP = (uint8_t *) findRouteToNode(nodeIP);

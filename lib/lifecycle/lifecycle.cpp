@@ -288,7 +288,6 @@ State handleMessages(Event event){
 State parentRecovery(Event event){
     int i, consecutiveSearchCount = 0, nrOfPossibleParents = 0;
     uint8_t * STAIP= nullptr;
-    messageParameters parameters;
     parentInfo possibleParents[10];
 
     if(iamRoot) return sActive;
@@ -302,7 +301,7 @@ State parentRecovery(Event event){
     disconnectFromAP();
 
     //Tell my children that i lost connection to my parent
-    encodeMessage(smallSendBuffer,sizeof(smallSendBuffer),TOPOLOGY_BREAK_ALERT,parameters);
+    encodeTopologyBreakAlert(smallSendBuffer,sizeof(smallSendBuffer));
     LOG(MESSAGES,INFO,"Informing my children about the lost connection\n");
     for (i = 0; i < childrenTable->numberOfItems; ++i) {
         STAIP = (uint8_t *) findNode(childrenTable, (uint8_t *) childrenTable->table[i].key);
@@ -374,7 +373,6 @@ State parentRestart(Event event){
     LOG(STATE_MACHINE,INFO,"Force Restart State\n");
     uint8_t *childAPIP, *childSTAIP, *nodeIP;
     uint8_t invalidIP[4] = {0,0,0,0};
-    messageParameters parameters;
     routingTableEntry me;
 
     // If the node has children, notify them that its parent (this node) is restarting.
@@ -383,7 +381,7 @@ State parentRestart(Event event){
         childAPIP = (uint8_t *) tableKey(childrenTable, i);
         childSTAIP = (uint8_t *) tableRead(childrenTable,childAPIP);
         // Notify the child with a message that the node is restarting
-        encodeMessage(smallSendBuffer, sizeof(smallSendBuffer),PARENT_RESET_NOTIFICATION,parameters);
+        encodeParentResetNotification(smallSendBuffer, sizeof(smallSendBuffer));
         sendMessage(childSTAIP,smallSendBuffer);
         LOG(MESSAGES,DEBUG,"Sending: %s to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer,childAPIP[0],childAPIP[1],childAPIP[2],childAPIP[3]);
     }
@@ -466,24 +464,22 @@ State recoveryAwait(Event event) {
 }
 
 State executeTask(Event event){
-    messageParameters parameters;
     LOG(STATE_MACHINE,INFO,"Execute Task State\n");
     // In this state, an application-specific task will be executed.
     // The user defines a callback function in the application layer, which is invoked here to perform the desired operation.
     int data = 5;
+    char payload[50];
 
-    snprintf(parameters.payload, sizeof(parameters.payload),"TEMPERATURE %i",data);
-    assignIP(parameters.IP1,myIP);
-    assignIP(parameters.IP2,rootIP);
+    snprintf(payload, sizeof(payload),"TEMPERATURE %i",data);
 
-    encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),DATA_MESSAGE,parameters);
+
+    encodeDataMessage(largeSendBuffer,sizeof(largeSendBuffer),payload,myIP,rootIP);
     if(middlewareInfluenceRoutingCallback != nullptr)middlewareInfluenceRoutingCallback(largeSendBuffer);
 
     return sActive;
 }
 void handleTimers(){
     int* MAC;
-    messageParameters parameters;
     unsigned long currentTime = getCurrentTime();
     //LOG(NETWORK,DEBUG,"1\n");
     for (int i = 0; i < lostChildrenTable->numberOfItems; i++) {
@@ -502,7 +498,7 @@ void handleTimers(){
         mySequenceNumber = mySequenceNumber + 2;
         //Update my sequence number
         updateMySequenceNumber(mySequenceNumber);
-        encodeMessage(largeSendBuffer, sizeof(largeSendBuffer),FULL_ROUTING_TABLE_UPDATE,parameters);
+        encodeFullRoutingTableUpdate(largeSendBuffer, sizeof(largeSendBuffer));
         propagateMessage(largeSendBuffer,myIP);
         lastRoutingUpdateTime = currentTime;
     }
@@ -595,7 +591,6 @@ void lostChildProcedure(){
     uint8_t lostChildIP[4];
     uint8_t lostNodeSubnetwork[TableMaxSize][4];
     uint8_t *nodeIP,*MAC;
-    messageParameters parameters;
     routingTableEntry unreachableEntry, *lostNodeTableEntry;
 
     /*** Iterate over the list of disconnected children. For each child that has exceeded the drop connection timeout
@@ -623,14 +618,12 @@ void lostChildProcedure(){
 
                             LOG(NETWORK,DEBUG,"Node: %hhu.%hhu.%hhu.%hhu belongs to lost child subnetwork\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
                             assignIP(lostNodeSubnetwork[subNetSize],nodeIP);
-                            assignIP(parameters.IP[subNetSize], nodeIP);
                             subNetSize ++;
                         }
                     }else{
                         LOG(NETWORK, ERROR, "❌ Valid entry in routing table contains a pointer to null instead of the routing entry.\n");
                     }
                 }
-                parameters.nrOfNodes = subNetSize;
 
                 // Remove the lost child from my children table
                 LOG(NETWORK,DEBUG,"Removing unreachable Node :%hhu.%hhu.%hhu.%hhu from my children Table\n",lostChildIP[0],lostChildIP[1],lostChildIP[2],lostChildIP[3]);
@@ -656,9 +649,9 @@ void lostChildProcedure(){
                     }
 
                     // If the node is connected to the main tree, notify the rest of the network about the node loss
-                    if(connectedToMainTree){
+                    if(connectedToMainTree){ //TODO VER SE ESTE CÓDIGO FAZ SENTIDO AQUI
                         // Notify the rest of the network about nodes that are no longer reachable.
-                        encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),PARTIAL_ROUTING_TABLE_UPDATE, parameters);
+                        encodePartialRoutingUpdate(largeSendBuffer,sizeof(largeSendBuffer),lostNodeSubnetwork,subNetSize);
                         propagateMessage(largeSendBuffer, myIP);
                     }
 
@@ -684,7 +677,6 @@ int parentHandshakeProcedure(parentInfo *possibleParents){
     uint8_t connectedParentIP[4];
     uint8_t mySTAIP[4];
     int nrOfPossibleParents = 0;
-    messageParameters params;
     bool receivedPIR = false;
 
     /***
@@ -705,8 +697,7 @@ int parentHandshakeProcedure(parentInfo *possibleParents){
         getMySTAIP(mySTAIP);
 
         //Send a Parent Discovery Request to the connected parent
-        params.IP1[0] = mySTAIP[0]; params.IP1[1] = mySTAIP[1]; params.IP1[2] = mySTAIP[2]; params.IP1[3] = mySTAIP[3];
-        encodeMessage(smallSendBuffer,sizeof (smallSendBuffer),PARENT_DISCOVERY_REQUEST, params);
+        encodeParentDiscoveryRequest(smallSendBuffer,sizeof (smallSendBuffer),mySTAIP);
 
         getGatewayIP(connectedParentIP);
         LOG(NETWORK,INFO, "Connected to parent: %hhu.%hhu.%hhu.%hhu\n",connectedParentIP[0],connectedParentIP[1],connectedParentIP[2],connectedParentIP[3]);
@@ -736,7 +727,6 @@ int parentHandshakeProcedure(parentInfo *possibleParents){
 
 void establishParentConnection(parentInfo preferredParent){
     uint8_t mySTAIP[4];
-    messageParameters params;
     bool receivedFRTU=false;
 
     /***
@@ -758,10 +748,7 @@ void establishParentConnection(parentInfo preferredParent){
 
     //Send a Child Registration Request to the parent
     getMySTAIP(mySTAIP);
-    params.IP1[0] = localIP[0]; params.IP1[1] = localIP[1]; params.IP1[2] = localIP[2]; params.IP1[3] = localIP[3];
-    params.IP2[0] = mySTAIP[0]; params.IP2[1] = mySTAIP[1]; params.IP2[2] = mySTAIP[2]; params.IP2[3] = mySTAIP[3];
-    params.sequenceNumber = mySequenceNumber;
-    encodeMessage(smallSendBuffer, sizeof(smallSendBuffer), CHILD_REGISTRATION_REQUEST, params);
+    encodeChildRegistrationRequest(smallSendBuffer, sizeof(smallSendBuffer),localIP,mySTAIP,mySequenceNumber);
     sendMessage(parent, smallSendBuffer);
 
 
@@ -784,7 +771,7 @@ void establishParentConnection(parentInfo preferredParent){
     // If the joining node has children (i.e., his subnetwork has nodes), it must also send its routing table to its new parent.
     // This ensures that the rest of the network becomes aware of the entire subtree associated with the new node
     if(childrenTable->numberOfItems > 0){
-        encodeMessage(largeSendBuffer,sizeof(largeSendBuffer),FULL_ROUTING_TABLE_UPDATE, params);
+        encodeFullRoutingTableUpdate(largeSendBuffer,sizeof(largeSendBuffer));
         sendMessage(parent, largeSendBuffer);
         lastRoutingUpdateTime = getCurrentTime();
     }

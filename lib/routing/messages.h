@@ -51,7 +51,7 @@ extern char largeSendBuffer[255];
 extern char smallSendBuffer[50];
 
 
-void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParameters parameters);
+//void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParameters parameters);
 
 void encodeParentInfoResponse(char* messageBuffer, size_t bufferSize,uint8_t *APIP,int hopDistance,int childrenNumber);
 void encodeChildRegistrationRequest(char* messageBuffer, size_t bufferSize,uint8_t *APIP,uint8_t *STAIP,int sequenceNumber);
@@ -61,6 +61,7 @@ void encodeTopologyBreakAlert(char* messageBuffer, size_t bufferSize);
 void encodeTopologyRestoredNotice(char* messageBuffer, size_t bufferSize);
 void encodeParentResetNotification(char* messageBuffer, size_t bufferSize);
 void encodeParentDiscoveryRequest(char* messageBuffer, size_t bufferSize,uint8_t *STAIP);
+void encodeDebugMessage(char* messageBuffer, size_t bufferSize,char* payload);
 
 void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *sourceIP,uint8_t *destinationIP);
 

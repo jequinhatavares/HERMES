@@ -20,25 +20,22 @@ void encodeVizMessage(char* msg, messageVizType type, messageVizParameters param
 void reportNewNodeToViz(uint8_t * nodeIP, uint8_t * parentIP){
 #ifdef VISUALIZATION_ON
     char msg[50];
-    messageParameters parameters;
     messageVizParameters vizParameters;
     //If the visualization program is active, pass the new node information to it
     assignIP(vizParameters.IP1, nodeIP);
     assignIP(vizParameters.IP2, parentIP);
     encodeVizMessage(msg,NEW_NODE,vizParameters);
 
-    sprintf(parameters.payload, "%s", msg);
-    strcpy(msg , "");
-    encodeMessage(msg, sizeof (msg),DEBUG_MESSAGE, parameters);
+    encodeDebugMessage(smallSendBuffer, sizeof (smallSendBuffer), msg);
 
     if(!iamRoot){
         uint8_t *nextHopIP = findRouteToNode(rootIP);
         if(nextHopIP != nullptr){
-            sendMessage(rootIP,msg);
+            sendMessage(rootIP,smallSendBuffer);
         }else{
             LOG(NETWORK, ERROR, "❌ ERROR: No path to the root node was found in the routing table.\n");
         }
-    }else LOG(DEBUG_SERVER,DEBUG,msg);
+    }else LOG(DEBUG_SERVER,DEBUG,smallSendBuffer);
 
 #endif
 }
@@ -46,25 +43,21 @@ void reportNewNodeToViz(uint8_t * nodeIP, uint8_t * parentIP){
 void reportDeletedNodeToViz(uint8_t * nodeIP){
 #ifdef VISUALIZATION_ON
     char msg[50];
-    messageParameters parameters;
     messageVizParameters vizParameters;
     //If the visualization program is active, pass the deleted node information to it
     assignIP(vizParameters.IP1, nodeIP);
     encodeVizMessage(msg,DELETED_NODE,vizParameters);
 
-    sprintf(parameters.payload, "%s", msg);
-    strcpy(msg , "");
-    encodeMessage(msg, sizeof (msg),DEBUG_MESSAGE, parameters);
-
+    encodeDebugMessage(smallSendBuffer, sizeof (smallSendBuffer),msg);
 
     if(!iamRoot){//If i am not the root send the message to the root
         uint8_t *nextHopIP = findRouteToNode(rootIP);
         if(nextHopIP != nullptr){
-            sendMessage(rootIP,msg);
+            sendMessage(rootIP,smallSendBuffer);
         }else{
             LOG(NETWORK, ERROR, "❌ No path to the root node was found in the routing table.\n");
         }
-    }else LOG(DEBUG_SERVER,DEBUG,msg);//If i am the root print the message to the monitoring server
+    }else LOG(DEBUG_SERVER,DEBUG,smallSendBuffer);//If i am the root print the message to the monitoring server
 
 #endif
 }

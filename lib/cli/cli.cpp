@@ -56,8 +56,8 @@ void getDataMessage() {
     #if defined(ESP32) || defined(ESP8266)
     messageParameters parameters;
     uint8_t nextHopIP[4];
-    char msg[255]="";
-    uint8_t *ptrIP;
+    char msg[255]="",msgPayload[100];
+    uint8_t *ptrIP,sourceIP[4],destinationIP[4];
 
     //delay(100); // Give Serial buffer time to clear
 
@@ -67,12 +67,12 @@ void getDataMessage() {
     Serial.readStringUntil('\n');
     String payload = Serial.readStringUntil('\n');
 
-    sscanf(payload.c_str(), "%s", parameters.payload);
+    sscanf(payload.c_str(), "%s", msgPayload);
 
-    readIPAddress(parameters.IP1, "Enter source node IP");
-    readIPAddress(parameters.IP2, "Enter destination node IP");
+    readIPAddress(sourceIP, "Enter source node IP");
+    readIPAddress(destinationIP, "Enter destination node IP");
 
-    encodeMessage(msg,sizeof(msg),DATA_MESSAGE, parameters);
+    encodeDataMessage(msg, sizeof(msg), msgPayload, sourceIP, destinationIP);
 
     ptrIP = findRouteToNode(parameters.IP2);
 
@@ -114,6 +114,7 @@ void cliInteraction(){
                 case 2:
                     tablePrint(routingTable,printRoutingTableHeader, printRoutingStruct);
                     break;
+
 
                 case 3:
                     tablePrint(childrenTable, printChildrenTableHeader,printChildStruct);
