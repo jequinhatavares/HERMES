@@ -654,7 +654,7 @@ void lostChildProcedure(){
                  * has successfully reintegrated into the network, just under a different parent.
                  */
                 // Mark the nodes as unreachable in the routing table.
-                for (i = 0; i < subNetSize; i++) {
+                for (i = 0; i < subNetSize; i++){
                     // Mark the nodes as unreachable in the routing table
                     lostNodeTableEntry = (routingTableEntry*)tableRead(routingTable, lostNodeSubnetwork[i]);
                     LOG(NETWORK,DEBUG,"Updating Node: %hhu.%hhu.%hhu.%hhu from my routing Table\n",lostNodeSubnetwork[i][0],lostNodeSubnetwork[i][1],lostNodeSubnetwork[i][2],lostNodeSubnetwork[i][3]);
@@ -671,7 +671,7 @@ void lostChildProcedure(){
                 }
 
                 // If the node is connected to the main tree, notify the rest of the network about the node loss
-                if(connectedToMainTree){
+                if(connectedToMainTree && subNetSize >0){
                     // Notify the rest of the network about nodes that are no longer reachable.
                     encodePartialRoutingUpdate(largeSendBuffer,sizeof(largeSendBuffer),lostNodeSubnetwork,subNetSize);
                     propagateMessage(largeSendBuffer, myIP);
