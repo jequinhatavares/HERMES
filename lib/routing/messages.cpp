@@ -131,7 +131,7 @@ void encodeChildRegistrationRequest(char* messageBuffer, size_t bufferSize,uint8
 void encodeFullRoutingTableUpdate(char* messageBuffer, size_t bufferSize){
     char tempMsg[40] = "";//35
     //FULL_ROUTING_TABLE_UPDATE [senderIP] [rootIP] |[node1 IP] [hopDistance] [Sequence Number1]|[node2 IP] [hopDistance] [Sequence Number2]|....
-    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu |",FULL_ROUTING_TABLE_UPDATE,myIP[0],myIP[1],myIP[2],
+    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu|",FULL_ROUTING_TABLE_UPDATE,myIP[0],myIP[1],myIP[2],
              myIP[3],rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
 
     for (int i = 0; i < routingTable->numberOfItems; i++) {
@@ -150,11 +150,11 @@ void encodePartialRoutingUpdate(char* messageBuffer, size_t bufferSize,uint8_t n
     routingTableEntry *nodeRoutingEntry;
 
     //PARTIAL_ROUTING_TABLE_UPDATE [senderIP] |[node1 IP] [hopDistance] [sequenceNumber]| [node2 IP] [hopDistance] [sequenceNumber] ...
-    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu |",PARTIAL_ROUTING_TABLE_UPDATE,myIP[0],myIP[1],myIP[2],myIP[3]);
+    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu|",PARTIAL_ROUTING_TABLE_UPDATE,myIP[0],myIP[1],myIP[2],myIP[3]);
     for (int i = 0; i < nrNodes; i++){
         nodeRoutingEntry = (routingTableEntry*)tableRead(routingTable, nodeIPs[i]);
         if(nodeRoutingEntry != nullptr){
-            snprintf(tempMsg,sizeof(tempMsg),"%hhu.%hhu.%hhu.%hhu %i %i |",nodeIPs[i][0],nodeIPs[i][1],nodeIPs[i][2],nodeIPs[i][3],nodeRoutingEntry->hopDistance, nodeRoutingEntry->sequenceNumber);
+            snprintf(tempMsg,sizeof(tempMsg),"%hhu.%hhu.%hhu.%hhu %i %i|",nodeIPs[i][0],nodeIPs[i][1],nodeIPs[i][2],nodeIPs[i][3],nodeRoutingEntry->hopDistance, nodeRoutingEntry->sequenceNumber);
             strcat(messageBuffer, tempMsg);
             strcpy(tempMsg , "");
         }

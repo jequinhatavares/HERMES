@@ -190,7 +190,6 @@ State joinNetwork(Event event){
 State active(Event event){
     LOG(STATE_MACHINE,INFO,"Active State\n");
 
-
     if (event == eMessage){
         insertFirst(stateMachineEngine, eMessage);
         return sHandleMessages;
@@ -294,6 +293,12 @@ State parentRecovery(Event event){
     uint8_t * STAIP= nullptr;
     parentInfo possibleParents[10];
 
+    // Handles the case where the node loses a child just before or at the same time it loses its parent
+    if(event == eLostChildConnection){
+        lostChildProcedure();
+        return sParentRestart;
+    }
+
     if(iamRoot) return sActive;
 
     //connectedToMainTree = false;
@@ -383,6 +388,12 @@ State parentRestart(Event event){
     uint8_t *childAPIP, *childSTAIP, *nodeIP;
     uint8_t invalidIP[4] = {0,0,0,0};
     routingTableEntry me;
+
+    // Handles the case where the node loses a child just before restarting
+    if(event == eLostChildConnection){
+        lostChildProcedure();
+        return sParentRestart;
+    }
 
     // If the node has children, notify them that its parent (this node) is restarting.
     // This means it will no longer be their parent, and they should start searching for a new one.
@@ -496,7 +507,7 @@ void handleTimers(){
         childConnectionStatus *status = (childConnectionStatus*)tableRead(lostChildrenTable, MAC);
         if(currentTime - status->childDisconnectionTime >= CHILD_RECONNECT_TIMEOUT && status->childTimedOut == false){
             status->childTimedOut = true;
-            insertLast(stateMachineEngine, eLostChildConnection);
+            insertFirst(stateMachineEngine, eLostChildConnection);
         }
     }
 
