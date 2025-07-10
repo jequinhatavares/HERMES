@@ -183,7 +183,7 @@ State joinNetwork(Event event){
     reachableNetworks.len = 0 ;
     LOG(NETWORK,INFO,"------------------ Node successfully added to the network -------------------\n");
     connectedToMainTree = true;
-    changeWifiMode(3);
+    //changeWifiMode(3);
     return sActive;
 }
 
@@ -758,10 +758,10 @@ bool establishParentConnection(parentInfo preferredParent){
         //Send a Child Registration Request to the parent
         getMySTAIP(mySTAIP);
         encodeChildRegistrationRequest(smallSendBuffer, sizeof(smallSendBuffer),localIP,mySTAIP,mySequenceNumber);
-        sendMessage(parent, smallSendBuffer);
+        sendMessage(preferredParent.parentIP, smallSendBuffer);
 
         //Wait for the parent to respond with his routing table information
-        receivedFRTU = waitForMessage(FULL_ROUTING_TABLE_UPDATE,parent,3000);
+        receivedFRTU = waitForMessage(FULL_ROUTING_TABLE_UPDATE,preferredParent.parentIP,3000);
 
         childRegistrationRequestCount ++;
 

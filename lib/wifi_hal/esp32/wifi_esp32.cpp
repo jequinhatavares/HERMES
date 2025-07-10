@@ -217,8 +217,8 @@ void startWifiSTA(int* localIP, int* gateway, int* subnet, int* dns){
 void startWifiAP(const char* SSID, const char* Pass, uint8_t * localIP, uint8_t* gateway, uint8_t* subnet){
 
     // Set the Wi-Fi mode to operate as both an Access Point (AP) and Station (STA)
-    //WiFi.config(localIP, gateway, subnet, gateway);
-    //WiFi.mode(WIFI_AP);
+
+    WiFi.mode(WIFI_AP_STA);
     // Start the Access Point with the SSID defined in SSID_PREFIX
      IPAddress localIP_, gateway_, subnet_ ;
     //Translate the IP addresses from int[4] to the IPAddress Class
@@ -247,7 +247,7 @@ void startWifiAP(const char* SSID, const char* Pass, uint8_t * localIP, uint8_t*
  * @return void
  */
 void searchAP(const char* SSID){
-    WiFi.mode(WIFI_AP_STA);
+    //WiFi.mode(WIFI_AP_STA);
     int n = WiFi.scanNetworks();//Number of scanned wifi networks
     int index, rindex;
     const char* rSSID = "RaspiNet";
@@ -285,7 +285,7 @@ void searchAP(const char* SSID){
  */
 bool connectToAP(const char * SSID, const char * PASS) {
     unsigned long startTime, currentTime;
-    WiFi.mode(WIFI_AP_STA); //AP
+    //WiFi.mode(WIFI_AP_STA); //AP
     WiFi.begin(SSID, PASS);
 
     startTime = getCurrentTime();

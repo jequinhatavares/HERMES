@@ -54,7 +54,6 @@ void readIPAddress(uint8_t *ip, const char *prompt) {
  */
 void getDataMessage() {
     #if defined(ESP32) || defined(ESP8266)
-    messageParameters parameters;
     uint8_t nextHopIP[4];
     char msg[255]="",msgPayload[100];
     uint8_t *ptrIP,sourceIP[4],destinationIP[4];
@@ -74,7 +73,7 @@ void getDataMessage() {
 
     encodeDataMessage(msg, sizeof(msg), msgPayload, sourceIP, destinationIP);
 
-    ptrIP = findRouteToNode(parameters.IP2);
+    ptrIP = findRouteToNode(destinationIP);
 
     if(ptrIP != nullptr){
         assignIP(nextHopIP, ptrIP);
