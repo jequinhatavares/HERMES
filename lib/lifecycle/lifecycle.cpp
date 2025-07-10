@@ -5,21 +5,29 @@ uint8_t gateway[4];
 uint8_t subnet[4];
 uint8_t dns[4];
 
+// Flag indicating whether this node is currently connected to the main network tree
 bool connectedToMainTree = false;
 
+// Timestamp of the last time the application-level processing was performed
 unsigned long lastApplicationProcessingTime = 0;
 
+// Timestamp marking the start of a waiting period during recovery procedures
 unsigned long recoveryWaitStartTime  = 0;
 
+// Callback pointer for middleware code to execute periodic timer events.
 void (*middlewareOnTimerCallback)() = nullptr;
+// Callback pointer for middleware to handle incoming middleware messages
 void (*middlewareHandleMessageCallback)(char*,size_t) = nullptr;
+// Callback pointer for middleware to influence routing decisions
 void (*middlewareInfluenceRoutingCallback)(char*) = nullptr;
+// Callback pointer for middleware to be notified of network events
 void (*middlewareOnNetworkEventCallback)(int,uint8_t *) = nullptr;
+// Callback pointer for middleware to select a preferred parent from a list.
+// Defaults to routing layer level chooseParent function if not overridden.
 parentInfo (*middlewareChooseParentCallback)(parentInfo *,int) = chooseParent;
 
-// Structure that is going to contain all possible parents information
 
-
+// State machine structure holding the current state and a transition table mapping states to handler functions.
 StateMachine SM_ = {
         .current_state = sInit,
         .TransitionTable = {
@@ -35,9 +43,9 @@ StateMachine SM_ = {
                 [sExecuteTask] = executeTask,
         },
 };
-
 StateMachine* SM = &SM_;
 
+// Circular buffer structure used to implement the state machine event queue (called engine because makes the state machine run)
 static CircularBuffer cb_ = {
         .head=0,
         .tail=0,
@@ -49,11 +57,32 @@ static CircularBuffer cb_ = {
 CircularBuffer* stateMachineEngine = &cb_;
 
 
+/**
+ * onParentDisconnect
+ * Handles the parent disconnection event by triggering a state machine transition.
+ * This function is used as a callback in the Wi-Fi layer when the parent disconnection
+ * event occurs. It allows the upper layer to react appropriately, keeping the Wi-Fi
+ * layer agnostic of how the event is processed (dependency injection).
+ *
+ * @return void
+*/
 void onParentDisconnect(){
     LOG(NETWORK, DEBUG,"onParentDisconnect callback!\n");
     insertLast(stateMachineEngine, eLostParentConnection);
     connectedToMainTree = false;
 }
+
+
+/**
+ * isChildRegistered
+ * Checks if a node is a registered child. This function is used as a callback by the Wi-Fi layer to determine
+ * whether a disconnection event comes from a known child node or from a temporary connection. It enables the activation
+ * of child loss mechanisms without requiring the Wi-Fi layer to know how the upper layer manages its data, preserving
+ * separation of concerns through dependency injection.
+*
+* @param MAC - Pointer to the MAC address of the node to check.
+* @return bool - True if child is registered, false otherwise.
+*/
 bool isChildRegistered(uint8_t * MAC){
     uint8_t nodeIP[4];
 
@@ -67,6 +96,15 @@ bool isChildRegistered(uint8_t * MAC){
     return false;
 }
 
+/**
+ * init
+ * Implements the Init State for node initialization.
+ * Sets up the node's softAP, starts the transport layer, initializes routing and children tables,
+ * registers callbacks, and sets global variables.
+ *
+ * @param event - The event.
+ * @return State - The resulting state (sSearch (for non-root nodes) or sActive(for the root)).
+*/
 State init(Event event){
     uint8_t MAC[6];
     char strMAC[30], ssid[256]; // Make sure this buffer is large enough to hold the entire SSID
@@ -123,6 +161,14 @@ State init(Event event){
     };
 }
 
+
+/**
+ * search
+ * Implements the Search State: continuously scans for available Wi-Fi networks until at least one is found.
+ *
+ * @param event - The search event.
+ * @return State - The next state (sJoinNetwork or sSearch).
+*/
 State search(Event event){
     LOG(STATE_MACHINE,INFO,"Search State\n");
     int i;
@@ -155,6 +201,15 @@ State search(Event event){
 
 }
 
+/**
+ * joinNetwork
+ * Implements the Join Network state, where the node attempts to connect to all available parent nodes and selects the
+ * most appropriate one. If the network joining process is successful, the node transitions to the Active state.
+ * Otherwise, if no parents respond or a connection error occurs, it transitions back to the Search state.
+ *
+ * @param event - The triggering event.
+ * @return State - The next state (sActive or sSearch).
+ */
 State joinNetwork(Event event){
     LOG(STATE_MACHINE,INFO,"Join Network State\n");
     int nrOfPossibleParents = 0;
@@ -187,6 +242,15 @@ State joinNetwork(Event event){
     return sActive;
 }
 
+
+/**
+ * active
+ * Implements the Active state, where the node operates normally and handles incoming events,
+ * such as message reception, disconnections, or routing updates.
+ *
+ * @param event - The event to be processed.
+ * @return State - The next state, depending on the event type.
+ */
 State active(Event event){
     LOG(STATE_MACHINE,INFO,"Active State\n");
 
@@ -214,6 +278,15 @@ State active(Event event){
     return sActive;
 }
 
+
+/**
+ * handleMessages
+ * Implements the Handle Messages state: processes incoming messages and dispatches them
+ * to the appropriate handlers based on message type.
+ *
+ * @param event - The message event to process.
+ * @return State - Always returns to sActive after processing.
+ */
 State handleMessages(Event event){
     LOG(STATE_MACHINE,INFO,"Handle Messages State\n");
     int messageType;
@@ -288,6 +361,18 @@ State handleMessages(Event event){
     return sActive;
 }
 
+
+/**
+ * parentRecovery
+ * Implements the Parent Recovery state. It informs all child nodes about the lost connection
+ * to the main tree, attempts to find another parent, and establishes a connection with it.
+ * If reconnection fails, it transitions to an appropriate fallback state.
+ * Also handles losing a child and managing that loss during parent disconnection.
+ *
+ * @param event - The event.
+ * @return State - The next state: sActive if connected to a new parent, or sParentRestart
+ *                 if unable to reconnect to the main tree.
+ */
 State parentRecovery(Event event){
     int i, consecutiveSearchCount = 0, nrOfPossibleParents = 0;
     uint8_t * STAIP= nullptr;
@@ -383,6 +468,14 @@ State parentRecovery(Event event){
     return sActive;
 }
 
+/**
+ * parentRestart
+ * Implements the Parent Restart state, managing the node restart procedure
+ * when parent recovery fails. Also handles the loss of a child node during this state.
+ *
+ * @param event - The restart event.
+ * @return State - The next state (sSearch).
+ */
 State parentRestart(Event event){
     LOG(STATE_MACHINE,INFO,"Force Restart State\n");
     uint8_t *childAPIP, *childSTAIP, *nodeIP;
@@ -434,6 +527,17 @@ State parentRestart(Event event){
     return sSearch;
 }
 
+
+/**
+ * recoveryWait
+ * Implements the Recovery Wait state, where the node waits to reconnect to the main tree.
+ * During this time, it may transition to sActive (if the connection is reestablished),
+ * to sParentRecovery (if the direct parent is lost or the wait times out),
+ * or remain in the waiting state.
+ *
+ * @param event - The wait event.
+ * @return State - The next state (sActive, sParentRecovery, or continue waiting).
+**/
 State recoveryAwait(Event event) {
     LOG(STATE_MACHINE,INFO,"Recovery Await State\n");
     messageType messageType;
@@ -483,6 +587,14 @@ State recoveryAwait(Event event) {
     return sRecoveryWait;
 }
 
+
+/**
+ * executeTask
+ * Executes application-specific tasks.
+ *
+ * @param event - The task execution event.
+ * @return State - Always returns to sActive after completing the task.
+ */
 State executeTask(Event event){
     LOG(STATE_MACHINE,INFO,"Execute Task State\n");
     // In this state, an application-specific task will be executed.
@@ -498,6 +610,18 @@ State executeTask(Event event){
 
     return sActive;
 }
+
+
+/**
+ * handleTimers
+ * Manages periodic timer-based events including:
+ * - Checking for lost child node timeouts and triggering recovery events.
+ * - Sending periodic routing updates if connected to the main tree.
+ * - Invoking middleware and application-specific periodic callbacks.
+ * - Monitoring recovery wait state timeout and triggering corresponding events.
+ *
+ * This function is called regularly to maintain protocol timing and state transitions.
+ */
 void handleTimers(){
     int* MAC;
     unsigned long currentTime = getCurrentTime();
@@ -539,6 +663,14 @@ void handleTimers(){
         insertLast(stateMachineEngine, eRecoveryWaitTimeOut);
     }
 }
+
+/**
+ * requestTaskExecution
+ * Called by the application layer to request execution of an application-specific task.
+ * This function enqueues the executeTask event that allows the state machine to transition to the Execute Task state.
+ *
+ * @return void
+ */
 void requestTaskExecution(){
     insertLast(stateMachineEngine, eExecuteTask);
 }
@@ -581,6 +713,14 @@ void setIPs(const uint8_t * MAC){
 }
 
 
+/**
+ * filterReachableNetworks
+ *
+ * Removes from the reachableNetworks list any Wi-Fi networks whose nodes belong
+ * to the same subnet as the current node. This prevents routing loops.
+ *
+ * @return void
+ */
 void filterReachableNetworks(){
     int i, k;
     uint8_t MAC[6],nodeIP[4];
@@ -605,6 +745,15 @@ void filterReachableNetworks(){
     }
 }
 
+
+/**
+ * lostChildProcedure
+ *
+ * Handles the procedure when a child node is considered permanently lost by marking its subtree as unreachable,
+ * updating the routing tables, removing the lost child from the children list, and notifying the rest of the network.
+ *
+ * @return void
+ */
 void lostChildProcedure(){
     LOG(STATE_MACHINE,INFO,"On Lost Child Procedure\n");
     int i, subNetSize = 0;
@@ -705,6 +854,17 @@ void lostChildProcedure(){
 
 }
 
+
+/**
+ * parentHandshakeProcedure
+ *
+ * Attempts to connect to each reachable network candidate to perform a handshake by sending a
+ * Parent Discovery Request and waiting for a Parent Info Response. Valid parents are collected
+ * into the possibleParents list. This process filters out invalid or unreachable parents.
+ *
+ * @param possibleParents - Array to store information about valid parent candidates.
+ * @return int - Number of valid possible parents found.
+ */
 int parentHandshakeProcedure(parentInfo *possibleParents){
     uint8_t connectedParentIP[4];
     uint8_t mySTAIP[4];
@@ -761,6 +921,16 @@ int parentHandshakeProcedure(parentInfo *possibleParents){
 }
 
 
+/**
+ * establishParentConnection
+ *
+ * Connects to the selected parent node’s Wi-Fi network, sends a child registration request
+ * and waits for the parent’s routing table update. If the node has its own children (subnetwork),
+ * it sends its routing table back to the parent to update the network topology.
+ *
+ * @param preferredParent - The chosen parent information including SSID and IP.
+ * @return bool - Returns true if the connection and registration succeed, false otherwise.
+ */
 bool establishParentConnection(parentInfo preferredParent){
     uint8_t mySTAIP[4];
     bool receivedFRTU=false;

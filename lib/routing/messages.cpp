@@ -560,7 +560,6 @@ void handleDebugMessage(char* msg){
         LOG(DEBUG_SERVER,DEBUG,msg);
         //sendMessage(debugServerIP, receiveBuffer);
     }
-
 }
 
 /**

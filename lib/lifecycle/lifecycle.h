@@ -11,11 +11,11 @@
 #include <snake_queue.h>
 #include <logger.h>
 #include <cstring>
-//#include <../middleware/strategies/strategy_inject/strategy_inject.h>
 
 #define SSID_PREFIX      		"JessicaNode"
 
 #define PASS     		        "123456789"
+
 #define APPLICATION_PROCESSING_INTERVAL 120000
 
 #define CHILD_RECONNECT_TIMEOUT 3000
@@ -25,6 +25,14 @@
 #define MAX_PARENT_SEARCH_ATTEMPTS 3
 
 #define CHILD_REGISTRATION_RETRY_COUNT 2
+
+extern StateMachine* SM;
+extern CircularBuffer* stateMachineEngine;
+
+extern uint8_t localIP[4];
+extern uint8_t gateway[4];
+extern uint8_t subnet[4];
+extern uint8_t dns[4];
 
 extern void (*middlewareOnTimerCallback)();
 extern void (*middlewareHandleMessageCallback)(char*,size_t);
@@ -72,14 +80,6 @@ void requestTaskExecution();
 #define eRecoveryWaitTimeOut ((Event) 10)
 #define eExecuteTask ((Event) 11)
 #define eError ((Event) 12)
-
-extern StateMachine* SM;
-extern CircularBuffer* stateMachineEngine;
-
-extern uint8_t localIP[4];
-extern uint8_t gateway[4];
-extern uint8_t subnet[4];
-extern uint8_t dns[4];
 
 
 void parseMAC(const char* macStr, int* macArray);
