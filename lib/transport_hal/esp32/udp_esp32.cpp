@@ -33,7 +33,7 @@ void sendMessage(uint8_t address[4], const char * msg){
  */
 int receiveMessage(char* buffer, size_t bufferSize){
     int packetSize = Udp.parsePacket();
-    if (0<packetSize<bufferSize){
+    if (packetSize > 0 && packetSize < bufferSize){
         int len = Udp.read(buffer, bufferSize);
         //IPAddress sender = Udp.remoteIP();
         //senderIP[0] = sender[0];senderIP[1] = sender[1];
