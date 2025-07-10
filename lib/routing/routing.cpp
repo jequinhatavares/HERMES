@@ -231,6 +231,10 @@ bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, 
     routingTableEntry updatedEntry;
     routingTableEntry *nodeEntry = (routingTableEntry*) findNode(routingTable, nodeIP);
 
+    /*** If the sequence number for my own node in the received routing update is higher than the one
+      * stored in RAM, it likely means the node experienced a reset or power loss and lost its volatile memory.
+      * In that case, update my sequence number to match the one in the routing update. ***/
+    if(isIPEqual(nodeIP,myIP) && sequenceNumber > mySequenceNumber) mySequenceNumber = sequenceNumber;
 
     if( nodeEntry == nullptr){ // If the node is not in the table add it
         // Check the parity of the sequence number. If it's odd (indicating a issue with the node),
@@ -242,7 +246,7 @@ bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, 
         }
         assignIP(updatedEntry.nextHopIP, senderIP);
         updatedEntry.sequenceNumber = sequenceNumber;
-        tableAdd(routingTable, nodeIP, &updatedEntry);
+        tableAdd(routingTable, nodeIP, & updatedEntry);
         return true;
 
     }else{//The node is already present in the table

@@ -1,12 +1,10 @@
 #ifndef ROUTING_H
 #define ROUTING_H
 
-//#include "table.h"
 #include <../table/table.h>
 #include <logger.h>
 #include <cstdint>
 
-//#include <../middleware/strategies/strategy_inject.h>
 
 typedef struct parentInfo{
     char* ssid;
@@ -32,6 +30,7 @@ extern bool hasParent;
 extern uint8_t myIP[4];
 extern uint8_t rootIP[4];
 extern uint8_t parent[4];
+
 extern int mySequenceNumber;
 
 extern unsigned long lastRoutingUpdateTime;
