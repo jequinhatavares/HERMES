@@ -148,7 +148,7 @@ void cliInteraction(){
                     break;
 
                 default:
-                    if (choice != 0)LOG(CLI,INFO,"Invalid option. Try again.");
+                    if (choice != 0)LOG(CLI,INFO,"Invalid option. Try again.\n");
                     break;
             }
         }
