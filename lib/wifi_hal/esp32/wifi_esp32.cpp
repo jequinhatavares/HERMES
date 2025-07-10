@@ -48,6 +48,7 @@ void onSoftAPModeStationDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t i
     lostChildMAC[2] = info.wifi_ap_stadisconnected.mac[2];lostChildMAC[3] = info.wifi_ap_stadisconnected.mac[3];
     lostChildMAC[4] = info.wifi_ap_stadisconnected.mac[4];lostChildMAC[5] = info.wifi_ap_stadisconnected.mac[5];
 
+
     unsigned long currentTime = getCurrentTime();
     childConnectionStatus lostChild;
     lostChild.childDisconnectionTime = currentTime;

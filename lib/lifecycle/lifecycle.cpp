@@ -494,7 +494,7 @@ void handleTimers(){
     for (int i = 0; i < lostChildrenTable->numberOfItems; i++) {
         MAC = (int*) tableKey(lostChildrenTable, i);
         childConnectionStatus *status = (childConnectionStatus*)tableRead(lostChildrenTable, MAC);
-        if(currentTime - status->childDisconnectionTime >= CHILD_RECONNECT_TIMEOUT){
+        if(currentTime - status->childDisconnectionTime >= CHILD_RECONNECT_TIMEOUT && status->childTimedOut == false){
             status->childTimedOut = true;
             insertLast(stateMachineEngine, eLostChildConnection);
         }
@@ -613,7 +613,7 @@ void lostChildProcedure(){
 
                 //Transform the lost child MAC into a IP
                 getIPFromMAC(MAC,lostChildIP);
-                LOG(NETWORK,DEBUG,"Lost Child MAC: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu \n", MAC[0], MAC[1], MAC[2], MAC[3], MAC[4], MAC[6]);
+                LOG(NETWORK,DEBUG,"Lost Child MAC: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu \n", MAC[0], MAC[1], MAC[2], MAC[3], MAC[4], MAC[5]);
                 LOG(NETWORK,DEBUG,"Lost Child IP: %hhu.%hhu.%hhu.%hhu \n", lostChildIP[0], lostChildIP[1], lostChildIP[2], lostChildIP[3]);
 
                 // Identify all nodes that were part of the lost child’s subnetwork.
@@ -642,6 +642,17 @@ void lostChildProcedure(){
                 tablePrint(childrenTable,printChildrenTableHeader, printChildStruct);
 
                 unreachableEntry.hopDistance = -1;
+
+                /**
+                 * If, for some reason, a node that was previously my direct child reconnects to the main tree
+                 * through a different parent (e.g., after disconnecting from me while I was also trying to
+                 * reconnect to the tree and unable to process the disconnection in time), it will no longer be
+                 * considered my child and will be removed from my children table.
+                 *
+                 * However, this does not affect the routing table: since the node is not the next hop for any
+                 * route in my table, its routing entry remains valid and unchanged. This is correct, as the node
+                 * has successfully reintegrated into the network, just under a different parent.
+                 */
                 // Mark the nodes as unreachable in the routing table.
                 for (i = 0; i < subNetSize; i++) {
                     // Mark the nodes as unreachable in the routing table
@@ -657,14 +668,15 @@ void lostChildProcedure(){
                         tableUpdate(routingTable, lostNodeSubnetwork[i],&unreachableEntry);
                     }
 
-                    // If the node is connected to the main tree, notify the rest of the network about the node loss
-                    if(connectedToMainTree){ //TODO VER SE ESTE CÓDIGO FAZ SENTIDO AQUI
-                        // Notify the rest of the network about nodes that are no longer reachable.
-                        encodePartialRoutingUpdate(largeSendBuffer,sizeof(largeSendBuffer),lostNodeSubnetwork,subNetSize);
-                        propagateMessage(largeSendBuffer, myIP);
-                    }
-
                 }
+
+                // If the node is connected to the main tree, notify the rest of the network about the node loss
+                if(connectedToMainTree){
+                    // Notify the rest of the network about nodes that are no longer reachable.
+                    encodePartialRoutingUpdate(largeSendBuffer,sizeof(largeSendBuffer),lostNodeSubnetwork,subNetSize);
+                    propagateMessage(largeSendBuffer, myIP);
+                }
+
                 LOG(NETWORK,DEBUG,"Updated Routing Table:\n");
                 tablePrint(routingTable,printRoutingTableHeader, printRoutingStruct);
 
