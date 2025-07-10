@@ -24,7 +24,7 @@
 
 #define MAX_PARENT_SEARCH_ATTEMPTS 3
 
-#define CHILD_REGISTRATION_RETRY_COUNT 3
+#define CHILD_REGISTRATION_RETRY_COUNT 2
 
 extern void (*middlewareOnTimerCallback)();
 extern void (*middlewareHandleMessageCallback)(char*,size_t);

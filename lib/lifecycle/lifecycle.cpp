@@ -361,7 +361,12 @@ State parentRecovery(Event event){
     parentInfo preferredParent = middlewareChooseParentCallback(possibleParents,nrOfPossibleParents);
 
     // Connect to the chosen parent, send CHILD_REGISTRATION_REQUEST, and receive their routing table
-    establishParentConnection(preferredParent);
+    if(!establishParentConnection(preferredParent)){
+        // If the connection is not successful, transition to the Node Restart state.
+        LOG(NETWORK,DEBUG,"Error establishing upstream connection with parent. Restarting node.\n");
+        insertLast(stateMachineEngine, eNodeRestart);
+        return sParentRestart;
+    }
 
     // Set the flag to true to indicate that the node is connected to the main tree
     connectedToMainTree = true;
@@ -749,12 +754,6 @@ bool establishParentConnection(parentInfo preferredParent){
 
     LOG(NETWORK,INFO,"Selected Parent -> IP: %i.%i.%i.%i | Children: %i | RootHopDist: %i\n",preferredParent.parentIP[0], preferredParent.parentIP[1], preferredParent.parentIP[2], preferredParent.parentIP[3], preferredParent.nrOfChildren, preferredParent.rootHopDistance);
 
-    //Update parent information on global variable
-    parent[0] = preferredParent.parentIP[0]; parent[1] = preferredParent.parentIP[1];
-    parent[2] = preferredParent.parentIP[2]; parent[3] = preferredParent.parentIP[3];
-    rootHopDistance = preferredParent.rootHopDistance + 1;
-    hasParent = true;
-
     do{
         //Send a Child Registration Request to the parent
         getMySTAIP(mySTAIP);
@@ -764,22 +763,32 @@ bool establishParentConnection(parentInfo preferredParent){
         //Wait for the parent to respond with his routing table information
         receivedFRTU = waitForMessage(FULL_ROUTING_TABLE_UPDATE,parent,3000);
 
-        //Process the routing table update
-        if (receivedFRTU){
-            LOG(MESSAGES,INFO,"Parent [Full Routing Update] Response: %s\n", receiveBuffer);
-            if(isMessageValid(FULL_ROUTING_TABLE_UPDATE,receiveBuffer)){
-                //LOG(MESSAGES,INFO,"Full Routing Update valid: %s\n", receiveBuffer);
-                handleFullRoutingTableUpdate(receiveBuffer);
-                LOG(NETWORK,INFO,"Routing Table Updated:\n");
-                tablePrint(routingTable,printRoutingTableHeader,printRoutingStruct);
-            }
-        }else{
-            LOG(NETWORK,ERROR,"❌ ERROR: No routing table data received from parent.\n");
-        }
         childRegistrationRequestCount ++;
+
     }while( !receivedFRTU && childRegistrationRequestCount < CHILD_REGISTRATION_RETRY_COUNT);
 
-    if(!receivedFRTU) return false;
+    /*** If, after CHILD_REGISTRATION_RETRY_COUNT attempts, the parent does not respond to the CHILD_REGISTRATION_REQUEST with its routing table,
+         it is assumed that the parent is no longer available or not accepting children.
+         In this case, the parent search and selection process must be restarted. ***/
+    if(!receivedFRTU){
+        LOG(NETWORK, INFO, "No routing table data received from chosen parent. Restarting parent selection procedure.\n");
+        return false;
+    }
+
+    //Update parent information on global variables
+    parent[0] = preferredParent.parentIP[0]; parent[1] = preferredParent.parentIP[1];
+    parent[2] = preferredParent.parentIP[2]; parent[3] = preferredParent.parentIP[3];
+    rootHopDistance = preferredParent.rootHopDistance + 1;
+    hasParent = true;
+
+    //Process the received routing table update
+    LOG(MESSAGES,INFO,"Parent [Full Routing Update] Response: %s\n", receiveBuffer);
+    if(isMessageValid(FULL_ROUTING_TABLE_UPDATE,receiveBuffer)){
+        //LOG(MESSAGES,INFO,"Full Routing Update valid: %s\n", receiveBuffer);
+        handleFullRoutingTableUpdate(receiveBuffer);
+        LOG(NETWORK,INFO,"Routing Table Updated:\n");
+        tablePrint(routingTable,printRoutingTableHeader,printRoutingStruct);
+    }
 
     // If the joining node has children (i.e., his subnetwork has nodes), it must also send its routing table to its new parent.
     // This ensures that the rest of the network becomes aware of the entire subtree associated with the new node
