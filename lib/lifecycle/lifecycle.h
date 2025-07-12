@@ -77,11 +77,11 @@ void requestTaskExecution();
 #define eNodeRestart ((Event) 7)
 #define eRestartSuccess ((Event) 8)
 #define eLostTreeConnection ((Event) 9)
-#define eRecoveryWaitTimeOut ((Event) 10)
-#define eExecuteTask ((Event) 11)
-#define eError ((Event) 12)
+#define eTreeConnectionRestored ((Event) 10)
+#define eRecoveryWaitTimeOut ((Event) 11)
+#define eExecuteTask ((Event) 12)
+#define eError ((Event) 13)
 
-void onMainTreeDisconnection();
 
 void parseMAC(const char* macStr, int* macArray);
 void setIPs(const uint8_t * MAC);

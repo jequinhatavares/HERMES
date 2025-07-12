@@ -94,13 +94,44 @@ bool isChildRegistered(uint8_t * MAC){
     return false;
 }
 
-void onMainTreeDisconnection(){
+
+/***
+ * onRootUnreachable
+ * Callback function for the routing layer to notify when root is unreachable.
+ * Injects state machine dependency by triggering transition to recovery state.
+ *
+ *
+ * @return void
+***/
+void onRootUnreachable(){
+    /*** Upon receiving routing information indicating that the root is unreachable, transition from the active state
+     *   to the recoveryAwait state. If the node is not already in recoveryAwait, it means a TOPOLOGY_BREAK_ALERT
+     * was missed, and the node did not enter the appropriate state. ***/
+    if(SM->current_state == sRecoveryWait || SM->current_state == sParentRecovery || SM->current_state == sParentRestart){
+        return;
+    }
     connectedToMainTree = false;
     recoveryWaitStartTime = getCurrentTime();
-    //LOG(NETWORK,INFO,"In Handle recoveryWaitStartTime:%lu\n",recoveryWaitStartTime);
     insertLast(stateMachineEngine, eLostTreeConnection);
 }
 
+
+/***
+ * onRootReachable
+ * Callback function for the routing layer to notify when root is reachable.
+ * Injects state machine dependency by triggering transition back to active state.
+ *
+ * @return void
+***/
+void onRootReachable(){
+    /*** Upon receiving routing information indicating that the root is reachable, transition from the recovery state
+     * to the active state if currently in recovery. If the node is not already in the active state, it means a
+     * TOPOLOGY_RESTORED_NOTICE was missed, and the node did not transition properly to the active state.***/
+    if(SM->current_state == sRecoveryWait || SM->current_state == sParentRecovery || SM->current_state == sParentRestart){
+        connectedToMainTree = true;
+        insertLast(stateMachineEngine, eTreeConnectionRestored);
+    }
+}
 /**
  * init
  * Implements the Init State for node initialization.
@@ -123,7 +154,8 @@ State init(Event event){
     strcat(ssid,strMAC);
 
     //Set up callback to react to flagged routing updates to trigger state machine transitions
-    onFlaggedRoutingUpdate = onMainTreeDisconnection;
+    onRootReachableCallback = onRootReachable;
+    onRootUnreachableCallback = onRootUnreachable;
 
     // Set up WiFi event callbacks (parent/child loss) to trigger state machine transitions
     parentDisconnectCallback = onParentDisconnect;
@@ -570,6 +602,14 @@ State recoveryAwait(Event event){
         }
 
         switch(messageType){
+            case FULL_ROUTING_TABLE_UPDATE:
+                handleFullRoutingTableUpdate(receiveBuffer);
+                break;
+
+            case PARTIAL_ROUTING_TABLE_UPDATE:
+                handlePartialRoutingUpdate(receiveBuffer);
+                break;
+
             case TOPOLOGY_BREAK_ALERT:
                 LOG(MESSAGES,INFO,"Received [Topology Break Alert] message: \"%s\"\n", receiveBuffer);
                 handleTopologyBreakAlert(receiveBuffer);
@@ -601,6 +641,8 @@ State recoveryAwait(Event event){
         lostChildProcedure();
     }else if (event == eLostParentConnection || event == eRecoveryWaitTimeOut){
         return sParentRecovery;
+    }else if(event == eTreeConnectionRestored){
+        return sActive;
     }
 
     //if(currentTime-startTime>=MAIN_TREE_RECONNECT_TIMEOUT)return sParentRestart;
