@@ -13,6 +13,9 @@ uint8_t rootIP[4];
 int mySequenceNumber = 2;
 unsigned long lastRoutingUpdateTime;
 
+// Flag indicating whether this node is currently connected to the main network tree
+bool connectedToMainTree=false;
+
 //int debugServerIP[4]={0,0,0,0};
 
 #undef TableMaxSize

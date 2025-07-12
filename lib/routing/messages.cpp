@@ -128,35 +128,45 @@ void encodeChildRegistrationRequest(char* messageBuffer, size_t bufferSize,uint8
              STAIP[0],STAIP[1],STAIP[2],STAIP[3], sequenceNumber);
 }
 
-void encodeFullRoutingTableUpdate(char* messageBuffer, size_t bufferSize){
-    char tempMsg[40] = "";//35
-    //FULL_ROUTING_TABLE_UPDATE [senderIP] [rootIP] |[node1 IP] [hopDistance] [Sequence Number1]|[node2 IP] [hopDistance] [Sequence Number2]|....
-    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu|",FULL_ROUTING_TABLE_UPDATE,myIP[0],myIP[1],myIP[2],
-             myIP[3],rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
+void encodeFullRoutingTableUpdate(char* messageBuffer, size_t bufferSize,bool disconnectionFlag){
+    int offset=0;
+    //FULL_ROUTING_TABLE_UPDATE [Flag] [senderIP] [rootIP] |[node1 IP] [hopDistance] [Sequence Number1]|[node2 IP] [hopDistance] [Sequence Number2]|....
+
+    if(disconnectionFlag){
+        /***If the routing update is generated while the subtree is disconnected from the main tree,
+         flag the update to indicate it originates from a disconnected subtree***/
+        offset+=snprintf(messageBuffer+offset,bufferSize-offset,"%i 1 %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu|",FULL_ROUTING_TABLE_UPDATE,myIP[0],myIP[1],myIP[2],
+                 myIP[3],rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
+
+    }else{
+        offset+=snprintf(messageBuffer+offset,bufferSize-offset,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu|",FULL_ROUTING_TABLE_UPDATE,myIP[0],myIP[1],myIP[2],
+                 myIP[3],rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
+    }
 
     for (int i = 0; i < routingTable->numberOfItems; i++) {
-        snprintf(tempMsg,sizeof(tempMsg),"%hhu.%hhu.%hhu.%hhu %i %i|",((uint8_t *)routingTable->table[i].key)[0],
+        offset+=snprintf(messageBuffer+offset,bufferSize-offset,"%hhu.%hhu.%hhu.%hhu %i %i|",((uint8_t *)routingTable->table[i].key)[0],
                  ((uint8_t *)routingTable->table[i].key)[1],((uint8_t *)routingTable->table[i].key)[2],
                  ((uint8_t *)routingTable->table[i].key)[3],((routingTableEntry *)routingTable->table[i].value)->hopDistance,
                  ((routingTableEntry *)routingTable->table[i].value)->sequenceNumber);
 
-        strcat(messageBuffer, tempMsg);
-        strcpy(tempMsg , "");
     }
 }
 
-void encodePartialRoutingUpdate(char* messageBuffer, size_t bufferSize,uint8_t nodeIPs[][4],int nrNodes){
-    char tempMsg[40] = "";//35
+void encodePartialRoutingUpdate(char* messageBuffer, size_t bufferSize,uint8_t nodeIPs[][4],int nrNodes,bool disconnectionFlag){
+    int offset=0;
     routingTableEntry *nodeRoutingEntry;
 
     //PARTIAL_ROUTING_TABLE_UPDATE [senderIP] |[node1 IP] [hopDistance] [sequenceNumber]| [node2 IP] [hopDistance] [sequenceNumber] ...
-    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu|",PARTIAL_ROUTING_TABLE_UPDATE,myIP[0],myIP[1],myIP[2],myIP[3]);
+    if(disconnectionFlag){
+        offset += snprintf(messageBuffer+offset,bufferSize-offset,"%i 1 %hhu.%hhu.%hhu.%hhu|",PARTIAL_ROUTING_TABLE_UPDATE,myIP[0],myIP[1],myIP[2],myIP[3]);
+    }else{
+        offset += snprintf(messageBuffer+offset,bufferSize-offset,"%i %hhu.%hhu.%hhu.%hhu|",PARTIAL_ROUTING_TABLE_UPDATE,myIP[0],myIP[1],myIP[2],myIP[3]);
+    }
+
     for (int i = 0; i < nrNodes; i++){
         nodeRoutingEntry = (routingTableEntry*)tableRead(routingTable, nodeIPs[i]);
         if(nodeRoutingEntry != nullptr){
-            snprintf(tempMsg,sizeof(tempMsg),"%hhu.%hhu.%hhu.%hhu %i %i|",nodeIPs[i][0],nodeIPs[i][1],nodeIPs[i][2],nodeIPs[i][3],nodeRoutingEntry->hopDistance, nodeRoutingEntry->sequenceNumber);
-            strcat(messageBuffer, tempMsg);
-            strcpy(tempMsg , "");
+            offset += snprintf(messageBuffer+offset,bufferSize-offset,"%hhu.%hhu.%hhu.%hhu %i %i|",nodeIPs[i][0],nodeIPs[i][1],nodeIPs[i][2],nodeIPs[i][3],nodeRoutingEntry->hopDistance, nodeRoutingEntry->sequenceNumber);
         }
     }
 }
@@ -398,12 +408,12 @@ void handleChildRegistrationRequest(char * msg){
 
     //Send my routing table to my child
     //LOG(MESSAGES,INFO,"Sending my routing Table to child:");
-    encodeFullRoutingTableUpdate(largeSendBuffer,sizeof(largeSendBuffer));
+    encodeFullRoutingTableUpdate(largeSendBuffer,sizeof(largeSendBuffer),connectedToMainTree);
     LOG(MESSAGES, INFO, "Sending [Full Routing Update]:%s to: %d.%d.%d.%d\n",largeSendBuffer,childAPIP[0], childAPIP[1], childAPIP[2], childAPIP[3]);
     sendMessage(childSTAIP,largeSendBuffer);
 
 
-    encodePartialRoutingUpdate(smallSendBuffer,sizeof(smallSendBuffer), &childAPIP,1);
+    encodePartialRoutingUpdate(smallSendBuffer,sizeof(smallSendBuffer), &childAPIP,1,connectedToMainTree);
     //LOG(MESSAGES,INFO,"Sending [PARTIAL ROUTING TABLE UPDATE] message: \"%s\"\n", smallSendBuffer);
     propagateMessage(smallSendBuffer,  childAPIP);
     //Sending new node information to the DEBUG visualization program, if enabled
@@ -423,13 +433,18 @@ void handleChildRegistrationRequest(char * msg){
 */
 void handleFullRoutingTableUpdate(char * msg){
     int type, nrOfChanges = 0;
-    uint8_t nodeIP[4], sourceIP[4],changedNodes[TableMaxSize][4];
-    int hopDistance,sequenceNumber;
+    uint8_t nodeIP[4], sourceIP[4],changedNodes[TableMaxSize][4],disconnectionFlag=0;
+    int hopDistance,sequenceNumber,parsedValues;
     bool isRoutingTableChanged = false, isRoutingEntryChanged = false ;
-    //Parse Message Type and root node IP
-    sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", &type,&sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
 
     char* token = strtok(msg, "|");
+
+    //Parse Message Type and root node IP
+    parsedValues = sscanf(msg, "%d %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",&type,&disconnectionFlag,&sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
+
+    if(parsedValues != 10){
+        sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",&type,&sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
+    }
 
     //To discard the message type and ensure the token points to the first routing table update entry
     token = strtok(nullptr, "|");
@@ -455,7 +470,7 @@ void handleFullRoutingTableUpdate(char * msg){
     if (isRoutingTableChanged){
         LOG(NETWORK,INFO, "Routing Information has changed-> Propagate new info\n");
         //Propagate the routing table update information trough the network
-        encodePartialRoutingUpdate(largeSendBuffer,sizeof(largeSendBuffer),changedNodes,nrOfChanges);
+        encodePartialRoutingUpdate(largeSendBuffer,sizeof(largeSendBuffer),changedNodes,nrOfChanges,connectedToMainTree);
         propagateMessage(largeSendBuffer, sourceIP);
     }
 
@@ -474,15 +489,19 @@ void handleFullRoutingTableUpdate(char * msg){
 */
 void handlePartialRoutingUpdate(char *msg){
     int type, nrOfChanges = 0;
-    uint8_t nodeIP[4], senderIP[4],changedNodes[TableMaxSize][4];
-    int sequenceNumber;
+    uint8_t nodeIP[4], senderIP[4],changedNodes[TableMaxSize][4],disconnectionFlag;
+    int sequenceNumber,parsedValues;
     int hopDistance;
     bool isRoutingTableChanged = false, isRoutingEntryChanged = false;
 
-    //Parse Message Type and senderIP
-    sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu", &type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
-
     char* token = strtok(msg, "|");
+
+    //Parse Message Type and senderIP
+    parsedValues=sscanf(msg, "%d %hhu %hhu.%hhu.%hhu.%hhu",&type,&disconnectionFlag,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
+
+    if(parsedValues != 6){
+        sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu",&type,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]);
+    }
 
     //To discard the message type and ensure the token points to the first routing table update entry
     token = strtok(nullptr, "|");
@@ -509,7 +528,7 @@ void handlePartialRoutingUpdate(char *msg){
         routingTableEntry*nodeEntry = (routingTableEntry*) findNode(routingTable,nodeIP);
         if(nodeEntry != nullptr){
             //Propagate the routing table update information trough the network
-            encodePartialRoutingUpdate(largeSendBuffer,sizeof(largeSendBuffer), changedNodes,nrOfChanges);
+            encodePartialRoutingUpdate(largeSendBuffer,sizeof(largeSendBuffer), changedNodes,nrOfChanges,connectedToMainTree);
             propagateMessage(largeSendBuffer, senderIP);
         }else{
             LOG(NETWORK,ERROR, "❌ Routing Table Update Failed: The node in the routing update was not"
@@ -670,14 +689,6 @@ void handleDebugRegistrationRequest(char* msg){
     //sscanf(msg, "%d %d.%d.%d.%d",&type, &debugServerIP[0],&debugServerIP[1],&debugServerIP[2],&debugServerIP[3]);
 }
 
-/**
- * handleDebugRegistrationRequest
- * Handles a DEBUG_REGISTRATION_REQUEST: decodes the message, ...
- *
- * @param msg - The message to decode.
- * @return void
- */
-
 
 /**
  * propagateMessage
@@ -787,6 +798,13 @@ void sendMessageToChildren(char* messageBuffer){
         }
     }
 
+}
+
+void sendMessageToParent(char* messageBuffer){
+    uint8_t *nextHopIP = findRouteToNode(parent);
+    if(nextHopIP != nullptr){
+        sendMessage(parent,messageBuffer);
+    }
 }
 
 

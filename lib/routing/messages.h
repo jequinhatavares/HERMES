@@ -46,8 +46,8 @@ extern char smallSendBuffer[50];
 
 void encodeParentInfoResponse(char* messageBuffer, size_t bufferSize,uint8_t *APIP,int hopDistance,int childrenNumber);
 void encodeChildRegistrationRequest(char* messageBuffer, size_t bufferSize,uint8_t *APIP,uint8_t *STAIP,int sequenceNumber);
-void encodeFullRoutingTableUpdate(char* messageBuffer, size_t bufferSize);
-void encodePartialRoutingUpdate(char* messageBuffer, size_t bufferSize,uint8_t nodeIPs[][4],int nrNodes);
+void encodeFullRoutingTableUpdate(char* messageBuffer, size_t bufferSize,bool disconnectionFlag);
+void encodePartialRoutingUpdate(char* messageBuffer, size_t bufferSize,uint8_t nodeIPs[][4],int nrNodes,bool disconnectionFlag);
 void encodeTopologyBreakAlert(char* messageBuffer, size_t bufferSize);
 void encodeTopologyRestoredNotice(char* messageBuffer, size_t bufferSize);
 void encodeParentResetNotification(char* messageBuffer, size_t bufferSize);

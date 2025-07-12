@@ -7,6 +7,8 @@
 
 #define ROUTING_UPDATE_INTERVAL 180000
 
+// Flag indicating whether this node is currently connected to the main network tree
+extern bool connectedToMainTree;
 
 typedef struct parentInfo{
     char* ssid;

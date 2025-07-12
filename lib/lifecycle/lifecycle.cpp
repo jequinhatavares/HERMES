@@ -5,8 +5,6 @@ uint8_t gateway[4];
 uint8_t subnet[4];
 uint8_t dns[4];
 
-// Flag indicating whether this node is currently connected to the main network tree
-bool connectedToMainTree = false;
 
 // Timestamp of the last time the application-level processing was performed
 unsigned long lastApplicationProcessingTime = 0;
@@ -375,7 +373,7 @@ State handleMessages(Event event){
  */
 State parentRecovery(Event event){
     int i, consecutiveSearchCount = 0, nrOfPossibleParents = 0;
-    uint8_t * STAIP= nullptr;
+    uint8_t * STAIP= nullptr,blankIP[4]={0,0,0,0};
     parentInfo possibleParents[10];
 
     // Handles the case where the node loses a child just before or at the same time it loses its parent
@@ -393,6 +391,8 @@ State parentRecovery(Event event){
     // Disconnect permanently from the current parent to stop disconnection events and enable connection to a new one
     LOG(NETWORK,INFO,"Disconnecting permanently from parent node\n");
     disconnectFromAP();
+    hasParent = false;
+    assignIP(parent,blankIP);
 
     //Tell my children that i lost connection to my parent
     encodeTopologyBreakAlert(smallSendBuffer,sizeof(smallSendBuffer));
@@ -465,6 +465,8 @@ State parentRecovery(Event event){
     encodeTopologyRestoredNotice(smallSendBuffer, sizeof(smallSendBuffer));
     sendMessageToChildren(smallSendBuffer);
 
+    hasParent = true;
+
     return sActive;
 }
 
@@ -517,6 +519,8 @@ State parentRestart(Event event){
 
     // Clear the stored parent IP
     assignIP(parent,invalidIP);
+    hasParent = false;
+    connectedToMainTree = false;
 
     // Clear the rootHopDistance and the number of children variables.
     rootHopDistance = -1;
@@ -538,7 +542,7 @@ State parentRestart(Event event){
  * @param event - The wait event.
  * @return State - The next state (sActive, sParentRecovery, or continue waiting).
 **/
-State recoveryAwait(Event event) {
+State recoveryAwait(Event event){
     LOG(STATE_MACHINE,INFO,"Recovery Await State\n");
     messageType messageType;
 
@@ -567,6 +571,7 @@ State recoveryAwait(Event event) {
                 LOG(MESSAGES,INFO,"Received [Parent Reset Notification] message: \"%s\"\n", receiveBuffer);
                 //handleParentResetNotification(receiveBuffer);
                 insertLast(stateMachineEngine, eLostParentConnection);
+                connectedToMainTree = false;
                 return sParentRecovery;
                 break;
 
@@ -637,12 +642,12 @@ void handleTimers(){
 
     // Periodically send routing updates to neighbors, but only if connected to the main tree
     // (i.e., the node has an uplink connection that ultimately leads to the root).
-    if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL && connectedToMainTree){
+    if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
         LOG(NETWORK,INFO,"Sending a Periodic Routing Update to my Neighbors\n");
         mySequenceNumber = mySequenceNumber + 2;
         //Update my sequence number
         updateMySequenceNumber(mySequenceNumber);
-        encodeFullRoutingTableUpdate(largeSendBuffer, sizeof(largeSendBuffer));
+        encodeFullRoutingTableUpdate(largeSendBuffer, sizeof(largeSendBuffer),connectedToMainTree);
         propagateMessage(largeSendBuffer,myIP);
         lastRoutingUpdateTime = currentTime;
     }
@@ -831,9 +836,9 @@ void lostChildProcedure(){
                 }
 
                 // If the node is connected to the main tree, notify the rest of the network about the node loss
-                if(connectedToMainTree && subNetSize >0){
+                if(subNetSize >0){
                     // Notify the rest of the network about nodes that are no longer reachable.
-                    encodePartialRoutingUpdate(largeSendBuffer,sizeof(largeSendBuffer),lostNodeSubnetwork,subNetSize);
+                    encodePartialRoutingUpdate(largeSendBuffer,sizeof(largeSendBuffer),lostNodeSubnetwork,subNetSize,connectedToMainTree);
                     propagateMessage(largeSendBuffer, myIP);
                 }
 
@@ -986,7 +991,7 @@ bool establishParentConnection(parentInfo preferredParent){
     // If the joining node has children (i.e., his subnetwork has nodes), it must also send its routing table to its new parent.
     // This ensures that the rest of the network becomes aware of the entire subtree associated with the new node
     if(childrenTable->numberOfItems > 0){
-        encodeFullRoutingTableUpdate(largeSendBuffer,sizeof(largeSendBuffer));
+        encodeFullRoutingTableUpdate(largeSendBuffer,sizeof(largeSendBuffer),connectedToMainTree);
         sendMessage(parent, largeSendBuffer);
         lastRoutingUpdateTime = getCurrentTime();
     }
