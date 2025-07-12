@@ -9,7 +9,7 @@
 void setMetricValue(void* av, void*bv);
 
 
-metricTableEntry metrics[TableMaxSize];
+metricTableEntry metrics[TABLE_MAX_SIZE];
 
 
 

@@ -22,7 +22,7 @@ bool hasTopologyMetric = false;
 /***
  * Topology metrics table
  *
- * tTable[TableMaxSize] - An array where each element is a struct containing two pointers:
+ * tTable[TABLE_MAX_SIZE] - An array where each element is a struct containing two pointers:
  *                         one to the key (used for indexing the metrics table) and another to the value (the corresponding entry).
  *
  * TTable - A struct that holds metadata for the topology metrics table, including:
@@ -32,10 +32,10 @@ bool hasTopologyMetric = false;
  *
  * topologyMetricsTable - A pointer to TTable, used for accessing the topology metrics table.
  *
- * nodesTopology[TableMaxSize][4] - Preallocated memory for storing the IP addresses of the nodes.
+ * nodesTopology[TABLE_MAX_SIZE][4] - Preallocated memory for storing the IP addresses of the nodes.
  ***/
 
-TableEntry tTable[TableMaxSize];
+TableEntry tTable[TABLE_MAX_SIZE];
 TableInfo TTable = {
         .numberOfItems = 0,
         .isEqual = isIPEqual,
@@ -44,7 +44,7 @@ TableInfo TTable = {
         .setValue = nullptr,
 };
 TableInfo* topologyMetricsTable = &TTable;
-uint8_t nodesTopology[TableMaxSize][4];
+uint8_t nodesTopology[TABLE_MAX_SIZE][4];
 
 //Init Function Pointers
 void (*encodeTopologyMetricValue)(char*,size_t,void *) = nullptr;
@@ -331,7 +331,7 @@ parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossiblePa
 }
 
 void chooseParentStrategyTopology(char* messageBuffer){
-    uint8_t sourceIP[4], targetNodeIP[4],possibleParents[TableMaxSize][4],IP[4],*chosenParentIP = nullptr,*nextHopIP;
+    uint8_t sourceIP[4], targetNodeIP[4],possibleParents[TABLE_MAX_SIZE][4],IP[4],*chosenParentIP = nullptr,*nextHopIP;
     uint8_t blankParent[4]={0,0,0,0};
     int middlewareMessageType,nChars=0,parentsCount=0;
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...

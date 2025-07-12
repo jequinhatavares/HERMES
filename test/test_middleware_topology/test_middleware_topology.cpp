@@ -7,7 +7,7 @@
 
 //pio test -e native -f "test_middleware_topology" -v
 
-topologyTableEntry topologyMetrics[TableMaxSize];
+topologyTableEntry topologyMetrics[TABLE_MAX_SIZE];
 
 /*** ****************************** Tests ****************************** ***/
 

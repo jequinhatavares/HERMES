@@ -12,7 +12,7 @@
  * @return TableInfo* - A pointer to the created table.
  */
 //TableInfo* tableCreate(bool (*pFunction)(void* a, void* b)){
-//    static TableEntry table[TableMaxSize];
+//    static TableEntry table[TABLE_MAX_SIZE];
 //    static TableInfo Table = {
 //            .numberOfItems = 0,
 //            .isEqual = pFunction,
@@ -35,7 +35,7 @@
  * @param value_size Size of each value in bytes.
  */
 void tableInit(TableInfo * T, void* keys, void* values, size_t key_size, size_t value_size){
-    for (int i = 0; i < TableMaxSize; i++) {
+    for (int i = 0; i < TABLE_MAX_SIZE; i++) {
         T->table[i].key = (char*)keys + (i * key_size);
         T->table[i].value = (char*)values + (i * value_size);
     }
@@ -106,6 +106,8 @@ void* tableRead(TableInfo* T, void* key){
  * @return void
  */
 void tableAdd(TableInfo* T, void* key, void* value){
+
+    if(T->numberOfItems++ == TABLE_MAX_SIZE) return;
 #ifndef PREALLOCATE_TABLE
     T->table[T->numberOfItems].key=key;
     T->table[T->numberOfItems].value=value;

@@ -425,7 +425,7 @@ void handleChildRegistrationRequest(char * msg){
 */
 void handleFullRoutingTableUpdate(char * msg){
     int type, nrOfChanges = 0;
-    uint8_t nodeIP[4], sourceIP[4],changedNodes[TableMaxSize][4],disconnectionFlag=0;
+    uint8_t nodeIP[4], sourceIP[4],changedNodes[TABLE_MAX_SIZE][4],disconnectionFlag=0;
     int hopDistance,sequenceNumber,parsedValues;
     bool isRoutingTableChanged = false, isRoutingEntryChanged = false ;
 
@@ -482,7 +482,7 @@ void handleFullRoutingTableUpdate(char * msg){
 */
 void handlePartialRoutingUpdate(char *msg){
     int type, nrOfChanges = 0;
-    uint8_t nodeIP[4], senderIP[4],changedNodes[TableMaxSize][4],disconnectionFlag;
+    uint8_t nodeIP[4], senderIP[4],changedNodes[TABLE_MAX_SIZE][4],disconnectionFlag;
     int sequenceNumber,parsedValues;
     int hopDistance;
     bool isRoutingTableChanged = false, isRoutingEntryChanged = false;

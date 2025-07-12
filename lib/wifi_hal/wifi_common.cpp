@@ -1,7 +1,7 @@
 //#include "wifi_interface.h"
 #include "wifi_common.h"
 
-TableEntry lTable[TableMaxSize];
+TableEntry lTable[TABLE_MAX_SIZE];
 TableInfo LTable = {
         .numberOfItems = 0,
         .isEqual = isMACEqual,
@@ -11,8 +11,8 @@ TableInfo LTable = {
 };
 TableInfo* lostChildrenTable = &LTable;
 
-int MAC[TableMaxSize][6];
-unsigned long lastChildDisconnectionTime[TableMaxSize];
+int MAC[TABLE_MAX_SIZE][6];
+unsigned long lastChildDisconnectionTime[TABLE_MAX_SIZE];
 
 bool isMACEqual(void* a, void* b){
     int* aMAC = (int*) a;

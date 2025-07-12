@@ -15,9 +15,9 @@
 //227:96:230:135 root
 //227:96:237:119
 
-topologyTableEntry topologyMetrics[TableMaxSize];
+topologyTableEntry topologyMetrics[TABLE_MAX_SIZE];
 
-metricTableEntry metrics[TableMaxSize];
+metricTableEntry metrics[TABLE_MAX_SIZE];
 
 void waitForEnter() {
     // Wait for Enter

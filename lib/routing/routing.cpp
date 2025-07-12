@@ -22,8 +22,8 @@ void (*onRootReachableCallback)() = nullptr;
 
 //int debugServerIP[4]={0,0,0,0};
 
-#undef TableMaxSize
-#define TableMaxSize 10
+#undef TABLE_MAX_SIZE
+#define TABLE_MAX_SIZE 10
 
 //Initialize Routing Table
 #define PREALLOCATE_TABLE
@@ -32,7 +32,7 @@ void (*onRootReachableCallback)() = nullptr;
 /***
  * Routing Table Variables
  *
- * rTable[TableMaxSize] - An array where each element is a struct containing two pointers:
+ * rTable[TABLE_MAX_SIZE] - An array where each element is a struct containing two pointers:
  *                        one to the key (used for indexing the routing table) and another to the value (the routing table entry).
  *
  * RTable - A struct that holds routing table metadata, including:
@@ -42,10 +42,10 @@ void (*onRootReachableCallback)() = nullptr;
  * * * .setValue - A function pointer for assigning preallocated memory for values (routing table entries of type routingTableEntry).
  * * * .table - A pointer to the rTable.
  *
- * IP[TableMaxSize][4] - Preallocated memory for storing routing table keys (IP addresses).
- * routingTableEntries[TableMaxSize] - Preallocated memory for storing routing table values (routingTableEntry structs).
+ * IP[TABLE_MAX_SIZE][4] - Preallocated memory for storing routing table keys (IP addresses).
+ * routingTableEntries[TABLE_MAX_SIZE] - Preallocated memory for storing routing table values (routingTableEntry structs).
  ***/
-TableEntry rTable[TableMaxSize];
+TableEntry rTable[TABLE_MAX_SIZE];
 TableInfo RTable = {
     .numberOfItems = 0,
     .isEqual = isIPEqual,
@@ -55,13 +55,13 @@ TableInfo RTable = {
 };
 TableInfo* routingTable = &RTable;
 
-uint8_t IP[TableMaxSize][4];
-routingTableEntry routingTableEntries[TableMaxSize];
+uint8_t IP[TABLE_MAX_SIZE][4];
+routingTableEntry routingTableEntries[TABLE_MAX_SIZE];
 
 /***
  * Children Table Variables
  *
- * cTable[TableMaxSize] - An array where each element is a struct containing two pointers:
+ * cTable[TABLE_MAX_SIZE] - An array where each element is a struct containing two pointers:
  *                         one to the key (used for indexing the children table) and another to the value (the corresponding entry).
  *
  * TTable - A struct that holds metadata for the children table, including:
@@ -71,10 +71,10 @@ routingTableEntry routingTableEntries[TableMaxSize];
  *
  * childrenTable - A pointer to TTable, used for accessing the children table.
  *
- * STA[TableMaxSize][4] - Preallocated memory for storing the STA IP addresses of child nodes.
- * AP[TableMaxSize][4] - Preallocated memory for storing the AP IP addresses of child nodes.
+ * STA[TABLE_MAX_SIZE][4] - Preallocated memory for storing the STA IP addresses of child nodes.
+ * AP[TABLE_MAX_SIZE][4] - Preallocated memory for storing the AP IP addresses of child nodes.
  ***/
-TableEntry cTable[TableMaxSize];
+TableEntry cTable[TABLE_MAX_SIZE];
 TableInfo CTable = {
         .numberOfItems=0,
         .isEqual = isIPEqual,
@@ -84,7 +84,7 @@ TableInfo CTable = {
 };
 TableInfo* childrenTable = &CTable;
 
-uint8_t STA[TableMaxSize][4], AP[TableMaxSize][4];
+uint8_t STA[TABLE_MAX_SIZE][4], AP[TABLE_MAX_SIZE][4];
 
 
 /**

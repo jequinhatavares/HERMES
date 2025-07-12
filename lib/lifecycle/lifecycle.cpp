@@ -113,6 +113,7 @@ void onRootUnreachable(){
     connectedToMainTree = false;
     recoveryWaitStartTime = getCurrentTime();
     insertLast(stateMachineEngine, eLostTreeConnection);
+    insertLast(stateMachineEngine, eLostTreeConnection);
 }
 
 
@@ -416,7 +417,7 @@ State parentRecovery(Event event){
     int i, consecutiveSearchCount = 0, nrOfPossibleParents = 0;
     uint8_t * STAIP= nullptr,blankIP[4]={0,0,0,0};
     uint8_t *nodeIP;
-    uint8_t lostNodeSubnetwork[TableMaxSize][4],nUnreachableNodes=0;
+    uint8_t lostNodeSubnetwork[TABLE_MAX_SIZE][4],nUnreachableNodes=0;
     parentInfo possibleParents[10];
 
     // Handles the case where the node loses a child just before or at the same time it loses its parent
@@ -821,7 +822,7 @@ void lostChildProcedure(){
     LOG(STATE_MACHINE,INFO,"On Lost Child Procedure\n");
     int i, subNetSize = 0;
     uint8_t lostChildIP[4];
-    uint8_t lostNodeSubnetwork[TableMaxSize][4];
+    uint8_t lostNodeSubnetwork[TABLE_MAX_SIZE][4];
     uint8_t *nodeIP,*MAC;
     routingTableEntry unreachableEntry, *lostNodeTableEntry;
 
@@ -1021,7 +1022,7 @@ bool establishParentConnection(parentInfo preferredParent){
  * @return void
 */
 void routingHandleConnectionLoss(uint8_t *lostNodeIP){
-    uint8_t lostNodeSubnetwork[TableMaxSize][4],nUnreachableNodes=0;
+    uint8_t lostNodeSubnetwork[TABLE_MAX_SIZE][4],nUnreachableNodes=0;
     uint8_t *nodeIP;
     routingTableEntry unreachableEntry, *lostNodeTableEntry;
 

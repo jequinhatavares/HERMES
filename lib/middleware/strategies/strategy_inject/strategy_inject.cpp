@@ -21,7 +21,7 @@ unsigned long lastMiddlewareUpdateTimeInject = 0;
 /***
  * Middleware metrics table
  *
- * mTable[TableMaxSize] - An array where each element is a struct containing two pointers:
+ * mTable[TABLE_MAX_SIZE] - An array where each element is a struct containing two pointers:
  *                         one to the key (used for indexing the metrics table) and another to the value (the corresponding entry).
  *
  * TTable - A struct that holds metadata for the metrics table, including:
@@ -31,9 +31,9 @@ unsigned long lastMiddlewareUpdateTimeInject = 0;
  *
  * childrenTable - A pointer to TTable, used for accessing the children table.
  *
- * nodeIP[TableMaxSize][4] - Preallocated memory for storing the IP addresses of the nodes.
+ * nodeIP[TABLE_MAX_SIZE][4] - Preallocated memory for storing the IP addresses of the nodes.
  ***/
-TableEntry mTable[TableMaxSize];
+TableEntry mTable[TABLE_MAX_SIZE];
 TableInfo MTable = {
         .numberOfItems = 0,
         .isEqual = isIPEqual,
@@ -42,7 +42,7 @@ TableInfo MTable = {
         .setValue = nullptr,
 };
 TableInfo* metricsTable = &MTable;
-uint8_t nodes[TableMaxSize][4];
+uint8_t nodes[TABLE_MAX_SIZE][4];
 
 //Function Pointers Initializers
 void (*encodeMetricValue)(char*,size_t,void *) = nullptr;

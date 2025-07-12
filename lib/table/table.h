@@ -1,7 +1,7 @@
 #ifndef TABLE_H
 #define TABLE_H
 
-#define TableMaxSize 10
+#define TABLE_MAX_SIZE 10
 #include <cstddef>
 
 /*

@@ -6,7 +6,7 @@
 #include "table.h"
 
 //pio test -e native -f "test_middleware_generic" -v
-metricTableEntry metrics[TableMaxSize];
+metricTableEntry metrics[TABLE_MAX_SIZE];
 
 void setUp(void){
 }

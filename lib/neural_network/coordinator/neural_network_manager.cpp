@@ -16,7 +16,7 @@ bool receivedAllNeuronAcks = false;
 /***
  * Neural Network Computations Assignment table
  *
- * mTable[TableMaxSize] - An array where each element is a struct containing two pointers:
+ * mTable[TABLE_MAX_SIZE] - An array where each element is a struct containing two pointers:
  *                         one to the key (used for indexing the metrics table) and another to the value (the corresponding entry).
  *
  * TTable - A struct that holds metadata for the metrics table, including:
@@ -26,7 +26,7 @@ bool receivedAllNeuronAcks = false;
  *
  * childrenTable - A pointer to TTable, used for accessing the children table.
  *
- * valuesPubSub[TableMaxSize] - Preallocated memory for storing the published and subscribed values of each node
+ * valuesPubSub[TABLE_MAX_SIZE] - Preallocated memory for storing the published and subscribed values of each node
  ***/
 TableEntry ntnTable[TOTAL_NEURONS];
 TableInfo NTNTable = {
@@ -194,7 +194,7 @@ void assignOutputTargetsToNetwork(uint8_t nodes[][4],uint8_t nrNodes){
     uint8_t *neuronId;
     NeuronEntry *neuronEntry;
     uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
-    uint8_t inputNodesIPs[TableMaxSize][4], nNodes = 0;
+    uint8_t inputNodesIPs[TABLE_MAX_SIZE][4], nNodes = 0;
 
 
     /***  The messages in this function are sent layer by layer.  At each node, messages are made based on the aggregation of
@@ -255,7 +255,7 @@ void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t tar
     NeuronId *neuronId;
     NeuronEntry *neuronEntry;
     uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
-    uint8_t inputNodesIPs[TableMaxSize][4], nNodes = 0;
+    uint8_t inputNodesIPs[TABLE_MAX_SIZE][4], nNodes = 0;
     int offset = 0;
     char tmpBuffer[50];
     size_t tmpBufferSize = sizeof(tmpBuffer);
