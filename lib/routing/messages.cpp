@@ -245,11 +245,20 @@ bool isMessageValid(int expectedMessageType,char* msg){
         }
         case FULL_ROUTING_TABLE_UPDATE: {
             uint8_t IP1[4], IP2[4];
-            int hopDistance,sequenceNumber;
+            int hopDistance,sequenceNumber,disconnectionFlag;
             char msgCopy[255];
             strcpy(msgCopy, msg);
 
-            if(sscanf(msgCopy, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],&IP2[0], &IP2[1], &IP2[2], &IP2[3]) != 9)return false;
+            // Try to parse flagged format first (with disconnection flag)
+            int parsedValues = sscanf(msgCopy, "%d %d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",&type, &disconnectionFlag,&IP1[0], &IP1[1], &IP1[2], &IP1[3],&IP2[0], &IP2[1], &IP2[2], &IP2[3]);
+
+            if (parsedValues != 10) {
+                // Try fallback: non-flagged format
+                parsedValues = sscanf(msgCopy, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",&type,&IP1[0], &IP1[1], &IP1[2], &IP1[3],&IP2[0], &IP2[1], &IP2[2], &IP2[3]);
+                if (parsedValues != 9) return false; // Invalid format
+            }
+
+            //if(sscanf(msgCopy, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],&IP2[0], &IP2[1], &IP2[2], &IP2[3]) != 9)return false;
             char* token = strtok(msgCopy, "|");
 
             token = strtok(nullptr, "|");
@@ -263,10 +272,20 @@ bool isMessageValid(int expectedMessageType,char* msg){
         }
         case PARTIAL_ROUTING_TABLE_UPDATE: {
             uint8_t IP1[4];
-            int hopDistance,sequenceNumber;
+            int hopDistance,sequenceNumber,disconnectionFlag;
             char msgCopy[255];
             strcpy(msgCopy, msg);
-            if(sscanf(msgCopy, "%d %hhu.%hhu.%hhu.%hhu", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3]) != 5)return false;
+
+            //if(sscanf(msgCopy, "%d %hhu.%hhu.%hhu.%hhu", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3]) != 5)return false;
+
+            // Try to parse flagged format first (with disconnection flag)
+            int parsedValues = sscanf(msgCopy, "%d %d %hhu.%hhu.%hhu.%hhu",&type, &disconnectionFlag,&IP1[0], &IP1[1], &IP1[2], &IP1[3]);
+
+            if (parsedValues != 6) {
+                // Try fallback: non-flagged format
+                parsedValues = sscanf(msgCopy, "%d %hhu.%hhu.%hhu.%hhu",&type,&IP1[0], &IP1[1], &IP1[2], &IP1[3]);
+                if (parsedValues != 5) return false; // Invalid format
+            }
             char* token = strtok(msgCopy, "|");
 
             token = strtok(nullptr, "|");
