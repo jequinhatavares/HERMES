@@ -656,7 +656,7 @@ void handleTimers(){
         mySequenceNumber = mySequenceNumber + 2;
         //Update my sequence number
         updateMySequenceNumber(mySequenceNumber);
-        encodeFullRoutingTableUpdate(largeSendBuffer, sizeof(largeSendBuffer),connectedToMainTree);
+        encodeFullRoutingTableUpdate(largeSendBuffer, sizeof(largeSendBuffer));
         propagateMessage(largeSendBuffer,myIP);
         lastRoutingUpdateTime = currentTime;
     }
@@ -847,7 +847,7 @@ void lostChildProcedure(){
                 // If the node is connected to the main tree, notify the rest of the network about the node loss
                 if(subNetSize >0){
                     // Notify the rest of the network about nodes that are no longer reachable.
-                    encodePartialRoutingUpdate(largeSendBuffer,sizeof(largeSendBuffer),lostNodeSubnetwork,subNetSize,connectedToMainTree);
+                    encodePartialRoutingUpdate(largeSendBuffer,sizeof(largeSendBuffer),lostNodeSubnetwork,subNetSize);
                     propagateMessage(largeSendBuffer, myIP);
                 }
 
@@ -1000,7 +1000,7 @@ bool establishParentConnection(parentInfo preferredParent){
     // If the joining node has children (i.e., his subnetwork has nodes), it must also send its routing table to its new parent.
     // This ensures that the rest of the network becomes aware of the entire subtree associated with the new node
     if(childrenTable->numberOfItems > 0){
-        encodeFullRoutingTableUpdate(largeSendBuffer,sizeof(largeSendBuffer),connectedToMainTree);
+        encodeFullRoutingTableUpdate(largeSendBuffer,sizeof(largeSendBuffer));
         sendMessage(parent, largeSendBuffer);
         lastRoutingUpdateTime = getCurrentTime();
     }

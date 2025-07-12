@@ -415,6 +415,36 @@ bool inMySubnet(uint8_t * nodeIP){
     return false;
 }
 
+int numberOfNodesInMySubnetwork(){
+    routingTableEntry *routingEntry;
+    uint8_t *childIP,*nodeIP;
+    int nodes = 0;
+
+    for (int j = 0; j < routingTable->numberOfItems; j++) {
+        nodeIP = (uint8_t *) tableKey(routingTable,j);
+        if(nodeIP == nullptr) continue;
+        routingEntry = (routingTableEntry *) findNode(routingTable,nodeIP);
+
+        //If the node is my direct child increase the count
+        if(tableFind(childrenTable,nodeIP) !=-1){
+            nodes++;
+            continue;
+        }
+
+        for (int i = 0; i < childrenTable->numberOfItems; i++) {
+            childIP = (uint8_t *)tableKey(childrenTable, i );
+            // The node belongs to my subnetwork if the next hop to reach it is one of my children
+            if (childIP != nullptr && routingEntry != nullptr){
+                if(isIPEqual(routingEntry->nextHopIP,childIP)) return true;
+            } else{
+                LOG(NETWORK, ERROR, "key on children table that should have a value returned nullptr\n");
+            }
+
+        }
+    }
+    return nodes;
+}
+
 void updateMySequenceNumber(int newSequenceNumber){
     routingTableEntry updatedEntry;
     routingTableEntry *myEntry = (routingTableEntry*) findNode(routingTable, myIP);
