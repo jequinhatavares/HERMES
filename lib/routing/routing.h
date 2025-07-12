@@ -10,8 +10,9 @@
 // Flag indicating whether this node is currently connected to the main network tree
 extern bool connectedToMainTree;
 
-extern void (*onFlaggedRoutingUpdate)();
 
+extern void (*onRootUnreachableCallback)();
+extern void (*onRootReachableCallback)();
 
 typedef struct parentInfo{
     char* ssid;

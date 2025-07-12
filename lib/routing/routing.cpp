@@ -16,8 +16,9 @@ unsigned long lastRoutingUpdateTime;
 // Flag indicating whether this node is currently connected to the main network tree
 bool connectedToMainTree=false;
 
-//Function pointer to the function of the lifecycle that deals with the reception of a flagged routing update
-void (*onFlaggedRoutingUpdate)() = nullptr;
+
+void (*onRootUnreachableCallback)() = nullptr;
+void (*onRootReachableCallback)() = nullptr;
 
 //int debugServerIP[4]={0,0,0,0};
 

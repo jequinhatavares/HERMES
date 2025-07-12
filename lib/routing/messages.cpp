@@ -131,8 +131,6 @@ void encodeChildRegistrationRequest(char* messageBuffer, size_t bufferSize,uint8
 void encodeFullRoutingTableUpdate(char* messageBuffer, size_t bufferSize){
     int offset=0;
     //FULL_ROUTING_TABLE_UPDATE [Flag] [senderIP] [rootIP] |[node1 IP] [hopDistance] [Sequence Number1]|[node2 IP] [hopDistance] [Sequence Number2]|....
-
-
     offset+=snprintf(messageBuffer+offset,bufferSize-offset,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu|",FULL_ROUTING_TABLE_UPDATE,myIP[0],myIP[1],myIP[2],
              myIP[3],rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
 
@@ -460,9 +458,7 @@ void handleFullRoutingTableUpdate(char * msg){
     /*** If the routing update is flagged as coming from a node in a detached subtree,
        * it indicates that this node is also part of a detached subtree. If the node is not yet
        * aware of its disconnected status, update its lifecycle information (states, variables) accordingly ***/
-    if(disconnectionFlag == 1 && connectedToMainTree){
-        if(onFlaggedRoutingUpdate != nullptr)onFlaggedRoutingUpdate();
-    }
+
 
     if (isRoutingTableChanged){
         LOG(NETWORK,INFO, "Routing Information has changed-> Propagate new info\n");
@@ -509,18 +505,34 @@ void handlePartialRoutingUpdate(char *msg){
         if(isRoutingEntryChanged == true){
             assignIP(changedNodes[nrOfChanges],nodeIP);
             nrOfChanges ++;
+
+            //Analyse the changes made to the root information
+            routingTableEntry *rootEntry = (routingTableEntry*) findNode(routingTable,rootIP);
+            if(rootEntry != nullptr){
+                if(rootEntry->sequenceNumber%2!=0){
+                    /***
+                     * If the root routing information indicates that the root is unreachable, two situations are possible:
+                     * either the information is outdated, or the node is no longer connected to the main tree.
+                     * In either case, the node transitions to the recovery-await state (if not already there) and waits for
+                     * reconnection or, in the case of outdated information, waits for a new update confirming that it is still part of the tree.
+                    ***/
+                    if(onRootUnreachableCallback != nullptr)onRootUnreachableCallback();
+                }else{
+                    /***
+                     * If the root routing information indicates that the root is reachable, and the node was previously in
+                     * the recovery-wait state, it can now transition to the active state (if not already there), since the update
+                     * confirms that the subtree has rejoined the main network.
+                     ***/
+                    if(onRootReachableCallback != nullptr)onRootReachableCallback();
+                }
+
+            }
         }
         //updateRoutingTable(nodeIP,newNode,sourceIP);
         isRoutingTableChanged = isRoutingTableChanged || isRoutingEntryChanged ;
         token = strtok(nullptr, "|");
     }
 
-    /*** If the routing update is flagged as coming from a node in a detached subtree,
-       * it indicates that this node is also part of a detached subtree. If the node is not yet
-       * aware of its disconnected status, update its lifecycle information (states, variables) accordingly ***/
-    if(disconnectionFlag == 1 && connectedToMainTree){
-        if(onFlaggedRoutingUpdate != nullptr)onFlaggedRoutingUpdate();
-    }
 
     // If the routing update caused a change in my routing table, propagate the updated information to the rest of the network
     if(isRoutingTableChanged){
@@ -536,6 +548,7 @@ void handlePartialRoutingUpdate(char *msg){
         }
     }
     strcpy(largeSendBuffer , "");
+
 
 }
 
