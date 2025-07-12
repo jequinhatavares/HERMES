@@ -94,6 +94,13 @@ bool isChildRegistered(uint8_t * MAC){
     return false;
 }
 
+void onMainTreeDisconnection(){
+    connectedToMainTree = false;
+    recoveryWaitStartTime = getCurrentTime();
+    //LOG(NETWORK,INFO,"In Handle recoveryWaitStartTime:%lu\n",recoveryWaitStartTime);
+    insertLast(stateMachineEngine, eLostTreeConnection);
+}
+
 /**
  * init
  * Implements the Init State for node initialization.
@@ -115,6 +122,8 @@ State init(Event event){
     sprintf(strMAC, "%hhu:%hhu:%hhu:%hhu:%hhu:%hhu",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
     strcat(ssid,strMAC);
 
+    //Set up callback to react to flagged routing updates to trigger state machine transitions
+    onFlaggedRoutingUpdate = onMainTreeDisconnection;
 
     // Set up WiFi event callbacks (parent/child loss) to trigger state machine transitions
     parentDisconnectCallback = onParentDisconnect;

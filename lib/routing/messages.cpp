@@ -467,6 +467,13 @@ void handleFullRoutingTableUpdate(char * msg){
         token = strtok(nullptr, "|");
     }
 
+    /*** If the routing update is flagged as coming from a node in a detached subtree,
+       * it indicates that this node is also part of a detached subtree. If the node is not yet
+       * aware of its disconnected status, update its lifecycle information (states, variables) accordingly ***/
+    if(disconnectionFlag == 1 && connectedToMainTree){
+        if(onFlaggedRoutingUpdate != nullptr)onFlaggedRoutingUpdate();
+    }
+
     if (isRoutingTableChanged){
         LOG(NETWORK,INFO, "Routing Information has changed-> Propagate new info\n");
         //Propagate the routing table update information trough the network
@@ -520,6 +527,13 @@ void handlePartialRoutingUpdate(char *msg){
         //updateRoutingTable(nodeIP,newNode,sourceIP);
         isRoutingTableChanged = isRoutingTableChanged || isRoutingEntryChanged ;
         token = strtok(nullptr, "|");
+    }
+
+    /*** If the routing update is flagged as coming from a node in a detached subtree,
+       * it indicates that this node is also part of a detached subtree. If the node is not yet
+       * aware of its disconnected status, update its lifecycle information (states, variables) accordingly ***/
+    if(disconnectionFlag == 1 && connectedToMainTree){
+        if(onFlaggedRoutingUpdate != nullptr)onFlaggedRoutingUpdate();
     }
 
     // If the routing update caused a change in my routing table, propagate the updated information to the rest of the network

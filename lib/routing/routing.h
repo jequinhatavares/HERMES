@@ -10,6 +10,9 @@
 // Flag indicating whether this node is currently connected to the main network tree
 extern bool connectedToMainTree;
 
+extern void (*onFlaggedRoutingUpdate)();
+
+
 typedef struct parentInfo{
     char* ssid;
     uint8_t parentIP[4];

@@ -81,6 +81,7 @@ void requestTaskExecution();
 #define eExecuteTask ((Event) 11)
 #define eError ((Event) 12)
 
+void onMainTreeDisconnection();
 
 void parseMAC(const char* macStr, int* macArray);
 void setIPs(const uint8_t * MAC);
