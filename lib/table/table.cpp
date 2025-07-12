@@ -87,7 +87,7 @@ int tableFind(TableInfo* T, void* key){
 void* tableRead(TableInfo* T, void* key){
 
     // Safeguard: ensure the provided key pointer is not null before proceeding
-    if (key== nullptr) return nullptr;
+    if (key == nullptr) return nullptr;
 
     int i = tableFind(T, key);
     if (i==-1) return nullptr;

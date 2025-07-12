@@ -91,5 +91,7 @@ void filterReachableNetworks();
 void lostChildProcedure();
 int parentHandshakeProcedure(parentInfo *possibleParents);
 bool establishParentConnection(parentInfo preferredParent);
+void routingHandleConnectionLoss(uint8_t *lostNodeIP);//todo maybe isto deveria estar no routing
+
 #endif //LIFECYCLE_H
 
