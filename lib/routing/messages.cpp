@@ -176,15 +176,23 @@ void encodeParentResetNotification(char* messageBuffer, size_t bufferSize){
     snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu",PARENT_RESET_NOTIFICATION,myIP[0],myIP[1],myIP[2],myIP[3]);
 }
 
-void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *sourceIP,uint8_t *destinationIP){
-    //11 [source node IP] [destination node IP] [message payload]
-    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",DATA_MESSAGE,sourceIP[0],sourceIP[1],
-             sourceIP[2],sourceIP[3],destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],payload);
-}
+
 
 void encodeDebugMessage(char* messageBuffer, size_t bufferSize,char* payload){
     //10 [DEBUG message payload]
     snprintf(messageBuffer,bufferSize,"%i %s\n",DEBUG_MESSAGE,payload);
+}
+
+
+void encodeACKMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *sourceIP,uint8_t *destinationIP){
+    //ACK_MESSAGE [source node IP] [destination node IP] [ACK payload]
+    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",ACK_MESSAGE,sourceIP[0],sourceIP[1],
+             sourceIP[2],sourceIP[3],destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],payload);
+}
+void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *sourceIP,uint8_t *destinationIP){
+    //DATA_MESSAGE [source node IP] [destination node IP] [message payload]
+    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",DATA_MESSAGE,sourceIP[0],sourceIP[1],
+             sourceIP[2],sourceIP[3],destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],payload);
 }
 
 bool isMessageValid(int expectedMessageType,char* msg){

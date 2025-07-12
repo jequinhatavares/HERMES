@@ -5,6 +5,8 @@
 #include <logger.h>
 #include <cstdint>
 
+#define ROUTING_UPDATE_INTERVAL 180000
+
 
 typedef struct parentInfo{
     char* ssid;
@@ -34,7 +36,6 @@ extern uint8_t parent[4];
 extern int mySequenceNumber;
 
 extern unsigned long lastRoutingUpdateTime;
-#define ROUTING_UPDATE_INTERVAL 180000
 //extern int debugServerIP[4];
 
 bool isIPEqual(void* a, void* b);
