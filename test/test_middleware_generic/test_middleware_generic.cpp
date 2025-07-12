@@ -6,7 +6,7 @@
 #include "table.h"
 
 //pio test -e native -f "test_middleware_generic" -v
-metricTableEntry metrics[TABLE_MAX_SIZE];
+MetricTableEntry metrics[TABLE_MAX_SIZE];
 
 void setUp(void){
 }
@@ -15,7 +15,7 @@ void tearDown(void){}
 
 void test_select_strategy(){
     middlewareSelectStrategy(STRATEGY_INJECT);
-    initStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
+    initStrategyInject((void*) metrics,sizeof(MetricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
 
     InjectContext *api = (InjectContext*) middlewareGetStrategyContext();
 }

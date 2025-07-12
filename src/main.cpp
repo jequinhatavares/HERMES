@@ -17,7 +17,7 @@
 
 topologyTableEntry topologyMetrics[TABLE_MAX_SIZE];
 
-metricTableEntry metrics[TABLE_MAX_SIZE];
+MetricTableEntry metrics[TABLE_MAX_SIZE];
 
 void waitForEnter() {
     // Wait for Enter
@@ -34,7 +34,7 @@ void waitForEnter() {
 
 void setup(){
     uint8_t MAC[6];
-    //metricTableEntry myMetric;
+    //MetricTableEntry myMetric;
     Serial.begin(115200);
 
 
@@ -76,7 +76,7 @@ void setup(){
 
     //Select and initialize the middleware strategy
     //middlewareSelectStrategy(STRATEGY_INJECT);
-    //initMiddlewareStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
+    //initMiddlewareStrategyInject((void*) metrics,sizeof(MetricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
     //InjectContext *context = (InjectContext*) middlewareGetStrategyContext();
     //myMetric.processingCapacity = MAC[5];
     //context->injectNodeMetric(&myMetric);

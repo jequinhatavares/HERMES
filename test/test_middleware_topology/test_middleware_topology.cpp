@@ -14,7 +14,7 @@ topologyTableEntry topologyMetrics[TABLE_MAX_SIZE];
 void test_encode_parent_list_advertisement_request(){
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [tmp parent IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
     char correctEncodedMsg[100] = "10 0 3.3.3.3 3.3.3.1 1.1.1.1 2.2.2.2 2.2.2.2 2.2.2.2";
-    parentInfo possibleParents[3];
+    ParentInfo possibleParents[3];
     uint8_t nParents=0, IP[4] = {2,2,2,2},parentIP[4] = {3,3,3,3},mySTAIP[4] = {3,3,3,1};
 
     for (int i = 0; i < 3; i++) {

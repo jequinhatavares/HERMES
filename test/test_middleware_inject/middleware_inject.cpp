@@ -9,23 +9,23 @@
 void setMetricValue(void* av, void*bv);
 
 
-metricTableEntry metrics[TABLE_MAX_SIZE];
+MetricTableEntry metrics[TABLE_MAX_SIZE];
 
 
 
 /*** ****************************** Tests ****************************** ***/
 
 void test_init_middleware(){
-    metricTableEntry metric;
+    MetricTableEntry metric;
     uint8_t IP[4]={1,1,1,1};
-    initStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
+    initStrategyInject((void*) metrics,sizeof(MetricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
 
     metric.processingCapacity = 1;
     injectNodeMetric(&metric);
 
     tablePrint(metricsTable, printMetricsTableHeader,printMetricStruct);
 
-    metricTableEntry *metricValue = (metricTableEntry*) tableRead(metricsTable,IP);
+    MetricTableEntry *metricValue = (MetricTableEntry*) tableRead(metricsTable,IP);
     TEST_ASSERT(metricValue != nullptr);
 
     tableClean(metricsTable);
@@ -33,20 +33,20 @@ void test_init_middleware(){
 }
 
 void test_handle_middleware_node_info_message(){
-    metricTableEntry metric;
+    MetricTableEntry metric;
     uint8_t mynodeIP[4]={2,2,2,2};
     uint8_t nodeIP[4]={1,1,1,1};
     char middlewareMsg[50] = "10 0 1.1.1.1 1.1.1.1 1";
 
     assignIP(myIP,mynodeIP);
 
-    initStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
+    initStrategyInject((void*) metrics,sizeof(MetricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
 
     handleMessageStrategyInject(middlewareMsg,sizeof(middlewareMsg));
 
     tablePrint(metricsTable,printMetricsTableHeader, printMetricStruct);
 
-    metricTableEntry *metricValue = (metricTableEntry*) tableRead(metricsTable,nodeIP);
+    MetricTableEntry *metricValue = (MetricTableEntry*) tableRead(metricsTable,nodeIP);
     TEST_ASSERT(metricValue != nullptr);
     TEST_ASSERT(metricValue->processingCapacity == 1);
 
@@ -54,26 +54,26 @@ void test_handle_middleware_node_info_message(){
 }
 
 void test_handle_middleware_table_info_message(){
-    metricTableEntry metric;
+    MetricTableEntry metric;
     uint8_t node2IP[4]={2,2,2,2};
     uint8_t node3IP[4]={3,3,3,3};
     char middlewareMsg[50] = "10 1 1.1.1.1 |1.1.1.1 1 |2.2.2.2 2 |3.3.3.3 3";
 
-    initStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
+    initStrategyInject((void*) metrics,sizeof(MetricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
 
     handleMessageStrategyInject(middlewareMsg,sizeof(middlewareMsg));
 
     tablePrint(metricsTable,printMetricsTableHeader, printMetricStruct);
 
-    metricTableEntry *metricValue = (metricTableEntry*) tableRead(metricsTable,myIP);
+    MetricTableEntry *metricValue = (MetricTableEntry*) tableRead(metricsTable,myIP);
     TEST_ASSERT(metricValue != nullptr);
     TEST_ASSERT(metricValue->processingCapacity == 1);
 
-    metricTableEntry *metricValue2 = (metricTableEntry*) tableRead(metricsTable,node2IP);
+    MetricTableEntry *metricValue2 = (MetricTableEntry*) tableRead(metricsTable,node2IP);
     TEST_ASSERT(metricValue2 != nullptr);
     TEST_ASSERT(metricValue2->processingCapacity == 2);
 
-    metricTableEntry *metricValue3 = (metricTableEntry*) tableRead(metricsTable,node3IP);
+    MetricTableEntry *metricValue3 = (MetricTableEntry*) tableRead(metricsTable,node3IP);
     TEST_ASSERT(metricValue3 != nullptr);
     TEST_ASSERT(metricValue3->processingCapacity == 3);
 
@@ -81,11 +81,11 @@ void test_handle_middleware_table_info_message(){
 }
 
 void test_encode_middleware_node_info_message(){
-    metricTableEntry metric;
+    MetricTableEntry metric;
     uint8_t nodeIP[4]={2,2,2,2};
     char middlewareMsg[50] = " 10 0 2.2.2.2 1.1.1.1 1", msgBuffer[100];
     char correctEncodedMsg[50] = "10 0 1.1.1.1 1.1.1.1 1";
-    initStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
+    initStrategyInject((void*) metrics,sizeof(MetricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
 
     metric.processingCapacity = 1;
     injectNodeMetric(&metric);
@@ -98,10 +98,10 @@ void test_encode_middleware_node_info_message(){
 }
 
 void test_encode_middleware_table_info_message(){
-    metricTableEntry metric;
+    MetricTableEntry metric;
     char middlewareMsg1[50] = " 10 0 2.2.2.2 2.2.2.2 2",middlewareMsg2[50] = " 10 0 2.2.2.2 3.3.3.3 3", msgBuffer[100];
     char correctEncodedMsg[50] = "10 1 1.1.1.1 |1.1.1.1 1 |2.2.2.2 2 |3.3.3.3 3";
-    initStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
+    initStrategyInject((void*) metrics,sizeof(MetricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
 
     metric.processingCapacity = 1;
     injectNodeMetric(&metric);
@@ -119,10 +119,10 @@ void test_encode_middleware_table_info_message(){
 }
 
 void test_rewrite_sender_with_complex_metric(){
-    metricTableEntry metric;
+    MetricTableEntry metric;
     char middlewareMsg1[50] = "10 0 2.2.2.2 2.2.2.2 2 3 0,777";
     char correctEncodedMsg[50] = "10 0 1.1.1.1 2.2.2.2 2 3 0,777";
-    initStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
+    initStrategyInject((void*) metrics,sizeof(MetricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
 
     metric.processingCapacity = 1;
     injectNodeMetric(&metric);
@@ -138,10 +138,10 @@ void test_rewrite_sender_with_complex_metric(){
 }
 
 void test_rewrite_sender_with_bigger_ip(){
-    metricTableEntry metric;
+    MetricTableEntry metric;
     char middlewareMsg1[50] = "10 0 2.2.2.2 2.2.2.2 2 3 0,777";
     char correctEncodedMsg[50] = "10 0 111.111.111.111 2.2.2.2 2 3 0,777";
-    initStrategyInject((void*) metrics,sizeof(metricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
+    initStrategyInject((void*) metrics,sizeof(MetricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
 
     uint8_t nodeIP[4]={111,111,111,111};
     assignIP(myIP,nodeIP);

@@ -14,11 +14,11 @@
 extern Strategy strategyPubSub;
 
 
-typedef enum topicTypes{
+typedef enum TopicTypes{
     TEMPERATURE,
     HUMIDITY,
     CAMERA,
-}topicTypes;
+}TopicTypes;
 
 #define MAX_TOPICS 3
 

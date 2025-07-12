@@ -48,7 +48,7 @@ void setConnectionStatus(void* av, void* bv){
 }
 
 void initAuxTables(){
-    //Serial.printf("SizeOf int[4]: %i struct: %i", sizeof(int[4]), sizeof(routingTableEntry));
+    //Serial.printf("SizeOf int[4]: %i struct: %i", sizeof(int[4]), sizeof(RoutingTableEntry));
     tableInit(lostChildrenTable,MAC, lastChildDisconnectionTime, sizeof(int[6]),sizeof(unsigned long));
 }
 

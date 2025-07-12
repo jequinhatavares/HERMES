@@ -51,9 +51,9 @@ void registerTopologyMetric(uint8_t *nodeIP, char* metricBuffer);
 
 void encodeNodeMetricReport(char* messageBuffer, size_t bufferSize, void* metric);
 void encodeParentAssignmentCommand(char* messageBuffer, size_t bufferSize, uint8_t * destinationIP, uint8_t * chosenParentIP, uint8_t * targetNodeIP);
-void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize, parentInfo* possibleParents, int nrOfPossibleParents, uint8_t *temporaryParent, uint8_t *mySTAIP);
+void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize, ParentInfo* possibleParents, int nrOfPossibleParents, uint8_t *temporaryParent, uint8_t *mySTAIP);
 
-parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossibleParents);
+ParentInfo requestParentFromRoot(ParentInfo* possibleParents, int nrOfPossibleParents);
 void chooseParentStrategyTopology(char* message);
 
 void topologySetNodeMetric(void* metric);

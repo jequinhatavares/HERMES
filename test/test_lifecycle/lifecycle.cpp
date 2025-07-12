@@ -3,7 +3,7 @@
 #include <string.h>
 //#include "messages.h"
 
-typedef enum messageType{
+typedef enum MessageType{
     PARENT_DISCOVERY_REQUEST, //0
     PARENT_INFO_RESPONSE, //1
     CHILD_REGISTRATION_REQUEST, //2
@@ -16,23 +16,23 @@ typedef enum messageType{
     DEBUG_MESSAGE,//9
     DATA_MESSAGE,//10
     ACK_MESSAGE,//11
-}messageType;
+}MessageType;
 
-typedef struct parentInfo{
+typedef struct ParentInfo{
     char* ssid;
     int parentIP[4];
     int rootHopDistance;
     int nrOfChildren;
-}parentInfo;
+}ParentInfo;
 
 
-void handleParentInfoResponse(char* msg, parentInfo *parents, int i){
-    int messageType;
+void handleParentInfoResponse(char* msg, ParentInfo *parents, int i){
+    int MessageType;
     int rootDistance, nrChildren;
     int parentIP[4];
-    sscanf(msg, "%d %d.%d.%d.%d %d %d", &messageType, &parentIP[0],&parentIP[1],&parentIP[2],&parentIP[3],&rootDistance,&nrChildren);
+    sscanf(msg, "%d %d.%d.%d.%d %d %d", &MessageType, &parentIP[0],&parentIP[1],&parentIP[2],&parentIP[3],&rootDistance,&nrChildren);
 
-    if (messageType == PARENT_INFO_RESPONSE){
+    if (MessageType == PARENT_INFO_RESPONSE){
         parents[i].rootHopDistance = rootDistance;
         parents[i].nrOfChildren = nrChildren;
         parents[i].parentIP[0]=parentIP[0];
@@ -43,8 +43,8 @@ void handleParentInfoResponse(char* msg, parentInfo *parents, int i){
 }
 
 
-parentInfo chooseParent(parentInfo* possibleParents, int n){
-    parentInfo preferredParent;
+ParentInfo chooseParent(ParentInfo* possibleParents, int n){
+    ParentInfo preferredParent;
     int minHop = 10000, parentIndex;
     for (int i = 0; i < n; i++) {
         if(possibleParents[i].rootHopDistance < minHop){
@@ -64,8 +64,8 @@ parentInfo chooseParent(parentInfo* possibleParents, int n){
     return possibleParents[parentIndex];
 }
 
-parentInfo chooseParentByLayer(parentInfo* possibleParents, int n){
-    parentInfo preferredParent;
+ParentInfo chooseParentByLayer(ParentInfo* possibleParents, int n){
+    ParentInfo preferredParent;
     bool found = false;
     int maxHop = 0, minChildren = 10000, minHop = 10000;
 
@@ -110,9 +110,9 @@ parentInfo chooseParentByLayer(parentInfo* possibleParents, int n){
 
 
 void test_parent_selection(){
-    parentInfo possibleParents[10], preferredParent;
+    ParentInfo possibleParents[10], preferredParent;
     char msg[20];
-    //messageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
+    //MessageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
     strcpy(msg , "1 1.1.1.1 0 2");
     handleParentInfoResponse(msg,possibleParents, 0);//Root
     strcpy(msg , "1 2.2.2.2 1 0");
@@ -131,10 +131,10 @@ void test_parent_selection(){
 }
 
 void test_parent_selection_with_tie(){
-    parentInfo possibleParents[10], preferredParent;
+    ParentInfo possibleParents[10], preferredParent;
     char msg[20];
 
-    //messageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
+    //MessageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
     strcpy(msg , "1 2.2.2.2 1 0");
     handleParentInfoResponse(msg, possibleParents, 0);//1st Child of the root
     strcpy(msg , "1 3.3.3.3 1 1");
@@ -152,9 +152,9 @@ void test_parent_selection_with_tie(){
 }
 
 void test_parent_selection_with_double_tie(){
-    parentInfo possibleParents[10], preferredParent;
+    ParentInfo possibleParents[10], preferredParent;
     char msg[20];
-    //messageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
+    //MessageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
     strcpy(msg , "1 2.2.2.2 1 1");
     handleParentInfoResponse(msg, possibleParents, 0);//1st Child of the root
     strcpy(msg , "1 3.3.3.3 1 1");
@@ -175,9 +175,9 @@ void test_parent_selection_with_double_tie(){
 }
 
 void test_parent_selection_restricting_by_layer_choose_root(){
-    parentInfo possibleParents[10], preferredParent;
+    ParentInfo possibleParents[10], preferredParent;
     char msg[20];
-    //messageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
+    //MessageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
     strcpy(msg , "1 1.1.1.1 0 1");
     handleParentInfoResponse(msg, possibleParents, 0);//root
     strcpy(msg , "1 2.2.2.2 1 1");
@@ -196,9 +196,9 @@ void test_parent_selection_restricting_by_layer_choose_root(){
 }
 
 void test_parent_selection_restricting_by_layer_choose_2nd_layer(){
-    parentInfo possibleParents[10], preferredParent;
+    ParentInfo possibleParents[10], preferredParent;
     char msg[20];
-    //messageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
+    //MessageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
     strcpy(msg , "1 1.1.1.1 0 2");
     handleParentInfoResponse(msg, possibleParents, 0);//root
     strcpy(msg , "1 2.2.2.2 1 0");
@@ -217,9 +217,9 @@ void test_parent_selection_restricting_by_layer_choose_2nd_layer(){
 }
 
 void test_parent_selection_restricting_by_layer_choose_2nd_layer_almost_full(){
-    parentInfo possibleParents[10], preferredParent;
+    ParentInfo possibleParents[10], preferredParent;
     char msg[20];
-    //messageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
+    //MessageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
     strcpy(msg , "1 1.1.1.1 0 2");
     handleParentInfoResponse(msg, possibleParents, 0);//root
     strcpy(msg , "1 2.2.2.2 1 2");
@@ -245,9 +245,9 @@ void test_parent_selection_restricting_by_layer_choose_2nd_layer_almost_full(){
 }
 
 void test_parent_selection_restricting_by_layer_choose_root_second_layer_full(){
-    parentInfo possibleParents[10], preferredParent;
+    ParentInfo possibleParents[10], preferredParent;
     char msg[20];
-    //messageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
+    //MessageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
     strcpy(msg , "1 1.1.1.1 0 1");
     handleParentInfoResponse(msg, possibleParents, 0);//root
     strcpy(msg , "1 2.2.2.2 1 2");
@@ -270,9 +270,9 @@ void test_parent_selection_restricting_by_layer_choose_root_second_layer_full(){
 }
 
 void test_parent_selection_restricting_by_layer_no_node_available_choose_root(){
-    parentInfo possibleParents[10], preferredParent;
+    ParentInfo possibleParents[10], preferredParent;
     char msg[20];
-    //messageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
+    //MessageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
     strcpy(msg , "1 1.1.1.1 0 2");
     handleParentInfoResponse(msg, possibleParents, 0);//root
     strcpy(msg , "1 2.2.2.2 1 2");
@@ -292,9 +292,9 @@ void test_parent_selection_restricting_by_layer_no_node_available_choose_root(){
 }
 
 void test_parent_selection_restricting_by_layer_no_node_available_choose_shallowest(){
-    parentInfo possibleParents[10], preferredParent;
+    ParentInfo possibleParents[10], preferredParent;
     char msg[20];
-    //messageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
+    //MessageType IP[0].IP[1].IP[2].IP[3] hopDistance nrOfChildren
     strcpy(msg , "1 2.2.2.2 1 2");
     handleParentInfoResponse(msg, possibleParents, 0);//1st Child of the root
     strcpy(msg , "1 3.3.3.3 1 2");

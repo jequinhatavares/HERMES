@@ -14,18 +14,18 @@ extern bool connectedToMainTree;
 extern void (*onRootUnreachableCallback)();
 extern void (*onRootReachableCallback)();
 
-typedef struct parentInfo{
+typedef struct ParentInfo{
     char* ssid;
     uint8_t parentIP[4];
     int rootHopDistance;
     int nrOfChildren;
-}parentInfo;
+}ParentInfo;
 
-typedef struct routingTableEntry {
+typedef struct RoutingTableEntry {
     int hopDistance;
     uint8_t nextHopIP[4];
     int sequenceNumber;
-} routingTableEntry;
+} RoutingTableEntry;
 
 extern TableInfo* routingTable;
 extern TableInfo* childrenTable;
@@ -59,7 +59,7 @@ void* findNode(TableInfo* Table, uint8_t nodeIP[4]);
 uint8_t * findRouteToNode(uint8_t nodeIP[4]);
 bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, uint8_t senderIP[4]);
 void updateChildrenTable(uint8_t APIP[4], uint8_t STAIP[4]);
-parentInfo chooseParent(parentInfo* possibleParents, int n);
+ParentInfo chooseParent(ParentInfo* possibleParents, int n);
 bool inMySubnet(uint8_t * nodeIP);
 void updateMySequenceNumber(int newSequenceNumber);
 int getNumberOfActiveDevices();

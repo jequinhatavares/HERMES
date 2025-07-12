@@ -106,7 +106,7 @@ void encodeParentAssignmentCommand(char* messageBuffer, size_t bufferSize, uint8
              ,destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],targetNodeIP[0],targetNodeIP[1],targetNodeIP[2],targetNodeIP[3]
              ,chosenParentIP[0],chosenParentIP[1],chosenParentIP[2],chosenParentIP[3]);
 }
-void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize, parentInfo* possibleParents, int nrOfPossibleParents, uint8_t *temporaryParent, uint8_t *mySTAIP){
+void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize, ParentInfo* possibleParents, int nrOfPossibleParents, uint8_t *temporaryParent, uint8_t *mySTAIP){
     int offset;
 
     /*** This is an intermediary message sent to the temporary parent.
@@ -270,7 +270,7 @@ void registerTopologyMetric(uint8_t *nodeIP, char* metricBuffer){
     }
 }
 
-parentInfo requestParentFromRoot(parentInfo* possibleParents, int nrOfPossibleParents){
+ParentInfo requestParentFromRoot(ParentInfo* possibleParents, int nrOfPossibleParents){
     uint8_t mySTAIP[4], temporaryParent[4],assignedParent[4];
     int packetSize=0, receivedMessageType;
     bool isExpectedMessage=false;

@@ -13,7 +13,7 @@
 #define MIDDLEWARE_UPDATE_INTERVAL 120000
 extern TableInfo* metricsTable;
 
-struct metricTableEntry{
+struct MetricTableEntry{
     int processingCapacity;
 };
 

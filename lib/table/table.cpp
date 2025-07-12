@@ -115,7 +115,7 @@ void tableAdd(TableInfo* T, void* key, void* value){
 #ifdef PREALLOCATE_TABLE
     //Serial.printf("number of items: %i\n", T->numberOfItems);
     //Serial.printf("values of keys being initialized: %i.%i.%i.%i\n", ((int*)T->table[T->numberOfItems].key)[0],((int*)T->table[T->numberOfItems].key)[1],((int*)T->table[T->numberOfItems].key)[2],((int*)T->table[T->numberOfItems].key)[3]);
-    //Serial.printf("value of values being initialized: %i.%i.%i.%i %i\n", ((int*)T->table[T->numberOfItems].value)[0],((routingTableEntry*)T->table[T->numberOfItems].value)->nextHopIP[1],((routingTableEntry*)T->table[T->numberOfItems].value)->nextHopIP[2],((routingTableEntry*)T->table[T->numberOfItems].value)->nextHopIP[3],((routingTableEntry*)T->table[T->numberOfItems].value)->hopDistance);
+    //Serial.printf("value of values being initialized: %i.%i.%i.%i %i\n", ((int*)T->table[T->numberOfItems].value)[0],((RoutingTableEntry*)T->table[T->numberOfItems].value)->nextHopIP[1],((RoutingTableEntry*)T->table[T->numberOfItems].value)->nextHopIP[2],((RoutingTableEntry*)T->table[T->numberOfItems].value)->nextHopIP[3],((RoutingTableEntry*)T->table[T->numberOfItems].value)->hopDistance);
     T->setKey(T->table[T->numberOfItems].key, key);
     T->setValue(T->table[T->numberOfItems].value, value);
 #endif

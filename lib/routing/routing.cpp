@@ -39,11 +39,11 @@ void (*onRootReachableCallback)() = nullptr;
  * * * .numberOfItems - The current number of entries in the routing table.
  * * * .isEqual - A function pointer for comparing table keys (IP addresses).
  * * * .setIP - A function pointer for assigning preallocated memory for keys (IP addresses stored as int[4]).
- * * * .setValue - A function pointer for assigning preallocated memory for values (routing table entries of type routingTableEntry).
+ * * * .setValue - A function pointer for assigning preallocated memory for values (routing table entries of type RoutingTableEntry).
  * * * .table - A pointer to the rTable.
  *
  * IP[TABLE_MAX_SIZE][4] - Preallocated memory for storing routing table keys (IP addresses).
- * routingTableEntries[TABLE_MAX_SIZE] - Preallocated memory for storing routing table values (routingTableEntry structs).
+ * routingTableEntries[TABLE_MAX_SIZE] - Preallocated memory for storing routing table values (RoutingTableEntry structs).
  ***/
 TableEntry rTable[TABLE_MAX_SIZE];
 TableInfo RTable = {
@@ -56,7 +56,7 @@ TableInfo RTable = {
 TableInfo* routingTable = &RTable;
 
 uint8_t IP[TABLE_MAX_SIZE][4];
-routingTableEntry routingTableEntries[TABLE_MAX_SIZE];
+RoutingTableEntry routingTableEntries[TABLE_MAX_SIZE];
 
 /***
  * Children Table Variables
@@ -121,8 +121,8 @@ void setIP(void* av, void* bv){
 }
 
 void setValue(void* av, void* bv){
-    routingTableEntry * a = (routingTableEntry *) av;
-    routingTableEntry * b = (routingTableEntry *) bv;
+    RoutingTableEntry * a = (RoutingTableEntry *) av;
+    RoutingTableEntry * b = (RoutingTableEntry *) bv;
 
     //Serial.printf("Values.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a->nextHopIP[0],a->nextHopIP[1],a->nextHopIP[2],a->nextHopIP[3], b->nextHopIP[0],b->nextHopIP[1],b->nextHopIP[2],b->nextHopIP[3]);
 
@@ -141,8 +141,8 @@ void setValue(void* av, void* bv){
  * @return (void)
  */
 void initTables(){
-    //Serial.printf("SizeOf int[4]: %i struct: %i", sizeof(int[4]), sizeof(routingTableEntry));
-    tableInit(routingTable,IP, &routingTableEntries, sizeof(uint8_t[4]),sizeof(routingTableEntry));
+    //Serial.printf("SizeOf int[4]: %i struct: %i", sizeof(int[4]), sizeof(RoutingTableEntry));
+    tableInit(routingTable,IP, &routingTableEntries, sizeof(uint8_t[4]),sizeof(RoutingTableEntry));
     tableInit(childrenTable,AP,STA, sizeof(uint8_t[4]), sizeof(uint8_t[4]));
 }
 
@@ -156,9 +156,9 @@ void initTables(){
 void printRoutingStruct(TableEntry* Table){
     LOG(NETWORK,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → NextHop[%hhu.%hhu.%hhu.%hhu] | (Distance: %d) | (Sequence Number: %d)\n",
            ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
-           ((routingTableEntry *)Table->value)->nextHopIP[0],((routingTableEntry *)Table->value)->nextHopIP[1],
-           ((routingTableEntry *)Table->value)->nextHopIP[2],((routingTableEntry *)Table->value)->nextHopIP[3],
-           ((routingTableEntry *)Table->value)->hopDistance,((routingTableEntry *)Table->value)->sequenceNumber);
+           ((RoutingTableEntry *)Table->value)->nextHopIP[0],((RoutingTableEntry *)Table->value)->nextHopIP[1],
+           ((RoutingTableEntry *)Table->value)->nextHopIP[2],((RoutingTableEntry *)Table->value)->nextHopIP[3],
+           ((RoutingTableEntry *)Table->value)->hopDistance,((RoutingTableEntry *)Table->value)->sequenceNumber);
 }
 
 void printRoutingTableHeader(){
@@ -211,7 +211,7 @@ uint8_t* findRouteToNode(uint8_t nodeIP[4]){
     }
 
     //Check in the routing table the next hop to the destination
-    routingTableEntry *entry = (routingTableEntry*)findNode(routingTable, nodeIP);
+    RoutingTableEntry *entry = (RoutingTableEntry*)findNode(routingTable, nodeIP);
 
     if(entry == nullptr) return nullptr;//If we cant find the node in the table return nullptr to avoid segmentation fault
 
@@ -235,8 +235,8 @@ uint8_t* findRouteToNode(uint8_t nodeIP[4]){
  * @return (void)
  **/
 bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, uint8_t senderIP[4]){
-    routingTableEntry updatedEntry;
-    routingTableEntry *nodeEntry = (routingTableEntry*) findNode(routingTable, nodeIP);
+    RoutingTableEntry updatedEntry;
+    RoutingTableEntry *nodeEntry = (RoutingTableEntry*) findNode(routingTable, nodeIP);
 
     /*** If the sequence number for my own node in the received routing update is higher than the one
       * stored in RAM, it likely means the node experienced a reset or power loss and lost its volatile memory.
@@ -321,11 +321,11 @@ void updateChildrenTable(uint8_t APIP[4], uint8_t STAIP[4]){
  *
  * @param possibleParents - An array of potential parent nodes.
  * @param n - The number of potential parents in the array.
- * @return (parentInfo) parent - The chosen parent node.
+ * @return (ParentInfo) parent - The chosen parent node.
  */
 #ifndef LIMIT_PARENT_VISIBILITY
-parentInfo chooseParent(parentInfo* possibleParents, int n){
-    parentInfo preferredParent;
+ParentInfo chooseParent(ParentInfo* possibleParents, int n){
+    ParentInfo preferredParent;
     int minHop = 10000, parentIndex;
     for (int i = 0; i < n; i++) {
         if(possibleParents[i].rootHopDistance < minHop){
@@ -348,8 +348,8 @@ parentInfo chooseParent(parentInfo* possibleParents, int n){
 #endif
 //#define LIMIT_PARENT_VISIBILITY
 #ifdef LIMIT_PARENT_VISIBILITY
-parentInfo chooseParent(parentInfo* possibleParents, int n){
-    parentInfo preferredParent;
+ParentInfo chooseParent(ParentInfo* possibleParents, int n){
+    ParentInfo preferredParent;
     bool found = false;
     int maxHop = 0, minChildren = 10000, minHop = 10000;
 
@@ -395,14 +395,14 @@ parentInfo chooseParent(parentInfo* possibleParents, int n){
 #endif
 
 bool inMySubnet(uint8_t * nodeIP){
-    routingTableEntry *routingEntry;
+    RoutingTableEntry *routingEntry;
     uint8_t *childIP;
 
     //If the node is my direct child return true
     if(tableFind(childrenTable,nodeIP) != -1) return true;
 
     // Now check for nodes that are not direct children, but belong to the subnetwork of my children (e.g., grandchildren, etc.)
-    routingEntry = (routingTableEntry*) findNode(routingTable,nodeIP);
+    routingEntry = (RoutingTableEntry*) findNode(routingTable,nodeIP);
     for (int i = 0; i < childrenTable->numberOfItems; i++) {
         childIP = (uint8_t *)tableKey(childrenTable, i );
         // The node belongs to my subnetwork if the next hop to reach it is one of my children
@@ -417,14 +417,14 @@ bool inMySubnet(uint8_t * nodeIP){
 }
 
 int numberOfNodesInMySubnetwork(){
-    routingTableEntry *routingEntry;
+    RoutingTableEntry *routingEntry;
     uint8_t *childIP,*nodeIP;
     int nodes = 0;
 
     for (int j = 0; j < routingTable->numberOfItems; j++) {
         nodeIP = (uint8_t *) tableKey(routingTable,j);
         if(nodeIP == nullptr) continue;
-        routingEntry = (routingTableEntry *) findNode(routingTable,nodeIP);
+        routingEntry = (RoutingTableEntry *) findNode(routingTable,nodeIP);
 
         //If the node is my direct child increase the count
         if(tableFind(childrenTable,nodeIP) !=-1){
@@ -447,8 +447,8 @@ int numberOfNodesInMySubnetwork(){
 }
 
 void updateMySequenceNumber(int newSequenceNumber){
-    routingTableEntry updatedEntry;
-    routingTableEntry *myEntry = (routingTableEntry*) findNode(routingTable, myIP);
+    RoutingTableEntry updatedEntry;
+    RoutingTableEntry *myEntry = (RoutingTableEntry*) findNode(routingTable, myIP);
     if(myEntry != nullptr){
         assignIP(updatedEntry.nextHopIP,myIP);
         updatedEntry.hopDistance = 0;
@@ -458,14 +458,14 @@ void updateMySequenceNumber(int newSequenceNumber){
 }
 
 int getNumberOfActiveDevices(){
-    routingTableEntry* routingEntry;
+    RoutingTableEntry* routingEntry;
     int nNodes = 0;
 
     /*** The value of routing.numberOfItems may not reflect the actual number of active nodes in the network,
          since a node can still be listed in the routing table even if it is temporarily disconnected.***/
 
     for (int i = 0; i < routingTable->numberOfItems; i++) {
-        routingEntry = (routingTableEntry*) tableValueAtIndex(routingTable, i);
+        routingEntry = (RoutingTableEntry*) tableValueAtIndex(routingTable, i);
         if(routingEntry != nullptr){
             // The node is active in the network if its distance is not -1 and its sequence number is even.
             if(routingEntry->hopDistance != -1 && routingEntry->sequenceNumber % 2 == 0){
@@ -479,7 +479,7 @@ int getNumberOfActiveDevices(){
 }
 
 bool isNodeReachable(uint8_t *nodeIP){
-    routingTableEntry *entry = (routingTableEntry*) tableRead(routingTable,nodeIP);
+    RoutingTableEntry *entry = (RoutingTableEntry*) tableRead(routingTable,nodeIP);
 
     if(entry == nullptr)return false;
 

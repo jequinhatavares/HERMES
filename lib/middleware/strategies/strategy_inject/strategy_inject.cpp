@@ -97,7 +97,7 @@ void injectNodeMetric(void* metric){
  * @return void
  */
 void rewriteSenderIPInject(char* messageBuffer, char* writeBuffer,size_t writeBufferSize, InjectMessageType type) {
-    int messageType, nChars;
+    int MessageType, nChars;
     uint8_t senderIP[4],nodeIP[4];
     InjectMessageType injectType;
 
@@ -105,11 +105,11 @@ void rewriteSenderIPInject(char* messageBuffer, char* writeBuffer,size_t writeBu
     if(type == INJECT_NODE_INFO){
         // If the encoded message already contains metric information, it means this is a propagation of an already encoded message.
         // In this case, only the sender address needs to be updated before further propagation.
-        if( sscanf(messageBuffer,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&messageType,&injectType,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]
+        if( sscanf(messageBuffer,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&MessageType,&injectType,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]
                 ,&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3], &nChars) == 10 ){
 
             LOG(MIDDLEWARE,DEBUG,"1\n");
-            snprintf(writeBuffer,writeBufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",messageType,injectType,myIP[0],myIP[1],myIP[2],myIP[3]
+            snprintf(writeBuffer,writeBufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",MessageType,injectType,myIP[0],myIP[1],myIP[2],myIP[3]
                     ,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3], messageBuffer + nChars);
 
         }
@@ -379,8 +379,8 @@ int compareMetrics(void *metricAv,void*metricBv){
 
     if(metricBv == nullptr) return 1;
 
-    metricTableEntry *metricA = (metricTableEntry*) metricAv;
-    metricTableEntry *metricB = (metricTableEntry*) metricBv;
+    MetricTableEntry *metricA = (MetricTableEntry*) metricAv;
+    MetricTableEntry *metricB = (MetricTableEntry*) metricBv;
     if(metricA->processingCapacity >= metricB->processingCapacity){
         return 1;
     }else{
@@ -389,20 +389,20 @@ int compareMetrics(void *metricAv,void*metricBv){
 }
 
 void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry){
-    metricTableEntry *metric = (metricTableEntry*) metricEntry;
+    MetricTableEntry *metric = (MetricTableEntry*) metricEntry;
     snprintf(buffer,bufferSize,"%i", metric->processingCapacity);
 }
 
 void decodeMetricEntry(char* buffer, void *metricEntry){
-    metricTableEntry *metric = (metricTableEntry*)metricEntry;
+    MetricTableEntry *metric = (MetricTableEntry*)metricEntry;
     sscanf(buffer,"%i", &metric->processingCapacity);
 }
 
 
 void setMetricValue(void* av, void*bv){
     if(bv == nullptr)return; //
-    metricTableEntry *a = (metricTableEntry *) av;
-    metricTableEntry *b = (metricTableEntry *) bv;
+    MetricTableEntry *a = (MetricTableEntry *) av;
+    MetricTableEntry *b = (MetricTableEntry *) bv;
 
     a->processingCapacity = b->processingCapacity;
 }
@@ -410,7 +410,7 @@ void setMetricValue(void* av, void*bv){
 void printMetricStruct(TableEntry* Table){
     LOG(NETWORK,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → (Metric: %d) \n",
         ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
-        ((metricTableEntry *)Table->value)->processingCapacity);
+        ((MetricTableEntry *)Table->value)->processingCapacity);
 }
 
 void printMetricsTableHeader(){

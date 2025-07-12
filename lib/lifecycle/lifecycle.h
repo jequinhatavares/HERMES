@@ -38,7 +38,7 @@ extern void (*middlewareOnTimerCallback)();
 extern void (*middlewareHandleMessageCallback)(char*,size_t);
 extern void (*middlewareInfluenceRoutingCallback)(char*);
 extern void (*middlewareOnNetworkEventCallback)(int,uint8_t *);
-extern parentInfo (*middlewareChooseParentCallback)(parentInfo *,int);
+extern ParentInfo (*middlewareChooseParentCallback)(ParentInfo *,int);
 
 
 State init(Event event);
@@ -89,8 +89,8 @@ void handleTimers();
 
 void filterReachableNetworks();
 void lostChildProcedure();
-int parentHandshakeProcedure(parentInfo *possibleParents);
-bool establishParentConnection(parentInfo preferredParent);
+int parentHandshakeProcedure(ParentInfo *possibleParents);
+bool establishParentConnection(ParentInfo preferredParent);
 void routingHandleConnectionLoss(uint8_t *lostNodeIP);//todo maybe isto deveria estar no routing
 
 #endif //LIFECYCLE_H

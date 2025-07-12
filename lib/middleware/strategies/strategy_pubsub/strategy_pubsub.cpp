@@ -86,7 +86,7 @@ void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopi
  * @return void
  */
 void rewriteSenderIPPubSub(char* messageBuffer, char* writeBuffer, size_t writeBufferSize, PubSubMessageType type){
-    messageType globalMessageType;
+    MessageType globalMessageType;
     PubSubMessageType typePubSub;
     uint8_t nodeIP[4],IP[4],topic1;
     char updatedMessage[255];
@@ -259,7 +259,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
     PubSubMessageType type;
     PubSubInfo pbNewInfo,*pbCurrentRecord;
     bool isTableUpdated = false;
-    routingTableEntry *routingTableValue;
+    RoutingTableEntry *routingTableValue;
     char* token, *spaceToken,*entry;
     char* nodeIPPart, *topicsPart;
     char *saveptr1, *saveptr2;
@@ -314,7 +314,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             }
 
             //Forward the message to the next hop toward the destination IP
-            //routingTableValue = (routingTableEntry*) findRouteToNode(IP);
+            //routingTableValue = (RoutingTableEntry*) findRouteToNode(IP);
             //if(routingTableValue != nullptr){
                 //sendMessage(routingTableValue->nextHopIP, messageBuffer);
             //}
@@ -359,7 +359,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
                 }
             }
             //Forward the message to the next hop toward the destination IP
-            //routingTableValue = (routingTableEntry*) findRouteToNode(IP);
+            //routingTableValue = (RoutingTableEntry*) findRouteToNode(IP);
             //if(routingTableValue != nullptr){
                 //sendMessage(routingTableValue->nextHopIP, messageBuffer);
             //}
@@ -886,7 +886,7 @@ void* getContextStrategyPubSub(){
 
 /******************          User Defined functions            **********************/
 void decodeTopic(char* dataMessage, int8_t * topicType){
-    topicTypes type;
+    TopicTypes type;
     char topicString[20];
     sscanf(dataMessage,"%s", topicString);
     if(strcmp(topicString,"TEMPERATURE") == 0){

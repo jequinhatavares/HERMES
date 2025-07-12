@@ -21,7 +21,7 @@
 
 
 
-typedef enum messageType{
+typedef enum MessageType{
     PARENT_DISCOVERY_REQUEST, //0
     PARENT_INFO_RESPONSE, //1
     CHILD_REGISTRATION_REQUEST, //2
@@ -29,20 +29,19 @@ typedef enum messageType{
     PARTIAL_ROUTING_TABLE_UPDATE, //4
     TOPOLOGY_BREAK_ALERT, //5
     TOPOLOGY_RESTORED_NOTICE,//6
-    //CHILD_RELEASE_NOTICE,
     PARENT_RESET_NOTIFICATION,//7
     DEBUG_MESSAGE,//8
     DATA_MESSAGE,//9
     ACK_MESSAGE,//10
     MIDDLEWARE_MESSAGE,//11
-}messageType;
+}MessageType;
 
 extern char receiveBuffer[256];
 extern char largeSendBuffer[255];
 extern char smallSendBuffer[50];
 
 
-//void encodeMessage(char * msg, size_t bufferSize, messageType type, messageParameters parameters);
+//void encodeMessage(char * msg, size_t bufferSize, MessageType type, messageParameters parameters);
 
 void encodeParentInfoResponse(char* messageBuffer, size_t bufferSize,uint8_t *APIP,int hopDistance,int childrenNumber);
 void encodeChildRegistrationRequest(char* messageBuffer, size_t bufferSize,uint8_t *APIP,uint8_t *STAIP,int sequenceNumber);
@@ -59,7 +58,7 @@ void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint
 bool isMessageValid(int expectedMessageType,char* msg);
 
 void handleParentDiscoveryRequest(char* msg);
-void handleParentInfoResponse(char* msg, parentInfo *parents, int i);
+void handleParentInfoResponse(char* msg, ParentInfo *parents, int i);
 void handleChildRegistrationRequest(char * msg);
 void handleFullRoutingTableUpdate(char *msg);
 void handlePartialRoutingUpdate(char *msg);
@@ -74,8 +73,8 @@ void handleDebugMessage2(char* msg, int* nextHopIP);
 void propagateMessage(char* message, uint8_t * sourceIP);
 void encodeTunneledMessage(char* encodedMessage,size_t encodedMessageSize,uint8_t sourceIP[4], uint8_t destinationIP[4], char* encapsulatedMessage);
 bool isMessageTunneled(char* dataMessage);
-bool waitForMessage(messageType type, uint8_t expectedSenderIP[4], unsigned long timeOut);
-void getSenderIP(char* messageBuffer, messageType type, uint8_t * senderIP);
+bool waitForMessage(MessageType type, uint8_t expectedSenderIP[4], unsigned long timeOut);
+void getSenderIP(char* messageBuffer, MessageType type, uint8_t * senderIP);
 
 void sendMessageToNode(char* messageBuffer,uint8_t *destinationIP);
 void sendDataMessageToNode(char* messageBuffer,uint8_t *senderIP,uint8_t *destinationIP);

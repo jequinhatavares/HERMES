@@ -22,7 +22,7 @@ void (*middlewareInfluenceRoutingCallback)(char*) = nullptr;
 void (*middlewareOnNetworkEventCallback)(int,uint8_t *) = nullptr;
 // Callback pointer for middleware to select a preferred parent from a list.
 // Defaults to routing layer level chooseParent function if not overridden.
-parentInfo (*middlewareChooseParentCallback)(parentInfo *,int) = chooseParent;
+ParentInfo (*middlewareChooseParentCallback)(ParentInfo *,int) = chooseParent;
 
 
 // State machine structure holding the current state and a transition table mapping states to handler functions.
@@ -145,7 +145,7 @@ void onRootReachable(){
 State init(Event event){
     uint8_t MAC[6];
     char strMAC[30], ssid[256]; // Make sure this buffer is large enough to hold the entire SSID
-    routingTableEntry me;
+    RoutingTableEntry me;
     uint8_t invalidIP[4] = {0,0,0,0};
 
 
@@ -253,7 +253,7 @@ State search(Event event){
 State joinNetwork(Event event){
     LOG(STATE_MACHINE,INFO,"Join Network State\n");
     int nrOfPossibleParents = 0;
-    parentInfo possibleParents[10];
+    ParentInfo possibleParents[10];
 
     nrOfPossibleParents = parentHandshakeProcedure(possibleParents);
 
@@ -265,7 +265,7 @@ State joinNetwork(Event event){
     }
 
     //With all the information gathered from the potential parents, select the preferred parent
-    parentInfo preferredParent = middlewareChooseParentCallback(possibleParents,nrOfPossibleParents);
+    ParentInfo preferredParent = middlewareChooseParentCallback(possibleParents,nrOfPossibleParents);
 
     /*** Connect to the chosen parent, send CHILD_REGISTRATION_REQUEST, and receive their routing table
       * If the connection is not successful (e.g., the chosen parent did not respond or the Wi-Fi connection failed),
@@ -329,15 +329,15 @@ State active(Event event){
  */
 State handleMessages(Event event){
     LOG(STATE_MACHINE,INFO,"Handle Messages State\n");
-    int messageType;
+    int MessageType;
     uint8_t childSTAIP[4];
 
-    sscanf(receiveBuffer, "%d", &messageType);
-    if(!isMessageValid(messageType, receiveBuffer)){
+    sscanf(receiveBuffer, "%d", &MessageType);
+    if(!isMessageValid(MessageType, receiveBuffer)){
         LOG(MESSAGES,ERROR,"Error: received message is invalid or malformed \"%s\"\n", receiveBuffer);
         return sActive;
     }
-    switch (messageType) {
+    switch (MessageType) {
         case PARENT_DISCOVERY_REQUEST:
             LOG(MESSAGES,INFO,"Received [Parent Discovery Request] message: \"%s\"\n", receiveBuffer);
             handleParentDiscoveryRequest(receiveBuffer);
@@ -418,7 +418,7 @@ State parentRecovery(Event event){
     uint8_t * STAIP= nullptr,blankIP[4]={0,0,0,0};
     uint8_t *nodeIP;
     uint8_t lostNodeSubnetwork[TABLE_MAX_SIZE][4],nUnreachableNodes=0;
-    parentInfo possibleParents[10];
+    ParentInfo possibleParents[10];
 
     // Handles the case where the node loses a child just before or at the same time it loses its parent
     if(event == eLostChildConnection){
@@ -497,7 +497,7 @@ State parentRecovery(Event event){
     }
 
     //With all the information gathered from the potential parents, select the preferred parent
-    parentInfo preferredParent = middlewareChooseParentCallback(possibleParents,nrOfPossibleParents);
+    ParentInfo preferredParent = middlewareChooseParentCallback(possibleParents,nrOfPossibleParents);
 
     // Connect to the chosen parent, send CHILD_REGISTRATION_REQUEST, and receive their routing table
     if(!establishParentConnection(preferredParent)){
@@ -531,7 +531,7 @@ State parentRestart(Event event){
     LOG(STATE_MACHINE,INFO,"Force Restart State\n");
     uint8_t *childAPIP, *childSTAIP, *nodeIP;
     uint8_t invalidIP[4] = {0,0,0,0};
-    routingTableEntry me;
+    RoutingTableEntry me;
 
     // Handles the case where the node loses a child just before restarting
     if(event == eLostChildConnection){
@@ -593,16 +593,16 @@ State parentRestart(Event event){
 **/
 State recoveryAwait(Event event){
     LOG(STATE_MACHINE,INFO,"Recovery Await State\n");
-    messageType messageType;
+    MessageType MessageType;
 
     if (event == eMessage){
-        sscanf(receiveBuffer, "%d", &messageType);
-        if(!isMessageValid(messageType, receiveBuffer)){
+        sscanf(receiveBuffer, "%d", &MessageType);
+        if(!isMessageValid(MessageType, receiveBuffer)){
             LOG(MESSAGES,ERROR,"Error: received message is invalid or malformed \"%s\"\n", receiveBuffer);
             return sRecoveryWait;
         }
 
-        switch(messageType){
+        switch(MessageType){
             case FULL_ROUTING_TABLE_UPDATE:
                 handleFullRoutingTableUpdate(receiveBuffer);
                 break;
@@ -824,7 +824,7 @@ void lostChildProcedure(){
     uint8_t lostChildIP[4];
     uint8_t lostNodeSubnetwork[TABLE_MAX_SIZE][4];
     uint8_t *nodeIP,*MAC;
-    routingTableEntry unreachableEntry, *lostNodeTableEntry;
+    RoutingTableEntry unreachableEntry, *lostNodeTableEntry;
 
     /*** Iterate over the list of disconnected children. For each child that has exceeded the drop connection timeout
         (i.e., considered permanently disconnected), identify all nodes in its subtree and mark them as unreachable
@@ -879,7 +879,7 @@ void lostChildProcedure(){
  * @param possibleParents - Array to store information about valid parent candidates.
  * @return int - Number of valid possible parents found.
  */
-int parentHandshakeProcedure(parentInfo *possibleParents){
+int parentHandshakeProcedure(ParentInfo *possibleParents){
     uint8_t connectedParentIP[4];
     uint8_t mySTAIP[4];
     int nrOfPossibleParents = 0;
@@ -945,7 +945,7 @@ int parentHandshakeProcedure(parentInfo *possibleParents){
  * @param preferredParent - The chosen parent information including SSID and IP.
  * @return bool - Returns true if the connection and registration succeed, false otherwise.
  */
-bool establishParentConnection(parentInfo preferredParent){
+bool establishParentConnection(ParentInfo preferredParent){
     uint8_t mySTAIP[4];
     bool receivedFRTU=false;
     int childRegistrationRequestCount=0;
@@ -1024,14 +1024,14 @@ bool establishParentConnection(parentInfo preferredParent){
 void routingHandleConnectionLoss(uint8_t *lostNodeIP){
     uint8_t lostNodeSubnetwork[TABLE_MAX_SIZE][4],nUnreachableNodes=0;
     uint8_t *nodeIP;
-    routingTableEntry unreachableEntry, *lostNodeTableEntry;
+    RoutingTableEntry unreachableEntry, *lostNodeTableEntry;
 
     int i;
 
     // Identify all nodes that have now become unreachable due to the node loss
     for (i = 0; i < routingTable->numberOfItems; i++) {
         nodeIP = (uint8_t *) tableKey(routingTable, i);
-        routingTableEntry* routingValue = (routingTableEntry*) findNode(routingTable,nodeIP);
+        RoutingTableEntry* routingValue = (RoutingTableEntry*) findNode(routingTable,nodeIP);
         if(routingValue != nullptr){
             // If the next Hop IP is the IP of the lost child, it means this node is part of the
             // lostChild subnetwork (including itself)
@@ -1059,7 +1059,7 @@ void routingHandleConnectionLoss(uint8_t *lostNodeIP){
     // Mark the nodes as unreachable in the routing table.
     for (i = 0; i < nUnreachableNodes; i++){
         // Mark the nodes as unreachable in the routing table
-        lostNodeTableEntry = (routingTableEntry*)tableRead(routingTable, lostNodeSubnetwork[i]);
+        lostNodeTableEntry = (RoutingTableEntry*)tableRead(routingTable, lostNodeSubnetwork[i]);
         LOG(NETWORK,DEBUG,"Updating Node: %hhu.%hhu.%hhu.%hhu from my routing Table\n",lostNodeSubnetwork[i][0],lostNodeSubnetwork[i][1],lostNodeSubnetwork[i][2],lostNodeSubnetwork[i][3]);
         assignIP(unreachableEntry.nextHopIP,lostNodeSubnetwork[i]);
 
