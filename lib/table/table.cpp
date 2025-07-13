@@ -107,7 +107,7 @@ void* tableRead(TableInfo* T, void* key){
  */
 void tableAdd(TableInfo* T, void* key, void* value){
 
-    if(T->numberOfItems++ == TABLE_MAX_SIZE) return;
+    if(T->numberOfItems == TABLE_MAX_SIZE) return;
 #ifndef PREALLOCATE_TABLE
     T->table[T->numberOfItems].key=key;
     T->table[T->numberOfItems].value=value;
