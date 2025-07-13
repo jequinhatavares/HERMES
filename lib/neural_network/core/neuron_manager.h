@@ -51,7 +51,7 @@ void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAck
 void onInputWaitTimeout();
 void onNACKTimeout();
 
-bool isIPinList(uint8_t *searchIP,uint8_t list[][4],uint8_t nElements); //TODO por esta função num sitio melhor
+ //TODO por esta função num sitio melhor
 
 /**
  * setBit
