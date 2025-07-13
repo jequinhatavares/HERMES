@@ -48,25 +48,26 @@ unsigned char isEmpty(SnakeQueue* snake){
 }
 
 bool inBuffer(SnakeQueue* snake,unsigned char object){
-  int i;
-  for(i=0;i<snake->size;i++){
-
-  }
-  return true;
+    for (int i = 0; i < snake->size; i++) {
+        int index = (snake->head + i) % MaxSize;
+        if (snake->table[index] == object) {
+            return true;
+        }
+    }
+    return false;
 }
 
-/*
+
 void printSnake(SnakeQueue* snake){
-  int i;
-
-  printf("snake: [");
-  for (i = 0; i<MaxSize; i++){
-    printf("%d, ", snake->table[i]);
-  }
-  printf("]\n");
-
+    LOG(STATE_MACHINE, DEBUG, "snake size: %d ", snake->size);
+    LOG(STATE_MACHINE, DEBUG, "snake: [");
+    for (int i = 0; i < snake->size; i++) {
+        int index = (snake->head + i) % MaxSize;
+        LOG(STATE_MACHINE, DEBUG, "%hhu, ", snake->table[index]);
+    }
+    LOG(STATE_MACHINE, DEBUG, "]\n");
 }
-
+/*
 void printHead(SnakeQueue* snake){
   printf("snake head: %d\n", snake->head);
 }

@@ -3,6 +3,8 @@
 
 #define MaxSize 30
 
+#include "logger.h"
+
 struct SnakeQueue_ {
   int head;
   int tail;
@@ -21,6 +23,8 @@ unsigned char getFirst(SnakeQueue*);
 void insertFirst(SnakeQueue*, unsigned char);
 
 unsigned char isEmpty(SnakeQueue*);
+
+void printSnake(SnakeQueue* snake);
 
 
 #endif //SNAKE_QUEUE_SNAKE_QUEUE_H
