@@ -400,6 +400,7 @@ void handleChildRegistrationRequest(char * msg){
 
     //Send my routing table to my child
     //LOG(MESSAGES,INFO,"Sending my routing Table to child:");
+    tablePrint(routingTable,printRoutingTableHeader,printRoutingStruct);
     encodeFullRoutingTableUpdate(largeSendBuffer,sizeof(largeSendBuffer));
     LOG(MESSAGES, INFO, "Sending [Full Routing Update]:%s to: %d.%d.%d.%d\n",largeSendBuffer,childAPIP[0], childAPIP[1], childAPIP[2], childAPIP[3]);
     sendMessage(childSTAIP,largeSendBuffer);

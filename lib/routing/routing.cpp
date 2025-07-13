@@ -241,7 +241,13 @@ bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, 
     /*** If the sequence number for my own node in the received routing update is higher than the one
       * stored in RAM, it likely means the node experienced a reset or power loss and lost its volatile memory.
       * In that case, update my sequence number to match the one in the routing update. ***/
-    if(isIPEqual(nodeIP,myIP) && sequenceNumber > mySequenceNumber) mySequenceNumber = sequenceNumber;
+    if(isIPEqual(nodeIP,myIP) && sequenceNumber > mySequenceNumber){
+        // In case other nodes previously marked me as unreachable, but I'm now back in the network,
+        // my sequence number should be even to indicate I'm reachable again.
+        if(sequenceNumber % 2 != 0)mySequenceNumber = sequenceNumber + 1; //TODO maybe aqui deveria ser um número maior que 1
+        else mySequenceNumber = sequenceNumber + 2;
+        updateMySequenceNumber(mySequenceNumber);
+    }
 
     if( nodeEntry == nullptr){ // If the node is not in the table add it
         // Check the parity of the sequence number. If it's odd (indicating a issue with the node),

@@ -227,15 +227,6 @@ State search(Event event){
     }while(reachableNetworks.len == 0 );
 
 
-    //If the search after filtering returns a non-empty list, proceed to the choose parent state
-    /***if(reachableNetworks.len > 0){
-        insertFirst(stateMachineEngine, eSuccess);
-        return sJoinNetwork;
-    }else{//If not continuing searching
-        insertFirst(stateMachineEngine, eSearch);
-        return sSearch;
-    }***/
-
     insertFirst(stateMachineEngine, eFoundParents);
     return sJoinNetwork;
 
@@ -435,7 +426,6 @@ State parentRecovery(Event event){
     // Disconnect permanently from the current parent to stop disconnection events and enable connection to a new one
     LOG(NETWORK,INFO,"Disconnecting permanently from parent node\n");
     disconnectFromAP();
-
 
     //Tell my children that i lost connection to my parent
     encodeTopologyBreakAlert(smallSendBuffer,sizeof(smallSendBuffer));
