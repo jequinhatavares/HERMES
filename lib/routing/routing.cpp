@@ -134,6 +134,26 @@ void setValue(void* av, void* bv){
     a->sequenceNumber = b->sequenceNumber;
 
 }
+
+
+/**
+ * isIPinList
+ * Checks if an IP address exists in a list of IPs.
+ *
+ * @param searchIP - IP address to search for (IPv4 format)
+ * @param list - 2D array of IP addresses to search
+ * @param nElements - Number of IPs in the list
+ * @return True if IP is found, false otherwise
+ */
+bool isIPinList(uint8_t *searchIP,uint8_t list[][4],uint8_t nElements){
+    for (uint8_t i = 0; i < nElements; i++) {
+        if(isIPEqual(list[i],searchIP)){
+            return true;
+        }
+    }
+    return false;
+}
+
 /**
  * initTables
  *Initializes the routing and children tables.
@@ -247,6 +267,7 @@ bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, 
         if(sequenceNumber % 2 != 0)mySequenceNumber = sequenceNumber + 1; //TODO maybe aqui deveria ser um número maior que 1
         else mySequenceNumber = sequenceNumber + 2;
         updateMySequenceNumber(mySequenceNumber);
+        return true;
     }
 
     if( nodeEntry == nullptr){ // If the node is not in the table add it
