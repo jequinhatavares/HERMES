@@ -18,6 +18,9 @@ void insertLast(SnakeQueue* snake, unsigned char new_value){
       snake->head = (snake->head == MaxSize - 1) ? 0  : snake->head + 1;
     }
   }
+
+  LOG(STATE_MACHINE, DEBUG, "(snake_queue)Should insert this:%hhu | Inserted this:%hhu\n",new_value,snake->table[snake->tail] = new_value);
+
   //Se a nova posição da Tail coincidir com a head a head vai ser a proxima posição
 
 }
@@ -41,6 +44,8 @@ void insertFirst(SnakeQueue *snake,unsigned char value){
   }
   //Se estiver cheio escreve por cima
   snake->table[snake->head]=value;
+  LOG(STATE_MACHINE, DEBUG, "(snake_queue)Should insert this:%hhu | Inserted this:%hhu\n",value,snake->table[snake->head]);
+
 }
 
 unsigned char isEmpty(SnakeQueue* snake){

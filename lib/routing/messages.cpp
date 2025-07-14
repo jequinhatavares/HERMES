@@ -546,6 +546,7 @@ void handlePartialRoutingUpdate(char *msg){
 
     // Verify whether the root's routing information has been updated
     if(isIPinList(rootIP,changedNodes,nrOfChanges)){
+        LOG(NETWORK,INFO, "Root on changed nodes\n");
         RoutingTableEntry *rootEntry = (RoutingTableEntry*) findNode(routingTable,rootIP);
         if(rootEntry != nullptr){
             if(rootEntry->sequenceNumber%2!=0){

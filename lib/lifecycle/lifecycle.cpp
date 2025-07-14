@@ -48,8 +48,7 @@ static CircularBuffer cb_ = {
         .head=0,
         .tail=0,
         .size=0,
-        .table = {0, 0, 0, 0,
-                  0, 0, 0, 0, },
+        .table = {0 },
 };
 
 CircularBuffer* stateMachineEngine = &cb_;
@@ -112,8 +111,15 @@ void onRootUnreachable(){
     }
     connectedToMainTree = false;
     recoveryWaitStartTime = getCurrentTime();
+    //insertLast(stateMachineEngine, eLostTreeConnection);
+    LOG(STATE_MACHINE,DEBUG, "Snake Before insertion:\n");
+    printSnake((CircularBuffer *)stateMachineEngine);
+
+    LOG(STATE_MACHINE,DEBUG, "Inserting event:%hhu in snake\n",eLostTreeConnection);
     insertLast(stateMachineEngine, eLostTreeConnection);
-    insertLast(stateMachineEngine, eLostTreeConnection);
+
+    LOG(STATE_MACHINE,DEBUG, "Snake After insertion:\n");
+    printSnake((CircularBuffer *)stateMachineEngine);
 }
 
 
@@ -130,7 +136,15 @@ void onRootReachable(){
      * TOPOLOGY_RESTORED_NOTICE was missed, and the node did not transition properly to the active state.***/
     if(SM->current_state == sRecoveryWait || SM->current_state == sParentRecovery || SM->current_state == sParentRestart){
         connectedToMainTree = true;
+
+        LOG(STATE_MACHINE,DEBUG, "Snake Before insertion:\n");
+        printSnake((CircularBuffer *)stateMachineEngine);
+
+        LOG(STATE_MACHINE,DEBUG, "Inserting event:%hhu in snake\n",eTreeConnectionRestored);
         insertLast(stateMachineEngine, eTreeConnectionRestored);
+
+        LOG(STATE_MACHINE,DEBUG, "Snake After insertion:\n");
+        printSnake((CircularBuffer *)stateMachineEngine);
     }
 }
 /**
@@ -292,8 +306,6 @@ State active(Event event){
         insertFirst(stateMachineEngine, eLostParentConnection);
         return sParentRecovery;
     }else if(event == eLostChildConnection){
-        //insertFirst(stateMachineEngine, eLostChildConnection);
-        //return sChildRecovery;
         lostChildProcedure();
         return sActive;
     }else if(event == eLostTreeConnection){
@@ -433,7 +445,9 @@ State parentRecovery(Event event){
     for (i = 0; i < childrenTable->numberOfItems; ++i) {
         STAIP = (uint8_t *) findNode(childrenTable, (uint8_t *) childrenTable->table[i].key);
         if(STAIP != nullptr){
+            uint8_t *childAPIP = (uint8_t *) childrenTable->table[i].key;
             sendMessage(STAIP,smallSendBuffer);
+            LOG(MESSAGES,INFO,"Sending [TOPOLOGY_BREAK_ALERT] message:%s to:%i.%i.%i.%i\n",smallSendBuffer,childAPIP[0],childAPIP[1],childAPIP[2],childAPIP[3]);
         }
         else{
             LOG(NETWORK, ERROR, "❌ Valid entry in children table contains a pointer to null instead of the STA IP.\n");

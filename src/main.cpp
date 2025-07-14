@@ -8,6 +8,7 @@
 #include "../lib/middleware/strategies/strategy_inject/strategy_inject.h"
 #include "../lib/middleware/strategies/strategy_pubsub/strategy_pubsub.h"
 #include "middleware.h"
+#include "../lib/circular_buffer/snake_queue.h"
 
 //#include "../lib/wifi_hal/wifi_hal.h"
 //#include "../lib/transport_hal/esp32/udp_esp32.h"
@@ -135,6 +136,7 @@ void loop(){
     handleTimers();
 
     if(stateMachineEngine->size != 0){
+        printSnake((CircularBuffer *)stateMachineEngine);
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
     }
 
