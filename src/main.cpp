@@ -125,6 +125,7 @@ void loop(){
     //Wait for incoming requests
     packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer));
     if (packetSize > 0){
+        LOG(MESSAGES, ERROR,"Received new message\n");
         insertLast(stateMachineEngine, eMessage);
         if(packetSize >= 255){
             LOG(MESSAGES, ERROR,"Receiving buffer is too small packet has size:%i\n", packetSize);
@@ -136,8 +137,13 @@ void loop(){
     handleTimers();
 
     if(stateMachineEngine->size != 0){
+        LOG(MESSAGES, ERROR,"Snake Queue before pop:\n");
         printSnake((CircularBuffer *)stateMachineEngine);
+
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
+
+        LOG(MESSAGES, ERROR,"Snake Queue after pop:\n");
+        printSnake((CircularBuffer *)stateMachineEngine);
     }
 
     cliInteraction();

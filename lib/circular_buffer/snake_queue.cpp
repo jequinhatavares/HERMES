@@ -1,5 +1,3 @@
-//#include <stdlib.h>
-//#include <stdio.h>
 #include "snake_queue.h"
 
 
@@ -30,6 +28,10 @@ void insertLast(SnakeQueue* snake, unsigned char new_value){
     if (snake->size < MaxSize){
         snake->size++;
     }
+
+    LOG(STATE_MACHINE,DEBUG,"InsertLast:%hhu ",new_value);
+    printSnake(snake);
+
 }
 
 
@@ -50,6 +52,7 @@ unsigned char getFirst(SnakeQueue* snake){
     snake->head = (snake->head + 1) % MaxSize;
     snake->size--;
 
+
     return value;
 }
 
@@ -69,6 +72,8 @@ void insertFirst(SnakeQueue *snake,unsigned char value){
         snake->tail = 0;
         snake->table[snake->head] = value;
         snake->size = 1;
+        LOG(STATE_MACHINE,DEBUG,"InsertFirst:%hhu ",value);
+        printSnake(snake);
         return;
     }
 
@@ -83,6 +88,9 @@ void insertFirst(SnakeQueue *snake,unsigned char value){
         //snake->head = (snake->head + MaxSize - 1) % MaxSize;
         // Size remains MaxSize, tail stays as-is
     }
+
+    LOG(STATE_MACHINE,DEBUG,"InsertFirst:%hhu ",value);
+    printSnake(snake);
 }
 
 /**

@@ -855,10 +855,6 @@ void lostChildProcedure(){
                 tablePrint(childrenTable,printChildrenTableHeader, printChildStruct);
 
 
-                LOG(NETWORK,DEBUG,"Updated Routing Table:\n");
-                tablePrint(routingTable,printRoutingTableHeader, printRoutingStruct);
-
-
                 // The procedure is finished so the child can be removed from the lostChildrenTable
                 tableRemove(lostChildrenTable, MAC);
 
