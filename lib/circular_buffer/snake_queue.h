@@ -30,5 +30,7 @@ void printSnake(SnakeQueue* snake);
 
 void printRawSnake(SnakeQueue* snake);
 
+void clearSnakeQueue(SnakeQueue* snake);
+
 
 #endif //SNAKE_QUEUE_SNAKE_QUEUE_H

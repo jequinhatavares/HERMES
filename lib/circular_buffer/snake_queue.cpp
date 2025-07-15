@@ -84,6 +84,15 @@ void printRawSnake(SnakeQueue* snake){
     LOG(STATE_MACHINE, DEBUG, "Head index: %d | Tail index: %d | Size: %d\n",
         snake->head, snake->tail, snake->size);
 }
+
+void clearSnakeQueue(SnakeQueue* snake) {
+    snake->head = 0;
+    snake->tail = 0;
+    snake->size = 0;
+    for (int i = 0; i < MaxSize; i++) {
+        snake->table[i] = 0;
+    }
+}
 /*
 void printHead(SnakeQueue* snake){
   printf("snake head: %d\n", snake->head);
