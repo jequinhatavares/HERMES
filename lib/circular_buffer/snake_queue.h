@@ -24,7 +24,11 @@ void insertFirst(SnakeQueue*, unsigned char);
 
 unsigned char isEmpty(SnakeQueue*);
 
+bool inBuffer(SnakeQueue* snake,unsigned char object);
+
 void printSnake(SnakeQueue* snake);
+
+void printRawSnake(SnakeQueue* snake);
 
 
 #endif //SNAKE_QUEUE_SNAKE_QUEUE_H

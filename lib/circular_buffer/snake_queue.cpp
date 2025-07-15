@@ -16,6 +16,7 @@ void insertLast(SnakeQueue* snake, unsigned char new_value){
 
     LOG(STATE_MACHINE, DEBUG, "(snake_queue)Should insert this:%hhu | Inserted this:%hhu\n",new_value,snake->table[snake->tail] = new_value);
 
+
     //Se a nova posição da Tail coincidir com a head a head vai ser a proxima posição
 
 }
@@ -69,6 +70,19 @@ void printSnake(SnakeQueue* snake){
         LOG(STATE_MACHINE, DEBUG, "%hhu, ", snake->table[index]);
     }
     LOG(STATE_MACHINE, DEBUG, "]\n");
+
+}
+
+void printRawSnake(SnakeQueue* snake){
+    LOG(STATE_MACHINE, DEBUG, "Raw buffer: [");
+    for (int i = 0; i < MaxSize; i++) {
+        LOG(STATE_MACHINE, DEBUG, "%hhu", snake->table[i]);
+        if (i < MaxSize - 1) LOG(STATE_MACHINE, DEBUG, ", ");
+    }
+    LOG(STATE_MACHINE, DEBUG, "]\n");
+
+    LOG(STATE_MACHINE, DEBUG, "Head index: %d | Tail index: %d | Size: %d\n",
+        snake->head, snake->tail, snake->size);
 }
 /*
 void printHead(SnakeQueue* snake){
