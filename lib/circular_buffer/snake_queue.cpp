@@ -3,38 +3,66 @@
 #include "snake_queue.h"
 
 void insertLast(SnakeQueue* snake, unsigned char new_value){
-    //Atualizar a CircularBuffer para se poder colocar o novo elemento na tail
-    if (snake->size == MaxSize) {
-        // Buffer full: overwrite head
+
+    if (snake->size == 0) {
+        // First insert: both head and tail point to index 0
+        snake->head = snake->tail = 0;
+    } else if (snake->size == MaxSize) {
+        // Buffer full: overwrite oldest (advance head)
         snake->head = (snake->head + 1) % MaxSize;
+        snake->tail = (snake->tail + 1) % MaxSize;
     } else {
-        snake->size++;
+        // Normal case: advance tail
+        snake->tail = (snake->tail + 1) % MaxSize;
     }
 
-    snake->tail = (snake->tail + 1) % MaxSize;
     snake->table[snake->tail] = new_value;
 
-    LOG(STATE_MACHINE, DEBUG, "(snake_queue)Should insert this:%hhu | Inserted this:%hhu\n",new_value,snake->table[snake->tail] = new_value);
-
-
+    if (snake->size < MaxSize){
+        snake->size++;
+    }
+    //LOG(STATE_MACHINE, DEBUG, "(snake_queue)Should insert this:%hhu | Inserted this:%hhu\n",new_value,snake->table[snake->tail] = new_value);
     //Se a nova posição da Tail coincidir com a head a head vai ser a proxima posição
-
 }
 
 unsigned char getFirst(SnakeQueue* snake){
-  unsigned char value = snake->table[snake->head];
-  snake->table[snake->head]=0;//Para safe test
-  if(snake->head !=snake->tail){//Retirar o ultimo elemento
-    snake->head = (snake->head == MaxSize - 1) ? 0 : snake->head + 1;
-  }
-  if(snake->size != 0){
-    snake->size --;
-  }
-  return value;
+
+    if (snake->size == 0) return 0; // Or some sentinel value
+
+    unsigned char value = snake->table[snake->head];
+    snake->table[snake->head] = 0; // Optional: zero for safety
+
+    snake->head = (snake->head + 1) % MaxSize;
+    snake->size--;
+
+    return value;
 }
 
 void insertFirst(SnakeQueue *snake,unsigned char value){
-    if (snake->size == MaxSize) {
+    if (snake->size == 0) {
+        // Empty buffer: head and tail point to the same slot
+        snake->head = 0;
+        snake->tail = 0;
+        snake->table[snake->head] = value;
+        snake->size = 1;
+        return;
+    }
+
+    if (snake->size < MaxSize) {
+        // There's space: move head backward
+        snake->head = (snake->head + MaxSize - 1) % MaxSize;
+        snake->table[snake->head] = value;
+        snake->size++;
+    } else {
+        // Buffer full: overwrite current head and don't move the pointers
+        snake->table[snake->head] = value;
+        //snake->head = (snake->head + MaxSize - 1) % MaxSize;
+        // Size remains MaxSize, tail stays as-is
+    }
+}
+
+void insertFirstV2(SnakeQueue *snake,unsigned char value){//overwrites the newest element if full (the tail)
+    if(snake->size == MaxSize) {
         // Buffer full: overwrite tail
         snake->tail = (snake->tail == 0) ? MaxSize - 1 : snake->tail - 1;
     } else {
@@ -43,7 +71,6 @@ void insertFirst(SnakeQueue *snake,unsigned char value){
 
     snake->head = (snake->head == 0) ? MaxSize - 1 : snake->head - 1;
     snake->table[snake->head] = value;
-    LOG(STATE_MACHINE, DEBUG, "(snake_queue)Should insert this:%hhu | Inserted this:%hhu\n",value,snake->table[snake->head]);
 
 }
 
