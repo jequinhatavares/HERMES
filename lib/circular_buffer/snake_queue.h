@@ -6,8 +6,8 @@
 #include "logger.h"
 
 struct SnakeQueue_ {
-  int head; //Pointer to the value on the head (filled value)
-  int tail; //Pointer to the last inserted value in the tail
+  int head; // Index of the first (oldest) element in the buffer
+  int tail; // Index of the most recently inserted element (the tail)
   int size;
   unsigned char table[MaxSize];
 };
@@ -21,6 +21,8 @@ void insertLast(SnakeQueue*, unsigned char);
 unsigned char getFirst(SnakeQueue*);
 
 void insertFirst(SnakeQueue*, unsigned char);
+
+void insertFirstWithTailOverwrite(SnakeQueue *snake,unsigned char value);
 
 unsigned char isEmpty(SnakeQueue*);
 
