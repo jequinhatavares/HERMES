@@ -48,7 +48,7 @@ static CircularBuffer cb_ = {
         .head=0,
         .tail=0,
         .size=0,
-        .table = {0 },
+        .table = {0},
 };
 
 CircularBuffer* stateMachineEngine = &cb_;

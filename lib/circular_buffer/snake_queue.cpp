@@ -3,25 +3,20 @@
 #include "snake_queue.h"
 
 void insertLast(SnakeQueue* snake, unsigned char new_value){
-  //Atualizar a CircularBuffer para se poder colocar o novo elemento na tail
-  if(snake->size != 0){
-    snake->tail = (snake->tail == MaxSize - 1) ?0  : snake->tail + 1;
-  }
-
-  snake->table[snake->tail] = new_value;
-  //Se o Circular Buffer estiver cheio não se incrementa o tamanho
-  if(snake->size != MaxSize){
-    snake->size++;
-  }else{
-    if(snake->tail == snake->head )
-    {
-      snake->head = (snake->head == MaxSize - 1) ? 0  : snake->head + 1;
+    //Atualizar a CircularBuffer para se poder colocar o novo elemento na tail
+    if (snake->size == MaxSize) {
+        // Buffer full: overwrite head
+        snake->head = (snake->head + 1) % MaxSize;
+    } else {
+        snake->size++;
     }
-  }
 
-  LOG(STATE_MACHINE, DEBUG, "(snake_queue)Should insert this:%hhu | Inserted this:%hhu\n",new_value,snake->table[snake->tail] = new_value);
+    snake->tail = (snake->tail + 1) % MaxSize;
+    snake->table[snake->tail] = new_value;
 
-  //Se a nova posição da Tail coincidir com a head a head vai ser a proxima posição
+    LOG(STATE_MACHINE, DEBUG, "(snake_queue)Should insert this:%hhu | Inserted this:%hhu\n",new_value,snake->table[snake->tail] = new_value);
+
+    //Se a nova posição da Tail coincidir com a head a head vai ser a proxima posição
 
 }
 
@@ -38,13 +33,16 @@ unsigned char getFirst(SnakeQueue* snake){
 }
 
 void insertFirst(SnakeQueue *snake,unsigned char value){
-  if(MaxSize != snake->size){
-    snake->head=(snake->head==0)?MaxSize-1: snake->head-1 ;
-    snake->size++;
-  }
-  //Se estiver cheio escreve por cima
-  snake->table[snake->head]=value;
-  LOG(STATE_MACHINE, DEBUG, "(snake_queue)Should insert this:%hhu | Inserted this:%hhu\n",value,snake->table[snake->head]);
+    if (snake->size == MaxSize) {
+        // Buffer full: overwrite tail
+        snake->tail = (snake->tail == 0) ? MaxSize - 1 : snake->tail - 1;
+    } else {
+        snake->size++;
+    }
+
+    snake->head = (snake->head == 0) ? MaxSize - 1 : snake->head - 1;
+    snake->table[snake->head] = value;
+    LOG(STATE_MACHINE, DEBUG, "(snake_queue)Should insert this:%hhu | Inserted this:%hhu\n",value,snake->table[snake->head]);
 
 }
 

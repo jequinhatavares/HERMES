@@ -1,7 +1,7 @@
 #ifndef SNAKE_QUEUE_SNAKE_QUEUE_H
 #define SNAKE_QUEUE_SNAKE_QUEUE_H
 
-#define MaxSize 30
+#define MaxSize 10
 
 #include "logger.h"
 
