@@ -45,7 +45,6 @@ State init(Event event);
 State search(Event event);
 State joinNetwork(Event event);
 State active(Event event);
-State handleMessages(Event event);
 State parentRecovery(Event event);
 State childRecovery(Event event);
 State parentRestart(Event event);
@@ -59,13 +58,12 @@ void requestTaskExecution();
 #define sSearch ((State) 1)
 #define sJoinNetwork ((State) 2)
 #define sActive ((State) 3)
-#define sHandleMessages ((State) 4)
-#define sParentRecovery ((State) 5)
+#define sParentRecovery ((State) 4)
 //#define sChildRecovery ((State) 6)
-#define sParentRestart ((State) 6)
-#define sRecoveryWait ((State) 7)
-#define sExecuteTask ((State) 8)
-#define sError ((State) 9)
+#define sParentRestart ((State) 5)
+#define sRecoveryWait ((State) 6)
+#define sExecuteTask ((State) 7)
+#define sError ((State) 8)
 
 #define eSuccess ((Event) 0)
 #define eInitSuccess ((Event) 1)
@@ -82,6 +80,7 @@ void requestTaskExecution();
 #define eExecuteTask ((Event) 12)
 #define eError ((Event) 13)
 
+void handleMessages();
 
 void parseMAC(const char* macStr, int* macArray);
 void setIPs(const uint8_t * MAC);

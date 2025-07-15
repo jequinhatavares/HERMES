@@ -33,7 +33,6 @@ StateMachine SM_ = {
                 [sSearch] = search,
                 [sJoinNetwork] = joinNetwork,
                 [sActive] = active,
-                [sHandleMessages] = handleMessages,
                 [sParentRecovery] = parentRecovery,
                 //[sChildRecovery] = childRecovery,
                 [sParentRestart] = parentRestart,
@@ -300,10 +299,11 @@ State active(Event event){
     LOG(STATE_MACHINE,INFO,"Active State\n");
 
     if (event == eMessage){
-        insertFirst(stateMachineEngine, eMessage);
-        return sHandleMessages;
+        handleMessages();
+        return sActive;
     }else if(event == eLostParentConnection){
         insertFirst(stateMachineEngine, eLostParentConnection);
+        //Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
         return sParentRecovery;
     }else if(event == eLostChildConnection){
         lostChildProcedure();
@@ -327,10 +327,9 @@ State active(Event event){
  * Implements the Handle Messages state: processes incoming messages and dispatches them
  * to the appropriate handlers based on message type.
  *
- * @param event - The message event to process.
- * @return State - Always returns to sActive after processing.
+ * @return void
  */
-State handleMessages(Event event){
+void handleMessages(){
     LOG(STATE_MACHINE,INFO,"Handle Messages State\n");
     int MessageType;
     uint8_t childSTAIP[4];
@@ -338,7 +337,6 @@ State handleMessages(Event event){
     sscanf(receiveBuffer, "%d", &MessageType);
     if(!isMessageValid(MessageType, receiveBuffer)){
         LOG(MESSAGES,ERROR,"Error: received message is invalid or malformed \"%s\"\n", receiveBuffer);
-        return sActive;
     }
     switch (MessageType) {
         case PARENT_DISCOVERY_REQUEST:
@@ -401,7 +399,6 @@ State handleMessages(Event event){
             break;
     }
 
-    return sActive;
 }
 
 
@@ -455,8 +452,7 @@ State parentRecovery(Event event){
     }
 
     // Increment mySequence Number
-    mySequenceNumber = mySequenceNumber + 2;
-    updateMySequenceNumber(mySequenceNumber);
+    updateMySequenceNumber(mySequenceNumber+2);
 
     // Handle routing mechanisms triggered by the loss of connection to the parent node (e.g., routing table update, network-wide notification)
     routingHandleConnectionLoss(parent);
@@ -707,9 +703,8 @@ void handleTimers(){
     // (i.e., the node has an uplink connection that ultimately leads to the root).
     if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
         LOG(NETWORK,INFO,"Sending a Periodic Routing Update to my Neighbors\n");
-        mySequenceNumber = mySequenceNumber + 2;
         //Update my sequence number
-        updateMySequenceNumber(mySequenceNumber);
+        updateMySequenceNumber(mySequenceNumber+2);
         encodeFullRoutingTableUpdate(largeSendBuffer, sizeof(largeSendBuffer));
         propagateMessage(largeSendBuffer,myIP);
         lastRoutingUpdateTime = currentTime;
@@ -865,6 +860,10 @@ void lostChildProcedure(){
         }
 
     }
+
+    // Update the node's sequence number so that when the lost child rejoins the network, its information is accepted immediately.
+    // Otherwise, the child would reject the parent due to the parent having a sequence number incremented by +1.
+    updateMySequenceNumber(mySequenceNumber+2);
 
 }
 

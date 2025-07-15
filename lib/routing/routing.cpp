@@ -264,9 +264,8 @@ bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, 
     if(isIPEqual(nodeIP,myIP) && sequenceNumber > mySequenceNumber){
         // In case other nodes previously marked me as unreachable, but I'm now back in the network,
         // my sequence number should be even to indicate I'm reachable again.
-        if(sequenceNumber % 2 != 0)mySequenceNumber = sequenceNumber + 1; //TODO maybe aqui deveria ser um número maior que 1
-        else mySequenceNumber = sequenceNumber + 2;
-        updateMySequenceNumber(mySequenceNumber);
+        if(sequenceNumber % 2 != 0)updateMySequenceNumber(sequenceNumber+1);//TODO maybe aqui deveria ser um número maior que 1
+        else updateMySequenceNumber(sequenceNumber+2);
         return true;
     }
 
@@ -475,11 +474,14 @@ int numberOfNodesInMySubnetwork(){
 
 void updateMySequenceNumber(int newSequenceNumber){
     RoutingTableEntry updatedEntry;
+
+     mySequenceNumber = newSequenceNumber;
+
     RoutingTableEntry *myEntry = (RoutingTableEntry*) findNode(routingTable, myIP);
     if(myEntry != nullptr){
         assignIP(updatedEntry.nextHopIP,myIP);
         updatedEntry.hopDistance = 0;
-        updatedEntry.sequenceNumber = newSequenceNumber;
+        updatedEntry.sequenceNumber = mySequenceNumber;
         tableUpdate(routingTable, myIP, &updatedEntry);
     }
 }
@@ -514,6 +516,7 @@ bool isNodeReachable(uint8_t *nodeIP){
     // and its sequence number is even (indicating a current/valid state)
     return(entry->hopDistance != -1) && (entry->sequenceNumber % 2 == 0);
 }
+
 void getIPFromMAC(uint8_t * MAC, uint8_t * IPAddr){
     IPAddr[0] = MAC[5];
     IPAddr[1] = MAC[4];

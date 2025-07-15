@@ -132,7 +132,6 @@ void loop(){
         }
 
     }
-
     // Handle all timers: routing periodic updates, child disconnection timeouts, middleware timer callbacks and any application-level periodic tasks
     handleTimers();
 
