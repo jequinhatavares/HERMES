@@ -197,7 +197,7 @@ State init(Event event){
 
     lastRoutingUpdateTime = getCurrentTime();
 
-    hasParent = false;
+    //hasParent = false;
 
 
     if (!iamRoot){
@@ -509,12 +509,12 @@ State parentRecovery(Event event){
 
     // Set the flag to true to indicate that the node is connected to the main tree
     connectedToMainTree = true;
+    hasParent = true;
 
     // Notify the children that the main tree connection has been reestablished
     encodeTopologyRestoredNotice(smallSendBuffer, sizeof(smallSendBuffer));
     sendMessageToChildren(smallSendBuffer);
 
-    hasParent = true;
 
     return sActive;
 }

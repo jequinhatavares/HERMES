@@ -733,31 +733,35 @@ void handleDebugRegistrationRequest(char* msg){
  */
 void propagateMessage(char* message, uint8_t * sourceIP){
     // If the message didn't come from the parent and i have a parent, forward it to the parent
-    //LOG(MESSAGES, DEBUG, "SourceIP: %i.%i.%i.%i\nParentIP: %i.%i.%i.%i hasParent: %i\n",sourceIP[0], sourceIP[1],sourceIP[2],sourceIP[3],
-    //   parent[0],parent[1],parent[2],parent[3],hasParent);
-    RoutingTableEntry *childRoutingEntry;
-    RoutingTableEntry *parentRoutingEntry = (RoutingTableEntry*)findNode(routingTable, parent);
+    uint8_t *childSTAIP,*childAPIP;
+    bool messageSent=false;
+
     //Send the message to my parent only if it exists and is reachable
-    if(parentRoutingEntry != nullptr){
-        if(!isIPEqual(sourceIP, parent) && parentRoutingEntry->hopDistance != -1){
-            LOG(MESSAGES, DEBUG, "Propagating Message to parent: %d.%d.%d.%d\n",parent[0],parent[1],parent[2],parent[3]);
-            sendMessage(parent, message);
-        }
+    if(!isIPEqual(sourceIP, parent) && hasParent){
+        sendMessage(parent, message);
+        messageSent = true;
+        LOG(MESSAGES, INFO, "Sending the Message:\"%s\" to %d.%d.%d.%d",message,parent[0],parent[1],parent[2],parent[3]);
     }
 
     //Forward the message to all children except the one that sent it to me
     for(int i = 0; i< childrenTable->numberOfItems; i++){
-        childRoutingEntry = (RoutingTableEntry*)findNode(routingTable, (uint8_t *)childrenTable->table[i].key);
-        //LOG(MESSAGES, DEBUG, "SourceIP: %i.%i.%i.%i ChildIP: %i.%i.%i.%i\n",sourceIP[0], sourceIP[1],sourceIP[2],sourceIP[3],
-        //        ((int*)childrenTable->table[i].key)[0],((int*)childrenTable->table[i].key)[1],((int*)childrenTable->table[i].key)[2],((int*)childrenTable->table[i].key)[3]);
-        if (childRoutingEntry != nullptr){
-            if(!isIPEqual((int*)childrenTable->table[i].key, sourceIP) && childRoutingEntry->hopDistance != -1){
-                LOG(MESSAGES, DEBUG, "Propagating Message to: %i.%i.%i.%i\n", ((uint8_t *)childrenTable->table[i].key)[0],((uint8_t *)childrenTable->table[i].key)[1],((uint8_t *)childrenTable->table[i].key)[2],((uint8_t *)childrenTable->table[i].key)[3]);
-                sendMessage((uint8_t *)childrenTable->table[i].value, message);
+        childAPIP = (uint8_t *)tableKey(childrenTable, i);
+        childSTAIP = (uint8_t *)tableValueAtIndex(childrenTable, i);
+        if (childSTAIP != nullptr && childAPIP != nullptr){
+            if(!isIPEqual(childAPIP, sourceIP)){
+                sendMessage(childSTAIP, message);
+                if (!messageSent) {
+                    LOG(MESSAGES, INFO, "Sending the Message:\"%s\" to %d.%d.%d.%d",message,childSTAIP[0],childSTAIP[1],childSTAIP[2],childSTAIP[3]);
+                    messageSent = true;
+                } else {
+                    LOG(MESSAGES, INFO, ", %d.%d.%d.%d",childSTAIP[0],childSTAIP[1],childSTAIP[2],childSTAIP[3]);
+                }
             }
         }
 
     }
+
+    if(messageSent)LOG(MESSAGES, INFO, "\n");
 
 }
 
