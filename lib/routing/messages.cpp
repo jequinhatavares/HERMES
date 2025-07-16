@@ -422,7 +422,8 @@ void handleChildRegistrationRequest(char * msg){
 * @return void
 */
 void handleFullRoutingTableUpdate(char * msg){
-    int type, nrOfChanges = 0;
+    int type, nrOfChanges = 0,childIndex=-1;
+    uint8_t *childSTAIP;
     uint8_t nodeIP[4], sourceIP[4],changedNodes[TABLE_MAX_SIZE][4],disconnectionFlag=0;
     int hopDistance,sequenceNumber,parsedValues;
     bool isRoutingTableChanged = false, isRoutingEntryChanged = false ;
@@ -448,6 +449,17 @@ void handleFullRoutingTableUpdate(char * msg){
         if(isRoutingEntryChanged == true){
             assignIP(changedNodes[nrOfChanges], nodeIP);
             nrOfChanges ++;
+
+            // If the node's own routing entry changed, it was previously unreachable and is now returning.
+            // It must notify the sender so they can update their routing table accordingly.
+            if(isIPEqual(nodeIP,myIP)){
+                encodePartialRoutingUpdate(smallSendBuffer,sizeof(smallSendBuffer),&myIP,1);
+                childIndex = tableFind(childrenTable, sourceIP) ;
+                if(childIndex != -1){ // If the sender is one of my children, the update must be sent to its childSTAIP
+                    childSTAIP = (uint8_t *)tableValueAtIndex(childrenTable,childIndex);
+                    if(childSTAIP!= nullptr)sendMessage(childSTAIP,smallSendBuffer);
+                }else sendMessage(sourceIP,smallSendBuffer);
+            }
         }
         isRoutingTableChanged = isRoutingTableChanged || isRoutingEntryChanged ;
         token = strtok(nullptr, "|");
@@ -503,7 +515,8 @@ void handleFullRoutingTableUpdate(char * msg){
 * @return void
 */
 void handlePartialRoutingUpdate(char *msg){
-    int type, nrOfChanges = 0;
+    int type, nrOfChanges = 0, childIndex;
+    uint8_t *childSTAIP;
     uint8_t nodeIP[4], senderIP[4],changedNodes[TABLE_MAX_SIZE][4],disconnectionFlag;
     int sequenceNumber,parsedValues;
     int hopDistance;
@@ -527,6 +540,17 @@ void handlePartialRoutingUpdate(char *msg){
         if(isRoutingEntryChanged == true){
             assignIP(changedNodes[nrOfChanges],nodeIP);
             nrOfChanges ++;
+
+            // If the node's own routing entry changed, it was previously unreachable and is now returning.
+            // It must notify the sender so they can update their routing table accordingly.
+            if(isIPEqual(nodeIP,myIP)){
+                encodePartialRoutingUpdate(smallSendBuffer,sizeof(smallSendBuffer),&myIP,1);
+                childIndex = tableFind(childrenTable, senderIP) ;
+                if(childIndex != -1){ // If the sender is one of my children, the update must be sent to its childSTAIP
+                    childSTAIP = (uint8_t *)tableValueAtIndex(childrenTable,childIndex);
+                    if(childSTAIP!= nullptr)sendMessage(childSTAIP,smallSendBuffer);
+                }else sendMessage(senderIP,smallSendBuffer);
+            }
         }
         //updateRoutingTable(nodeIP,newNode,sourceIP);
         isRoutingTableChanged = isRoutingTableChanged || isRoutingEntryChanged ;

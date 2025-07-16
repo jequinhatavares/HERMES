@@ -264,7 +264,7 @@ bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, 
     if(isIPEqual(nodeIP,myIP) && sequenceNumber > mySequenceNumber){
         // In case other nodes previously marked me as unreachable, but I'm now back in the network,
         // my sequence number should be even to indicate I'm reachable again.
-        if(sequenceNumber % 2 != 0)updateMySequenceNumber(sequenceNumber+1);//TODO maybe aqui deveria ser um número maior que 1
+        if(sequenceNumber % 2 != 0)updateMySequenceNumber(sequenceNumber+1);
         else updateMySequenceNumber(sequenceNumber+2);
         return true;
     }
