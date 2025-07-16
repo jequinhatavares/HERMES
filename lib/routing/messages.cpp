@@ -837,8 +837,7 @@ void sendMessageToChildren(char* messageBuffer){
 }
 
 void sendMessageToParent(char* messageBuffer){
-    uint8_t *nextHopIP = findRouteToNode(parent);
-    if(nextHopIP != nullptr){
+    if(hasParent){
         sendMessage(parent,messageBuffer);
     }
 }
