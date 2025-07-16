@@ -14,6 +14,8 @@ WiFiUDP Udp;
  */
 void sendMessage(uint8_t address[4], const char * msg){
     IPAddress address_;
+    if(address == nullptr)return;
+
     address_[0] = address[0];address_[1] = address[1];
     address_[2] = address[2];address_[3] = address[3];
     Udp.beginPacket(address_, UDP_PORT);

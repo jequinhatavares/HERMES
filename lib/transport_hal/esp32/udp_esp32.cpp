@@ -14,6 +14,8 @@ WiFiUDP Udp;
  */
 void sendMessage(uint8_t address[4], const char * msg){
     IPAddress address_;
+    if(address == nullptr)return;
+
     address_[0] = address[0];address_[1] = address[1];
     address_[2] = address[2];address_[3] = address[3];
 
@@ -22,6 +24,7 @@ void sendMessage(uint8_t address[4], const char * msg){
 
     Udp.write((const uint8_t*) msg, strlen(msg));
     Udp.endPacket();
+
 }
 
 /**
@@ -42,6 +45,7 @@ int receiveMessage(char* buffer, size_t bufferSize){
             buffer[len] = '\0';
         }
     }
+
     return packetSize;
 
 }
