@@ -111,15 +111,10 @@ void onRootUnreachable(){
     }
     connectedToMainTree = false;
     recoveryWaitStartTime = getCurrentTime();
-    //insertLast(stateMachineEngine, eLostTreeConnection);
-    LOG(STATE_MACHINE,DEBUG, "Snake Before insertion:\n");
-    printSnake((CircularBuffer *)stateMachineEngine);
 
     LOG(STATE_MACHINE,DEBUG, "Inserting event:%hhu in snake\n",eLostTreeConnection);
     insertLast(stateMachineEngine, eLostTreeConnection);
 
-    LOG(STATE_MACHINE,DEBUG, "Snake After insertion:\n");
-    printSnake((CircularBuffer *)stateMachineEngine);
 }
 
 
@@ -134,17 +129,12 @@ void onRootReachable(){
     /*** Upon receiving routing information indicating that the root is reachable, transition from the recovery state
      * to the active state if currently in recovery. If the node is not already in the active state, it means a
      * TOPOLOGY_RESTORED_NOTICE was missed, and the node did not transition properly to the active state.***/
-    if(SM->current_state == sRecoveryWait || SM->current_state == sParentRecovery || SM->current_state == sParentRestart){
+    if(SM->current_state == sRecoveryWait){
         connectedToMainTree = true;
-
-        LOG(STATE_MACHINE,DEBUG, "Snake Before insertion:\n");
-        printSnake((CircularBuffer *)stateMachineEngine);
 
         LOG(STATE_MACHINE,DEBUG, "Inserting event:%hhu in snake\n",eTreeConnectionRestored);
         insertLast(stateMachineEngine, eTreeConnectionRestored);
 
-        LOG(STATE_MACHINE,DEBUG, "Snake After insertion:\n");
-        printSnake((CircularBuffer *)stateMachineEngine);
     }
 }
 /**
@@ -279,6 +269,7 @@ State joinNetwork(Event event){
         insertLast(stateMachineEngine, eParentSelectionFailed);
         return sSearch;
     }
+
 
     reachableNetworks.len = 0 ;
     LOG(NETWORK,INFO,"------------------ Node successfully added to the network -------------------\n");
@@ -418,11 +409,35 @@ State parentRecovery(Event event){
     int i, consecutiveSearchCount = 0, nrOfPossibleParents = 0;
     uint8_t * STAIP= nullptr,blankIP[4]={0,0,0,0};
     ParentInfo possibleParents[10];
+    MessageType MessageType;
 
     // Handles the case where the node loses a child just before or at the same time it loses its parent
     if(event == eLostChildConnection){
         lostChildProcedure();
         return sParentRestart;
+    }else if (event == eMessage){
+        sscanf(receiveBuffer, "%d", &MessageType);
+        if(!isMessageValid(MessageType, receiveBuffer)){
+            LOG(MESSAGES,ERROR,"Error: received message is invalid or malformed \"%s\"\n", receiveBuffer);
+            return sRecoveryWait;
+        }
+
+        switch(MessageType) {
+            case FULL_ROUTING_TABLE_UPDATE:
+                LOG(MESSAGES, INFO, "Received [FULL_ROUTING_TABLE_UPDATE] message: \"%s\"\n", receiveBuffer);
+                handleFullRoutingTableUpdate(receiveBuffer);
+                break;
+
+            case PARTIAL_ROUTING_TABLE_UPDATE:
+                LOG(MESSAGES, INFO, "Received [PARTIAL_ROUTING_TABLE_UPDATE] message: \"%s\"\n", receiveBuffer);
+                handlePartialRoutingUpdate(receiveBuffer);
+                break;
+
+            /*** Reject all other message types (e.g., PARENT_DISCOVERY_REQUEST, CHILD_REGISTRATION_REQUEST,
+            , DATA_MESSAGE, MIDDLEWARE_MESSAGE etc.) since the node is not in an active state. ***/
+            default:
+                break;
+        }
     }
 
     if(iamRoot) return sActive;
@@ -510,10 +525,15 @@ State parentRecovery(Event event){
     connectedToMainTree = true;
     hasParent = true;
 
+    // If the joining node has children (i.e., his subnetwork has nodes), it must also send its routing table to its new parent.
+    // This ensures that the rest of the network becomes aware of the entire subtree associated with the new node
+    encodeFullRoutingTableUpdate(largeSendBuffer,sizeof(largeSendBuffer));
+    sendMessage(parent, largeSendBuffer);
+    lastRoutingUpdateTime = getCurrentTime();
+
     // Notify the children that the main tree connection has been reestablished
     encodeTopologyRestoredNotice(smallSendBuffer, sizeof(smallSendBuffer));
     sendMessageToChildren(smallSendBuffer);
-
 
     return sActive;
 }
@@ -536,7 +556,7 @@ State parentRestart(Event event){
     if(event == eLostChildConnection){
         lostChildProcedure();
         return sParentRestart;
-    }
+    }else if(event == eMessage) return sParentRestart;
 
     // If the node has children, notify them that its parent (this node) is restarting.
     // This means it will no longer be their parent, and they should start searching for a new one.
@@ -603,10 +623,12 @@ State recoveryAwait(Event event){
 
         switch(MessageType){
             case FULL_ROUTING_TABLE_UPDATE:
+                LOG(MESSAGES,INFO,"Received [FULL_ROUTING_TABLE_UPDATE] message: \"%s\"\n", receiveBuffer);
                 handleFullRoutingTableUpdate(receiveBuffer);
                 break;
 
             case PARTIAL_ROUTING_TABLE_UPDATE:
+                LOG(MESSAGES,INFO,"Received [PARTIAL_ROUTING_TABLE_UPDATE] message: \"%s\"\n", receiveBuffer);
                 handlePartialRoutingUpdate(receiveBuffer);
                 break;
 
@@ -632,7 +654,7 @@ State recoveryAwait(Event event){
                 break;
 
             /*** Reject all other message types (e.g., PARENT_DISCOVERY_REQUEST, CHILD_REGISTRATION_REQUEST,
-                ROUTING_TABLE_UPDATE, DATA_MESSAGE, etc.) since the node is not in an active state. ***/
+               , DATA_MESSAGE,DEBUG_MESSAGE, etc.) since the node is not in an active state. ***/
             default:
                 break;
 
@@ -994,13 +1016,6 @@ bool establishParentConnection(ParentInfo preferredParent){
         tablePrint(routingTable,printRoutingTableHeader,printRoutingStruct);
     }
 
-    // If the joining node has children (i.e., his subnetwork has nodes), it must also send its routing table to its new parent.
-    // This ensures that the rest of the network becomes aware of the entire subtree associated with the new node
-    if(childrenTable->numberOfItems > 0){
-        encodeFullRoutingTableUpdate(largeSendBuffer,sizeof(largeSendBuffer));
-        sendMessage(parent, largeSendBuffer);
-        lastRoutingUpdateTime = getCurrentTime();
-    }
 
     // Callback to notify the middleware layer of successfully joining the network with a permanent connection
     if(middlewareOnNetworkEventCallback != nullptr)middlewareOnNetworkEventCallback(0,parent);

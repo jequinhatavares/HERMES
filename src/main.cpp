@@ -133,7 +133,7 @@ void loop(){
     // Handle all timers: routing periodic updates, child disconnection timeouts, middleware timer callbacks and any application-level periodic tasks
     handleTimers();
 
-    if(stateMachineEngine->size != 0){
+    while(stateMachineEngine->size != 0){
         printSnake((CircularBuffer *)stateMachineEngine);
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
     }
