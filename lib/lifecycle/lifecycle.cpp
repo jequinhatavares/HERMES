@@ -66,6 +66,7 @@ void onParentDisconnect(){
     LOG(NETWORK, DEBUG,"onParentDisconnect callback!\n");
     insertLast(stateMachineEngine, eLostParentConnection);
     connectedToMainTree = false;
+    hasParent= false;
 }
 
 
@@ -416,8 +417,6 @@ void handleMessages(){
 State parentRecovery(Event event){
     int i, consecutiveSearchCount = 0, nrOfPossibleParents = 0;
     uint8_t * STAIP= nullptr,blankIP[4]={0,0,0,0};
-    uint8_t *nodeIP;
-    uint8_t lostNodeSubnetwork[TABLE_MAX_SIZE][4],nUnreachableNodes=0;
     ParentInfo possibleParents[10];
 
     // Handles the case where the node loses a child just before or at the same time it loses its parent
@@ -839,9 +838,6 @@ void lostChildProcedure(){
                 LOG(NETWORK,DEBUG,"Lost Child MAC: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu \n", MAC[0], MAC[1], MAC[2], MAC[3], MAC[4], MAC[5]);
                 LOG(NETWORK,DEBUG,"Lost Child IP: %hhu.%hhu.%hhu.%hhu \n", lostChildIP[0], lostChildIP[1], lostChildIP[2], lostChildIP[3]);
 
-                // Handle routing mechanisms triggered by the loss of connection to a child node (e.g., routing table update, network-wide notification)
-                routingHandleConnectionLoss(lostChildIP);
-
                 // Remove the lost child from my children table
                 LOG(NETWORK,DEBUG,"Removing unreachable Node :%hhu.%hhu.%hhu.%hhu from my children Table\n",lostChildIP[0],lostChildIP[1],lostChildIP[2],lostChildIP[3]);
                 tableRemove(childrenTable, lostChildIP);
@@ -849,6 +845,8 @@ void lostChildProcedure(){
                 LOG(NETWORK,DEBUG,"Updated Children Table\n");
                 tablePrint(childrenTable,printChildrenTableHeader, printChildStruct);
 
+                // Handle routing mechanisms triggered by the loss of connection to a child node (e.g., routing table update, network-wide notification)
+                routingHandleConnectionLoss(lostChildIP);
 
                 // The procedure is finished so the child can be removed from the lostChildrenTable
                 tableRemove(lostChildrenTable, MAC);
@@ -1059,12 +1057,11 @@ void routingHandleConnectionLoss(uint8_t *lostNodeIP){
     for (i = 0; i < nUnreachableNodes; i++){
         // Mark the nodes as unreachable in the routing table
         lostNodeTableEntry = (RoutingTableEntry*)tableRead(routingTable, lostNodeSubnetwork[i]);
-        LOG(NETWORK,DEBUG,"Updating Node: %hhu.%hhu.%hhu.%hhu from my routing Table\n",lostNodeSubnetwork[i][0],lostNodeSubnetwork[i][1],lostNodeSubnetwork[i][2],lostNodeSubnetwork[i][3]);
-        assignIP(unreachableEntry.nextHopIP,lostNodeSubnetwork[i]);
 
         // If the node is not already marked as unreachable (i.e., it has an even sequence number),
         // increment the lost child’s sequence number by 1 to indicate that the route is now invalid due to lost connectivity.
-        if(lostNodeTableEntry->sequenceNumber%2==0){
+        if(lostNodeTableEntry != nullptr && lostNodeTableEntry->sequenceNumber%2==0){
+            assignIP(unreachableEntry.nextHopIP,lostNodeTableEntry->nextHopIP);
             unreachableEntry.sequenceNumber = lostNodeTableEntry->sequenceNumber + 1;
             unreachableEntry.hopDistance = -1;
             tableUpdate(routingTable, lostNodeSubnetwork[i],&unreachableEntry);

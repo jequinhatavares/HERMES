@@ -467,7 +467,6 @@ void handleFullRoutingTableUpdate(char * msg){
 
     // If the routing update caused a change in my routing table, propagate the updated information to the rest of the network
     if (isRoutingTableChanged){
-        LOG(NETWORK,INFO, "Routing Information has changed-> Propagate new info\n");
         //Propagate the routing table update information trough the network
         encodePartialRoutingUpdate(largeSendBuffer,sizeof(largeSendBuffer),changedNodes,nrOfChanges);
         propagateMessage(largeSendBuffer, sourceIP);
@@ -560,7 +559,6 @@ void handlePartialRoutingUpdate(char *msg){
 
     // If the routing update caused a change in my routing table, propagate the updated information to the rest of the network
     if(isRoutingTableChanged){
-        LOG(NETWORK,INFO, "Routing Information has changed->propagate new info\n");
         //Propagate the routing table update information trough the network
         encodePartialRoutingUpdate(largeSendBuffer,sizeof(largeSendBuffer), changedNodes,nrOfChanges);
         propagateMessage(largeSendBuffer, senderIP);
@@ -778,7 +776,7 @@ void propagateMessage(char* message, uint8_t * sourceIP){
                     LOG(MESSAGES, INFO, "Sending the Message:\"%s\" to %d.%d.%d.%d",message,childSTAIP[0],childSTAIP[1],childSTAIP[2],childSTAIP[3]);
                     messageSent = true;
                 } else {
-                    LOG(MESSAGES, INFO, ", %d.%d.%d.%d",childSTAIP[0],childSTAIP[1],childSTAIP[2],childSTAIP[3]);
+                    LOG(MESSAGES, INFO, ", %d.%d.%d.%d",childAPIP[0],childAPIP[1],childAPIP[2],childAPIP[3]);
                 }
             }
         }

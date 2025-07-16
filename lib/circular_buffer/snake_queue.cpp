@@ -29,8 +29,6 @@ void insertLast(SnakeQueue* snake, unsigned char new_value){
         snake->size++;
     }
 
-    LOG(STATE_MACHINE,DEBUG,"InsertLast:%hhu ",new_value);
-    printSnake(snake);
 
 }
 
@@ -72,8 +70,6 @@ void insertFirst(SnakeQueue *snake,unsigned char value){
         snake->tail = 0;
         snake->table[snake->head] = value;
         snake->size = 1;
-        LOG(STATE_MACHINE,DEBUG,"InsertFirst:%hhu ",value);
-        printSnake(snake);
         return;
     }
 
@@ -89,8 +85,6 @@ void insertFirst(SnakeQueue *snake,unsigned char value){
         // Size remains MaxSize, tail stays as-is
     }
 
-    LOG(STATE_MACHINE,DEBUG,"InsertFirst:%hhu ",value);
-    printSnake(snake);
 }
 
 /**
