@@ -1,7 +1,9 @@
 #ifndef UDP_INTERFACE_H
 #define UDP_INTERFACE_H
 
+#ifndef UDP_PORT
 #define UDP_PORT 12345
+#endif
 #include <cstdint>
 
 

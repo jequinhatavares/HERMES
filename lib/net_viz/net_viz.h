@@ -7,8 +7,6 @@
 #include <logger.h>
 
 
-#define VISUALIZATION_ON
-
 typedef enum messageVizType{
     NEW_NODE, //0
     DELETED_NODE, //1

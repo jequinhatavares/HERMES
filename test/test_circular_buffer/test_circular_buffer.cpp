@@ -42,12 +42,12 @@ void test_insert_last_then_first_preserves_order() {
 }
 
 void test_fill_buffer_then_read_back() {
-    for (unsigned char i = 0; i < MaxSize; i++) {
+    for (unsigned char i = 0; i < CIRCULAR_BUFFER_SIZE; i++) {
         insertLast(CBuffer, i + 1);
     }
 
-    TEST_ASSERT_EQUAL(MaxSize, CBuffer->size);
-    for (unsigned char i = 0; i < MaxSize; i++) {
+    TEST_ASSERT_EQUAL(CIRCULAR_BUFFER_SIZE, CBuffer->size);
+    for (unsigned char i = 0; i < CIRCULAR_BUFFER_SIZE; i++) {
         TEST_ASSERT_EQUAL_UINT8(i + 1, getFirst(CBuffer));
     }
 
@@ -58,14 +58,14 @@ void test_fill_buffer_then_read_back() {
 }
 
 void test_overwrite_when_full_insert_last() {
-    for (unsigned char i = 0; i < MaxSize; i++) {
+    for (unsigned char i = 0; i < CIRCULAR_BUFFER_SIZE; i++) {
         insertLast(CBuffer, i + 1); // Fill with 1..10
     }
 
     insertLast(CBuffer, 99); // Overwrite 1
 
 
-    TEST_ASSERT_EQUAL(MaxSize, CBuffer->size);
+    TEST_ASSERT_EQUAL(CIRCULAR_BUFFER_SIZE, CBuffer->size);
     TEST_ASSERT_EQUAL_UINT8(2, getFirst(CBuffer));
     for (unsigned char i = 3; i <= 10; i++) {
         TEST_ASSERT_EQUAL_UINT8(i, getFirst(CBuffer));
@@ -78,7 +78,7 @@ void test_overwrite_when_full_insert_last() {
 }
 
 void test_overwrite_when_full_insert_first() {
-    for (unsigned char i = 0; i < MaxSize; i++) {
+    for (unsigned char i = 0; i < CIRCULAR_BUFFER_SIZE; i++) {
         insertLast(CBuffer, i + 1); // Fill 1..10
     }
 
@@ -90,9 +90,9 @@ void test_overwrite_when_full_insert_first() {
     //printSnake(CBuffer);
     //printRawSnake(CBuffer);
 
-    TEST_ASSERT_EQUAL(MaxSize, CBuffer->size);
+    TEST_ASSERT_EQUAL(CIRCULAR_BUFFER_SIZE, CBuffer->size);
     TEST_ASSERT_EQUAL_UINT8(100, getFirst(CBuffer)); // 100 should be first
-    for (unsigned char i = 1; i < MaxSize; i++) {
+    for (unsigned char i = 1; i < CIRCULAR_BUFFER_SIZE; i++) {
         TEST_ASSERT_EQUAL_UINT8(i + 1, getFirst(CBuffer));
     }
 
@@ -118,7 +118,7 @@ void test_alternating_inserts_and_reads() {
 }
 
 void test_wraparound_insert_and_remove() {
-    for (unsigned char i = 0; i < MaxSize; i++) {
+    for (unsigned char i = 0; i < CIRCULAR_BUFFER_SIZE; i++) {
         insertLast(CBuffer, i + 1);
     }
 
@@ -210,7 +210,7 @@ void test_insertFirstWithTailOverwrite() {
     // Step 3: Fill to max
     insertLast(CBuffer, 60);
     insertLast(CBuffer, 70);
-    insertLast(CBuffer, 80); // Now size == MaxSize (10)
+    insertLast(CBuffer, 80); // Now size == CIRCULAR_BUFFER_SIZE (10)
 
     // Queue: [1, 5, 10, 20, 30, 40, 50, 60, 70, 80]
     //insertFirstWithTailOverwrite when full
@@ -218,7 +218,7 @@ void test_insertFirstWithTailOverwrite() {
     // Queue: [1, 5, 10, 20, 30, 40, 50, 60, 70, 99]
 
 
-    TEST_ASSERT_EQUAL(MaxSize, CBuffer->size);
+    TEST_ASSERT_EQUAL(CIRCULAR_BUFFER_SIZE, CBuffer->size);
 
     // Expected values in pop order: 99, 1, 5, 10, 20, 30, 40, 50, 60, 70
     unsigned char expected[] = {99, 1, 5, 10, 20, 30, 40, 50, 60, 70};
@@ -226,7 +226,7 @@ void test_insertFirstWithTailOverwrite() {
     printSnake(CBuffer);
     printRawSnake(CBuffer);
 
-    for (int i = 0; i < MaxSize; i++) {
+    for (int i = 0; i < CIRCULAR_BUFFER_SIZE; i++) {
         unsigned char val = getFirst(CBuffer);
         TEST_ASSERT_EQUAL_UINT8(expected[i], val);
     }

@@ -1,8 +1,12 @@
 #ifndef TABLE_H
 #define TABLE_H
 
-#define TABLE_MAX_SIZE 10
 #include <cstddef>
+
+#ifndef ROUTING_UPDATE_INTERVAL
+#define TABLE_MAX_SIZE 10
+#endif
+
 
 /*
 bool defaultEqual(void* a, void* b){
@@ -28,7 +32,7 @@ typedef struct TableInfo{
 //#endif
 } TableInfo;
 
-//extern TableEntry Table[MaxSize];
+//extern TableEntry Table[CIRCULAR_BUFFER_SIZE];
 
 TableInfo* tableCreate(bool (*)(void*, void*));  // DEPRECATED
 void tableInit(TableInfo * T, void* keys, void* values, size_t key_size, size_t value_size);

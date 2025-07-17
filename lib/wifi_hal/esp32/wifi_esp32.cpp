@@ -63,7 +63,7 @@ void onSoftAPModeStationDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t i
         LOG(NETWORK,DEBUG,"Incremented the childDisconnectionCount\n");
 
         // When repeated disconnections surpass the defined threshold queue an event to initiate child recovery procedures
-        if(childDisconnectionCount >= disconnectionThreshold) {
+        if(childDisconnectionCount >=PARENT_DISCONNECTION_THRESHOLD) {
             // Callback code, global func pointer defined in wifi_hal.h:22 and initialized in lifecycle.cpp:48
             if (childDisconnectCallback != nullptr){
                 childDisconnectCallback();
@@ -126,12 +126,12 @@ void onStationModeDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info){
 
     // Check if the interval since the last disconnection is short enough
     // to avoid incrementing the counter for isolated or sporadic events.
-    if(currentTime - lastParentDisconnectionTime <=3000){
+    if(currentTime - lastParentDisconnectionTime <=AP_DISCONNECTION_GRACE_PERIOD){
         parentDisconnectionCount++;
         //LOG(NETWORK,DEBUG,"Incremented the parentDisconnectionCount: %i\n", parentDisconnectionCount);
 
         // When repeated disconnections surpass the defined threshold queue an event to initiate parent recovery procedures
-        if(parentDisconnectionCount >= disconnectionThreshold) {
+        if(parentDisconnectionCount >=PARENT_DISCONNECTION_THRESHOLD) {
             //LOG(NETWORK,DEBUG,"parentDisconnectionCount above the threshold\n");
             // Callback code, global func pointer defined in wifi_hal.h:22 and initialized in lifecycle.cpp:48
             if (parentDisconnectCallback != nullptr){
@@ -292,7 +292,7 @@ bool connectToAP(const char * SSID, const char * PASS) {
     startTime = getCurrentTime();
     currentTime = startTime;
     // Wait for the Wi-Fi connection to establish or until timeout is reached
-    while( ((currentTime - startTime) <= WIFI_TIMEOUT) && WiFi.status() != WL_CONNECTED){
+    while( ((currentTime - startTime) <= WIFI_CONNECTION_TIMEOUT) && WiFi.status() != WL_CONNECTED){
         Serial.println(getWifiStatus(WiFi.status()));
         delay(150);
         currentTime = getCurrentTime();

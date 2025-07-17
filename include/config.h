@@ -13,61 +13,95 @@
 //                         Application Variables
 // ==============================================================================
 
-
+// Interval between periodic application-level tasks (in milliseconds)
 // #define APPLICATION_PROCESSING_INTERVAL 12000000
+
+// Whether the node runs periodic tasks in the application layer
 // #define APPLICATION_RUNS_PERIODIC_TASKS false
 
-
-// ==============================================================================
-//                          Routing Configuration
-// ==============================================================================
-// Parameters that affect how the routing layer builds and maintains routes.
-
-// #define ROUTING_UPDATE_INTERVAL 180000
-// #define ROUTE_TTL_MS 60000         // Time before a route entry expires (in milliseconds)
-// #define ALLOW_BROADCAST true       // Enable broadcast messaging
-// #define MAX_ROUTE_HOPS 10          // Limit on the number of hops a message can take
-
-
-// ==============================================================================
-//                          Lifecycle Configuration
-// ==============================================================================
-
-
-
-// #define CHILD_RECONNECT_TIMEOUT 3000
-// #define MAIN_TREE_RECONNECT_TIMEOUT 20000
-// #define MAX_PARENT_SEARCH_ATTEMPTS 3
-// #define CHILD_REGISTRATION_RETRY_COUNT 2
-
-
-// ==============================================================================
-//                           Network Configuration
-// ==============================================================================
-
-
-
-// #define ROOT_NODE false             // Set to true if this node is the root of the mesh
-// #define NETWORK_ID 1               // Identifier for this network (for isolating multiple meshes)
-// #define CHILD_TABLE_SIZE 8         // Number of child entries a node can hold
-
-
-// ==============================================================================
-//                            Wi-Fi Configuration
-// ==============================================================================
-
-
-// #define MESH_SSID "MyMeshNetwork"      // Mesh SSID (must be the same on all nodes)
-// #define MESH_PASSWORD "password123"    // Mesh password (must match on all nodes)
-// #define WIFI_CHANNEL 6                 // Wi-Fi channel (must be fixed across the mesh)
-// #define AP_IP_BASE "192.168.4."        // Base IP for SoftAP mode (if applicable)
+// Enable real-time monitoring server features for visualizing the network topology
+// #define VISUALIZATION_ON
 
 
 // ==============================================================================
 //                         Middleware Configuration
 // ==============================================================================
 
+// Interval between middleware periodic updates (in milliseconds)
+// #define MIDDLEWARE_UPDATE_INTERVAL 120000
 
-// #define ENABLE_MIDDLEWARE true         // Enable or disable the middleware layer
-// #define MIDDLEWARE_BUFFER_SIZE 256     // Max size (bytes) of middleware message buffers
-// #define MIDDLEWARE_TASK_DELAY_MS 50    // Time (ms) between middleware task executions
+
+// ==============================================================================
+//                           Network Configuration
+// ==============================================================================
+
+// Maximum number of entries in the node’s routing table (defines how many other nodes the network can support in total)
+// #define TABLE_MAX_SIZE 10
+
+// Wi-Fi network SSID
+// #define WIFI_SSID "JessicaNode"
+
+// Wi-Fi network password
+// #define WIFI_PASSWORD "123456789"
+
+
+// ==============================================================================
+//                          Lifecycle Configuration
+// ==============================================================================
+
+// Size of the circular buffer that holds lifecycle-related events such as message arrivals, timeouts or disconnection
+// signals used by the state machine
+// #define CIRCULAR_BUFFER_SIZE 10
+
+// Timeout waiting for a parent node’s reply (in milliseconds)
+// #define PARENT_REPLY_TIMEOUT 3000
+
+// Time (in milliseconds) a child has to reconnect to this node’s AP interface before being considered permanently lost
+// #define CHILD_RECONNECT_TIMEOUT 3000
+
+// Maximum time (in milliseconds) the node remains in the RECOVER_AWAIT state, waiting
+// for its subnetwork to rejoin the main network before detaching and restarting discovery
+// #define MAIN_TREE_RECONNECT_TIMEOUT 20000
+
+// Maximum number of attempts to find a new parent before giving up and releasing all child nodes in the current subnetwork
+// #define MAX_PARENT_SEARCH_ATTEMPTS 3
+
+// Number of retry attempts to register as a child with a given parent before restarting the parent selection process
+// #define CHILD_REGISTRATION_RETRY_COUNT 2
+
+// Number of disconnection events required before triggering parent recovery
+// #define PARENT_DISCONNECTION_THRESHOLD 3
+
+// ==============================================================================
+//                          Routing Configuration
+// ==============================================================================
+// Parameters that affect how the routing layer builds and maintains routes.
+
+// Interval between periodic routing updates (in milliseconds)
+// #define ROUTING_UPDATE_INTERVAL 180000
+
+
+
+// ==============================================================================
+//                            UDP Configurations
+// ==============================================================================
+
+// UDP port used, if the network integrates a Raspberry Pi set this to a port above 1024
+// #define UDP_PORT 12345
+
+
+// ==============================================================================
+//                            Wi-Fi Configuration
+// ==============================================================================
+
+// Timeout while trying to connect to the parent’s Wi-Fi network (in milliseconds)
+// #define WIFI_CONNECTION_TIMEOUT 3000
+
+// Grace period to ignore disconnections (in milliseconds)
+// #define AP_DISCONNECTION_GRACE_PERIOD 3000
+
+// Wi-Fi channel (must be fixed across the network)
+// #define WIFI_CHANNEL 6
+
+
+

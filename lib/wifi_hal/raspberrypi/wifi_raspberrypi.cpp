@@ -77,7 +77,7 @@ void onAPModeStationDisconnectedHandler(wifi_event_info__t *info){
  */
 void onStationModeConnectedHandler(wifi_event_info__t *info) {
     printf("\n[WIFI_EVENTS] Connected to AP\n");
-    //WiFi.begin(SSID_PREFIX,PASS);
+    //WiFi.begin(SSID_PREFIX,WIFI_PASSWORD);
     parentDisconnectionCount = 0; // Reset the parent disconnection Counter
     //LOG(NETWORK,DEBUG,"Reset the parentDisconnectionCount: %i\n", parentDisconnectionCount);
 }
@@ -106,7 +106,7 @@ void onStationModeDisconnectedHandler(wifi_event_info__t *info){
         //LOG(NETWORK,DEBUG,"Incremented the parentDisconnectionCount: %i\n", parentDisconnectionCount);
 
         // When repeated disconnections surpass the defined threshold queue an event to initiate parent recovery procedures
-        if(parentDisconnectionCount >= disconnectionThreshold) {
+        if(parentDisconnectionCount >=PARENT_DISCONNECTION_THRESHOLD) {
             //LOG(NETWORK,DEBUG,"parentDisconnectionCount above the threshold\n");
             // Callback code, global func pointer defined in wifi_hal.h:22 and initialized in lifecycle.cpp:48
             if (parentDisconnectCallback != nullptr){

@@ -153,7 +153,7 @@ State init(Event event){
     uint8_t invalidIP[4] = {0,0,0,0};
 
 
-    strcpy(ssid, SSID_PREFIX);        // Copy the initial SSID_PREFIX to the buffer
+    strcpy(ssid, SSID_PREFIX);        // Copy the initial WIFI_SSID to the buffer
     getMyMAC(MAC);
     sprintf(strMAC, "%hhu:%hhu:%hhu:%hhu:%hhu:%hhu",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
     strcat(ssid,strMAC);
@@ -170,7 +170,7 @@ State init(Event event){
     getMyMAC(MAC);
     setIPs(MAC);
 
-    startWifiAP(ssid,PASS, localIP, gateway, subnet);
+    startWifiAP(ssid,WIFI_PASSWORD, localIP, gateway, subnet);
 
     beginTransport();
 
@@ -922,7 +922,7 @@ int parentHandshakeProcedure(ParentInfo *possibleParents){
 
         /*** Attempt to connect to the parent node's Wi-Fi network. If the connection fails
          * (e.g., SSID unavailable, parent unreachable, or out of range), proceed to the next candidate parent. ***/
-        if(!connectToAP(reachableNetworks.item[i], PASS)) continue;
+        if(!connectToAP(reachableNetworks.item[i], WIFI_PASSWORD)) continue;
 
         //LOG(NETWORK,INFO,"→ Connected to Potential Parent: %s\n", getGatewayIP().toString().c_str());
         getMySTAIP(mySTAIP);
@@ -935,7 +935,7 @@ int parentHandshakeProcedure(ParentInfo *possibleParents){
         sendMessage(connectedParentIP, smallSendBuffer);
 
         //Wait for the parent to respond with his parent information
-        receivedPIR = waitForMessage(PARENT_INFO_RESPONSE,connectedParentIP,3000);
+        receivedPIR = waitForMessage(PARENT_INFO_RESPONSE,connectedParentIP,PARENT_REPLY_TIMEOUT);
 
         if(receivedPIR){
             LOG(MESSAGES,INFO,"Parent [Parent Info Response]: %s\n", receiveBuffer);
@@ -978,7 +978,7 @@ bool establishParentConnection(ParentInfo preferredParent){
      ***/
 
     //Connect to the preferred parent
-    if(!connectToAP(preferredParent.ssid, PASS)) return false;
+    if(!connectToAP(preferredParent.ssid, WIFI_PASSWORD)) return false;
 
     LOG(NETWORK,INFO,"Selected Parent -> IP: %i.%i.%i.%i | Children: %i | RootHopDist: %i\n",preferredParent.parentIP[0], preferredParent.parentIP[1], preferredParent.parentIP[2], preferredParent.parentIP[3], preferredParent.nrOfChildren, preferredParent.rootHopDistance);
 
@@ -989,7 +989,7 @@ bool establishParentConnection(ParentInfo preferredParent){
         sendMessage(preferredParent.parentIP, smallSendBuffer);
 
         //Wait for the parent to respond with his routing table information
-        receivedFRTU = waitForMessage(FULL_ROUTING_TABLE_UPDATE,preferredParent.parentIP,3000);
+        receivedFRTU = waitForMessage(FULL_ROUTING_TABLE_UPDATE,preferredParent.parentIP,PARENT_REPLY_TIMEOUT);
 
         childRegistrationRequestCount ++;
 

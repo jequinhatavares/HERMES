@@ -246,7 +246,7 @@ void influenceRoutingStrategyTopology(char* dataMessage){
 void onTimerStrategyTopology(){
     unsigned long currentTime = getCurrentTime();
     //Periodically send this node's metric to all other nodes in the network
-    if( (currentTime - lastMiddlewareUpdateTimeTopology) >= 10000 ) {
+    if( (currentTime - lastMiddlewareUpdateTimeTopology) >= MIDDLEWARE_UPDATE_INTERVAL ) {
     }
 }
 void* getContextStrategyTopology(){
@@ -280,7 +280,7 @@ ParentInfo requestParentFromRoot(ParentInfo* possibleParents, int nrOfPossiblePa
 
     // Select the first element of the possibleParents List to be the temporary parent
     if(nrOfPossibleParents != 0){
-        connectToAP(possibleParents[0].ssid,PASS);
+        connectToAP(possibleParents[0].ssid,WIFI_PASSWORD);
         assignIP(temporaryParent,possibleParents[0].parentIP);
         getMySTAIP(mySTAIP);
     }

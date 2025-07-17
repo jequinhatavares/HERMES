@@ -7,10 +7,18 @@
 #include "wifi_common.h"
 #include <cstdint>
 
-#define disconnectionThreshold 3
+#ifndef PARENT_DISCONNECTION_THRESHOLD
+#define PARENT_DISCONNECTION_THRESHOLD 3
+#endif
 
+#ifndef WIFI_CONNECTION_TIMEOUT
+#define WIFI_CONNECTION_TIMEOUT 3000
+#endif
 
-#define WIFI_TIMEOUT 3000
+#ifndef AP_DISCONNECTION_GRACE_PERIOD
+#define AP_DISCONNECTION_GRACE_PERIOD 3000
+#endif
+
 
 extern bool initializeAP;
 

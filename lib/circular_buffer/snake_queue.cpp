@@ -14,18 +14,18 @@ void insertLast(SnakeQueue* snake, unsigned char new_value){
     if (snake->size == 0) {
         // First insert: both head and tail point to index 0
         snake->head = snake->tail = 0;
-    } else if (snake->size == MaxSize) {
+    } else if (snake->size == CIRCULAR_BUFFER_SIZE) {
         // Buffer full: overwrite oldest (advance head)
-        snake->head = (snake->head + 1) % MaxSize;
-        snake->tail = (snake->tail + 1) % MaxSize;
+        snake->head = (snake->head + 1) % CIRCULAR_BUFFER_SIZE;
+        snake->tail = (snake->tail + 1) % CIRCULAR_BUFFER_SIZE;
     } else {
         // Normal case: advance tail
-        snake->tail = (snake->tail + 1) % MaxSize;
+        snake->tail = (snake->tail + 1) % CIRCULAR_BUFFER_SIZE;
     }
 
     snake->table[snake->tail] = new_value;
 
-    if (snake->size < MaxSize){
+    if (snake->size < CIRCULAR_BUFFER_SIZE){
         snake->size++;
     }
 
@@ -47,7 +47,7 @@ unsigned char getFirst(SnakeQueue* snake){
     unsigned char value = snake->table[snake->head];
     snake->table[snake->head] = 0; // Optional: zero for safety
 
-    snake->head = (snake->head + 1) % MaxSize;
+    snake->head = (snake->head + 1) % CIRCULAR_BUFFER_SIZE;
     snake->size--;
 
 
@@ -73,16 +73,16 @@ void insertFirst(SnakeQueue *snake,unsigned char value){
         return;
     }
 
-    if (snake->size < MaxSize) {
+    if (snake->size < CIRCULAR_BUFFER_SIZE) {
         // There's space: move head backward
-        snake->head = (snake->head + MaxSize - 1) % MaxSize;
+        snake->head = (snake->head + CIRCULAR_BUFFER_SIZE - 1) % CIRCULAR_BUFFER_SIZE;
         snake->table[snake->head] = value;
         snake->size++;
     } else {
         // Buffer full: overwrite current head and don't move the pointers
         snake->table[snake->head] = value;
-        //snake->head = (snake->head + MaxSize - 1) % MaxSize;
-        // Size remains MaxSize, tail stays as-is
+        //snake->head = (snake->head + CIRCULAR_BUFFER_SIZE - 1) % CIRCULAR_BUFFER_SIZE;
+        // Size remains CIRCULAR_BUFFER_SIZE, tail stays as-is
     }
 
 }
@@ -95,14 +95,14 @@ void insertFirst(SnakeQueue *snake,unsigned char value){
  * @param value - Value to insert
  */
 void insertFirstWithTailOverwrite(SnakeQueue *snake,unsigned char value){//overwrites the newest element if full (the tail)
-    if(snake->size == MaxSize) {
+    if(snake->size == CIRCULAR_BUFFER_SIZE) {
         // Buffer full: overwrite tail
-        snake->tail = (snake->tail == 0) ? MaxSize - 1 : snake->tail - 1;
+        snake->tail = (snake->tail == 0) ? CIRCULAR_BUFFER_SIZE - 1 : snake->tail - 1;
     } else {
         snake->size++;
     }
 
-    snake->head = (snake->head == 0) ? MaxSize - 1 : snake->head - 1;
+    snake->head = (snake->head == 0) ? CIRCULAR_BUFFER_SIZE - 1 : snake->head - 1;
     snake->table[snake->head] = value;
 
 }
@@ -130,7 +130,7 @@ unsigned char isEmpty(SnakeQueue* snake){
  */
 bool inBuffer(SnakeQueue* snake,unsigned char object){
     for (int i = 0; i < snake->size; i++) {
-        int index = (snake->head + i) % MaxSize;
+        int index = (snake->head + i) % CIRCULAR_BUFFER_SIZE;
         if (snake->table[index] == object) {
             return true;
         }
@@ -149,7 +149,7 @@ void printSnake(SnakeQueue* snake){
     LOG(STATE_MACHINE, DEBUG, "snake size: %d ", snake->size);
     LOG(STATE_MACHINE, DEBUG, "snake: [");
     for (int i = 0; i < snake->size; i++) {
-        int index = (snake->head + i) % MaxSize;
+        int index = (snake->head + i) % CIRCULAR_BUFFER_SIZE;
         LOG(STATE_MACHINE, DEBUG, "%hhu, ", snake->table[index]);
     }
     LOG(STATE_MACHINE, DEBUG, "]\n");
@@ -165,9 +165,9 @@ void printSnake(SnakeQueue* snake){
  */
 void printRawSnake(SnakeQueue* snake){
     LOG(STATE_MACHINE, DEBUG, "Raw buffer: [");
-    for (int i = 0; i < MaxSize; i++) {
+    for (int i = 0; i < CIRCULAR_BUFFER_SIZE; i++) {
         LOG(STATE_MACHINE, DEBUG, "%hhu", snake->table[i]);
-        if (i < MaxSize - 1) LOG(STATE_MACHINE, DEBUG, ", ");
+        if (i < CIRCULAR_BUFFER_SIZE - 1) LOG(STATE_MACHINE, DEBUG, ", ");
     }
     LOG(STATE_MACHINE, DEBUG, "]\n");
 
@@ -185,7 +185,7 @@ void clearSnakeQueue(SnakeQueue* snake) {
     snake->head = 0;
     snake->tail = 0;
     snake->size = 0;
-    for (int i = 0; i < MaxSize; i++) {
+    for (int i = 0; i < CIRCULAR_BUFFER_SIZE; i++) {
         snake->table[i] = 0;
     }
 }

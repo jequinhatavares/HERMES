@@ -12,9 +12,13 @@
 #include <logger.h>
 #include <cstring>
 
-#define SSID_PREFIX      		"JessicaNode"
+#ifndef WIFI_SSID
+#define WIFI_SSID      		"JessicaNode"
+#endif
 
-#define PASS     		        "123456789"
+#ifndef WIFI_PASSWORD
+#define WIFI_PASSWORD     		        "123456789"
+#endif
 
 #ifndef APPLICATION_PROCESSING_INTERVAL
 #define APPLICATION_PROCESSING_INTERVAL 12000000
@@ -34,6 +38,10 @@
 
 #ifndef CHILD_REGISTRATION_RETRY_COUNT
 #define CHILD_REGISTRATION_RETRY_COUNT 2
+#endif
+
+#ifndef PARENT_REPLY_TIMEOUT
+#define PARENT_REPLY_TIMEOUT 3000
 #endif
 
 extern StateMachine* SM;

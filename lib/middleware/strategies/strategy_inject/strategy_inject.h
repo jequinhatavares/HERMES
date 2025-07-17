@@ -10,7 +10,8 @@
 #include "../strategy_interface.h"
 //#include "../../routing/messages.h"
 
-#define MIDDLEWARE_UPDATE_INTERVAL 120000
+
+
 extern TableInfo* metricsTable;
 
 struct MetricTableEntry{

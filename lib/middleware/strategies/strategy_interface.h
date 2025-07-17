@@ -2,6 +2,9 @@
 #define STRATEGY_INTERFACE_H
 #include <cstdlib>
 
+#ifndef MIDDLEWARE_UPDATE_INTERVAL
+#define MIDDLEWARE_UPDATE_INTERVAL 120000
+#endif
 
 typedef struct Strategy{
     //void (*init)(void);

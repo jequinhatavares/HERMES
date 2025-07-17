@@ -656,7 +656,7 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
 void onTimerStrategyPubSub(){
     unsigned long currentTime = getCurrentTime();
     //Periodically send this node's metric to all other nodes in the network
-    if( (currentTime - lastMiddlewareUpdateTimePubSub) >= 10000 ) {
+    if( (currentTime - lastMiddlewareUpdateTimePubSub) >= MIDDLEWARE_UPDATE_INTERVAL ) {
         /***encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_NODE_UPDATE);
         propagateMessage(largeSendBuffer, myIP);
         LOG(NETWORK,DEBUG,"Sending periodic [MIDDLEWARE/PUBSUB_NODE_INFO] Message: %s\n",largeSendBuffer);
