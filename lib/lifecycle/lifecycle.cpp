@@ -153,7 +153,7 @@ State init(Event event){
     uint8_t invalidIP[4] = {0,0,0,0};
 
 
-    strcpy(ssid, SSID_PREFIX);        // Copy the initial WIFI_SSID to the buffer
+    strcpy(ssid, WIFI_SSID);        // Copy the initial WIFI_SSID to the buffer
     getMyMAC(MAC);
     sprintf(strMAC, "%hhu:%hhu:%hhu:%hhu:%hhu:%hhu",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
     strcat(ssid,strMAC);
@@ -225,7 +225,7 @@ State search(Event event){
 
     //Find nodes in the network
     do{
-        searchAP(SSID_PREFIX);
+        searchAP(WIFI_SSID);
         //Remove from the reachableNetworks all nodes that belong to my subnetwork (to avoid connecting to them and forming loops)
         filterReachableNetworks();
     }while(reachableNetworks.len == 0 );
@@ -489,7 +489,7 @@ State parentRecovery(Event event){
             }
             reachableNetworks.len = 0;
         }
-        searchAP(SSID_PREFIX);
+        searchAP(WIFI_SSID);
 
         //Remove from the reachableNetworks all nodes that belong to my subnetwork (to avoid connecting to them and forming loops)
         filterReachableNetworks();
