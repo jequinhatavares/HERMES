@@ -843,12 +843,10 @@ void filterReachableNetworks(){
  * @return void
  */
 void lostChildProcedure(){
-    LOG(STATE_MACHINE,INFO,"On Lost Child Procedure\n");
-    int i, subNetSize = 0;
+    LOG(NETWORK, INFO, "[LostChildProcedure] Entered\n");
+    int i;
     uint8_t lostChildIP[4];
-    uint8_t lostNodeSubnetwork[TABLE_MAX_SIZE][4];
-    uint8_t *nodeIP,*MAC;
-    RoutingTableEntry unreachableEntry, *lostNodeTableEntry;
+    uint8_t *MAC;
 
     /*** Iterate over the list of disconnected children. For each child that has exceeded the drop connection timeout
         (i.e., considered permanently disconnected), identify all nodes in its subtree and mark them as unreachable
@@ -861,14 +859,14 @@ void lostChildProcedure(){
 
                 //Transform the lost child MAC into a IP
                 getIPFromMAC(MAC,lostChildIP);
-                LOG(NETWORK,DEBUG,"Lost Child MAC: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu \n", MAC[0], MAC[1], MAC[2], MAC[3], MAC[4], MAC[5]);
-                LOG(NETWORK,DEBUG,"Lost Child IP: %hhu.%hhu.%hhu.%hhu \n", lostChildIP[0], lostChildIP[1], lostChildIP[2], lostChildIP[3]);
+                LOG(NETWORK, INFO, "[LostChild] MAC: %hhu:%hhu:%hhu:%hhu:%hhu:%hhu ",MAC[0], MAC[1], MAC[2], MAC[3], MAC[4], MAC[5]);
+                LOG(NETWORK, INFO, "IP : %hhu.%hhu.%hhu.%hhu\n",lostChildIP[0], lostChildIP[1], lostChildIP[2], lostChildIP[3]);
 
                 // Remove the lost child from my children table
-                LOG(NETWORK,DEBUG,"Removing unreachable Node :%hhu.%hhu.%hhu.%hhu from my children Table\n",lostChildIP[0],lostChildIP[1],lostChildIP[2],lostChildIP[3]);
+                LOG(NETWORK,INFO,"Removing lost child %hhu.%hhu.%hhu.%hhu from children table\n",lostChildIP[0],lostChildIP[1],lostChildIP[2],lostChildIP[3]);
                 tableRemove(childrenTable, lostChildIP);
                 numberOfChildren--;
-                LOG(NETWORK,DEBUG,"Updated Children Table\n");
+                LOG(NETWORK,INFO,"Children table after removal:\n");
                 tablePrint(childrenTable,printChildrenTableHeader, printChildStruct);
 
                 // Handle routing mechanisms triggered by the loss of connection to a child node (e.g., routing table update, network-wide notification)
@@ -880,7 +878,7 @@ void lostChildProcedure(){
                 //Report the deleted node to the monitoring server
                 reportDeletedNodeToViz(lostChildIP);
             }
-            subNetSize = 0;
+
         }
 
     }
@@ -1052,14 +1050,21 @@ void routingHandleConnectionLoss(uint8_t *lostNodeIP){
             // If the next Hop IP is the IP of the lost child, it means this node is part of the
             // lostChild subnetwork (including itself)
             if(isIPEqual(routingValue->nextHopIP, lostNodeIP)){
-                LOG(NETWORK,DEBUG,"Node: %hhu.%hhu.%hhu.%hhu is now unreachable\n", nodeIP[0], nodeIP[1], nodeIP[2], nodeIP[3]);
                 assignIP(lostNodeSubnetwork[nUnreachableNodes],nodeIP);
                 nUnreachableNodes ++;
+
+                if(nUnreachableNodes == 1){
+                    LOG(MESSAGES, INFO, "Unreachable Nodes: %hhu.%hhu.%hhu.%hhu",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
+                }else{
+                    LOG(MESSAGES, INFO, ", %hhu.%hhu.%hhu.%hhu",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
+                }
+
             }
         }else{
             LOG(NETWORK, ERROR, "❌ Valid entry in routing table contains a pointer to null instead of the routing entry.\n");
         }
     }
+
 
     /**
       * If, for some reason, a node that was previously my direct child reconnects to the main tree
@@ -1090,12 +1095,13 @@ void routingHandleConnectionLoss(uint8_t *lostNodeIP){
 
     // Notify the rest of the network about the node loss
     if(nUnreachableNodes >0){
+        LOG(MESSAGES, INFO, "\n");
         // Notify the rest of the network about nodes that are no longer reachable.
         encodePartialRoutingUpdate(largeSendBuffer,sizeof(largeSendBuffer),lostNodeSubnetwork,nUnreachableNodes);
         propagateMessage(largeSendBuffer, myIP);
     }
 
-    LOG(NETWORK,DEBUG,"Updated Routing Table:\n");
+    LOG(NETWORK,DEBUG,"Routing table updated:\n");
     tablePrint(routingTable,printRoutingTableHeader, printRoutingStruct);
 
 }

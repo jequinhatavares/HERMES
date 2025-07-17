@@ -721,7 +721,7 @@ void handleAckMessage(char *msg){
     if (nextHopPtr != nullptr){
         assignIP(nextHopIP, nextHopPtr);
     }else{
-        LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
+        LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %hhu.%hhu.%hhu.%hhu. "
                             "Unable to forward message.\n", destinationIP[0], destinationIP[1],destinationIP[2], destinationIP[3]);
     }
 
@@ -762,7 +762,7 @@ void propagateMessage(char* message, uint8_t * sourceIP){
     if(!isIPEqual(sourceIP, parent) && hasParent){
         sendMessage(parent, message);
         messageSent = true;
-        LOG(MESSAGES, INFO, "Sending the Message:\"%s\" to %d.%d.%d.%d",message,parent[0],parent[1],parent[2],parent[3]);
+        LOG(MESSAGES, INFO, "Sending the Message:\"%s\" to %hhu.%hhu.%hhu.%hhu",message,parent[0],parent[1],parent[2],parent[3]);
     }
 
     //Forward the message to all children except the one that sent it to me
@@ -773,10 +773,10 @@ void propagateMessage(char* message, uint8_t * sourceIP){
             if(!isIPEqual(childAPIP, sourceIP)){
                 sendMessage(childSTAIP, message);
                 if (!messageSent) {
-                    LOG(MESSAGES, INFO, "Sending the Message:\"%s\" to %d.%d.%d.%d",message,childSTAIP[0],childSTAIP[1],childSTAIP[2],childSTAIP[3]);
+                    LOG(MESSAGES, INFO, "Sending the Message:\"%s\" to %hhu.%hhu.%hhu.%hhu",message,childSTAIP[0],childSTAIP[1],childSTAIP[2],childSTAIP[3]);
                     messageSent = true;
                 } else {
-                    LOG(MESSAGES, INFO, ", %d.%d.%d.%d",childAPIP[0],childAPIP[1],childAPIP[2],childAPIP[3]);
+                    LOG(MESSAGES, INFO, ", %hhu.%hhu.%hhu.%hhu",childAPIP[0],childAPIP[1],childAPIP[2],childAPIP[3]);
                 }
             }
         }
@@ -853,7 +853,7 @@ void sendMessageToChildren(char* messageBuffer){
         childAPIP = (uint8_t *)tableKey(childrenTable,i);
         childSTAIP = (uint8_t *)tableValueAtIndex(childrenTable,i);
         if(childSTAIP != nullptr){
-            LOG(MESSAGES, INFO, "Sending the Message:\"%s\" to %d.%d.%d.%d\n",messageBuffer,childAPIP[0],childAPIP[1],childAPIP[2],childAPIP[3]);
+            LOG(MESSAGES, INFO, "Sending the Message:\"%s\" to %hhu.%hhu.%hhu.%hhu\n",messageBuffer,childAPIP[0],childAPIP[1],childAPIP[2],childAPIP[3]);
             sendMessage(childSTAIP,messageBuffer);
         }
     }
