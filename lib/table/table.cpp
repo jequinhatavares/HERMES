@@ -170,6 +170,7 @@ void tableRemove(TableInfo* T, void* key){
     T->numberOfItems --;
 }
 
+
 /**
  * tablePrint
  * Prints the contents of the table using a user-defined print function.
@@ -184,6 +185,7 @@ void tablePrint(TableInfo* T, void (*printHeader)(), void (*printEntry)(TableEnt
         printEntry(&T->table[i]);
     }
 }
+
 
 /**
  * tableClean
@@ -201,5 +203,4 @@ void tableClean(TableInfo* T){
     }
     #endif
     T->numberOfItems = 0;
-
 }

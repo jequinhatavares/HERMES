@@ -5,7 +5,9 @@
 #include <logger.h>
 #include <cstdint>
 
+#ifndef ROUTING_UPDATE_INTERVAL
 #define ROUTING_UPDATE_INTERVAL 180000
+#endif
 
 // Flag indicating whether this node is currently connected to the main network tree
 extern bool connectedToMainTree;
@@ -42,7 +44,6 @@ extern uint8_t parent[4];
 extern int mySequenceNumber;
 
 extern unsigned long lastRoutingUpdateTime;
-//extern int debugServerIP[4];
 
 bool isIPinList(uint8_t *searchIP,uint8_t list[][4],uint8_t nElements);
 
