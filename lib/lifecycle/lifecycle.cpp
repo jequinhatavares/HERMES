@@ -362,6 +362,10 @@ void handleMessages(){
             insertLast(stateMachineEngine, eLostTreeConnection);
             break;
 
+        case TOPOLOGY_RESTORED_NOTICE:
+            LOG(MESSAGES,INFO,"Received [TOPOLOGY_RESTORED_NOTICE] message: \"%s\"\n", receiveBuffer);
+            break;
+
         case PARENT_RESET_NOTIFICATION:
             LOG(MESSAGES,INFO,"Received [Parent Reset Notification] message: \"%s\"\n", receiveBuffer);
             handleParentResetNotification(receiveBuffer);

@@ -847,11 +847,13 @@ void sendMessageToNode(char* messageBuffer,uint8_t *destinationIP){
 }
 
 void sendMessageToChildren(char* messageBuffer){
-    uint8_t *childSTAIP;
+    uint8_t *childSTAIP,*childAPIP;
     for (int i = 0; i < childrenTable->numberOfItems; i++) {
         // When broadcasting a message to all children, we can directly use as the nextHopIp the child's STA IP from the childrenTable.
+        childAPIP = (uint8_t *)tableKey(childrenTable,i);
         childSTAIP = (uint8_t *)tableValueAtIndex(childrenTable,i);
         if(childSTAIP != nullptr){
+            LOG(MESSAGES, INFO, "Sending the Message:\"%s\" to %d.%d.%d.%d\n",messageBuffer,childAPIP[0],childAPIP[1],childAPIP[2],childAPIP[3]);
             sendMessage(childSTAIP,messageBuffer);
         }
     }
