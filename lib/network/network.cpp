@@ -42,27 +42,25 @@ void network::run() {
 
 
 void network::sendMessageToRoot(const char *messagePayload) {
-
+    sendDataMessageToNode(messagePayload,rootIP);
 }
 
 void network::sendMessageToParent(const char *messagePayload) {
-
+    sendDataMessageToParent(messagePayload);
 }
 
 void network::sendMessageToChildren(const char *messagePayload) {
-
-
+    sendDataMessageToChildren(messagePayload);
 }
 
-void network::sendMessageToNode(const char *messagePayload, const uint8_t *nodeIP) {
-
-
+void network::sendMessageToNode(const char *messagePayload,uint8_t *nodeIP) {
+    sendDataMessageToNode(messagePayload,nodeIP);
 }
 
 
 void network::broadcastMessage(const char *messagePayload) {
-
-
+    uint8_t broadcastIP[4]={255,255,255,255};
+    sendDataMessageToNode(messagePayload,broadcastIP);
 }
 
 

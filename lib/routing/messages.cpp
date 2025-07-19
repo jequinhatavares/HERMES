@@ -187,7 +187,7 @@ void encodeACKMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8
 }
 
 
-void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *originatorIP,uint8_t *destinationIP){
+void encodeDataMessage(char* messageBuffer, size_t bufferSize,const char* payload,uint8_t *originatorIP,uint8_t *destinationIP){
     uint8_t broadcastIP[4]={255,255,255,255};
     if(!isIPEqual(destinationIP,broadcastIP)){
         //DATA_MESSAGE [originator node IP] [destination node IP] [message payload]
@@ -889,11 +889,46 @@ void sendMessageToParent(char* messageBuffer){
 }
 
 
-void sendDataMessageToNode(char* messageBuffer,uint8_t *senderIP,uint8_t *destinationIP){
-    //encodeDataMessage(la,messageBuffer);
-    uint8_t *nextHopIP = findRouteToNode(destinationIP);
-    if(nextHopIP != nullptr){
-        sendMessage(destinationIP,messageBuffer);
+
+
+
+void sendDataMessageToChildren(const char* messagePayload){
+    uint8_t *childSTAIP,*childAPIP;
+    for (int i = 0; i < childrenTable->numberOfItems; i++) {
+        // When broadcasting a message to all children, we can directly use as the nextHopIp the child's STA IP from the childrenTable.
+        childAPIP = (uint8_t *)tableKey(childrenTable,i);
+        childSTAIP = (uint8_t *)tableValueAtIndex(childrenTable,i);
+        if(childSTAIP != nullptr){
+            encodeDataMessage(largeSendBuffer, sizeof(largeSendBuffer),messagePayload,myIP,childAPIP);
+            LOG(MESSAGES, INFO, "Sending Data Message:\"%s\" to %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,childAPIP[0],childAPIP[1],childAPIP[2],childAPIP[3]);
+            sendMessage(childSTAIP,largeSendBuffer);
+        }
     }
+
+}
+
+void sendDataMessageToParent(const char* messagePayload){
+    if(hasParent){
+        encodeDataMessage(largeSendBuffer, sizeof(largeSendBuffer),messagePayload,myIP,parent);
+        sendMessage(parent,largeSendBuffer);
+    }
+}
+
+
+void sendDataMessageToNode(const char* messagePayload,uint8_t *destinationIP){
+    uint8_t broadcastIP[4]={255,255,255,255};
+
+    encodeDataMessage(largeSendBuffer, sizeof(largeSendBuffer),messagePayload,myIP,destinationIP);
+
+    // If it's a broadcast data message, forward it to all neighbors
+    if (isIPEqual(destinationIP,broadcastIP)){ //If the data message is meant to be broadcast
+        propagateMessage(largeSendBuffer,myIP);
+    }else{
+        uint8_t *nextHopIP = findRouteToNode(destinationIP);
+        if(nextHopIP != nullptr){
+            sendMessage(destinationIP,largeSendBuffer);
+        }
+    }
+
 }
 

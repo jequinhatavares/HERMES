@@ -23,17 +23,20 @@ class network {
         // Called in loop()
         void run();
 
+        /*************  Middleware related methods  ************/
+
+
+        /*************  Message related methods  ************/
         void sendMessageToRoot(const char* messagePayload);
-
         void sendMessageToParent(const char* messagePayload);
-
         void sendMessageToChildren(const char* messagePayload);
-
-        void sendMessageToNode(const char* messagePayload,const uint8_t* nodeIP);
-
+        void sendMessageToNode(const char* messagePayload, uint8_t* nodeIP);
         void broadcastMessage(const char* messagePayload);
+        void sendACKMessage(const char* messagePayload, uint8_t* nodeIP);
 
-        void sendACKMessage(const char* messagePayload,const uint8_t* nodeIP);
+
+
+
 
 };
 

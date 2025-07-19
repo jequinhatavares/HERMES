@@ -55,7 +55,7 @@ void encodeParentResetNotification(char* messageBuffer, size_t bufferSize);
 void encodeParentDiscoveryRequest(char* messageBuffer, size_t bufferSize,uint8_t *STAIP);
 void encodeDebugMessage(char* messageBuffer, size_t bufferSize,char* payload);
 
-void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *originatorIP,uint8_t *destinationIP);
+void encodeDataMessage(char* messageBuffer, size_t bufferSize,const char* payload,uint8_t *originatorIP,uint8_t *destinationIP);
 
 bool isMessageValid(int expectedMessageType,char* msg);
 
@@ -79,7 +79,12 @@ bool waitForMessage(MessageType type, uint8_t expectedSenderIP[4], unsigned long
 void getSenderIP(char* messageBuffer, MessageType type, uint8_t * senderIP);
 
 void sendMessageToNode(char* messageBuffer,uint8_t *destinationIP);
-void sendDataMessageToNode(char* messageBuffer,uint8_t *senderIP,uint8_t *destinationIP);
 void sendMessageToChildren(char* messageBuffer);
+void sendMessageToParent(char* messageBuffer);
+
+void sendDataMessageToNode(const char* messagePayload,uint8_t *destinationIP);
+void sendDataMessageToChildren(const char* messagePayload);
+void sendDataMessageToParent(const char* messagePayload);
+void sendDataMessageToNode(const char* messagePayload,uint8_t *originatorIP,uint8_t *destinationIP);
 
 #endif //MESSAGES_H
