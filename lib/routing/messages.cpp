@@ -869,6 +869,7 @@ void sendMessageToParent(char* messageBuffer){
 
 void sendDataMessageToNode(char* messageBuffer,uint8_t *senderIP,uint8_t *destinationIP){
     //encodeDataMessage(la,messageBuffer);
+    encodeDataMessage();
     uint8_t *nextHopIP = findRouteToNode(destinationIP);
     if(nextHopIP != nullptr){
         sendMessage(destinationIP,messageBuffer);
