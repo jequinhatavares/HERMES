@@ -19,7 +19,9 @@
 #include <cstdio>
 #include <cstring>
 
-
+#ifndef MAX_PAYLOAD_SIZE
+#define MAX_PAYLOAD_SIZE 200
+#endif
 
 typedef enum MessageType{
     PARENT_DISCOVERY_REQUEST, //0
@@ -53,7 +55,7 @@ void encodeParentResetNotification(char* messageBuffer, size_t bufferSize);
 void encodeParentDiscoveryRequest(char* messageBuffer, size_t bufferSize,uint8_t *STAIP);
 void encodeDebugMessage(char* messageBuffer, size_t bufferSize,char* payload);
 
-void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *sourceIP,uint8_t *destinationIP);
+void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *originatorIP,uint8_t *destinationIP);
 
 bool isMessageValid(int expectedMessageType,char* msg);
 

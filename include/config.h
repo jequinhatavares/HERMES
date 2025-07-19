@@ -22,6 +22,9 @@
 // Enable real-time monitoring server features for visualizing the network topology
 // #define VISUALIZATION_ON
 
+// Application Data message maximum payload size
+// #define MAX_PAYLOAD_SIZE 200
+
 
 // ==============================================================================
 //                         Middleware Configuration

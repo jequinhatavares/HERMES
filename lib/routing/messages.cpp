@@ -185,10 +185,20 @@ void encodeACKMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8
     snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",ACK_MESSAGE,sourceIP[0],sourceIP[1],
              sourceIP[2],sourceIP[3],destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],payload);
 }
-void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *sourceIP,uint8_t *destinationIP){
-    //DATA_MESSAGE [source node IP] [destination node IP] [message payload]
-    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",DATA_MESSAGE,sourceIP[0],sourceIP[1],
-             sourceIP[2],sourceIP[3],destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],payload);
+
+
+void encodeDataMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *originatorIP,uint8_t *destinationIP){
+    uint8_t broadcastIP[4]={255,255,255,255};
+    if(!isIPEqual(destinationIP,broadcastIP)){
+        //DATA_MESSAGE [originator node IP] [destination node IP] [message payload]
+        snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",DATA_MESSAGE,originatorIP[0],originatorIP[1],
+                 originatorIP[2],originatorIP[3],destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],payload);
+    }else{
+        //DATA_MESSAGE [originator node IP] [destination node IP=broadcastIP] [sender IP] [message payload]
+        snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu 255.255.255.255 %hhu.%hhu.%hhu.%hhu %s",DATA_MESSAGE,originatorIP[0],originatorIP[1],
+                 originatorIP[2],originatorIP[3],myIP[0],myIP[1],myIP[2],myIP[3],payload);
+    }
+
 }
 
 bool isMessageValid(int expectedMessageType,char* msg){
@@ -291,10 +301,11 @@ bool isMessageValid(int expectedMessageType,char* msg){
             break;
         }
         case DATA_MESSAGE: {
-            uint8_t IP1[4], IP2[4];
+            /***uint8_t IP1[4], IP2[4];
             char payload[200];
             return (sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %199s", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
-                           &IP2[0], &IP2[1], &IP2[2], &IP2[3], payload) == 10);
+                           &IP2[0], &IP2[1], &IP2[2], &IP2[3], payload) == 10);***/
+            return true;
             break;
         }
         case ACK_MESSAGE: {
@@ -651,31 +662,42 @@ void handleDebugMessage(char* msg){
 * @return void
 */
 void handleDataMessage(char *msg){
-    int type, nChars=0;
-    uint8_t sourceIP[4], destinationIP[4], nextHopIP[4];
-    uint8_t *nextHopPtr = nullptr;
-    char payload[200];
-    bool isTunneled = false;
+    int type, nChars=0,nChars2=0;
+    uint8_t originatorIP[4],destinationIP[4],nextHopIP[4],broadcastIP[4]={255,255,255,255};
+    uint8_t *nextHopPtr = nullptr,senderIP[4];
+    char payload[MAX_PAYLOAD_SIZE];
+    bool isTunneled = false,isBroadcast=false;
 
-    sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&type, &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
+    sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&type, &originatorIP[0],&originatorIP[1],&originatorIP[2],&originatorIP[3],
         &destinationIP[0],&destinationIP[1],&destinationIP[2],&destinationIP[3],&nChars);
     //Serial.printf("Message %s received from %d.%d.%d.%d to %d.%d.%d.%d", payload, senderIP[0],senderIP[1],senderIP[2],senderIP[3],
     //destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3]);
 
+    if(isIPEqual(destinationIP,broadcastIP)){
+        sscanf(msg+nChars, "%hhu.%hhu.%hhu.%hhu %n",&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],&nChars2);
+        nChars += nChars2;
+        isBroadcast=true;
+    }
     // Copy the rest of the string manually
     strncpy(payload, msg + nChars, sizeof(payload) - 1);
 
-    //Find the route to the destination IP of the message
-    nextHopPtr = findRouteToNode(destinationIP);
-    if (nextHopPtr != nullptr){
-        assignIP(nextHopIP, nextHopPtr);
-    }else{
-        LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
-                            "Unable to forward message.\n", destinationIP[0], destinationIP[1],destinationIP[2], destinationIP[3]);
-    }
 
-    // If this message is not intended for this node, forward it to the next hop leading to its destination.
-    if(!isIPEqual(nextHopIP, myIP)){
+    if(isBroadcast){ //if the message is a broadcast message
+        //Process the message
+
+        //Propagate the message to the rest of the message
+        encodeDataMessage(largeSendBuffer, sizeof(largeSendBuffer),payload,originatorIP,broadcastIP);
+        propagateMessage(largeSendBuffer,senderIP);
+
+    }else if(!isIPEqual(destinationIP, myIP)){ // If this message is not intended for this node, forward it to the next hop leading to its destination.
+        //Find the route to the destination IP of the message
+        nextHopPtr = findRouteToNode(destinationIP);
+        if (nextHopPtr != nullptr){
+            assignIP(nextHopIP, nextHopPtr);
+        }else{
+            LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
+                                "Unable to forward message.\n", destinationIP[0], destinationIP[1],destinationIP[2], destinationIP[3]);
+        }
         sendMessage(nextHopIP,receiveBuffer);
     }else{// If the message is for this node, process it and send an ACK back to the source
 
@@ -685,15 +707,15 @@ void handleDataMessage(char *msg){
 
         //Send ACK Message back to the source of the message
         //assignIP(parameters.IP1,myIP);
-        //assignIP(parameters.IP2,sourceIP);
+        //assignIP(parameters.IP2,originatorIP);
         //encodeMessage(smallSendBuffer, sizeof(smallSendBuffer),ACK_MESSAGE, parameters);
 
-        /***nextHopPtr = findRouteToNode(sourceIP);
+        /***nextHopPtr = findRouteToNode(originatorIP);
         if (nextHopPtr != nullptr){
             sendMessage(nextHopPtr,smallSendBuffer);
         }else{
             LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
-                                "Unable to forward message.\n", sourceIP[0], sourceIP[1],sourceIP[2], sourceIP[3]);
+                                "Unable to forward message.\n", originatorIP[0], originatorIP[1],originatorIP[2], originatorIP[3]);
         }***/
     }
 
@@ -788,7 +810,7 @@ void propagateMessage(char* message, uint8_t * sourceIP){
 }
 
 void encodeTunneledMessage(char* encodedMessage,size_t encodedMessageSize,uint8_t sourceIP[4], uint8_t destinationIP[4], char* encapsulatedMessage){
-    char payload[200];
+    char payload[MAX_PAYLOAD_SIZE];
     strncpy(payload,encapsulatedMessage,sizeof(payload)-1);
     encodeDataMessage(encodedMessage, encodedMessageSize,payload,sourceIP,destinationIP);
 }
@@ -869,7 +891,6 @@ void sendMessageToParent(char* messageBuffer){
 
 void sendDataMessageToNode(char* messageBuffer,uint8_t *senderIP,uint8_t *destinationIP){
     //encodeDataMessage(la,messageBuffer);
-    encodeDataMessage();
     uint8_t *nextHopIP = findRouteToNode(destinationIP);
     if(nextHopIP != nullptr){
         sendMessage(destinationIP,messageBuffer);
