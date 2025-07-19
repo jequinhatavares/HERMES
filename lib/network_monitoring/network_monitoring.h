@@ -7,20 +7,20 @@
 #include <logger.h>
 
 
-typedef enum messageVizType{
+typedef enum MonitoringMessageType{
     NEW_NODE, //0
     DELETED_NODE, //1
     CHANGE_PARENT, //2
-}messageVizType;
+}MonitoringMessageType;
 
 typedef struct messageVizParameters{
     uint8_t IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};
 }messageVizParameters;
 
-void encodeVizMessage(char* msg, messageVizType type, messageVizParameters parameters);
+void encodeMonitoringMessage(char* msg, MonitoringMessageType type, messageVizParameters parameters);
 
-void reportNewNodeToViz(uint8_t * nodeIP, uint8_t * parentIP);
-void reportDeletedNodeToViz(uint8_t* nodeIP);
+void reportNewNodeToMonitoringServer (uint8_t * nodeIP, uint8_t * parentIP);
+void reportDeletedNodeToMonitoringServer (uint8_t* nodeIP);
 
 
 #endif //NET_VIZ_H

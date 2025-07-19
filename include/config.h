@@ -20,7 +20,7 @@
 // #define APPLICATION_RUNS_PERIODIC_TASKS false
 
 // Enable real-time monitoring server features for visualizing the network topology
-// #define VISUALIZATION_ON
+// #define MONITORING_ON
 
 // Application Data message maximum payload size
 // #define MAX_PAYLOAD_SIZE 200

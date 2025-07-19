@@ -86,7 +86,7 @@ char smallSendBuffer[50] = "";
             snprintf(msg,bufferSize,"%i",type);
             break;
 
-        case DEBUG_MESSAGE:
+        case MONITORING_MESSAGE:
             //10 [DEBUG message payload]
             snprintf(msg,bufferSize,"%i %s\n",type,parameters.payload);
             break;
@@ -176,7 +176,7 @@ void encodeParentResetNotification(char* messageBuffer, size_t bufferSize){
 
 void encodeDebugMessage(char* messageBuffer, size_t bufferSize,char* payload){
     //10 [DEBUG message payload]
-    snprintf(messageBuffer,bufferSize,"%i %s\n",DEBUG_MESSAGE,payload);
+    snprintf(messageBuffer,bufferSize,"%i %s\n",MONITORING_MESSAGE,payload);
 }
 
 
@@ -293,7 +293,7 @@ bool isMessageValid(int expectedMessageType,char* msg){
             return(sscanf(msg,"%d",&type)== 1);
             break;
 
-        case DEBUG_MESSAGE: {
+        case MONITORING_MESSAGE: {
             /***int dummy;
             char payload[100];
             return (sscanf(msg, "%d %[^\n]", &dummy, payload) == 2);***/
@@ -418,7 +418,7 @@ void handleChildRegistrationRequest(char * msg){
     //LOG(MESSAGES,INFO,"Sending [PARTIAL ROUTING TABLE UPDATE] message: \"%s\"\n", smallSendBuffer);
     propagateMessage(smallSendBuffer,  childAPIP);
     //Sending new node information to the DEBUG visualization program, if enabled
-    reportNewNodeToViz(childAPIP, myIP);
+    reportNewNodeToMonitoringServer (childAPIP, myIP);
 
     strcpy(smallSendBuffer , "");
     strcpy(largeSendBuffer , "");
@@ -630,7 +630,7 @@ void handleParentResetNotification(char *msg){
 }
 /**
  * handleDebugMessage
- * Handles a DEBUG_MESSAGE: decodes the message, forwards it to the appropriate next hop or debug server.
+ * Handles a MONITORING_MESSAGE: decodes the message, forwards it to the appropriate next hop or debug server.
  *
  * @param msg - The message to decode.
  * @return void

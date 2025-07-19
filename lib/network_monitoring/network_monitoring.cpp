@@ -1,7 +1,7 @@
-#include "net_viz.h"
+#include "network_monitoring.h"
 
 
-void encodeVizMessage(char* msg, messageVizType type, messageVizParameters parameters){
+void encodeMonitoringMessage(char* msg, MonitoringMessageType type, messageVizParameters parameters){
     switch (type) {
         case NEW_NODE:
             //0 [nodeIP] [parentIP]
@@ -17,14 +17,14 @@ void encodeVizMessage(char* msg, messageVizType type, messageVizParameters param
     }
 }
 
-void reportNewNodeToViz(uint8_t * nodeIP, uint8_t * parentIP){
-#ifdef VISUALIZATION_ON
+void reportNewNodeToMonitoringServer (uint8_t * nodeIP, uint8_t * parentIP){
+#ifdef MONITORING_ON
     char msg[50];
     messageVizParameters vizParameters;
     //If the visualization program is active, pass the new node information to it
     assignIP(vizParameters.IP1, nodeIP);
     assignIP(vizParameters.IP2, parentIP);
-    encodeVizMessage(msg,NEW_NODE,vizParameters);
+    encodeMonitoringMessage(msg,NEW_NODE,vizParameters);
 
     encodeDebugMessage(smallSendBuffer, sizeof (smallSendBuffer), msg);
 
@@ -40,13 +40,13 @@ void reportNewNodeToViz(uint8_t * nodeIP, uint8_t * parentIP){
 #endif
 }
 
-void reportDeletedNodeToViz(uint8_t * nodeIP){
-#ifdef VISUALIZATION_ON
+void reportDeletedNodeToMonitoringServer (uint8_t * nodeIP){
+#ifdef MONITORING_ON
     char msg[50];
     messageVizParameters vizParameters;
     //If the visualization program is active, pass the deleted node information to it
     assignIP(vizParameters.IP1, nodeIP);
-    encodeVizMessage(msg,DELETED_NODE,vizParameters);
+    encodeMonitoringMessage(msg,DELETED_NODE,vizParameters);
 
     encodeDebugMessage(smallSendBuffer, sizeof (smallSendBuffer),msg);
 

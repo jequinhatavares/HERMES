@@ -199,7 +199,7 @@ State init(Event event){
         connectedToMainTree = true;
         assignIP(parent, invalidIP);
         assignIP(rootIP,myIP);
-        reportNewNodeToViz(myIP,invalidIP);
+        reportNewNodeToMonitoringServer (myIP,invalidIP);
 
         return sActive;
     };
@@ -876,7 +876,7 @@ void lostChildProcedure(){
                 tableRemove(lostChildrenTable, MAC);
 
                 //Report the deleted node to the monitoring server
-                reportDeletedNodeToViz(lostChildIP);
+                reportDeletedNodeToMonitoringServer(lostChildIP);
             }
 
         }
