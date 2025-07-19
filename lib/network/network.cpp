@@ -40,6 +40,30 @@ void network::run() {
 
 }
 
+void network::middlewareSelectStrategy(StrategyType strategyType){
+    ::middlewareSelectStrategy(strategyType);
+}
+
+void network::initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)){
+    ::initMiddlewareStrategyInject(metricStruct, metricStructSize,setValueFunction,encodeMetricFunction,decodeMetricFunction);
+}
+
+void network::initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *)){
+    ::initMiddlewareStrategyPubSub(setValueFunction,encodeTopicFunction,decodeTopicFunction);
+}
+
+void network::initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t)){
+    ::initMiddlewareStrategyTopology(topologyMetricValues, topologyMetricStructSize,setValueFunction,encodeTopologyMetricFunction,decodeTopologyMetricFunction, selectParentFunction);
+}
+
+void network::middlewareInfluenceRouting(char *dataMessage) {
+    ::middlewareInfluenceRouting(dataMessage);
+}
+
+void* network::middlewareGetStrategyContext() {
+    return ::middlewareGetStrategyContext();
+}
+
 
 void network::sendMessageToRoot(const char *messagePayload) {
     sendDataMessageToNode(messagePayload,rootIP);
