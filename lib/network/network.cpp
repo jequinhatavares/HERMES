@@ -44,25 +44,66 @@ void network::middlewareSelectStrategy(StrategyType strategyType){
     ::middlewareSelectStrategy(strategyType);
 }
 
-void network::initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)){
-    ::initMiddlewareStrategyInject(metricStruct, metricStructSize,setValueFunction,encodeMetricFunction,decodeMetricFunction);
-}
-
-void network::initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *)){
-    ::initMiddlewareStrategyPubSub(setValueFunction,encodeTopicFunction,decodeTopicFunction);
-}
-
-void network::initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t)){
-    ::initMiddlewareStrategyTopology(topologyMetricValues, topologyMetricStructSize,setValueFunction,encodeTopologyMetricFunction,decodeTopologyMetricFunction, selectParentFunction);
-}
 
 void network::middlewareInfluenceRouting(char *dataMessage) {
     ::middlewareInfluenceRouting(dataMessage);
 }
 
-void* network::middlewareGetStrategyContext() {
-    return ::middlewareGetStrategyContext();
+
+void network::initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)){
+    ::initMiddlewareStrategyInject(metricStruct, metricStructSize,setValueFunction,encodeMetricFunction,decodeMetricFunction);
 }
+
+void network::injectMetric(void *metric) {
+    if (activeStrategyType != STRATEGY_INJECT) return;
+
+    InjectContext* context = (InjectContext*) ::middlewareGetStrategyContext();
+    if(context != nullptr)context->injectNodeMetric(metric);
+}
+
+
+void network::initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *)){
+    ::initMiddlewareStrategyPubSub(setValueFunction,encodeTopicFunction,decodeTopicFunction);
+}
+
+void network::subscribeToTopic(int8_t topic) {
+    if (activeStrategyType != STRATEGY_PUBSUB) return;
+
+    PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
+    if(context != nullptr)context->subscribeToTopic(topic);
+}
+
+void network::unsubscribeToTopic(int8_t topic){
+    if (activeStrategyType != STRATEGY_PUBSUB) return;
+
+    PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
+    if(context != nullptr)context->unsubscribeToTopic(topic);
+}
+
+void network::advertiseTopic(int8_t topic){
+    if (activeStrategyType != STRATEGY_PUBSUB) return;
+
+    PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
+    if(context != nullptr)context->advertiseTopic(topic);
+}
+
+void network::unadvertiseTopic(int8_t topic){
+    if (activeStrategyType != STRATEGY_PUBSUB) return;
+
+    PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
+    if(context != nullptr)context->unadvertiseTopic(topic);
+}
+
+void network::initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t)){
+    ::initMiddlewareStrategyTopology(topologyMetricValues, topologyMetricStructSize,setValueFunction,encodeTopologyMetricFunction,decodeTopologyMetricFunction, selectParentFunction);
+}
+void network::setMetric(void *metric) {
+    if (activeStrategyType != STRATEGY_TOPOLOGY) return;
+
+    TopologyContext* context = (TopologyContext*) ::middlewareGetStrategyContext();
+    if(context != nullptr)context->setMetric(metric);
+}
+
 
 
 void network::sendMessageToRoot(const char *messagePayload) {
