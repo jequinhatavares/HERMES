@@ -636,9 +636,9 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
                     nextHopIP = (uint8_t *) findRouteToNode(nodeIP);
                     if(nextHopIP != nullptr){
                         sendMessage(nextHopIP,largeSendBuffer);
-                        LOG(NETWORK,ERROR,"Sending [DATA] message: %s to %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
+                        LOG(MIDDLEWARE,ERROR,"Sending [DATA] message: %s to %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
                     }else{
-                        LOG(NETWORK,ERROR,"ERROR: Unable to find a path to the node in the routing table\n");
+                        LOG(MIDDLEWARE,ERROR,"ERROR: Unable to find a path to the node in the routing table\n");
                     }
                 }
             }
@@ -659,7 +659,7 @@ void onTimerStrategyPubSub(){
     if( (currentTime - lastMiddlewareUpdateTimePubSub) >= MIDDLEWARE_UPDATE_INTERVAL ) {
         /***encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_NODE_UPDATE);
         propagateMessage(largeSendBuffer, myIP);
-        LOG(NETWORK,DEBUG,"Sending periodic [MIDDLEWARE/PUBSUB_NODE_INFO] Message: %s\n",largeSendBuffer);
+        LOG(MIDDLEWARE,DEBUG,"Sending periodic [MIDDLEWARE/PUBSUB_NODE_INFO] Message: %s\n",largeSendBuffer);
         lastMiddlewareUpdateTimePubSub = currentTime;***/
     }
 }
@@ -834,22 +834,22 @@ void unadvertiseTopic(int8_t pubTopic){
  * @return void
  **/
 void printPubSubStruct(TableEntry* Table){
-    LOG(NETWORK,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → ",
+    LOG(MIDDLEWARE,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → ",
         ((int8_t *)Table->key)[0],((int8_t *)Table->key)[1],((int8_t *)Table->key)[2],((int8_t *)Table->key)[3]);
 
-    LOG(NETWORK,INFO,"(Publishes: ");
+    LOG(MIDDLEWARE,INFO,"(Publishes: ");
     for(int i = 0; i < MAX_TOPICS; ++i) {
-        LOG(NETWORK,INFO,"%d | ",
+        LOG(MIDDLEWARE,INFO,"%d | ",
             ((PubSubInfo *)Table->value)->publishedTopics[i]);
     }
-    LOG(NETWORK,INFO,") ");
+    LOG(MIDDLEWARE,INFO,") ");
 
-    LOG(NETWORK,INFO,"(Subscriptions: ");
+    LOG(MIDDLEWARE,INFO,"(Subscriptions: ");
     for(int i = 0; i < MAX_TOPICS; ++i) {
-        LOG(NETWORK,INFO,"%d | ",
+        LOG(MIDDLEWARE,INFO,"%d | ",
             ((PubSubInfo *)Table->value)->subscribedTopics[i]);
     }
-    LOG(NETWORK,INFO,")\n");
+    LOG(MIDDLEWARE,INFO,")\n");
 
 }
 
@@ -860,7 +860,7 @@ void printPubSubStruct(TableEntry* Table){
  * @return void
  **/
 void printPubSubTableHeader(){
-    LOG(NETWORK,INFO,"**********************| Middleware Strategy Pub/Sub Table |**********************\n");
+    LOG(MIDDLEWARE,INFO,"**********************| Middleware Strategy Pub/Sub Table |**********************\n");
 }
 
 /**

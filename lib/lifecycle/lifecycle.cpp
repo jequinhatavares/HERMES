@@ -372,7 +372,7 @@ void handleMessages(){
             insertLast(stateMachineEngine, eLostParentConnection);
             break;
 
-        case DEBUG_MESSAGE:
+        case MONITORING_MESSAGE:
             handleDebugMessage(receiveBuffer);
             break;
 
@@ -658,7 +658,7 @@ State recoveryAwait(Event event){
                 break;
 
             /*** Reject all other message types (e.g., PARENT_DISCOVERY_REQUEST, CHILD_REGISTRATION_REQUEST,
-               , DATA_MESSAGE,DEBUG_MESSAGE, etc.) since the node is not in an active state. ***/
+               , DATA_MESSAGE,MONITORING_MESSAGE, etc.) since the node is not in an active state. ***/
             default:
                 break;
 

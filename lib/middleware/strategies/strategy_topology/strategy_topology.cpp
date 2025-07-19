@@ -159,7 +159,7 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
 
         }else{
             // This message type is intended to be sent only by the new node to its directly connected temporary parent
-            LOG(NETWORK, ERROR, "❌ ERROR: This node should be the destination of the TOP_PARENT_LIST_ADVERTISEMENT_REQUEST message\n");
+            LOG(MIDDLEWARE, ERROR, "❌ ERROR: This node should be the destination of the TOP_PARENT_LIST_ADVERTISEMENT_REQUEST message\n");
         }
     }
     else if(type == TOP_PARENT_LIST_ADVERTISEMENT){
@@ -203,7 +203,7 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
             if(nextHopIP != nullptr){
                 sendMessage(nextHopIP,messageBuffer);
             }else{
-                LOG(NETWORK,ERROR,"❌ERROR: No path to root node was found in the routing table.\n");
+                LOG(MIDDLEWARE,ERROR,"❌ERROR: No path to root node was found in the routing table.\n");
             }
         }else{
             sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n"
@@ -229,7 +229,7 @@ void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]){
                         sendMessage(nextHopIP,smallSendBuffer);
                         LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_NODE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
                     }else{
-                        LOG(NETWORK, ERROR, "❌ ERROR: No path to the root node (%hhu.%hhu.%hhu.%hhu) was found in the routing table.\n",rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
+                        LOG(MIDDLEWARE, ERROR, "❌ ERROR: No path to the root node (%hhu.%hhu.%hhu.%hhu) was found in the routing table.\n",rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
                     }
                 }
             }else{
@@ -393,7 +393,7 @@ void topologySetNodeMetric(void* metric){
             if(nextHopIP != nullptr){
                 sendMessage(nextHopIP,smallSendBuffer);
             }else{
-                LOG(NETWORK,ERROR,"❌ERROR: No path to root node was found in the routing table.\n");
+                LOG(MIDDLEWARE,ERROR,"❌ERROR: No path to root node was found in the routing table.\n");
             }
         }
 
@@ -467,11 +467,11 @@ void setTopologyMetricValue(void* av, void*bv){
 }
 
 void printTopologyMetricStruct(TableEntry* Table){
-    LOG(NETWORK,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → (Topology Metric: %d) \n",
+    LOG(MIDDLEWARE,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → (Topology Metric: %d) \n",
         ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
         ((topologyTableEntry *)Table->value)->processingCapacity);
 }
 
 void printTopologyTableHeader(){
-    LOG(NETWORK,INFO,"**********************| Middleware Strategy Topology Table |**********************\n");
+    LOG(MIDDLEWARE,INFO,"**********************| Middleware Strategy Topology Table |**********************\n");
 }

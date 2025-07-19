@@ -302,7 +302,7 @@ void influenceRoutingStrategyInject(char* dataMessage){
             LOG(MESSAGES,INFO,"Sending [DATA] message: \"%s\" to: %hhu.hhu.%hhu.%hhu\n",dataMessage,originalDestination[0],originalDestination[1],originalDestination[2],originalDestination[3]);
 
         }else{
-            LOG(NETWORK,ERROR,"ERROR: Trying to send message to: %hhu.%hhu.%hhu.%hhu but did not find path to node\n",bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
+            LOG(MIDDLEWARE,ERROR,"ERROR: Trying to send message to: %hhu.%hhu.%hhu.%hhu but did not find path to node\n",bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
         }
         return;
     }
@@ -318,7 +318,7 @@ void influenceRoutingStrategyInject(char* dataMessage){
         LOG(MESSAGES,INFO,"Sending tunneled [DATA] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",dataMessage,bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
         sendMessage(nextHopIP, largeSendBuffer);
     }else{
-        LOG(NETWORK,ERROR,"ERROR: Trying to send message to: %hhu.%hhu.%hhu.%hhu but did not find path to node\n",bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
+        LOG(MIDDLEWARE,ERROR,"ERROR: Trying to send message to: %hhu.%hhu.%hhu.%hhu but did not find path to node\n",bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
     }
 }
 
@@ -336,7 +336,7 @@ void onTimerStrategyInject(){
     if( (currentTime - lastMiddlewareUpdateTimeInject) >= MIDDLEWARE_UPDATE_INTERVAL ){
         snprintf(smallSendBuffer, sizeof(smallSendBuffer), "%i ",MIDDLEWARE_MESSAGE);
         encodeMessageStrategyInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
-        LOG(NETWORK,DEBUG,"Sending periodic [MIDDLEWARE/INJECT_NODE_INFO] Message: %s\n",smallSendBuffer);
+        LOG(MIDDLEWARE,DEBUG,"Sending periodic [MIDDLEWARE/INJECT_NODE_INFO] Message: %s\n",smallSendBuffer);
         propagateMessage(smallSendBuffer,myIP);
         lastMiddlewareUpdateTimeInject = currentTime;
     }
@@ -408,11 +408,11 @@ void setMetricValue(void* av, void*bv){
 }
 
 void printMetricStruct(TableEntry* Table){
-    LOG(NETWORK,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → (Metric: %d) \n",
+    LOG(MIDDLEWARE,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → (Metric: %d) \n",
         ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
         ((MetricTableEntry *)Table->value)->processingCapacity);
 }
 
 void printMetricsTableHeader(){
-    LOG(NETWORK,INFO,"**********************| Middleware Strategy Inject Table |**********************\n");
+    LOG(MIDDLEWARE,INFO,"**********************| Middleware Strategy Inject Table |**********************\n");
 }
