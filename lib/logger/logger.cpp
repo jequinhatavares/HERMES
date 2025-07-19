@@ -19,6 +19,21 @@ void enableModule(LogModules module) {
     activeLogModules[module] = true;
 }
 
+
+/**
+ * enableAllModules
+ * Enables all logging modules
+ *
+ * @param module- The module to enable logging for.
+ *
+ * @return void
+ */
+void enableAllModules() {
+    for (int i = 0; i < MAX_MODULES; i++) {
+        activeLogModules[i] = true;
+    }
+}
+
 /**
  * disableModule
  * Disables logging for a specific module.

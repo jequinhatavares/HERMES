@@ -12,7 +12,7 @@
 #include <cstdarg>
 #include <cstring>
 
-#define MAX_MODULES 10
+#define MAX_MODULES 7
 
 typedef enum LogModules {
     NETWORK, //0
@@ -38,6 +38,7 @@ extern LogModules lastModule;
 
 
 void enableModule(LogModules module);
+void enableAllModules();
 void disableModule(LogModules module);
 bool isModuleEnabled(LogModules module);
 void logHeaders(LogModules module);
