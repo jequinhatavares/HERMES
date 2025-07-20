@@ -48,10 +48,7 @@ class network {
         void sendMessageToChildren(const char* messagePayload);
         void sendMessageToNode(const char* messagePayload, uint8_t* nodeIP);
         void broadcastMessage(const char* messagePayload);
-        void sendACKMessage(const char* messagePayload, uint8_t* nodeIP);
-
-
-
+        void sendACKMessage(const char* ackPayload, uint8_t* destinationIP);
 
 
 };

@@ -180,7 +180,7 @@ void encodeDebugMessage(char* messageBuffer, size_t bufferSize,char* payload){
 }
 
 
-void encodeACKMessage(char* messageBuffer, size_t bufferSize,char* payload,uint8_t *sourceIP,uint8_t *destinationIP){
+void encodeACKMessage(char* messageBuffer, size_t bufferSize,const char* payload,uint8_t *sourceIP,uint8_t *destinationIP){
     //ACK_MESSAGE [source node IP] [destination node IP] [ACK payload]
     snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",ACK_MESSAGE,sourceIP[0],sourceIP[1],
              sourceIP[2],sourceIP[3],destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],payload);
@@ -930,5 +930,14 @@ void sendDataMessageToNode(const char* messagePayload,uint8_t *destinationIP){
         }
     }
 
+}
+
+void sendACKMessageToNode(const char* ackPayload,uint8_t *destinationIP){
+
+    encodeACKMessage(largeSendBuffer, sizeof(largeSendBuffer),ackPayload,myIP,destinationIP);
+    uint8_t *nextHopIP = findRouteToNode(destinationIP);
+    if(nextHopIP != nullptr){
+        sendMessage(destinationIP,largeSendBuffer);
+    }
 }
 

@@ -15,7 +15,7 @@
 //#include "transport_hal.h"
 //#include "lifecycle.h"
 #include "logger.h"
-#include "network_monitoring.h"
+#include "../network_monitoring/network_monitoring.h"
 #include <cstdio>
 #include <cstring>
 
@@ -55,6 +55,7 @@ void encodeParentResetNotification(char* messageBuffer, size_t bufferSize);
 void encodeParentDiscoveryRequest(char* messageBuffer, size_t bufferSize,uint8_t *STAIP);
 void encodeDebugMessage(char* messageBuffer, size_t bufferSize,char* payload);
 
+void encodeACKMessage(char* messageBuffer, size_t bufferSize,const char* payload,uint8_t *sourceIP,uint8_t *destinationIP);
 void encodeDataMessage(char* messageBuffer, size_t bufferSize,const char* payload,uint8_t *originatorIP,uint8_t *destinationIP);
 
 bool isMessageValid(int expectedMessageType,char* msg);
@@ -86,5 +87,6 @@ void sendDataMessageToNode(const char* messagePayload,uint8_t *destinationIP);
 void sendDataMessageToChildren(const char* messagePayload);
 void sendDataMessageToParent(const char* messagePayload);
 void sendDataMessageToNode(const char* messagePayload,uint8_t *originatorIP,uint8_t *destinationIP);
+void sendACKMessageToNode(const char* ackPayload,uint8_t *destinationIP);
 
 #endif //MESSAGES_H

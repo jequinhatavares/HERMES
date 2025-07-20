@@ -128,4 +128,8 @@ void network::broadcastMessage(const char *messagePayload) {
     sendDataMessageToNode(messagePayload,broadcastIP);
 }
 
+void network::sendACKMessage(const char *ackPayload, uint8_t *destinationIP) {
+    sendACKMessageToNode(ackPayload,destinationIP);
+}
+
 
