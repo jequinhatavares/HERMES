@@ -182,12 +182,10 @@ void setup(){
 
     initTime();
 
-    //iamRoot = true;
-
     Advance(SM, eSuccess);//Init
 
      middlewareSelectStrategy(STRATEGY_TOPOLOGY);
-    initMiddlewareStrategyTopology();
+     initMiddlewareStrategyTopology();
 
     if(!iamRoot){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Search APs

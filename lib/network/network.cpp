@@ -1,43 +1,65 @@
 #include "network.h"
 
 
-void network::configure(bool isRoot) {
+void network::setAsRoot(bool isRoot) {
     iamRoot = isRoot;
 }
 
 void network::begin() {
+
     uint8_t MAC[6];
-    Serial.begin(115200);
+    //Serial.begin(115200);
+
+    #if defined(raspberrypi_3b)
+        initTime();
+    #endif
 
     //To auto initialize the root node has the node with the IP 135.230.96.1
     getMyMAC(MAC);
 
-    #ifdef ESP32
-        LOG(NETWORK,INFO,"ESP32\n");
-        //esp_log_level_set("wifi", ESP_LOG_VERBOSE);
-    #endif
-
-    #ifdef ESP8266
-        LOG(NETWORK,INFO,"ESP8266\n");
-    #endif
-
     LOG(NETWORK,INFO,"Code uploaded through multi_upload_tool.py V1\n");
     LOG(NETWORK,INFO,"My MAC addr: %i.%i.%i.%i.%i.%i\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
-
-    //waitForEnter();
-
 
     Advance(SM, eSuccess);//Init
 
     if(!iamRoot){
-        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Search APs
-        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Choose Parent
+        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//State Search APs
+        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//State Join Network
     }
+
 }
 
 
 void network::run() {
+    int packetSize;
 
+    #if defined(raspberrypi_3b)
+        // Raspberry Pi Wi-Fi events are manually implemented and require polling in the main loop
+        waitForWifiEvent();
+    #endif
+
+    //Wait for incoming requests
+    packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer));
+    if (packetSize > 0){
+        insertLast(stateMachineEngine, eMessage);
+        if(packetSize >= 255){
+            LOG(MESSAGES, ERROR,"Receiving buffer is too small packet has size:%i\n", packetSize);
+        }
+
+    }
+
+    // Handle all timers: routing periodic updates, child disconnection timeouts, middleware timer callbacks and any application-level periodic tasks
+    handleTimers();
+
+    while(stateMachineEngine->size != 0){
+        printSnake((CircularBuffer *)stateMachineEngine);
+        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
+    }
+
+    #if defined(ESP32) || defined(ESP8266)
+        // Command Line Interface not yet implemented for Raspberry Pi
+        cliInteraction();
+    #endif
 }
 
 void network::middlewareSelectStrategy(StrategyType strategyType){
@@ -158,7 +180,7 @@ void network::onACKReceived(void (*callback)(uint8_t *, uint8_t *, char *)) {
     onACKMessageCallback = callback;
 }
 
-void network::onPeriodicAPPTask(void (*callback)()) {
+void network::onPeriodicAppTask(void (*callback)()) {
     onAppPeriodicTaskCallback = callback;
 }
 

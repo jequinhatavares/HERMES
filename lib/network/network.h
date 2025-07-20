@@ -14,13 +14,11 @@ class network {
     public:
 
         // Called in setup before begin()
-        void configure(bool isRoot);
+        void setAsRoot(bool isRoot);
 
         void onDataReceived(void (*callback)(uint8_t*, uint8_t*, char*));
-
         void onACKReceived(void (*callback)(uint8_t*, uint8_t*, char*));
-
-        void onPeriodicAPPTask(void (*callback)());
+        void onPeriodicAppTask(void (*callback)());
 
         // Called in setup()
         void begin();
