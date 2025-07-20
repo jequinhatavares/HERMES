@@ -7,9 +7,9 @@
 //#include "strategy.h"
 //#include <wifi_hal.h>
 #include <transport_hal.h>
+#include <time_hal.h>
 //#include <../time_hal/time_hal.h>
 //#include <time_hal.h>
-#include <../middleware/strategies/strategy_inject/strategy_inject.h>
 //#include "../wifi_hal/wifi_hal.h"
 //#include <../transport_hal/transport_hal.h>
 //#include "transport_hal.h"
