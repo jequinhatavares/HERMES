@@ -79,6 +79,7 @@ void initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,vo
     isStrategyInitialized = true;
 }
 
+
 /**
  * initMiddlewareStrategyPubSub
  * Initializes the middleware strategy Pub/Sub by assigning the required function pointers.

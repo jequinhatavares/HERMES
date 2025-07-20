@@ -1,10 +1,26 @@
 #include "network.h"
 
-
+/**
+ * setAsRoot
+ *
+ * Sets whether this node should act as the root of the network.
+ * Must be called before `begin()`. Only one root is allowed per network.
+ *
+ * @param isRoot - True if the node should be the root, false otherwise.
+ * @return void
+ */
 void network::setAsRoot(bool isRoot) {
     iamRoot = isRoot;
 }
 
+
+/**
+ * begin
+ * Initializes the node and integrates it into the multi-hop network.
+ * Must be called once in the setup phase.
+ *
+ * @return void
+ */
 void network::begin() {
 
     uint8_t MAC[6];
@@ -30,6 +46,14 @@ void network::begin() {
 }
 
 
+/**
+ * run
+ * Main execution loop of the network layer. Handles Wi-Fi events, receives incoming messages,
+ * manages timers, and drives the state machine to maintain and operate the network.
+ * Should be called continuously in the main loop to ensure proper network operation.
+ *
+ * @return void
+ */
 void network::run() {
     int packetSize;
 
@@ -62,20 +86,58 @@ void network::run() {
     #endif
 }
 
+/**
+ * middlewareSelectStrategy
+ * Selects and activates a middleware strategy to influence routing behavior.
+ *
+ * @param strategyType - The strategy to be activated (e.g., STRATEGY_INJECT, STRATEGY_PUBSUB, STRATEGY_TOPOLOGY).
+ *                       STRATEGY_NONE disables any active strategy.
+ * @return void
+ */
 void network::middlewareSelectStrategy(StrategyType strategyType){
     ::middlewareSelectStrategy(strategyType);
 }
 
 
+/**
+ * middlewareInfluenceRouting
+ * Invokes the active middleware strategy to influence routing decisions
+ *
+ * @param dataMessage - Pointer to the message data for which the middleware can influence the next routing direction
+ * @return void
+ */
 void network::middlewareInfluenceRouting(char *dataMessage) {
     ::middlewareInfluenceRouting(dataMessage);
 }
 
 
+/**
+ * initMiddlewareStrategyInject
+ * Initializes the middleware strategy Inject by setting up function pointers and metric structures.
+ * This should only be called after selecting the STRATEGY_INJECT strategy using middlewareSelectStrategy.
+ *
+ * @param metricStruct - Pointer to the memory where the metricStruct table values are allocated.
+ * @param metricStructSize - Size of the metric structure in bytes.
+ * @param setValueFunction - Pointer to the function responsible for updating values within the metric table.
+ * @param encodeMetricFunction - Pointer to the function responsible for encoding the metric structure value into a buffer.
+ * @param decodeMetricFunction - Pointer to the function responsible for decoding the buffer into a metric structure value.
+ *
+ * @return void
+ */
 void network::initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)){
     ::initMiddlewareStrategyInject(metricStruct, metricStructSize,setValueFunction,encodeMetricFunction,decodeMetricFunction);
 }
 
+
+/**
+ * injectNodeMetric
+ * Inserts/updates the metric data for this node.
+ *
+ * Note: This method works only when the active middleware strategy is STRATEGY_INJECT and has been initialized.
+ *
+ * @param metric - Pointer to the metric data to be injected or updated.
+ * @return void
+ */
 void network::injectMetric(void *metric) {
     if (!::isMiddlewareStrategyActive(STRATEGY_INJECT)){
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
@@ -87,10 +149,32 @@ void network::injectMetric(void *metric) {
 }
 
 
+/**
+ * initMiddlewareStrategyPubSub
+ * Initializes the middleware strategy Pub/Sub by assigning the required function pointers.
+ * This function must be called only after selecting the STRATEGY_PUBSUB strategy using middlewareSelectStrategy.
+ *
+ * @param setValueFunction - Pointer to the function responsible for updating values within the pubsub table.
+ * @param encodeTopicFunction - Pointer to the function responsible for encoding the topic data into a buffer.
+ * @param decodeTopicFunction - Pointer to the function responsible for decoding a buffer into a topic identifier.
+ *
+ * @return void
+ */
 void network::initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *)){
     ::initMiddlewareStrategyPubSub(setValueFunction,encodeTopicFunction,decodeTopicFunction);
 }
 
+
+/**
+ * subscribeToTopic
+ * Registers a subscription to the specified topic on the local node and propagates
+ * the subscription information to the rest of the network.
+ *
+ * Note: This method works only when the active middleware strategy is STRATEGY_PUBSUB and has been initialized.
+ *
+ * @param subTopic - Identifier of the topic to subscribe to
+ * @return void
+ */
 void network::subscribeToTopic(int8_t topic) {
     if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
@@ -101,6 +185,17 @@ void network::subscribeToTopic(int8_t topic) {
     if(context != nullptr)context->subscribeToTopic(topic);
 }
 
+
+/**
+ * unsubscribeFromTopic
+ * Removes the local subscription to the specified topic and propagates
+ * the unsubscription information to the rest of the network.
+ *
+ * Note: This method works only when the active middleware strategy is STRATEGY_PUBSUB and has been initialized.
+ *
+ * @param subTopic - Identifier of the topic to unsubscribe from
+ * @return void
+ */
 void network::unsubscribeToTopic(int8_t topic){
     if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)) return;{
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
@@ -111,6 +206,16 @@ void network::unsubscribeToTopic(int8_t topic){
     if(context != nullptr)context->unsubscribeToTopic(topic);
 }
 
+/**
+ * advertiseTopic
+ * Announces that this node is publishing a specific topic, making this
+ * information available to other nodes in the network.
+ *
+ * Note: This method works only when the active middleware strategy is STRATEGY_PUBSUB and has been initialized.
+ *
+ * @param pubTopic - Identifier of the topic being advertised for publication
+ * @return void
+ */
 void network::advertiseTopic(int8_t topic){
     if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
@@ -121,6 +226,17 @@ void network::advertiseTopic(int8_t topic){
     if(context != nullptr)context->advertiseTopic(topic);
 }
 
+
+/**
+ * unadvertiseTopic
+ * Informs the network that this node is no longer publishing the specified topic,
+ * removing it from the advertised publication list.
+ *
+ * Note: This method works only when the active middleware strategy is STRATEGY_PUBSUB and has been initialized.
+ *
+ * @param pubTopic - Identifier of the topic that is no longer being published
+ * @return void
+ */
 void network::unadvertiseTopic(int8_t topic){
     if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
@@ -131,55 +247,164 @@ void network::unadvertiseTopic(int8_t topic){
     if(context != nullptr)context->unadvertiseTopic(topic);
 }
 
+/**
+ * initMiddlewareStrategyTopology
+ * Initializes the middleware strategy Topology by assigning the required function pointers.
+ * This function must be called only after selecting the STRATEGY_TOPOLOGY using middlewareSelectStrategy.
+ *
+ * @param topologyMetricValues - Pointer to the memory where the topology metric table values are allocated.
+ * @param topologyMetricStructSize - Size of the topology metric structure in bytes.
+ * @param setValueFunction - Pointer to the function responsible for updating values within the topology table.
+ * @param encodeTopicFunction - Pointer to the function responsible for encoding the topology data into a buffer.
+ * @param decodeTopicFunction - Pointer to the function responsible for decoding a buffer into a topology metric struct.
+ * @param selectParentFunction - Pointer to the function that selects the parent for a new node from a list of potential parents
+ *
+ * @return void
+ */
 void network::initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t)){
     ::initMiddlewareStrategyTopology(topologyMetricValues, topologyMetricStructSize,setValueFunction,encodeTopologyMetricFunction,decodeTopologyMetricFunction, selectParentFunction);
 }
-void network::setMetric(void *metric) {
+
+/**
+ * setParentMetric
+ *
+ * Sets the metric value for this node and sends it to the root when a new node joins the network.
+ * This allows the root to select the best parent node based on specific criteria.
+ *
+ * Note: This method is effective only when the active middleware strategy is STRATEGY_TOPOLOGY and has been initialized.
+ *
+ * @param metric - The metric value to assign to this node.
+ * @return void
+ */
+void network::setParentMetric(void *metric) {
     if (!::isMiddlewareStrategyActive( STRATEGY_TOPOLOGY)){
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
         return;
     }
 
     TopologyContext* context = (TopologyContext*) ::middlewareGetStrategyContext();
-    if(context != nullptr)context->setMetric(metric);
+    if(context != nullptr)context->setParentMetric(metric);
 }
 
 
-
+/**
+ * sendMessageToRoot
+ * Sends a data message to the root node of the network.
+ *
+ * @param messageBuffer - Application-provided buffer for message encoding
+ * @param bufferSize - Size of the message buffer.
+ * @param messagePayload - Application-specific payload to be included in the message.
+ * @return void
+ */
 void network::sendMessageToRoot(char* messageBuffer,size_t bufferSize,const char* messagePayload) {
     sendDataMessageToNode(messageBuffer,bufferSize,messagePayload,rootIP);
 }
 
+
+/**
+ * sendMessageToParent
+ * Sends a data message to this node's parent in the routing tree.
+ *
+ * @param messageBuffer - Application-provided buffer for message encoding
+ * @param bufferSize - Size of the message buffer.
+ * @param messagePayload - Application-specific payload.
+ * @return void
+ */
 void network::sendMessageToParent(char* messageBuffer,size_t bufferSize,const char *messagePayload) {
     sendDataMessageToParent(messageBuffer,bufferSize,messagePayload);
 }
 
+
+/**
+ * sendMessageToChildren
+ * Sends a data message to all child nodes connected to this node.
+ *
+ * @param messageBuffer - Application-provided buffer for the message for message encoding
+ * @param bufferSize - Size of the message buffer.
+ * @param messagePayload - Application-specific payload.
+ * @return void
+ */
 void network::sendMessageToChildren(char* messageBuffer,size_t bufferSize,const char *messagePayload) {
     sendDataMessageToChildren(messageBuffer,bufferSize,messagePayload);
 }
 
+
+/**
+ * sendMessageToNode
+ * Sends a data message to a specific node identified by its IP address.
+ *
+ * @param messageBuffer - Application-provided buffer for the message for message encoding
+ * @param bufferSize - Size of the message buffer.
+ * @param messagePayload - Application-specific payload.
+ * @param nodeIP - Target node's IP address.
+ * @return void
+ */
 void network::sendMessageToNode(char* messageBuffer,size_t bufferSize,const char *messagePayload,uint8_t *nodeIP) {
     sendDataMessageToNode(messageBuffer,bufferSize,messagePayload,nodeIP);
 }
 
 
+/**
+ * broadcastMessage
+ * Broadcasts a data message to all nodes in the network.
+ *
+ * @param messageBuffer - Application-provided buffer for the message for message encoding
+ * @param bufferSize - Size of the message buffer.
+ * @param messagePayload - Application-specific payload.
+ * @return void
+ */
 void network::broadcastMessage(char* messageBuffer,size_t bufferSize,const char *messagePayload) {
     uint8_t broadcastIP[4]={255,255,255,255};
     sendDataMessageToNode(messageBuffer,bufferSize,messagePayload,broadcastIP);
 }
 
+
+/**
+ * sendACKMessage
+ * Sends an ACK message to a specified node.
+ *
+ * @param messageBuffer - Application-provided buffer for the message for message encoding
+ * @param bufferSize - Size of the message buffer.
+ * @param messagePayload - Application-specific payload.
+ * @param destinationIP - Destination node's IP address.
+ * @return void
+ */
 void network::sendACKMessage(char* messageBuffer,size_t bufferSize,const char *ackPayload, uint8_t *destinationIP) {
     sendACKMessageToNode(messageBuffer,bufferSize,ackPayload,destinationIP);
 }
 
+
+/**
+ * onDataReceived
+ * Registers a callback to be invoked when a data message is received.
+ *
+ * @param callback - Function pointer to the callback with the signature (senderIP, receiverIP, payload).
+ * @return void
+ */
 void network::onDataReceived(void (*callback)(uint8_t *, uint8_t *, char *)) {
     onDataMessageCallback = callback;
 }
 
+
+/**
+ * onACKReceived
+ * Registers a callback to handle incoming acknowledgment messages.
+ *
+ * @param callback - Function pointer to handle ACKs, with the format (senderIP, receiverIP, ackPayload).
+ * @return void
+ */
 void network::onACKReceived(void (*callback)(uint8_t *, uint8_t *, char *)) {
     onACKMessageCallback = callback;
 }
 
+
+/**
+ * onPeriodicAppTask
+ * Registers a callback to be called periodically for application-specific tasks.
+ *
+ * @param callback - Function pointer to a no-argument callback function.
+ * @return void
+ */
 void network::onPeriodicAppTask(void (*callback)()) {
     onAppPeriodicTaskCallback = callback;
 }

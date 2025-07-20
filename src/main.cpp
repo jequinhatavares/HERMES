@@ -101,7 +101,7 @@ void setup(){
     initMiddlewareStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,chooseParentByProcessingCapacity);
     TopologyContext *context = (TopologyContext*) middlewareGetStrategyContext();
     myMetric.processingCapacity = MAC[5];
-    if(context != nullptr)context->setMetric(&myMetric);***/
+    if(context != nullptr)context->setParentMetric(&myMetric);***/
 
     //middlewareSelectStrategy(STRATEGY_NONE);
 

@@ -32,7 +32,7 @@ typedef enum TopologyMessageType{
 
 // Topology strategy context definition
 typedef struct TopologyContext{
-    void (*setMetric)(void* metric);
+    void (*setParentMetric)(void* metric);
 } TopologyContext;
 
 struct topologyTableEntry{
