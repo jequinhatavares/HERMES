@@ -5,10 +5,9 @@
 #include "lifecycle.h"
 #include "cli.h"
 #include "logger.h"
-#include "../lib/middleware/strategies/strategy_inject/strategy_inject.h"
-#include "../lib/middleware/strategies/strategy_pubsub/strategy_pubsub.h"
 #include "middleware.h"
-#include "../lib/circular_buffer/snake_queue.h"
+
+//#include "../lib/circular_buffer/snake_queue.h"
 
 class network {
 
