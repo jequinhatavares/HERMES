@@ -1012,7 +1012,6 @@ bool establishParentConnection(ParentInfo preferredParent){
         tablePrint(routingTable,printRoutingTableHeader,printRoutingStruct);
     }
 
-
     // Callback to notify the middleware layer of successfully joining the network with a permanent connection
     if(middlewareOnNetworkEventCallback != nullptr)middlewareOnNetworkEventCallback(0,parent);
 

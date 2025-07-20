@@ -87,10 +87,10 @@ void sendMessageToNode(char* messageBuffer,uint8_t *destinationIP);
 void sendMessageToChildren(char* messageBuffer);
 void sendMessageToParent(char* messageBuffer);
 
-void sendDataMessageToNode(const char* messagePayload,uint8_t *destinationIP);
-void sendDataMessageToChildren(const char* messagePayload);
-void sendDataMessageToParent(const char* messagePayload);
-void sendDataMessageToNode(const char* messagePayload,uint8_t *originatorIP,uint8_t *destinationIP);
-void sendACKMessageToNode(const char* ackPayload,uint8_t *destinationIP);
+void sendDataMessageToNode(char* messageBuffer,size_t bufferSize,const char* messagePayload,uint8_t *destinationIP);
+void sendDataMessageToChildren(char* messageBuffer,size_t bufferSize,const char* messagePayload);
+void sendDataMessageToParent(char* messageBuffer,size_t bufferSize,const char* messagePayload);
+void sendDataMessageToNode(char* messageBuffer,size_t bufferSize,const char* messagePayload,uint8_t *originatorIP,uint8_t *destinationIP);
+void sendACKMessageToNode(char* messageBuffer,size_t bufferSize,const char* ackPayload,uint8_t *destinationIP);
 
 #endif //MESSAGES_H

@@ -46,12 +46,12 @@ class network {
         void setMetric(void*metric);
 
         /*************  Message related methods  ************/
-        void sendMessageToRoot(const char* messagePayload);
-        void sendMessageToParent(const char* messagePayload);
-        void sendMessageToChildren(const char* messagePayload);
-        void sendMessageToNode(const char* messagePayload, uint8_t* nodeIP);
-        void broadcastMessage(const char* messagePayload);
-        void sendACKMessage(const char* ackPayload, uint8_t* destinationIP);
+        void sendMessageToRoot(char* messageBuffer,size_t bufferSize,const char* messagePayload);
+        void sendMessageToParent(char* messageBuffer,size_t bufferSize,const char* messagePayload);
+        void sendMessageToChildren(char* messageBuffer,size_t bufferSize,const char* messagePayload);
+        void sendMessageToNode(char* messageBuffer,size_t bufferSize,const char* messagePayload, uint8_t* nodeIP);
+        void broadcastMessage(char* messageBuffer,size_t bufferSize,const char* messagePayload);
+        void sendACKMessage(char* messageBuffer,size_t bufferSize,const char* ackPayload, uint8_t* destinationIP);
 
 
 };

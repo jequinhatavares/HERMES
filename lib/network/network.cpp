@@ -146,30 +146,30 @@ void network::setMetric(void *metric) {
 
 
 
-void network::sendMessageToRoot(const char *messagePayload) {
-    sendDataMessageToNode(messagePayload,rootIP);
+void network::sendMessageToRoot(char* messageBuffer,size_t bufferSize,const char* messagePayload) {
+    sendDataMessageToNode(messageBuffer,bufferSize,messagePayload,rootIP);
 }
 
-void network::sendMessageToParent(const char *messagePayload) {
-    sendDataMessageToParent(messagePayload);
+void network::sendMessageToParent(char* messageBuffer,size_t bufferSize,const char *messagePayload) {
+    sendDataMessageToParent(messageBuffer,bufferSize,messagePayload);
 }
 
-void network::sendMessageToChildren(const char *messagePayload) {
-    sendDataMessageToChildren(messagePayload);
+void network::sendMessageToChildren(char* messageBuffer,size_t bufferSize,const char *messagePayload) {
+    sendDataMessageToChildren(messageBuffer,bufferSize,messagePayload);
 }
 
-void network::sendMessageToNode(const char *messagePayload,uint8_t *nodeIP) {
-    sendDataMessageToNode(messagePayload,nodeIP);
+void network::sendMessageToNode(char* messageBuffer,size_t bufferSize,const char *messagePayload,uint8_t *nodeIP) {
+    sendDataMessageToNode(messageBuffer,bufferSize,messagePayload,nodeIP);
 }
 
 
-void network::broadcastMessage(const char *messagePayload) {
+void network::broadcastMessage(char* messageBuffer,size_t bufferSize,const char *messagePayload) {
     uint8_t broadcastIP[4]={255,255,255,255};
-    sendDataMessageToNode(messagePayload,broadcastIP);
+    sendDataMessageToNode(messageBuffer,bufferSize,messagePayload,broadcastIP);
 }
 
-void network::sendACKMessage(const char *ackPayload, uint8_t *destinationIP) {
-    sendACKMessageToNode(ackPayload,destinationIP);
+void network::sendACKMessage(char* messageBuffer,size_t bufferSize,const char *ackPayload, uint8_t *destinationIP) {
+    sendACKMessageToNode(messageBuffer,bufferSize,ackPayload,destinationIP);
 }
 
 void network::onDataReceived(void (*callback)(uint8_t *, uint8_t *, char *)) {

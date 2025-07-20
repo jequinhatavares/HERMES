@@ -901,52 +901,51 @@ void sendMessageToParent(char* messageBuffer){
 
 
 
-void sendDataMessageToChildren(const char* messagePayload){
+void sendDataMessageToChildren(char* messageBuffer,size_t bufferSize,const char* messagePayload){
     uint8_t *childSTAIP,*childAPIP;
     for (int i = 0; i < childrenTable->numberOfItems; i++) {
         // When broadcasting a message to all children, we can directly use as the nextHopIp the child's STA IP from the childrenTable.
         childAPIP = (uint8_t *)tableKey(childrenTable,i);
         childSTAIP = (uint8_t *)tableValueAtIndex(childrenTable,i);
         if(childSTAIP != nullptr){
-            encodeDataMessage(largeSendBuffer, sizeof(largeSendBuffer),messagePayload,myIP,childAPIP);
-            LOG(MESSAGES, INFO, "Sending Data Message:\"%s\" to %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,childAPIP[0],childAPIP[1],childAPIP[2],childAPIP[3]);
-            sendMessage(childSTAIP,largeSendBuffer);
+            encodeDataMessage(messageBuffer,bufferSize ,messagePayload,myIP,childAPIP);
+            LOG(MESSAGES, INFO, "Sending Data Message:\"%s\" to %hhu.%hhu.%hhu.%hhu\n",messageBuffer,childAPIP[0],childAPIP[1],childAPIP[2],childAPIP[3]);
+            sendMessage(childSTAIP,messageBuffer);
         }
     }
 
 }
 
-void sendDataMessageToParent(const char* messagePayload){
+void sendDataMessageToParent(char* messageBuffer,size_t bufferSize,const char* messagePayload){
     if(hasParent){
-        encodeDataMessage(largeSendBuffer, sizeof(largeSendBuffer),messagePayload,myIP,parent);
-        sendMessage(parent,largeSendBuffer);
+        encodeDataMessage(messageBuffer, bufferSize,messagePayload,myIP,parent);
+        sendMessage(parent,messageBuffer);
     }
 }
 
 
-void sendDataMessageToNode(const char* messagePayload,uint8_t *destinationIP){
+void sendDataMessageToNode(char* messageBuffer,size_t bufferSize,const char* messagePayload,uint8_t *destinationIP){
     uint8_t broadcastIP[4]={255,255,255,255};
 
-    encodeDataMessage(largeSendBuffer, sizeof(largeSendBuffer),messagePayload,myIP,destinationIP);
+    encodeDataMessage(messageBuffer, bufferSize,messagePayload,myIP,destinationIP);
 
     // If it's a broadcast data message, forward it to all neighbors
     if (isIPEqual(destinationIP,broadcastIP)){ //If the data message is meant to be broadcast
-        propagateMessage(largeSendBuffer,myIP);
+        propagateMessage(messageBuffer,myIP);
     }else{
         uint8_t *nextHopIP = findRouteToNode(destinationIP);
         if(nextHopIP != nullptr){
-            sendMessage(destinationIP,largeSendBuffer);
+            sendMessage(destinationIP,messageBuffer);
         }
     }
 
 }
 
-void sendACKMessageToNode(const char* ackPayload,uint8_t *destinationIP){
-
-    encodeACKMessage(largeSendBuffer, sizeof(largeSendBuffer),ackPayload,myIP,destinationIP);
+void sendACKMessageToNode(char* messageBuffer,size_t bufferSize,const char* ackPayload,uint8_t *destinationIP){
+    encodeACKMessage(messageBuffer, bufferSize,ackPayload,myIP,destinationIP);
     uint8_t *nextHopIP = findRouteToNode(destinationIP);
     if(nextHopIP != nullptr){
-        sendMessage(destinationIP,largeSendBuffer);
+        sendMessage(destinationIP,messageBuffer);
     }
 }
 
