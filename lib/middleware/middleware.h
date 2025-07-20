@@ -16,7 +16,6 @@ typedef enum StrategyType{
     STRATEGY_NONE,
 }StrategyType;
 
-extern StrategyType activeStrategyType;
 
 void initMiddlewareCallbacks();
 
@@ -31,6 +30,7 @@ void middlewareEncodeMessage(char* messageBuffer, size_t bufferSize, int type);
 void middlewareOnTimer();
 void middlewareOnNetworkEvent(int networkEvent, uint8_t involvedIP[4]);
 void* middlewareGetStrategyContext();
+bool isMiddlewareStrategyActive(StrategyType strategyType);
 
 
 #endif //MIDDLEWARE_H

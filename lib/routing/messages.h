@@ -15,7 +15,7 @@
 //#include "transport_hal.h"
 //#include "lifecycle.h"
 #include "logger.h"
-#include "../net_viz/net_viz.h"
+#include "network_monitoring.h"
 #include <cstdio>
 #include <cstring>
 

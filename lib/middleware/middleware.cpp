@@ -264,3 +264,15 @@ void* middlewareGetStrategyContext(){
 
     return activeStrategy->getContext();
 }
+
+
+/**
+ * isMiddlewareStrategyActive
+ * Checks whether the provided strategy type matches the currently active strategy.
+ *
+ * @param strategyType The strategy type to compare.
+ * @return true if the given strategy type is currently active, false otherwise.
+ */
+bool isMiddlewareStrategyActive(StrategyType strategyType){
+    return strategyType == activeStrategyType;
+}

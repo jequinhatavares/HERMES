@@ -1,5 +1,5 @@
-#ifndef NET_VIZ_H
-#define NET_VIZ_H
+#ifndef NETWORK_MONITORING_H
+#define NETWORK_MONITORING_H
 
 #include <cstdio>
 #include <messages.h>
@@ -23,4 +23,4 @@ void reportNewNodeToMonitoringServer (uint8_t * nodeIP, uint8_t * parentIP);
 void reportDeletedNodeToMonitoringServer (uint8_t* nodeIP);
 
 
-#endif //NET_VIZ_H
+#endif //NETWORK_MONITORING_H

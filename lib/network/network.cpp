@@ -55,7 +55,7 @@ void network::initMiddlewareStrategyInject(void *metricStruct, size_t metricStru
 }
 
 void network::injectMetric(void *metric) {
-    if (activeStrategyType != STRATEGY_INJECT) return;
+    if (!::isMiddlewareStrategyActive(STRATEGY_INJECT)) return;
 
     InjectContext* context = (InjectContext*) ::middlewareGetStrategyContext();
     if(context != nullptr)context->injectNodeMetric(metric);
@@ -67,28 +67,28 @@ void network::initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *
 }
 
 void network::subscribeToTopic(int8_t topic) {
-    if (activeStrategyType != STRATEGY_PUBSUB) return;
+    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)) return;
 
     PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
     if(context != nullptr)context->subscribeToTopic(topic);
 }
 
 void network::unsubscribeToTopic(int8_t topic){
-    if (activeStrategyType != STRATEGY_PUBSUB) return;
+    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)) return;
 
     PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
     if(context != nullptr)context->unsubscribeToTopic(topic);
 }
 
 void network::advertiseTopic(int8_t topic){
-    if (activeStrategyType != STRATEGY_PUBSUB) return;
+    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)) return;
 
     PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
     if(context != nullptr)context->advertiseTopic(topic);
 }
 
 void network::unadvertiseTopic(int8_t topic){
-    if (activeStrategyType != STRATEGY_PUBSUB) return;
+    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)) return;
 
     PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
     if(context != nullptr)context->unadvertiseTopic(topic);
@@ -98,7 +98,7 @@ void network::initMiddlewareStrategyTopology(void *topologyMetricValues, size_t 
     ::initMiddlewareStrategyTopology(topologyMetricValues, topologyMetricStructSize,setValueFunction,encodeTopologyMetricFunction,decodeTopologyMetricFunction, selectParentFunction);
 }
 void network::setMetric(void *metric) {
-    if (activeStrategyType != STRATEGY_TOPOLOGY) return;
+    if (!::isMiddlewareStrategyActive( STRATEGY_TOPOLOGY)) return;
 
     TopologyContext* context = (TopologyContext*) ::middlewareGetStrategyContext();
     if(context != nullptr)context->setMetric(metric);

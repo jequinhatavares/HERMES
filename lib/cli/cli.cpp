@@ -120,13 +120,13 @@ void cliInteraction(){
                     break;
 
                 case 4:
-                    if(activeStrategyType == STRATEGY_NONE){
+                    if(isMiddlewareStrategyActive(STRATEGY_NONE)){
 
-                    }else if(activeStrategyType == STRATEGY_INJECT){
+                    }else if(isMiddlewareStrategyActive(STRATEGY_INJECT)){
                         tablePrint(metricsTable,printMetricsTableHeader,printMetricStruct);
-                    }else if(activeStrategyType == STRATEGY_PUBSUB){
+                    }else if(isMiddlewareStrategyActive(STRATEGY_PUBSUB)){
                         tablePrint(pubsubTable,printPubSubTableHeader,printPubSubStruct);
-                    }else if(activeStrategyType == STRATEGY_TOPOLOGY && iamRoot){
+                    }else if(isMiddlewareStrategyActive(STRATEGY_TOPOLOGY) && iamRoot){
                         tablePrint(pubsubTable,printTopologyTableHeader,printTopologyMetricStruct);
                     }
                     break;
