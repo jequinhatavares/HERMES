@@ -53,8 +53,6 @@ void (*decodeTopicValue)(char*,int8_t *) = nullptr;
 
 PubSubInfo valuesPubSub[TABLE_MAX_SIZE];
 
-// Global variable used to pass topic values to the function responsible for encoding PubSub messages
-int8_t topic;
 
 /**
  * initStrategyPubSub
@@ -133,9 +131,10 @@ void rewriteSenderIPPubSub(char* messageBuffer, char* writeBuffer, size_t writeB
  * @param messageBuffer - buffer where the messages is going to be stored
  * @param bufferSize - Size of the buffer
  * @param typePubSub - Type of PubSub message to encode
+ * @param topic - Topic value used for message types involving topic subscription or advertisement changes
  * @return void
  */
-void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typePubSub) {
+void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typePubSub, int8_t topic) {
     PubSubInfo *nodePubSubInfo;
     int offset = 0,i,j;
     uint8_t *nodeIP;
@@ -172,20 +171,7 @@ void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typ
             // Message used to advertise all publish-subscribe information of the node
             //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List] //maxsize:48+1
             nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
-            /***if(nodePubSubInfo != nullptr){
-                snprintf(messageBuffer,bufferSize,"%i %i %i.%i.%i.%i %i.%i.%i.%i | ",MIDDLEWARE_MESSAGE,PUBSUB_NODE_UPDATE,
-                         myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3]);
 
-                for (int i = 0; i < MAX_TOPICS; i++) {
-                    snprintf(tmpMessage1, sizeof(tmpMessage1),"%i ",nodePubSubInfo->publishedTopics[i]);
-                    snprintf(tmpMessage2, sizeof(tmpMessage1),"%i ",nodePubSubInfo->subscribedTopics[i]);
-
-                    strcat(tmpMessage3,tmpMessage1);
-                    strcat(tmpMessage4,tmpMessage2);
-                }
-                strcat(messageBuffer,tmpMessage3);
-                strcat(messageBuffer,tmpMessage4);
-            }***/
             if (nodePubSubInfo != nullptr) {
                 offset = snprintf(messageBuffer, bufferSize, "%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu | ",
                                       MIDDLEWARE_MESSAGE, PUBSUB_NODE_UPDATE,
@@ -549,13 +535,13 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
 void onNetworkEventStrategyPubSub(int networkEvent, uint8_t involvedIP[4]){
     switch (networkEvent) {
         case NETEVENT_JOINED_NETWORK:
-            encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_NODE_UPDATE);
+            encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_NODE_UPDATE,-1);
             sendMessage(involvedIP,smallSendBuffer);
             LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/PUBSUB_NODE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
 
             break;
         case NETEVENT_CHILD_CONNECTED:
-            encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_TABLE_UPDATE);
+            encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_TABLE_UPDATE,-1);
             sendMessage(involvedIP,largeSendBuffer);
             LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/PUBSUB_TABLE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
             break;
@@ -695,8 +681,7 @@ void subscribeToTopic(int8_t subTopic) {
     }
 
     // Announce that i am subscribing to that topic
-    topic = subTopic;
-    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE);
+    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE,subTopic);
     propagateMessage(smallSendBuffer,myIP);
 
 }
@@ -736,9 +721,8 @@ void unsubscribeToTopic(int8_t subTopic){
         tableAdd(pubsubTable,myIP,&myInitInfo);
     }
 
-    // Announce that i am subscribing to that topic
-    topic = subTopic;
-    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE);
+    // Announce that i am unsubscribing to that topic
+    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_UNSUBSCRIBE,subTopic);
     propagateMessage(smallSendBuffer,myIP);
 }
 
@@ -777,8 +761,7 @@ void advertiseTopic(int8_t pubTopic){
     }
 
     // Advertise to other nodes that I am publishing this topic
-    topic = pubTopic;
-    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_ADVERTISE);
+    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_ADVERTISE,pubTopic);
     propagateMessage(smallSendBuffer,myIP);
 }
 
@@ -817,8 +800,7 @@ void unadvertiseTopic(int8_t pubTopic){
     }
 
     // Advertise to other nodes that I am publishing this topic
-    topic = pubTopic;
-    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_UNADVERTISE);
+    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_UNADVERTISE,pubTopic);
     propagateMessage(smallSendBuffer,myIP);
 }
 
