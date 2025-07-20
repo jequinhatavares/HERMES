@@ -2,7 +2,6 @@
 
 Strategy strategyPubSub = {
         .handleMessage = handleMessageStrategyPubSub,
-        .encodeMessage = encodeMessageStrategyPubSub,
         .influenceRouting = influenceRoutingStrategyPubSub,
         .onTimer = onTimerStrategyPubSub,
         .onNetworkEvent = onNetworkEventStrategyPubSub,

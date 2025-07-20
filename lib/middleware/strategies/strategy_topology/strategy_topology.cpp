@@ -5,7 +5,6 @@
 
 Strategy strategyTopology = {
         .handleMessage = handleMessageStrategyTopology,
-        .encodeMessage = encodeMessageStrategyTopology,
         .influenceRouting = influenceRoutingStrategyTopology,
         .onTimer = onTimerStrategyTopology,
         .onNetworkEvent = onNetworkEventStrategyTopology,

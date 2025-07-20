@@ -2,7 +2,6 @@
 
 Strategy strategyInject = {
     .handleMessage = handleMessageStrategyInject,
-    .encodeMessage = encodeMessageStrategyInject,
     .influenceRouting = influenceRoutingStrategyInject,
     .onTimer = onTimerStrategyInject,
     .onNetworkEvent = onNetworkEventStrategyInject,

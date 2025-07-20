@@ -174,30 +174,6 @@ void middlewareHandleMessage(char* messageBuffer, size_t bufferSize){
     activeStrategy->handleMessage(messageBuffer,bufferSize);
 }
 
-/**
- * middlewareEncodeMessage
- * Encodes a message according to the active middleware strategy, modifying the provided buffer.
- *
- * @param messageBuffer - Pointer to the buffer where the encoded message will be stored.
- * @param bufferSize - Size of the message buffer in bytes.
- * @param type - An integer representing the middleware type of the message to encode.
- *
- * @return void
- */
-void middlewareEncodeMessage(char* messageBuffer, size_t bufferSize, int type){
-    if(activeStrategyType == STRATEGY_NONE) return;
-    if(activeStrategy == nullptr){
-        LOG(MIDDLEWARE,ERROR,"ERROR: Cannot encode middleware messages without a strategy selected.\n");
-        return;
-    }
-    if(!isStrategyInitialized){
-        LOG(MIDDLEWARE,ERROR,"ERROR: Cannot encode middleware messages without a strategy initialized.\n");
-        return;
-    }
-    if(activeStrategyType == STRATEGY_NONE) return;
-
-    activeStrategy->encodeMessage(messageBuffer,bufferSize,type);
-}
 
 /**
  * middlewareOnTimer
