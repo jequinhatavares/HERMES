@@ -142,8 +142,7 @@ void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typ
 
     // These messages encode the node's own publish/subscribe information
     switch (typePubSub) {
-        case PUBSUB_PUBLISH:
-            break;
+
         case PUBSUB_SUBSCRIBE:
             //Message sent when a one subscribes to a certain topic
             //13 1 [sender IP] [Subscriber IP] [Topic]
@@ -273,10 +272,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
     //printf("InfoPubSub: %s\n",infoPubSub);
 
     switch (type) {
-        case PUBSUB_PUBLISH:
-            //13  0 [destination IP] [Publisher IP] [Published Topic]
-            sscanf(infoPubSub,"%hhu.%hhu.%hhu.%hhu %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
-            break;
+
         case PUBSUB_SUBSCRIBE:
             //Message sent when a one node subscribes to a certain topic
             //13 1 [sender IP] [Subscriber IP] [Topic]

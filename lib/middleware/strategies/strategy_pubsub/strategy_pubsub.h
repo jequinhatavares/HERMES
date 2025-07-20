@@ -30,7 +30,6 @@ typedef struct PubSubInfo{
 }PubSubInfo;
 
 typedef enum PubSubMessageType{
-    PUBSUB_PUBLISH,
     PUBSUB_SUBSCRIBE,
     PUBSUB_UNSUBSCRIBE,
     PUBSUB_ADVERTISE,
