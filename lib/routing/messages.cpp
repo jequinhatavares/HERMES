@@ -1,5 +1,8 @@
 #include "messages.h"
 
+void (*onDataMessageCallback)(uint8_t*,uint8_t *,char*) = nullptr;
+void (*onACKMessageCallback)(uint8_t*,uint8_t *,char*) = nullptr;
+
 char receiveBuffer[256] = "";
 char largeSendBuffer[255] = "";
 char smallSendBuffer[50] = "";
@@ -683,7 +686,8 @@ void handleDataMessage(char *msg){
 
 
     if(isBroadcast){ //if the message is a broadcast message
-        //Process the message
+        //Process the message with the user provided callback
+        if(onDataMessageCallback) onDataMessageCallback(originatorIP,destinationIP,payload);
 
         //Propagate the message to the rest of the message
         encodeDataMessage(largeSendBuffer, sizeof(largeSendBuffer),payload,originatorIP,broadcastIP);
@@ -699,9 +703,10 @@ void handleDataMessage(char *msg){
                                 "Unable to forward message.\n", destinationIP[0], destinationIP[1],destinationIP[2], destinationIP[3]);
         }
         sendMessage(nextHopIP,receiveBuffer);
-    }else{// If the message is for this node, process it and send an ACK back to the source
+    }else{// If the message is addressed to this node, handle it using the user-defined callback
 
-        //TODO process the message
+        if(onDataMessageCallback) onDataMessageCallback(originatorIP,destinationIP,payload);
+
         isTunneled = isMessageTunneled(msg);
         if(isTunneled)LOG(MESSAGES,INFO,"Tunneled Message arrived\n");
 
@@ -731,26 +736,30 @@ void handleDataMessage(char *msg){
  * @return void
  */
 void handleAckMessage(char *msg){
-    int type;
+    int type,nChars=0;
     uint8_t nextHopIP[4], sourceIP[4], destinationIP[4];
     uint8_t *nextHopPtr = nullptr;
+    char payload[MAX_PAYLOAD_SIZE];
 
-    sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",&type, &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
-           &destinationIP[0],&destinationIP[1],&destinationIP[2],&destinationIP[3]);
-    //Serial.printf("Message %s received from %d.%d.%d.%d to %d.%d.%d.%d", payload, senderIP[0],senderIP[1],senderIP[2],senderIP[3],
-    //destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3]);
-    nextHopPtr = findRouteToNode(destinationIP);
-    if (nextHopPtr != nullptr){
-        assignIP(nextHopIP, nextHopPtr);
-    }else{
-        LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %hhu.%hhu.%hhu.%hhu. "
-                            "Unable to forward message.\n", destinationIP[0], destinationIP[1],destinationIP[2], destinationIP[3]);
-    }
+    sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&type, &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
+           &destinationIP[0],&destinationIP[1],&destinationIP[2],&destinationIP[3],&nChars);
 
-    if(!isIPEqual(nextHopIP, myIP)){
-        sendMessage(nextHopIP,receiveBuffer);
+
+    //If the node is not the final destination of the ACK forward the message to the next hop
+    if(!isIPEqual(destinationIP, myIP)){
+        nextHopPtr = findRouteToNode(destinationIP);
+        if (nextHopPtr != nullptr){
+            assignIP(nextHopIP, nextHopPtr);
+            sendMessage(nextHopIP,receiveBuffer);
+        }else{
+            LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %hhu.%hhu.%hhu.%hhu. "
+                                "Unable to forward message.\n", destinationIP[0], destinationIP[1],destinationIP[2], destinationIP[3]);
+        }
     }else{
-        //TODO process the ACK
+        // Extract the ACK payload from the message and pass it to the user-defined callback
+        strncpy(payload, msg + nChars, sizeof(payload) - 1);
+
+        if(onACKMessageCallback) onACKMessageCallback(sourceIP,destinationIP,payload);
     }
 
 }

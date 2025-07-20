@@ -55,7 +55,10 @@ void network::initMiddlewareStrategyInject(void *metricStruct, size_t metricStru
 }
 
 void network::injectMetric(void *metric) {
-    if (!::isMiddlewareStrategyActive(STRATEGY_INJECT)) return;
+    if (!::isMiddlewareStrategyActive(STRATEGY_INJECT)){
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        return;
+    }
 
     InjectContext* context = (InjectContext*) ::middlewareGetStrategyContext();
     if(context != nullptr)context->injectNodeMetric(metric);
@@ -67,28 +70,40 @@ void network::initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *
 }
 
 void network::subscribeToTopic(int8_t topic) {
-    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)) return;
+    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        return;
+    }
 
     PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
     if(context != nullptr)context->subscribeToTopic(topic);
 }
 
 void network::unsubscribeToTopic(int8_t topic){
-    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)) return;
+    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)) return;{
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        return;
+    }
 
     PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
     if(context != nullptr)context->unsubscribeToTopic(topic);
 }
 
 void network::advertiseTopic(int8_t topic){
-    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)) return;
+    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        return;
+    }
 
     PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
     if(context != nullptr)context->advertiseTopic(topic);
 }
 
 void network::unadvertiseTopic(int8_t topic){
-    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)) return;
+    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        return;
+    }
 
     PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
     if(context != nullptr)context->unadvertiseTopic(topic);
@@ -98,7 +113,10 @@ void network::initMiddlewareStrategyTopology(void *topologyMetricValues, size_t 
     ::initMiddlewareStrategyTopology(topologyMetricValues, topologyMetricStructSize,setValueFunction,encodeTopologyMetricFunction,decodeTopologyMetricFunction, selectParentFunction);
 }
 void network::setMetric(void *metric) {
-    if (!::isMiddlewareStrategyActive( STRATEGY_TOPOLOGY)) return;
+    if (!::isMiddlewareStrategyActive( STRATEGY_TOPOLOGY)){
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        return;
+    }
 
     TopologyContext* context = (TopologyContext*) ::middlewareGetStrategyContext();
     if(context != nullptr)context->setMetric(metric);
@@ -130,6 +148,18 @@ void network::broadcastMessage(const char *messagePayload) {
 
 void network::sendACKMessage(const char *ackPayload, uint8_t *destinationIP) {
     sendACKMessageToNode(ackPayload,destinationIP);
+}
+
+void network::onDataReceived(void (*callback)(uint8_t *, uint8_t *, char *)) {
+    onDataMessageCallback = callback;
+}
+
+void network::onACKReceived(void (*callback)(uint8_t *, uint8_t *, char *)) {
+    onACKMessageCallback = callback;
+}
+
+void network::onPeriodicAPPTask(void (*callback)()) {
+    onAppPeriodicTaskCallback = callback;
 }
 
 

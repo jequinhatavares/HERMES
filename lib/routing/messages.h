@@ -7,13 +7,13 @@
 //#include "strategy.h"
 //#include <wifi_hal.h>
 #include <transport_hal.h>
-#include <time_hal.h>
 //#include <../time_hal/time_hal.h>
 //#include <time_hal.h>
 //#include "../wifi_hal/wifi_hal.h"
 //#include <../transport_hal/transport_hal.h>
 //#include "transport_hal.h"
 //#include "lifecycle.h"
+#include "../time_hal/time_hal.h"
 #include "logger.h"
 #include "../network_monitoring/network_monitoring.h"
 #include <cstdio>
@@ -22,6 +22,13 @@
 #ifndef MAX_PAYLOAD_SIZE
 #define MAX_PAYLOAD_SIZE 200
 #endif
+
+extern void (*onDataMessageCallback)(uint8_t*,uint8_t *,char*);
+extern void (*onACKMessageCallback)(uint8_t*,uint8_t *,char*);
+
+extern char receiveBuffer[256];
+extern char largeSendBuffer[255];
+extern char smallSendBuffer[50];
 
 typedef enum MessageType{
     PARENT_DISCOVERY_REQUEST, //0
@@ -38,9 +45,6 @@ typedef enum MessageType{
     MIDDLEWARE_MESSAGE,//11
 }MessageType;
 
-extern char receiveBuffer[256];
-extern char largeSendBuffer[255];
-extern char smallSendBuffer[50];
 
 
 //void encodeMessage(char * msg, size_t bufferSize, MessageType type, messageParameters parameters);

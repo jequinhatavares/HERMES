@@ -24,6 +24,7 @@ void (*middlewareOnNetworkEventCallback)(int,uint8_t *) = nullptr;
 // Defaults to routing layer level chooseParent function if not overridden.
 ParentInfo (*middlewareChooseParentCallback)(ParentInfo *,int) = chooseParent;
 
+void (*onAppPeriodicTaskCallback)() = nullptr;
 
 // State machine structure holding the current state and a transition table mapping states to handler functions.
 StateMachine SM_ = {
@@ -686,16 +687,9 @@ State recoveryAwait(Event event){
  */
 State executeTask(Event event){
     LOG(STATE_MACHINE,INFO,"Execute Task State\n");
-    // In this state, an application-specific task will be executed.
-    // The user defines a callback function in the application layer, which is invoked here to perform the desired operation.
-    int data = 5;
-    char payload[50];
 
-    snprintf(payload, sizeof(payload),"TEMPERATURE %i",data);
-
-
-    encodeDataMessage(largeSendBuffer,sizeof(largeSendBuffer),payload,myIP,rootIP);
-    if(middlewareInfluenceRoutingCallback != nullptr)middlewareInfluenceRoutingCallback(largeSendBuffer);
+    // Call the user-provided function to perform the application-specific periodic task
+    if(onAppPeriodicTaskCallback) onAppPeriodicTaskCallback();
 
     return sActive;
 }
@@ -739,7 +733,7 @@ void handleTimers(){
     if(middlewareOnTimerCallback != nullptr && connectedToMainTree)middlewareOnTimerCallback();
 
     // Handle APP related periodic events
-    if((currentTime-lastApplicationProcessingTime) >=APPLICATION_PROCESSING_INTERVAL && connectedToMainTree){
+    if( APPLICATION_RUNS_PERIODIC_TASKS && connectedToMainTree && (currentTime-lastApplicationProcessingTime) >=APPLICATION_PROCESSING_INTERVAL ){
         requestTaskExecution();
         lastApplicationProcessingTime = currentTime;
     }

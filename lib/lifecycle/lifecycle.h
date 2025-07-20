@@ -24,6 +24,10 @@
 #define APPLICATION_PROCESSING_INTERVAL 12000000
 #endif
 
+#ifndef APPLICATION_RUNS_PERIODIC_TASKS
+#define APPLICATION_RUNS_PERIODIC_TASKS false
+#endif
+
 #ifndef CHILD_RECONNECT_TIMEOUT
 #define CHILD_RECONNECT_TIMEOUT 3000
 #endif
@@ -57,6 +61,8 @@ extern void (*middlewareHandleMessageCallback)(char*,size_t);
 extern void (*middlewareInfluenceRoutingCallback)(char*);
 extern void (*middlewareOnNetworkEventCallback)(int,uint8_t *);
 extern ParentInfo (*middlewareChooseParentCallback)(ParentInfo *,int);
+
+extern void (*onAppPeriodicTaskCallback)();
 
 
 State init(Event event);
