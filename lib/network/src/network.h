@@ -1,8 +1,8 @@
 #pragma once
 
 
-#include "core/wifi_hal/wifi_hal.h"
-#include "core/transport_hal/transport_hal.h"
+#include "core/wifi_hal/wifi_hal.h" //nao faz sentido incluir por agora
+#include "core/transport_hal/transport_hal.h" //nao faz sentido incluir
 #include "core/lifecycle/lifecycle.h"
 #include "core/cli/cli.h"
 #include "core/logger/logger.h"

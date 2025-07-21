@@ -1,10 +1,11 @@
 #ifndef WIFIROUTING_WIFI_INTERFACE_H
 #define WIFIROUTING_WIFI_INTERFACE_H
 
-#include <time_hal.h>
-#include <logger.h>
-#include <table.h>
+#include "../time_hal/time_hal.h"
+#include "../logger/logger.h"
+#include "../table/table.h"
 #include "wifi_common.h"
+
 #include <cstdint>
 
 #ifndef PARENT_DISCONNECTION_THRESHOLD

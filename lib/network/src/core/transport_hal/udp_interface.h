@@ -1,10 +1,11 @@
 #ifndef UDP_INTERFACE_H
 #define UDP_INTERFACE_H
 
+#include <cstdint>
+
 #ifndef UDP_PORT
 #define UDP_PORT 12345
 #endif
-#include <cstdint>
 
 
 void sendMessage(uint8_t address[4], const char * msg);

@@ -7,7 +7,8 @@
 #define CIRCULAR_BUFFER_SIZE 10
 #endif
 
-#include "logger.h"
+#include "../logger/logger.h"
+
 
 struct SnakeQueue_ {
   int head; // Index of the first (oldest) element in the buffer

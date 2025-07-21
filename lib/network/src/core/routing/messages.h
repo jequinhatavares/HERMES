@@ -1,21 +1,14 @@
 #ifndef MESSAGES_H
 #define MESSAGES_H
 
-//#include "table.h"
 #include "../table/table.h"
-#include "routing.h"
-//#include "strategy.h"
-//#include <wifi_hal.h>
-#include <transport_hal.h>
-//#include <../time_hal/time_hal.h>
-//#include <time_hal.h>
-//#include "../wifi_hal/wifi_hal.h"
-//#include <../transport_hal/transport_hal.h>
-//#include "transport_hal.h"
-//#include "lifecycle.h"
-#include "../time_hal/time_hal.h"
-#include "logger.h"
+#include "../logger/logger.h"
 #include "../network_monitoring/network_monitoring.h"
+#include "../routing/routing.h"
+
+#include "../transport_hal/transport_hal.h"
+#include "../time_hal/time_hal.h"
+
 #include <cstdio>
 #include <cstring>
 

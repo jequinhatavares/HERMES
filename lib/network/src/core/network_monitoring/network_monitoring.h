@@ -2,9 +2,9 @@
 #define NETWORK_MONITORING_H
 
 #include <cstdio>
-#include <messages.h>
-#include <transport_hal.h>
-#include <logger.h>
+#include "../routing/messages.h"
+#include "../transport_hal/transport_hal.h"
+#include "../logger/logger.h"
 
 
 typedef enum MonitoringMessageType{

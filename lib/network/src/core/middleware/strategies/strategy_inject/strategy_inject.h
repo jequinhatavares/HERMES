@@ -1,14 +1,13 @@
 #ifndef STRATEGY_INJECT_H
 #define STRATEGY_INJECT_H
 
-#include <../table/table.h>
-#include "routing.h"
-#include "messages.h"
-#include "logger.h"
+#include "../../../table/table.h"
+#include "../../../routing/routing.h"
+#include "../../../routing/messages.h"
+#include "../../../logger/logger.h"
 #include "../../../time_hal/time_hal.h"
 #include "../../../transport_hal/transport_hal.h"
 #include "../strategy_interface.h"
-//#include "../../routing/messages.h"
 
 
 

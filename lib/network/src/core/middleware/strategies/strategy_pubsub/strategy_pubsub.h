@@ -1,15 +1,17 @@
 #ifndef STRATEGY_PUBSUB_H
 #define STRATEGY_PUBSUB_H
 
-#include <cstdlib>
-#include <cstring>
-#include <cstdint>
-#include "routing.h"
-#include "messages.h"
-#include "logger.h"
+
+#include "../../../routing/routing.h"
+#include "../../../routing/messages.h"
+#include "../../../logger/logger.h"
 #include "../../../time_hal/time_hal.h"
 #include "../../../transport_hal/transport_hal.h"
 #include "../strategy_interface.h"
+
+#include <cstdlib>
+#include <cstring>
+#include <cstdint>
 
 extern Strategy strategyPubSub;
 

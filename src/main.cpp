@@ -4,24 +4,28 @@
  *   This ensures user-defined values take priority at compile time. ***/
 //#include "network_config.h"
 
-#include <wifi_hal.h>
+/***#include <wifi_hal.h>
 #include <transport_hal.h>
 #include "lifecycle.h"
 #include "cli.h"
-#include "logger.h"
 #include "../lib/middleware/strategies/strategy_inject/strategy_inject.h"
 #include "../lib/middleware/strategies/strategy_pubsub/strategy_pubsub.h"
 #include "middleware.h"
-#include "../lib/circular_buffer/snake_queue.h"
-#include "network.h"
+#include "../lib/circular_buffer/snake_queue.h" ***/
+//#include "../lib/network/src/network.h"
+#include <network.h>
+#include <Arduino.h>
 
 
+
+
+//#include <network.h>
 //227:96:230:135 root
 //227:96:237:119
 
-topologyTableEntry topologyMetrics[TABLE_MAX_SIZE];
+//topologyTableEntry topologyMetrics[TABLE_MAX_SIZE];
 
-MetricTableEntry metrics[TABLE_MAX_SIZE];
+//MetricTableEntry metrics[TABLE_MAX_SIZE];
 
 void waitForEnter() {
     // Wait for Enter

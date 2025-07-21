@@ -1,18 +1,19 @@
 #ifndef STRATEGY_TOPOLOGY_H
 #define STRATEGY_TOPOLOGY_H
 
-#include <cstdlib>
-#include <cstring>
-#include <cstdint>
-#include "routing.h"
-#include "messages.h"
-#include "logger.h"
+
+#include "../../../routing/routing.h"
+#include "../../../routing/messages.h"
+#include "../../../logger/logger.h"
 #include "../../../time_hal/time_hal.h"
 #include "../../../transport_hal/transport_hal.h"
 #include "../../../wifi_hal/wifi_hal.h"
 #include "../strategy_interface.h"
-#include <lifecycle.h> //This dependency can be removed when the config file is created
+#include "../../../lifecycle/lifecycle.h" //This dependency can be removed when the config file is created
 
+#include <cstdlib>
+#include <cstring>
+#include <cstdint>
 
 extern Strategy strategyTopology;
 

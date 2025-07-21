@@ -1,6 +1,6 @@
 #ifndef WIFI_COMMON_H
 #define WIFI_COMMON_H
-#include "table.h"
+#include "../table/table.h"
 
 typedef struct childConnectionStatus{
     unsigned long childDisconnectionTime;

@@ -1,15 +1,15 @@
 #ifndef LIFECYCLE_H
 #define LIFECYCLE_H
 
-#include <transport_hal.h>
-#include <wifi_hal.h>
-#include <time_hal.h>
-#include <messages.h>
-#include <routing.h>
-#include <state_machine.h>
-#include <../network_monitoring/network_monitoring.h>
-#include <snake_queue.h>
-#include <logger.h>
+#include "../wifi_hal/wifi_hal.h"
+#include "../transport_hal/transport_hal.h"
+#include "../time_hal/time_hal.h"
+#include "../routing/messages.h"
+#include "../routing/routing.h"
+#include "../state_machine/state_machine.h"
+#include "../network_monitoring/network_monitoring.h"
+#include "../circular_buffer/snake_queue.h"
+#include "../logger/logger.h"
 #include <cstring>
 
 #ifndef WIFI_SSID
