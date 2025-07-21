@@ -804,7 +804,7 @@ void propagateMessage(char* message, uint8_t * sourceIP){
             if(!isIPEqual(childAPIP, sourceIP)){
                 sendMessage(childSTAIP, message);
                 if (!messageSent) {
-                    LOG(MESSAGES, INFO, "Sending the Message:\"%s\" to %hhu.%hhu.%hhu.%hhu",message,childSTAIP[0],childSTAIP[1],childSTAIP[2],childSTAIP[3]);
+                    LOG(MESSAGES, INFO, "Sending the Message:\"%s\" to %hhu.%hhu.%hhu.%hhu",message,childAPIP[0],childAPIP[1],childAPIP[2],childAPIP[3]);
                     messageSent = true;
                 } else {
                     LOG(MESSAGES, INFO, ", %hhu.%hhu.%hhu.%hhu",childAPIP[0],childAPIP[1],childAPIP[2],childAPIP[3]);

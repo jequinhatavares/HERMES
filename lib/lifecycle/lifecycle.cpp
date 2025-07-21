@@ -854,7 +854,7 @@ void lostChildProcedure(){
                 //Transform the lost child MAC into a IP
                 getIPFromMAC(MAC,lostChildIP);
                 LOG(NETWORK, INFO, "[LostChild] MAC: %hhu:%hhu:%hhu:%hhu:%hhu:%hhu ",MAC[0], MAC[1], MAC[2], MAC[3], MAC[4], MAC[5]);
-                LOG(NETWORK, INFO, "IP : %hhu.%hhu.%hhu.%hhu\n",lostChildIP[0], lostChildIP[1], lostChildIP[2], lostChildIP[3]);
+                LOG(NETWORK, INFO, "IP: %hhu.%hhu.%hhu.%hhu\n",lostChildIP[0], lostChildIP[1], lostChildIP[2], lostChildIP[3]);
 
                 // Remove the lost child from my children table
                 LOG(NETWORK,INFO,"Removing lost child %hhu.%hhu.%hhu.%hhu from children table\n",lostChildIP[0],lostChildIP[1],lostChildIP[2],lostChildIP[3]);
