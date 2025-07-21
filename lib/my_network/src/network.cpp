@@ -9,7 +9,7 @@
  * @param isRoot - True if the node should be the root, false otherwise.
  * @return void
  */
-void Network::setAsRoot(bool isRoot) {
+void Network::setAsRoot(bool isRoot){
     iamRoot = isRoot;
 }
 

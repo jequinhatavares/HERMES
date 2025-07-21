@@ -1,11 +1,13 @@
 #pragma once
 
-#include <wifi_hal.h>
-#include <transport_hal.h>
-#include "lifecycle.h"
-#include "cli.h"
-#include "logger.h"
-#include "middleware.h"
+
+#include "core/wifi_hal/wifi_hal.h"
+#include "core/transport_hal/transport_hal.h"
+#include "core/lifecycle/lifecycle.h"
+#include "core/cli/cli.h"
+#include "core/logger/logger.h"
+#include "core/middleware/middleware.h"
+
 
 //#include "../lib/circular_buffer/snake_queue.h"
 
