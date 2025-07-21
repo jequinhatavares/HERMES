@@ -1,6 +1,11 @@
 #ifndef ROUTING_H
 #define ROUTING_H
 
+/*** Include config.h at the top of every file that uses configurable macros.
+ *   This ensures user-defined values take priority at compile time. ***/
+#include "network_config.h"
+
+
 #include "../table/table.h"
 #include "../logger/logger.h"
 

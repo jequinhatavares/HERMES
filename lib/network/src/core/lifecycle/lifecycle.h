@@ -1,6 +1,11 @@
 #ifndef LIFECYCLE_H
 #define LIFECYCLE_H
 
+/*** Include config.h at the top of every file that uses configurable macros.
+ *   This ensures user-defined values take priority at compile time. ***/
+#include "network_config.h"
+
+
 #include "../wifi_hal/wifi_hal.h"
 #include "../transport_hal/transport_hal.h"
 #include "../time_hal/time_hal.h"
@@ -11,6 +16,7 @@
 #include "../circular_buffer/snake_queue.h"
 #include "../logger/logger.h"
 #include <cstring>
+
 
 #ifndef WIFI_SSID
 #define WIFI_SSID      		"JessicaNode"

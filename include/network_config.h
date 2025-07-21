@@ -20,7 +20,7 @@
 // #define APPLICATION_RUNS_PERIODIC_TASKS false
 
 // Enable real-time monitoring server features for visualizing the network topology
-// #define MONITORING_ON
+//  #define MONITORING_ON
 
 // Application Data message maximum payload size
 // #define MAX_PAYLOAD_SIZE 200
@@ -42,7 +42,7 @@
 // #define TABLE_MAX_SIZE 10
 
 // Wi-Fi network SSID
-// #define WIFI_SSID "JessicaNode"
+ #define WIFI_SSID "LOLNode"
 
 // Wi-Fi network password
 // #define WIFI_PASSWORD "123456789"

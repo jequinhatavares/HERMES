@@ -1,6 +1,9 @@
 #ifndef SNAKE_QUEUE_SNAKE_QUEUE_H
 #define SNAKE_QUEUE_SNAKE_QUEUE_H
 
+/*** Include config.h at the top of every file that uses configurable macros.
+ *   This ensures user-defined values take priority at compile time. ***/
+#include "network_config.h"
 
 
 #ifndef CIRCULAR_BUFFER_SIZE

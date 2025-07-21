@@ -1,6 +1,11 @@
 #ifndef UDP_INTERFACE_H
 #define UDP_INTERFACE_H
 
+/*** Include config.h at the top of every file that uses configurable macros.
+ *   This ensures user-defined values take priority at compile time. ***/
+#include "network_config.h"
+
+#include <cstddef>
 #include <cstdint>
 
 #ifndef UDP_PORT

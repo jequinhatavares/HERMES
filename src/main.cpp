@@ -1,8 +1,5 @@
 //#define raspberrypi_3b
 #if defined(ESP32) || defined(ESP8266)
-/*** Include config.h at the top of every file that uses configurable macros.
- *   This ensures user-defined values take priority at compile time. ***/
-//#include "network_config.h"
 
 /***#include <wifi_hal.h>
 #include <transport_hal.h>
@@ -13,10 +10,9 @@
 #include "middleware.h"
 #include "../lib/circular_buffer/snake_queue.h" ***/
 //#include "../lib/network/src/network.h"
+//#include "network_config.h"
 #include <network.h>
 #include <Arduino.h>
-
-
 
 
 //#include <network.h>
@@ -109,10 +105,6 @@ void setup(){
     //middlewareSelectStrategy(STRATEGY_NONE);
 
 }
-
-//WiFiClient client;
-//bool client_defined = false;
-
 
 void loop(){
    network.run();

@@ -1,6 +1,10 @@
 #ifndef WIFIROUTING_WIFI_INTERFACE_H
 #define WIFIROUTING_WIFI_INTERFACE_H
 
+/*** Include config.h at the top of every file that uses configurable macros.
+ *   This ensures user-defined values take priority at compile time. ***/
+#include "network_config.h"
+
 #include "../time_hal/time_hal.h"
 #include "../logger/logger.h"
 #include "../table/table.h"
