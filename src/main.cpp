@@ -1,5 +1,9 @@
 //#define raspberrypi_3b
 #if defined(ESP32) || defined(ESP8266)
+/*** Include config.h at the top of every file that uses configurable macros.
+ *   This ensures user-defined values take priority at compile time. ***/
+#include "network_config.h"
+
 #include <wifi_hal.h>
 #include <transport_hal.h>
 #include "lifecycle.h"
