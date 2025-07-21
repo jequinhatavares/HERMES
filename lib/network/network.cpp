@@ -9,7 +9,7 @@
  * @param isRoot - True if the node should be the root, false otherwise.
  * @return void
  */
-void network::setAsRoot(bool isRoot) {
+void Network::setAsRoot(bool isRoot) {
     iamRoot = isRoot;
 }
 
@@ -21,10 +21,9 @@ void network::setAsRoot(bool isRoot) {
  *
  * @return void
  */
-void network::begin() {
+void Network::begin() {
 
     uint8_t MAC[6];
-    //Serial.begin(115200);
 
     #if defined(raspberrypi_3b)
         initTime();
@@ -43,18 +42,23 @@ void network::begin() {
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//State Join Network
     }
 
+
+
+    //startWifiAP(ssid,PASS, localIP, gateway, subnet);
+    //changeWifiMode(3);
+    //LOG(NETWORK,INFO,"My SoftAP IP: %s\nMy STA IP %s\nGateway IP: %s\n", getMyAPIP().toString().c_str(), getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
 }
 
 
 /**
  * run
  * Main execution loop of the network layer. Handles Wi-Fi events, receives incoming messages,
- * manages timers, and drives the state machine to maintain and operate the network.
- * Should be called continuously in the main loop to ensure proper network operation.
+ * manages timers, and drives the state machine to maintain and operate the Network.
+ * Should be called continuously in the main loop to ensure proper Network operation.
  *
  * @return void
  */
-void network::run() {
+void Network::run() {
     int packetSize;
 
     #if defined(raspberrypi_3b)
@@ -94,7 +98,7 @@ void network::run() {
  *                       STRATEGY_NONE disables any active strategy.
  * @return void
  */
-void network::middlewareSelectStrategy(StrategyType strategyType){
+void Network::middlewareSelectStrategy(StrategyType strategyType){
     ::middlewareSelectStrategy(strategyType);
 }
 
@@ -106,7 +110,7 @@ void network::middlewareSelectStrategy(StrategyType strategyType){
  * @param dataMessage - Pointer to the message data for which the middleware can influence the next routing direction
  * @return void
  */
-void network::middlewareInfluenceRouting(char *dataMessage) {
+void Network::middlewareInfluenceRouting(char *dataMessage) {
     ::middlewareInfluenceRouting(dataMessage);
 }
 
@@ -124,7 +128,7 @@ void network::middlewareInfluenceRouting(char *dataMessage) {
  *
  * @return void
  */
-void network::initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)){
+void Network::initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)){
     ::initMiddlewareStrategyInject(metricStruct, metricStructSize,setValueFunction,encodeMetricFunction,decodeMetricFunction);
 }
 
@@ -138,7 +142,7 @@ void network::initMiddlewareStrategyInject(void *metricStruct, size_t metricStru
  * @param metric - Pointer to the metric data to be injected or updated.
  * @return void
  */
-void network::injectMetric(void *metric) {
+void Network::injectMetric(void *metric) {
     if (!::isMiddlewareStrategyActive(STRATEGY_INJECT)){
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
         return;
@@ -160,7 +164,7 @@ void network::injectMetric(void *metric) {
  *
  * @return void
  */
-void network::initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *)){
+void Network::initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *)){
     ::initMiddlewareStrategyPubSub(setValueFunction,encodeTopicFunction,decodeTopicFunction);
 }
 
@@ -175,7 +179,7 @@ void network::initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *
  * @param subTopic - Identifier of the topic to subscribe to
  * @return void
  */
-void network::subscribeToTopic(int8_t topic) {
+void Network::subscribeToTopic(int8_t topic) {
     if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
         return;
@@ -196,7 +200,7 @@ void network::subscribeToTopic(int8_t topic) {
  * @param subTopic - Identifier of the topic to unsubscribe from
  * @return void
  */
-void network::unsubscribeToTopic(int8_t topic){
+void Network::unsubscribeToTopic(int8_t topic){
     if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)) return;{
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
         return;
@@ -216,7 +220,7 @@ void network::unsubscribeToTopic(int8_t topic){
  * @param pubTopic - Identifier of the topic being advertised for publication
  * @return void
  */
-void network::advertiseTopic(int8_t topic){
+void Network::advertiseTopic(int8_t topic){
     if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
         return;
@@ -237,7 +241,7 @@ void network::advertiseTopic(int8_t topic){
  * @param pubTopic - Identifier of the topic that is no longer being published
  * @return void
  */
-void network::unadvertiseTopic(int8_t topic){
+void Network::unadvertiseTopic(int8_t topic){
     if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
         return;
@@ -261,7 +265,7 @@ void network::unadvertiseTopic(int8_t topic){
  *
  * @return void
  */
-void network::initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t)){
+void Network::initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t)){
     ::initMiddlewareStrategyTopology(topologyMetricValues, topologyMetricStructSize,setValueFunction,encodeTopologyMetricFunction,decodeTopologyMetricFunction, selectParentFunction);
 }
 
@@ -276,7 +280,7 @@ void network::initMiddlewareStrategyTopology(void *topologyMetricValues, size_t 
  * @param metric - The metric value to assign to this node.
  * @return void
  */
-void network::setParentMetric(void *metric) {
+void Network::setParentMetric(void *metric) {
     if (!::isMiddlewareStrategyActive( STRATEGY_TOPOLOGY)){
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
         return;
@@ -296,7 +300,7 @@ void network::setParentMetric(void *metric) {
  * @param messagePayload - Application-specific payload to be included in the message.
  * @return void
  */
-void network::sendMessageToRoot(char* messageBuffer,size_t bufferSize,const char* messagePayload) {
+void Network::sendMessageToRoot(char* messageBuffer,size_t bufferSize,const char* messagePayload) {
     sendDataMessageToNode(messageBuffer,bufferSize,messagePayload,rootIP);
 }
 
@@ -310,7 +314,7 @@ void network::sendMessageToRoot(char* messageBuffer,size_t bufferSize,const char
  * @param messagePayload - Application-specific payload.
  * @return void
  */
-void network::sendMessageToParent(char* messageBuffer,size_t bufferSize,const char *messagePayload) {
+void Network::sendMessageToParent(char* messageBuffer,size_t bufferSize,const char *messagePayload) {
     sendDataMessageToParent(messageBuffer,bufferSize,messagePayload);
 }
 
@@ -324,7 +328,7 @@ void network::sendMessageToParent(char* messageBuffer,size_t bufferSize,const ch
  * @param messagePayload - Application-specific payload.
  * @return void
  */
-void network::sendMessageToChildren(char* messageBuffer,size_t bufferSize,const char *messagePayload) {
+void Network::sendMessageToChildren(char* messageBuffer,size_t bufferSize,const char *messagePayload) {
     sendDataMessageToChildren(messageBuffer,bufferSize,messagePayload);
 }
 
@@ -339,7 +343,7 @@ void network::sendMessageToChildren(char* messageBuffer,size_t bufferSize,const 
  * @param nodeIP - Target node's IP address.
  * @return void
  */
-void network::sendMessageToNode(char* messageBuffer,size_t bufferSize,const char *messagePayload,uint8_t *nodeIP) {
+void Network::sendMessageToNode(char* messageBuffer,size_t bufferSize,const char *messagePayload,uint8_t *nodeIP) {
     sendDataMessageToNode(messageBuffer,bufferSize,messagePayload,nodeIP);
 }
 
@@ -353,7 +357,7 @@ void network::sendMessageToNode(char* messageBuffer,size_t bufferSize,const char
  * @param messagePayload - Application-specific payload.
  * @return void
  */
-void network::broadcastMessage(char* messageBuffer,size_t bufferSize,const char *messagePayload) {
+void Network::broadcastMessage(char* messageBuffer,size_t bufferSize,const char *messagePayload) {
     uint8_t broadcastIP[4]={255,255,255,255};
     sendDataMessageToNode(messageBuffer,bufferSize,messagePayload,broadcastIP);
 }
@@ -369,7 +373,7 @@ void network::broadcastMessage(char* messageBuffer,size_t bufferSize,const char 
  * @param destinationIP - Destination node's IP address.
  * @return void
  */
-void network::sendACKMessage(char* messageBuffer,size_t bufferSize,const char *ackPayload, uint8_t *destinationIP) {
+void Network::sendACKMessage(char* messageBuffer,size_t bufferSize,const char *ackPayload, uint8_t *destinationIP) {
     sendACKMessageToNode(messageBuffer,bufferSize,ackPayload,destinationIP);
 }
 
@@ -381,7 +385,7 @@ void network::sendACKMessage(char* messageBuffer,size_t bufferSize,const char *a
  * @param callback - Function pointer to the callback with the signature (senderIP, receiverIP, payload).
  * @return void
  */
-void network::onDataReceived(void (*callback)(uint8_t *, uint8_t *, char *)) {
+void Network::onDataReceived(void (*callback)(uint8_t *, uint8_t *, char *)) {
     onDataMessageCallback = callback;
 }
 
@@ -393,7 +397,7 @@ void network::onDataReceived(void (*callback)(uint8_t *, uint8_t *, char *)) {
  * @param callback - Function pointer to handle ACKs, with the format (senderIP, receiverIP, ackPayload).
  * @return void
  */
-void network::onACKReceived(void (*callback)(uint8_t *, uint8_t *, char *)) {
+void Network::onACKReceived(void (*callback)(uint8_t *, uint8_t *, char *)) {
     onACKMessageCallback = callback;
 }
 
@@ -405,7 +409,7 @@ void network::onACKReceived(void (*callback)(uint8_t *, uint8_t *, char *)) {
  * @param callback - Function pointer to a no-argument callback function.
  * @return void
  */
-void network::onPeriodicAppTask(void (*callback)()) {
+void Network::onPeriodicAppTask(void (*callback)()) {
     onAppPeriodicTaskCallback = callback;
 }
 

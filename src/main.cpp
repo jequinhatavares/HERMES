@@ -2,7 +2,7 @@
 #if defined(ESP32) || defined(ESP8266)
 /*** Include config.h at the top of every file that uses configurable macros.
  *   This ensures user-defined values take priority at compile time. ***/
-#include "network_config.h"
+//#include "network_config.h"
 
 #include <wifi_hal.h>
 #include <transport_hal.h>
@@ -13,9 +13,8 @@
 #include "../lib/middleware/strategies/strategy_pubsub/strategy_pubsub.h"
 #include "middleware.h"
 #include "../lib/circular_buffer/snake_queue.h"
+#include "network.h"
 
-//#include "../lib/wifi_hal/wifi_hal.h"
-//#include "../lib/transport_hal/esp32/udp_esp32.h"
 
 //227:96:230:135 root
 //227:96:237:119
@@ -37,9 +36,10 @@ void waitForEnter() {
     Serial.println("Starting program...");
 }
 
+class Network network;
+
 void setup(){
     uint8_t MAC[6];
-    //MetricTableEntry myMetric;
     Serial.begin(115200);
 
     enableModule(STATE_MACHINE);
@@ -53,15 +53,6 @@ void setup(){
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
 
-
-    //To auto initialize the root node has the node with the IP 135.230.96.1
-    getMyMAC(MAC);
-    if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96)
-    {
-        iamRoot = true;
-    }
-
-
     #ifdef ESP32
         LOG(NETWORK,INFO,"ESP32\n");
         //esp_log_level_set("wifi", ESP_LOG_VERBOSE);
@@ -70,13 +61,17 @@ void setup(){
     #ifdef ESP8266
         LOG(NETWORK,INFO,"ESP8266\n");
     #endif
-    LOG(NETWORK,INFO,"Code uploaded through multi_upload_tool.py V1\n");
-    LOG(NETWORK,INFO,"My MAC addr: %i.%i.%i.%i.%i.%i\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
 
+    //To auto initialize the root node has the node with the IP 135.230.96.1
+    getMyMAC(MAC);
+    if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96)
+    {
+        network.setAsRoot(true);
+    }
     waitForEnter();
 
+    network.begin();
 
-    Advance(SM, eSuccess);//Init
 
     //Select and initialize the middleware strategy
     //middlewareSelectStrategy(STRATEGY_INJECT);
@@ -109,14 +104,6 @@ void setup(){
 
     //middlewareSelectStrategy(STRATEGY_NONE);
 
-    if(!iamRoot){
-        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Search APs
-        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Choose Parent
-    }
-
-    //startWifiAP(ssid,PASS, localIP, gateway, subnet);
-    //changeWifiMode(3);
-    //LOG(NETWORK,INFO,"My SoftAP IP: %s\nMy STA IP %s\nGateway IP: %s\n", getMyAPIP().toString().c_str(), getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
 }
 
 //WiFiClient client;
@@ -124,26 +111,7 @@ void setup(){
 
 
 void loop(){
-    int packetSize;
-    //Wait for incoming requests
-    packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer));
-    if (packetSize > 0){
-        insertLast(stateMachineEngine, eMessage);
-        if(packetSize >= 255){
-            LOG(MESSAGES, ERROR,"Receiving buffer is too small packet has size:%i\n", packetSize);
-        }
-
-    }
-    // Handle all timers: routing periodic updates, child disconnection timeouts, middleware timer callbacks and any application-level periodic tasks
-    handleTimers();
-
-    while(stateMachineEngine->size != 0){
-        printSnake((CircularBuffer *)stateMachineEngine);
-        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
-    }
-
-    cliInteraction();
-
+   network.run();
 }
 #endif
 

@@ -22,7 +22,7 @@
  * It abstracts complex network logic, enabling the application to perform specific tasks
  * without worrying about underlying networking details.
  */
-class network {
+class Network {
 
     public:
 
