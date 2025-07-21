@@ -73,6 +73,11 @@ class Network {
     void broadcastMessage(char* messageBuffer,size_t bufferSize,const char* messagePayload); // Broadcasts a message to all nodes in the network
     void sendACKMessage(char* messageBuffer,size_t bufferSize,const char* ackPayload, uint8_t* destinationIP); // Sends an ACK message to a node
 
+    // ================== NETWORK INFORMATION ==================
+    void getNodeMAC(uint8_t *MAC);  // Retrieves the MAC address of this node and stores it in the provided MAC[6] array
+    void getNodeIP(uint8_t *IP);    // Retrieves the IP address of this node and stores it in the provided IP[6] array
+    void getParentIP(uint8_t *IP);  // Retrieves the IP address of the parent and stores it in the provided IP[6] array
+    void getRootIP(uint8_t *IP);    // Retrieves the IP address of the root and stores it in the provided IP[6] array
 };
 
 

@@ -413,4 +413,24 @@ void Network::onPeriodicAppTask(void (*callback)()) {
     onAppPeriodicTaskCallback = callback;
 }
 
+void Network::getNodeMAC(uint8_t *MAC) {
+    if(MAC == nullptr)return;
+    getMyMAC(MAC);
+}
+
+void Network::getNodeIP(uint8_t *IP) {
+    if(IP == nullptr)return;
+    assignIP(IP,myIP);
+}
+
+void Network::getParentIP(uint8_t *IP) {
+    if(IP == nullptr)return;
+    getGatewayIP(IP);
+}
+
+void Network::getRootIP(uint8_t *IP) {
+    if(IP == nullptr)return;
+    assignIP(IP,rootIP);
+}
+
 

@@ -42,7 +42,7 @@
 // #define TABLE_MAX_SIZE 10
 
 // Wi-Fi network SSID
- #define WIFI_SSID "LOLNode"
+// #define WIFI_SSID "JessicaNode"
 
 // Wi-Fi network password
 // #define WIFI_PASSWORD "123456789"
