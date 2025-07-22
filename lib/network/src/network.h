@@ -26,6 +26,8 @@ class Network {
 
     public:
 
+    bool iamRoot=false;
+
     // ==================== NETWORK CORE =====================
     void setAsRoot(bool isRoot);        // Set this node as root (call before begin())
     void begin();                       // Initialize network components (call in setup())
@@ -35,7 +37,6 @@ class Network {
     void onDataReceived(void (*callback)(uint8_t*, uint8_t*, char*));   // Set the function that handles incoming data messages
     void onACKReceived(void (*callback)(uint8_t*, uint8_t*, char*));    // Set the function that handles incoming ACK messages
     void onPeriodicAppTask(void (*callback)());                         // Registers a periodic application task callback
-
 
     // ================== MIDDLEWARE  =================
     void middlewareSelectStrategy(StrategyType strategyType);   // Sets the middleware routing strategy to use

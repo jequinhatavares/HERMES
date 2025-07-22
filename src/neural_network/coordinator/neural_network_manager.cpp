@@ -200,7 +200,7 @@ void assignOutputTargetsToNetwork(uint8_t nodes[][4],uint8_t nrNodes){
     /***  The messages in this function are sent layer by layer.  At each node, messages are made based on the aggregation of
      * neurons computed in the same layer, since these neurons need to send their outputs to the same neurons or nodes
      * in the next layer. ***/
-    for (uint8_t i = 0; i < network.numLayers; i++) {
+    for (uint8_t i = 0; i < neuralNetwork.numLayers; i++) {
 
         LOG(APP,INFO,"Layer: %hhu\n",i);
 
@@ -266,7 +266,7 @@ void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t tar
     /***  The messages in this function are constructed layer by layer. Messages are made based on aggregation of the
      * neurons computed in the same layer, since these neurons need to send their outputs to the same neurons or nodes
      * in the next layer. ***/
-    for (uint8_t i = 0; i < network.numLayers; i++) {
+    for (uint8_t i = 0; i < neuralNetwork.numLayers; i++) {
         /*** The neurons in the next layer require the outputs of the current layer as input. Therefore, we need to
          * identify which nodes are responsible for computing the next layer's neurons. These are the nodes to which
          * the current layer's neurons must send their outputs. ***/
@@ -329,7 +329,7 @@ void assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t target
     /***  The messages in this function are constructed layer by layer. Messages are made based on aggregation of the
      * neurons computed in the same layer, since these neurons need to send their outputs to the same neurons or nodes
      * in the next layer. ***/
-    for (uint8_t i = 0; i < network.numLayers; i++) {
+    for (uint8_t i = 0; i < neuralNetwork.numLayers; i++) {
 
         /*** Identify the neurons computed by the target node at the current layer and build a message
            * with the subscriptions ad publications that the node does ***/
@@ -464,49 +464,6 @@ void encodeForwardMessage(char*messageBuffer, size_t bufferSize, int inferenceId
 }
 
 
-void manageNeuralNetwork(){
-    unsigned long currentTime = getCurrentTime();
-    // Check if the expected time for ack arrival from all nodes had passed
-    if((currentTime-neuronAssignmentTime) >= ACK_TIMEOUT && areNeuronsAssigned && !receivedAllNeuronAcks){
-        onACKTimeOut();
-    }
-}
-
-void onACKTimeOut(){
-    NeuronId *currentId;
-    NeuronEntry *neuronEntry;
-    uint8_t layer, indexInLayer,*inputIndexMap;
-    char tmpBuffer[50];
-    size_t tmpBufferSize = sizeof(tmpBuffer);
-
-    for(int i=0; i< neuronToNodeTable->numberOfItems;i++){
-        currentId = (NeuronId*)tableKey(neuronToNodeTable,i);
-        neuronEntry = (NeuronEntry*)tableRead(neuronToNodeTable,currentId);
-
-        /*** If the neuron was not acknowledged by the node that was supposed to compute it,
-             the message assigning the neurons to that node must be resent and renamed.***/
-        if(!neuronEntry->isAcknowledged){
-            layer = neuronEntry->layer;
-            indexInLayer = neuronEntry->indexInLayer;
-
-            //Remake the part of the message that maps the inputs into the input vector
-            inputIndexMap = new uint8_t [network.layers[layer].numInputs];
-            for (uint8_t j = 0; j < network.layers[layer].numInputs ; j++){
-                inputIndexMap[j] = *currentId+(j-network.layers[layer].numInputs);
-            }
-
-            encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,
-                                      *currentId,network.layers[layer].numInputs,inputIndexMap,
-                                      &network.layers[indexInLayer].weights[indexInLayer * network.layers[layer].numInputs],network.layers[layer].biases[indexInLayer]);
-
-            //TODO SEND the message to the node
-            delete [] inputIndexMap;
-
-        }
-    }
-}
-
-
 void handleACKMessage(char* messageBuffer){
     // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
     char *saveptr1, *token;
@@ -538,5 +495,49 @@ void handleACKMessage(char* messageBuffer){
     }
 
     receivedAllNeuronAcks = isNetworkAcknowledge;
-
 }
+
+
+
+void manageNeuralNetwork(){
+    unsigned long currentTime = getCurrentTime();
+    // Check if the expected time for ack arrival from all nodes had passed
+    if((currentTime-neuronAssignmentTime) >= ACK_TIMEOUT && areNeuronsAssigned && !receivedAllNeuronAcks){
+        onACKTimeOut();
+    }
+}
+
+void onACKTimeOut(){
+    NeuronId *currentId;
+    NeuronEntry *neuronEntry;
+    uint8_t layer, indexInLayer,*inputIndexMap;
+    char tmpBuffer[50];
+    size_t tmpBufferSize = sizeof(tmpBuffer);
+
+    for(int i=0; i< neuronToNodeTable->numberOfItems;i++){
+        currentId = (NeuronId*)tableKey(neuronToNodeTable,i);
+        neuronEntry = (NeuronEntry*)tableRead(neuronToNodeTable,currentId);
+
+        /*** If the neuron was not acknowledged by the node that was supposed to compute it,
+             the message assigning the neurons to that node must be remade and resent.***/
+        if(!neuronEntry->isAcknowledged){
+            layer = neuronEntry->layer;
+            indexInLayer = neuronEntry->indexInLayer;
+
+            //Remake the part of the message that maps the inputs into the input vector
+            inputIndexMap = new uint8_t [neuralNetwork.layers[layer].numInputs];
+            for (uint8_t j = 0; j < neuralNetwork.layers[layer].numInputs ; j++){
+                inputIndexMap[j] = *currentId+(j-neuralNetwork.layers[layer].numInputs);
+            }
+
+            encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,
+                                      *currentId,neuralNetwork.layers[layer].numInputs,inputIndexMap,
+                                      &neuralNetwork.layers[indexInLayer].weights[indexInLayer * neuralNetwork.layers[layer].numInputs],neuralNetwork.layers[layer].biases[indexInLayer]);
+
+            //TODO SEND the message to the node
+            delete [] inputIndexMap;
+
+        }
+    }
+}
+

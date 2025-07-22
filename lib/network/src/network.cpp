@@ -17,7 +17,8 @@
  * @return void
  */
 void Network::setAsRoot(bool isRoot){
-    iamRoot = isRoot;
+    ::iamRoot = isRoot;
+    this->iamRoot = isRoot;
 }
 
 
