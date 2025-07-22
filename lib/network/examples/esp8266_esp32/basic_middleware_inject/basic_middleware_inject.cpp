@@ -4,7 +4,47 @@
 //Put Here the MAC of the node you wish to be root
 uint8_t rootMAC[6] = {0,0,0,96,230,135};
 
-MetricTableEntry metrics[TABLE_MAX_SIZE];
+struct MetricTableEntry{
+    int processingCapacity;
+};
+
+MetricTableEntry metrics[10];
+
+
+int compareMetrics(void *metricAv,void*metricBv){
+    if(metricAv == nullptr && metricBv == nullptr) return -1;
+
+    if(metricAv == nullptr) return 2;
+
+    if(metricBv == nullptr) return 1;
+
+    MetricTableEntry *metricA = (MetricTableEntry*) metricAv;
+    MetricTableEntry *metricB = (MetricTableEntry*) metricBv;
+    if(metricA->processingCapacity >= metricB->processingCapacity){
+        return 1;
+    }else{
+        return 2;
+    }
+}
+
+void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry){
+    MetricTableEntry *metric = (MetricTableEntry*) metricEntry;
+    snprintf(buffer,bufferSize,"%i", metric->processingCapacity);
+}
+
+void decodeMetricEntry(char* buffer, void *metricEntry){
+    MetricTableEntry *metric = (MetricTableEntry*)metricEntry;
+    sscanf(buffer,"%i", &metric->processingCapacity);
+}
+
+
+void setMetricValue(void* av, void*bv){
+    if(bv == nullptr)return; //
+    MetricTableEntry *a = (MetricTableEntry *) av;
+    MetricTableEntry *b = (MetricTableEntry *) bv;
+
+    a->processingCapacity = b->processingCapacity;
+}
 
 class Network network;
 

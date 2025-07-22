@@ -1,7 +1,6 @@
 //#define raspberrypi_3b
 #if defined(ESP32) || defined(ESP8266)
 
-
 #include <network.h>
 #include <Arduino.h>
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "/core/middleware/strategies/strategy_interface.h"
-#include "/core/logger/logger.h"
+#include "core/middleware/strategies/strategy_interface.h"
+#include "core/logger/logger.h"
 #include <cstdint>
 #include <cstdio>
 

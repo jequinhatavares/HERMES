@@ -1,10 +1,34 @@
 #include <network.h>
-
-#include <stdio.h>
-#include <unistd.h>
+#include <Arduino.h>
 
 class Network network;
 
+//Put Here the MAC of the node you wish to be root
+uint8_t rootMAC[6] = {0,0,0,96,230,135};
+
+
+typedef enum TopicTypes{
+    TEMPERATURE,
+    HUMIDITY,
+    CAMERA,
+}TopicTypes;
+
+
+void decodeTopic(char* dataMessage, int8_t * topicType){
+    TopicTypes type;
+    char topicString[20];
+    sscanf(dataMessage,"%s", topicString);
+    if(strcmp(topicString,"TEMPERATURE") == 0){
+        *topicType = TEMPERATURE;
+    }else if(strcmp(topicString,"HUMIDITY") == 0){
+        *topicType = HUMIDITY;
+    }else if(strcmp(topicString,"CAMERA") == 0){
+        *topicType = CAMERA;
+    }
+}
+void encodeTopic(char*DataMessage,size_t messageSize, void* topic) {
+
+}
 
 void periodicSensorMeasure(){
     char dataPayload[10];
@@ -26,23 +50,33 @@ void periodicSensorMeasure(){
 
 }
 
-void setup();
 
-void setup(){
-    uint8_t MAC[8];
+void setup() {
+    uint8_t MAC[6];
+    Serial.begin(115200);
 
+    enableModule(STATE_MACHINE);
+    enableModule(MESSAGES);
+    enableModule(NETWORK);
+    enableModule(MONITORING_SERVER);
+    enableModule(CLI);
+    enableModule(MIDDLEWARE);
     enableModule(APP);
 
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
 
+    //To auto initialize the root node has the node with the IP 135.230.96.1
     network.getNodeMAC(MAC);
-
-    network.begin();
+    if(MAC[5] == rootMAC[5] && MAC[4] == rootMAC[4] && MAC[3] == rootMAC[3])
+    {
+        network.setAsRoot(true);
+    }
 
     network.middlewareSelectStrategy(STRATEGY_PUBSUB);
-    network.initMiddlewareStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
+    network.initMiddlewareStrategyPubSub(encodeTopic,decodeTopic);
 
+    network.begin();
 
     if(MAC[5] == 135){
         network.subscribeToTopic(TEMPERATURE);
@@ -60,14 +94,7 @@ void setup(){
 
 }
 
-int main() {
 
-    LOG(APP, INFO, "Hello, world from Raspberry Pi\n");
-
-    setup();
-
-    while (1) {
-        network.run();
-    }
-
+void loop(){
+    network.run();
 }
