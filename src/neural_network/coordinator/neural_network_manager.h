@@ -2,12 +2,15 @@
 #define NEURAL_NETWORK_MANAGER_H
 
 
+//#include "routing.h"
+//#include "messages.h"
 #include "../nn_types.h"
-#include "routing.h"
-#include "messages.h"
 #include "nn_parameters.h"
 #include "../nn_configurations.h"
-#include "../core/neuron_manager.h"
+#include "../worker/neuron_manager.h"
+
+#include <network.h>
+
 
 #include <cstdio>
 #include <cmath>
@@ -41,8 +44,9 @@ void encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMes
 int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize,uint8_t neuronId, uint8_t inputSize, uint8_t * inputSaveOrder,const float*weightsValues, float bias);
 void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes);
 void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronIds, uint8_t nNeurons, uint8_t subTopic, uint8_t pubTopic);
-
 void encodeForwardMessage(char*messageBuffer, size_t bufferSize, int inferenceId);
+
+void handleACKMessage(char* messageBuffer);
 
 void manageNeuralNetwork();
 void onACKTimeOut();

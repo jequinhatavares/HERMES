@@ -7,10 +7,13 @@
 #include <cstdint>
 
 #include "neuron_core.h"
-#include "time_hal.h"
-#include "messages.h"
-#include "routing.h"
+//#include "time_hal.h"
+//#include "messages.h"
+//#include "routing.h"
 #include "../nn_types.h"
+
+#include <network.h>
+
 
 
 typedef uint32_t BitField;
@@ -34,6 +37,7 @@ extern BitField receivedInputs[MAX_NEURONS];
 
 extern OutputTarget outputTargets[MAX_NEURONS];
 
+void handleNeuronMessage(char* messageBuffer);
 void handleAssignComputationsMessage(char*messageBuffer);
 void handleNeuralNetworkMessage(char* messageBuffer);
 void handleAssignOutput(char* messageBuffer);
@@ -47,6 +51,8 @@ void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4
 void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId outputNeuronId, float neuronOutput);
 void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId missingNeuron);
 void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount);
+
+void manageNeuron();
 
 void onInputWaitTimeout();
 void onNACKTimeout();

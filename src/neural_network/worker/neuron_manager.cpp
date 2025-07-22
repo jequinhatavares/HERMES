@@ -30,15 +30,15 @@ int currentInferenceId = 0;
 
 
 /**
- * handleNeuralNetworkMessage
- * Processes all incoming neural network related messages
+ * handleNeuronMessage
+ * Processes all incoming neural network neuron related messages
  *
  * @param messageBuffer - Buffer containing the received message
  */
-void handleNeuralNetworkMessage(char* messageBuffer){
+void handleNeuronMessage(char* messageBuffer){
     NeuralNetworkMessageType type;
 
-    sscanf(messageBuffer, "%*d %d",&type);
+    sscanf(messageBuffer, "%d",&type);
 
     switch (type) {
         case NN_ASSIGN_COMPUTATION:
@@ -474,7 +474,7 @@ void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4
  */
 void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId outputNeuronId, float neuronOutput){
     int offset = 0;
-    //DATA_MESSAGE NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
+    //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
     //Encode the neuron id that generated this output
     offset = snprintf(messageBuffer,bufferSize,"%d %i %d ",NN_NEURON_OUTPUT,currentInferenceId,outputNeuronId);
 

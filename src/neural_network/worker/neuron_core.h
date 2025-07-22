@@ -2,9 +2,10 @@
 #define NEURAL_NETWORK_H
 
 #include <cstring>
-#include <logger.h>
+//#include <logger.h>
 #include "../nn_configurations.h"
 #include "../nn_types.h"
+
 
 
 extern NeuronId neuronIds[MAX_NEURONS];
