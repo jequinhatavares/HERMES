@@ -1,0 +1,67 @@
+#include <network.h>
+#include <Arduino.h>
+
+//Put Here the MAC of the node you wish to be root
+uint8_t rootMAC[6] = {0,0,0,96,230,135};
+
+topologyTableEntry topologyMetrics[TABLE_MAX_SIZE];
+
+class Network network;
+
+void setup() {
+    uint8_t MAC[6];
+    Serial.begin(115200);
+
+    topologyTableEntry myMetric;
+
+    enableModule(STATE_MACHINE);
+    enableModule(MESSAGES);
+    enableModule(NETWORK);
+    enableModule(MONITORING_SERVER);
+    enableModule(CLI);
+    enableModule(MIDDLEWARE);
+    enableModule(APP);
+
+    lastModule = MESSAGES;
+    currentLogLevel = DEBUG;
+
+    //To auto initialize the root node has the node with the IP 135.230.96.1
+    network.getNodeMAC(MAC);
+    if(MAC[5] == rootMAC[5] && MAC[4] == rootMAC[4] && MAC[3] == rootMAC[3])
+    {
+        network.setAsRoot(true);
+    }
+
+    network.begin();
+
+    // Select the middleware strategy Topology
+    network.middlewareSelectStrategy(STRATEGY_TOPOLOGY);
+
+    // Initialize the Topology strategy
+    network.initMiddlewareStrategyTopology(
+            topologyMetrics,// - topologyMetrics: a pointer to the array holding the topology metrics for known nodes
+            sizeof(topologyTableEntry), // - sizeof(topologyTableEntry): the size of each metric entry in the array
+            setTopologyMetricValue,// - setTopologyMetricValue: a function to update an individual metric entry
+            encodeTopologyMetricEntry, // - encodeTopologyMetricEntry: function to serialize a metric entry for transmission
+            decodeTopologyMetricEntry, // - decodeTopologyMetricEntry: function to deserialize received metric data
+            chooseParentByProcessingCapacity // - chooseParentByProcessingCapacity: function used by the root to select the best parent for a new node based on metrics
+    );
+
+    /***
+     * In the Topology strategy, there is no need to explicitly call network.middlewareInfluenceRouting(),
+     * because routing influence happens during the network formation phase. When a new node joins the network,
+     * the root selects its parent based on a predefined metric (e.g., processing capacity). By determining the parent-child
+     * relationships during network setup, the routing paths are implicitly influenced.
+    ***/
+    myMetric.processingCapacity = MAC[5];
+
+    // Each node can initialize its own metric (e.g., processing capacity),
+    // which will later be used by the root to determine this node's suitability
+    // to act as a parent when new nodes join the network
+    network.setParentMetric(&myMetric);
+}
+
+
+void loop(){
+    network.run();
+}
