@@ -4,6 +4,8 @@
 #include <network.h>
 #include <Arduino.h>
 
+class Network network;
+
 //227:96:230:135 root
 //227:96:237:119
 
@@ -24,7 +26,6 @@ void waitForEnter() {
     Serial.println("Starting program...");
 }
 
-class Network network;
 
 void setup(){
     uint8_t MAC[6];
