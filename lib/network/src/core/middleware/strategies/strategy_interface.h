@@ -21,6 +21,13 @@ typedef struct Strategy{
 } Strategy;
 
 
+typedef enum StrategyType{
+    STRATEGY_INJECT,
+    STRATEGY_PUBSUB,
+    STRATEGY_TOPOLOGY,
+    STRATEGY_NONE,
+}StrategyType;
+
 typedef enum NetworkEvent {
     NETEVENT_JOINED_NETWORK,
     NETEVENT_CHILD_CONNECTED,

@@ -5,16 +5,9 @@
 #include "strategies/strategy_inject/strategy_inject.h"
 #include "strategies/strategy_pubsub/strategy_pubsub.h"
 #include "strategies/strategy_topology/strategy_topology.h"
-#include "../logger/logger.h"
+#include "strategies/strategy_interface.h"
 #include "../lifecycle/lifecycle.h"
 
-
-typedef enum StrategyType{
-    STRATEGY_INJECT,
-    STRATEGY_PUBSUB,
-    STRATEGY_TOPOLOGY,
-    STRATEGY_NONE,
-}StrategyType;
 
 
 void initMiddlewareCallbacks();

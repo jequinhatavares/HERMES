@@ -1,15 +1,11 @@
 #pragma once
 
-
-#include "core/wifi_hal/wifi_hal.h" //nao faz sentido incluir por agora
-#include "core/transport_hal/transport_hal.h" //nao faz sentido incluir
-#include "core/lifecycle/lifecycle.h"
-#include "core/cli/cli.h"
-#include "core/logger/logger.h"
-#include "core/middleware/middleware.h"
+#include "/core/middleware/strategies/strategy_interface.h"
+#include "/core/logger/logger.h"
+#include <cstdint>
+#include <cstdio>
 
 
-//#include "../lib/circular_buffer/snake_queue.h"
 
 /**
  * @class Network

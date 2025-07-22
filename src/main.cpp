@@ -42,6 +42,7 @@ void setup(){
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
 
+
     #ifdef ESP32
         LOG(NETWORK,INFO,"ESP32\n");
         //esp_log_level_set("wifi", ESP_LOG_VERBOSE);
@@ -52,12 +53,12 @@ void setup(){
     #endif
 
     //To auto initialize the root node has the node with the IP 135.230.96.1
-    getMyMAC(MAC);
     if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96)
     {
         network.setAsRoot(true);
     }
     waitForEnter();
+
 
     network.begin();
 
