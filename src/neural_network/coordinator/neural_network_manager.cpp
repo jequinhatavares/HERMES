@@ -89,8 +89,9 @@ void printNeuronTableHeader(){
 }
 void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_t nrNodes){
     uint8_t neuronPerNodeCount = 0,*inputIndexMap;
-    int assignedDevices = 0, messageOffset = 0;
     uint8_t numHiddenNeurons =0, neuronsPerNode;
+    uint8_t myIP[4]={0,0,0,0};
+    int assignedDevices = 0, messageOffset = 0;
     // Initialize the neuron ID to the first neuron in the first hidden layer (i.e., the first ID after the last input neuron)
     uint8_t currentNeuronId= net->layers[0].numInputs;
     char tmpBuffer[150];
@@ -106,7 +107,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
 
     // Encode the message header for the first node’s neuron assignments
     encodeMessageHeader(tmpBuffer, sizeof(tmpBuffer),NN_ASSIGN_COMPUTATION);
-    messageOffset += snprintf(largeSendBuffer, sizeof(largeSendBuffer),"%s",tmpBuffer);
+    messageOffset += snprintf(appPayload, sizeof(appPayload),"%s",tmpBuffer);
 
     LOG(APP, INFO, "Neural network initialized with %d neurons (avg. %d neurons per node)\n", net->numNeurons, neuronsPerNode);
 
@@ -129,6 +130,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
             // The root node (the node running this algorithm) is responsible for computing the output layer.
             if(i == net->numLayers - 1){
                 // Add the neuron-to-node mapping to the table
+                network.getNodeIP(myIP);
                 assignIP(neuronEntry.nodeIP,myIP);
                 neuronEntry.layer = i;
                 neuronEntry.indexInLayer = j;
@@ -144,7 +146,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
                                            currentNeuronId,net->layers[i].numInputs,inputIndexMap,
                                            &net->layers[i].weights[j * net->layers[i].numInputs],net->layers[i].biases[j]);
 
-            messageOffset += snprintf(largeSendBuffer + messageOffset, sizeof(largeSendBuffer) - messageOffset,"%s",tmpBuffer);
+            messageOffset += snprintf(appPayload + messageOffset, sizeof(appPayload) - messageOffset,"%s",tmpBuffer);
 
             // Add the neuron-to-node mapping to the table
             assignIP(neuronEntry.nodeIP,nodes[assignedDevices]);
@@ -160,6 +162,12 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
 
             // When the number of neurons assigned to the current device reaches the expected amount, move on to the next device in the list.
             if(neuronPerNodeCount == neuronsPerNode){
+
+                //Send the message to the node assigning him the neurons
+                //LOG(APP, INFO, "Encoded Message: NN_ASSIGN_COMPUTATION [Neuron ID] [Input Size] [Input Save Order] [weights values] [bias]\n");
+                //LOG(APP, INFO, "Encoded Message: %s size:%i\n",largeSendBuffer, strlen(largeSendBuffer));
+                network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodes[assignedDevices]);
+
                 // Move to the next node, except when all neurons have been assigned i.e., the last neuron of the final layer
                 if((j != net->layers[i].numOutputs - 1) || (i != net->numLayers-2)) assignedDevices ++;
                 neuronPerNodeCount = 0;
@@ -169,16 +177,12 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
                     return;
                 }
 
-                //TODO Send the message
-                //LOG(APP, INFO, "Encoded Message: NN_ASSIGN_COMPUTATION [Neuron ID] [Input Size] [Input Save Order] [weights values] [bias]\n");
-                //LOG(APP, INFO, "Encoded Message: %s size:%i\n",largeSendBuffer, strlen(largeSendBuffer));
-
-                // Reset the send buffer and message offset to prepare for the next node's neuron assignments
+                // Reset the payload buffer and message offset to prepare for the next node's neuron assignments
                 messageOffset = 0;
-                strcpy(largeSendBuffer,"");
+                strcpy(appPayload,"");
                 // Encode the message header for the next node’s neuron assignments
                 encodeMessageHeader(tmpBuffer, sizeof(tmpBuffer),NN_ASSIGN_COMPUTATION);
-                messageOffset += snprintf(largeSendBuffer, sizeof(largeSendBuffer),"%s",tmpBuffer);
+                messageOffset += snprintf(appPayload, sizeof(appPayload),"%s",tmpBuffer);
             }
         }
 
@@ -239,9 +243,11 @@ void assignOutputTargetsToNetwork(uint8_t nodes[][4],uint8_t nrNodes){
                 }
             }
             LOG(APP,DEBUG,"number of neurons: %hhu number of nodes: %hhu\n",nNeurons,nNodes);
-            encodeAssignOutputMessage(largeSendBuffer,sizeof(largeSendBuffer),outputNeurons,nNeurons,inputNodesIPs,nNodes);
-            LOG(APP,INFO,"Encoded message: %s\n",largeSendBuffer);
+            encodeAssignOutputMessage(appPayload,sizeof(appPayload),outputNeurons,nNeurons,inputNodesIPs,nNodes);
+
+            //LOG(APP,INFO,"Encoded message: %s\n",appPayload);
             //Todo send Message for the node
+            network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodes[j]);
 
             nNeurons = 0;
         }

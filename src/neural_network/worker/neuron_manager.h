@@ -6,13 +6,13 @@
 #include <cstdio>
 #include <cstdint>
 
-#include "neuron_core.h"
 //#include "time_hal.h"
 //#include "messages.h"
 //#include "routing.h"
 #include "../nn_types.h"
+#include "neuron_core.h"
+#include "../../app_globals.h"
 
-#include <network.h>
 
 
 

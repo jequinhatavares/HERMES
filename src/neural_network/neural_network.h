@@ -3,7 +3,7 @@
 
 #include "coordinator/neural_network_manager.h"
 #include "worker/neuron_manager.h"
-#include "../network_instance.h"
+#include "../app_globals.h"
 
 
 

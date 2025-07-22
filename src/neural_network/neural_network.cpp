@@ -3,6 +3,7 @@
 
 void handleNeuralNetworkMessage(uint8_t* originatorIP,uint8_t* destinationIP,char* messageBuffer){
     NeuralNetworkMessageType type;
+
     sscanf(messageBuffer, "%d",&type);
     switch (type) {
         case NN_ASSIGN_COMPUTATION:
@@ -21,7 +22,7 @@ void handleNeuralNetworkMessage(uint8_t* originatorIP,uint8_t* destinationIP,cha
             handleNeuronMessage(messageBuffer);
             break;
         case NN_ACK:
-            if(myNetwork.iamRoot) handleACKMessage(messageBuffer);
+            if(network.iamRoot) handleACKMessage(messageBuffer);
             else LOG(APP,ERROR,"This node received a message meant for the coordinator (root) node. Message: %s", messageBuffer);
             break;
         default:

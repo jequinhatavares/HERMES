@@ -8,6 +8,7 @@
 
 #include "../table/table.h"
 #include "../logger/logger.h"
+#include "../ip_tools/ip_tools.h"
 
 #include <cstdint>
 
@@ -51,10 +52,7 @@ extern int mySequenceNumber;
 
 extern unsigned long lastRoutingUpdateTime;
 
-bool isIPinList(uint8_t *searchIP,uint8_t list[][4],uint8_t nElements);
 
-bool isIPEqual(void* a, void* b);
-void assignIP(uint8_t destIP[4], uint8_t sourceIP[4]);
 void setIP(void* av, void* bv);
 void setValue(void* av, void* bv);
 

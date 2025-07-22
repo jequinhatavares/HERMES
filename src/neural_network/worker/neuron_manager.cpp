@@ -164,7 +164,7 @@ void handleAssignOutput(char* messageBuffer){
     int offset=0;
 
     //Encode the message header of the ACK message
-    offset += snprintf(smallSendBuffer+offset, sizeof(smallSendBuffer)-offset,"%d ",NN_ACK);
+    offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%d ",NN_ACK);
 
 
     //DATA_MESSAGE NN_ASSIGN_OUTPUT |[Number of neurons] [Output Neuron ID 1] [Output Neuron ID 2]...[Number of targets] [Target IP 1] [Target IP 2]... |
@@ -206,7 +206,7 @@ void handleAssignOutput(char* messageBuffer){
 
         for (int i = 0; i < nNeurons; i++) {
             encodeACKMessage(tmpBuffer,tmpBufferSize,neuronID,nNeurons);
-            offset += snprintf(smallSendBuffer+offset, sizeof(smallSendBuffer)-offset,"%s",tmpBuffer);
+            offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%s",tmpBuffer);
         }
 
         //Move on to the next layer neurons
@@ -214,6 +214,7 @@ void handleAssignOutput(char* messageBuffer){
     }
 
     //TODO send the ACK to the root node
+    network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
 
 
 }
@@ -331,7 +332,7 @@ void handleNACKMessage(char*messageBuffer){
             // If the output is already computed, resend it to the neuron that missed it
             if(isOutputComputed[neuronStorageIndex]){
                 //Encode the message containing the neuron output value
-                encodeNeuronOutputMessage(smallSendBuffer,sizeof(smallSendBuffer),currentId,outputValues[neuronStorageIndex]);
+                encodeNeuronOutputMessage(appPayload,sizeof(appPayload),currentId,outputValues[neuronStorageIndex]);
                 //TODO send the message
             }
 
@@ -555,10 +556,10 @@ void onInputWaitTimeout(){
     int neuronStorageIndex = -1,offset=0;
     uint8_t inputSize = -1;
     char tmpBuffer[20];
-    size_t tmpBufferSize = sizeof(tmpBuffer),sendBufferSize=sizeof(smallSendBuffer);
+    size_t tmpBufferSize = sizeof(tmpBuffer);
 
     // The message aggregates the missing inputs from all neurons into a single message
-    offset += snprintf(smallSendBuffer+offset,sendBufferSize-offset,"%d ",NN_NACK);
+    offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%d ",NN_NACK);
 
     // Iterate through all neurons to determine which have incomplete input sets and identify the missing inputs
     // Since the IDs of neurons missing inputs are irrelevant to the nodes providing those inputs, the neuron IDs are not included in the message.
@@ -576,12 +577,13 @@ void onInputWaitTimeout(){
                 // If the bit is not set, it means the input has not been received yet
                 if(!isBitSet(receivedInputs[neuronStorageIndex],j)){
                     encodeNACKMessage(tmpBuffer, tmpBufferSize,saveOrders[neuronStorageIndex][j]);
-                    offset += snprintf(smallSendBuffer+offset,sendBufferSize-offset,"%s",tmpBuffer);
+                    offset += snprintf(appPayload+offset,sizeof(appPayload)-offset,"%s",tmpBuffer);
                 }
             }
         }
     }
     //TODO BroadCast the message to the network
+    network.broadcastMessage(appBuffer, sizeof(appBuffer),appPayload);
 
     //Set up the NACK control variables
     nackTriggered = true;

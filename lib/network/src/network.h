@@ -4,6 +4,7 @@
 #include "core/logger/logger.h"
 #include "core/table/table.h"
 #include "core/time_hal/time_hal.h"
+#include "core/ip_tools/ip_tools.h"
 #include <cstdint>
 #include <cstdio>
 
