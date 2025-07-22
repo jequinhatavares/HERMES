@@ -54,6 +54,7 @@ uint8_t * (*chooseParentFunction)(uint8_t *, uint8_t (*)[4] , uint8_t) = nullptr
 
 TopologyContext topologyContext ={
         .setParentMetric = topologySetNodeMetric,
+        .getParentMetric = getNodeTopologyMetric,
 };
 
 void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t)){

@@ -34,6 +34,7 @@ typedef enum TopologyMessageType{
 // Topology strategy context definition
 typedef struct TopologyContext{
     void (*setParentMetric)(void* metric);
+    void* (*getParentMetric)(uint8_t * nodeIP);
 } TopologyContext;
 
 struct topologyTableEntry{
@@ -60,6 +61,8 @@ void chooseParentStrategyTopology(char* message);
 void topologySetNodeMetric(void* metric);
 
 void printTopologyTableHeader();
+
+void* getNodeTopologyMetric(uint8_t * nodeIP);
 
 /******************************-----------Application Defined Functions----------------********************************/
 

@@ -440,4 +440,17 @@ void Network::getRootIP(uint8_t *IP) {
     assignIP(IP,rootIP);
 }
 
+void *Network::getParentMetric(uint8_t *nodeIP) {
+    if(!iamRoot)return nullptr;
+    if (!::isMiddlewareStrategyActive( STRATEGY_TOPOLOGY)){
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        return nullptr;
+    }
+
+    TopologyContext* context = (TopologyContext*) ::middlewareGetStrategyContext();
+    if(context != nullptr) return context->getParentMetric(nodeIP);
+
+    return nullptr;
+}
+
 

@@ -1,6 +1,8 @@
 #include <network.h>
 #include <Arduino.h>
 
+class Network network;
+
 //Put Here the MAC of the node you wish to be root
 uint8_t rootMAC[6] = {0,0,0,96,230,135};
 
@@ -18,7 +20,7 @@ uint8_t* chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t potent
     topologyTableEntry *topologyMetricValue;
 
     for (int i = 0; i < nPotentialParents; i++) {
-        topologyMetricValue = (topologyTableEntry*) getNodeTopologyMetric(potentialParents[i]);
+        topologyMetricValue = (topologyTableEntry*) network.getParentMetric(potentialParents[i]);
         if(topologyMetricValue != nullptr){
             LOG(MIDDLEWARE,DEBUG,"Potential Parent: %hhu.%hhu.%hhu.%hhu metric:%d\n",potentialParents[i][0],potentialParents[i][1],potentialParents[i][2],potentialParents[i][3],topologyMetricValue->processingCapacity);
             if(topologyMetricValue->processingCapacity >= maxProcessingCapacity){
@@ -55,7 +57,7 @@ void setTopologyMetricValue(void* av, void*bv){
     a->processingCapacity = b->processingCapacity;
 }
 
-class Network network;
+
 
 void setup() {
     uint8_t MAC[6];
