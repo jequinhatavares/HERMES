@@ -57,7 +57,7 @@ The logging system is divided into different log categories, each corresponding 
 - **NETWORK** – Logs related to network events (e.g., new child node detected, successful network join, AP IP established).
 - **MESSAGES** – Logs for sent and received messages.
 - **STATE_MACHINE** – Logs tracking state transitions in the node's state machine.
-- **DEBUG_SERVER** – Logs related to communication with the visualization server.
+- **MONITORING_SERVER** – Logs related to communication with the visualization server.
 
 By default, all logging modules are **disabled**. To activate a specific logging module, call passing the desired module as an argument:
 

@@ -35,7 +35,7 @@ void reportNewNodeToMonitoringServer (uint8_t * nodeIP, uint8_t * parentIP){
         }else{
             LOG(NETWORK, ERROR, "❌ ERROR: No path to the root node was found in the routing table.\n");
         }
-    }else LOG(DEBUG_SERVER,DEBUG,smallSendBuffer);
+    }else LOG(MONITORING_SERVER,DEBUG,smallSendBuffer);
 
 #endif
 }
@@ -57,7 +57,7 @@ void reportDeletedNodeToMonitoringServer (uint8_t * nodeIP){
         }else{
             LOG(NETWORK, ERROR, "❌ No path to the root node was found in the routing table.\n");
         }
-    }else LOG(DEBUG_SERVER,DEBUG,smallSendBuffer);//If i am the root print the message to the monitoring server
+    }else LOG(MONITORING_SERVER,DEBUG,smallSendBuffer);//If i am the root print the message to the monitoring server
 
 #endif
 }

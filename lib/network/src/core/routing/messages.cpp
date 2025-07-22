@@ -652,7 +652,7 @@ void handleDebugMessage(char* msg){
         }
         sendMessage(nextHopIP,receiveBuffer);
     }else{//send message to debug server
-        LOG(DEBUG_SERVER,DEBUG,msg);
+        LOG(MONITORING_SERVER,DEBUG,msg);
         //sendMessage(debugServerIP, receiveBuffer);
     }
 }

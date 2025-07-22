@@ -186,7 +186,7 @@ void setUp(void){
     enableModule(STATE_MACHINE);
     enableModule(MESSAGES);
     enableModule(NETWORK);
-    enableModule(DEBUG_SERVER);
+    enableModule(MONITORING_SERVER);
     enableModule(CLI);
     enableModule(MIDDLEWARE);
 

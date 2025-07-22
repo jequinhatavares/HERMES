@@ -19,7 +19,7 @@ typedef enum LogModules {
     MESSAGES, //1
     STATE_MACHINE, //2
     CLI, //3
-    DEBUG_SERVER, //4
+    MONITORING_SERVER, //4
     MIDDLEWARE, //5
     APP, //6
 }LogModules;
