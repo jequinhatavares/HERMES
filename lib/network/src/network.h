@@ -46,7 +46,7 @@ class Network {
     void injectMetric(void*metric); // Inject new node metric into network
 
     // ================ STRATEGY: PUB/SUB ====================
-    void initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *)
+    void initMiddlewareStrategyPubSub(void (*encodeTopicFunction)(char*,size_t,void *)
                                       ,void (*decodeTopicFunction)(char*,int8_t *)); // Configures the PubSub strategy
     void subscribeToTopic(int8_t topic); // Subscribe to a topic
     void unsubscribeToTopic(int8_t topic); // Remove topic subscription

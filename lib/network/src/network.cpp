@@ -171,8 +171,8 @@ void Network::injectMetric(void *metric) {
  *
  * @return void
  */
-void Network::initMiddlewareStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *)){
-    ::initMiddlewareStrategyPubSub(setValueFunction,encodeTopicFunction,decodeTopicFunction);
+void Network::initMiddlewareStrategyPubSub(void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *)){
+    ::initMiddlewareStrategyPubSub(encodeTopicFunction,decodeTopicFunction);
 }
 
 

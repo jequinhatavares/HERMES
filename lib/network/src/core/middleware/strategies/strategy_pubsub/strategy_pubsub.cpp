@@ -37,7 +37,7 @@ TableInfo PSTable = {
         .isEqual = isIPEqual,
         .table = psTable,
         .setKey = setIP,
-        .setValue = nullptr,
+        .setValue = setPubSubInfo,
 };
 TableInfo* pubsubTable = &PSTable;
 
@@ -62,8 +62,7 @@ PubSubInfo valuesPubSub[TABLE_MAX_SIZE];
  * @param decodeTopicFunction - Callback for decoding topic data
  * @return void
  */
-void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *) ){
-    pubsubTable->setValue = setValueFunction;
+void initStrategyPubSub(void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *) ){
     //Initialize the pubsubTable
     tableInit(pubsubTable, nodesPubSub, valuesPubSub, sizeof(uint8_t [4]), sizeof(PubSubInfo));
 

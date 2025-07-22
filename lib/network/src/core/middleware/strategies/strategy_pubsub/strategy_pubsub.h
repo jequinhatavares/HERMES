@@ -49,7 +49,7 @@ typedef struct PubSubContext{
 } PubSubContext;
 
 
-void initStrategyPubSub(void (*setValueFunction)(void*,void *),void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *) );
+void initStrategyPubSub(void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *) );
 void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typePubSub, int8_t topic);
 void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize);
 void onNetworkEventStrategyPubSub(int networkEvent, uint8_t involvedIP[4]);
