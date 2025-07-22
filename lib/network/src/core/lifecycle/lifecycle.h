@@ -18,13 +18,6 @@
 #include <cstring>
 
 
-#ifndef WIFI_SSID
-#define WIFI_SSID      		"JessicaNode"
-#endif
-
-#ifndef WIFI_PASSWORD
-#define WIFI_PASSWORD     		        "123456789"
-#endif
 
 #ifndef APPLICATION_PROCESSING_INTERVAL
 #define APPLICATION_PROCESSING_INTERVAL 12000000

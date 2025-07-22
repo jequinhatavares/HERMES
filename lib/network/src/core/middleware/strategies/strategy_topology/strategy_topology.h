@@ -9,7 +9,7 @@
 #include "../../../transport_hal/transport_hal.h"
 #include "../../../wifi_hal/wifi_hal.h"
 #include "../strategy_interface.h"
-#include "../../../lifecycle/lifecycle.h" //This dependency can be removed when the config file is created
+
 
 #include <cstdlib>
 #include <cstring>

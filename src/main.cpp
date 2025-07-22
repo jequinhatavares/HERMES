@@ -1,21 +1,10 @@
 //#define raspberrypi_3b
 #if defined(ESP32) || defined(ESP8266)
 
-/***#include <wifi_hal.h>
-#include <transport_hal.h>
-#include "lifecycle.h"
-#include "cli.h"
-#include "../lib/middleware/strategies/strategy_inject/strategy_inject.h"
-#include "../lib/middleware/strategies/strategy_pubsub/strategy_pubsub.h"
-#include "middleware.h"
-#include "../lib/circular_buffer/snake_queue.h" ***/
-//#include "../lib/network/src/network.h"
-//#include "network_config.h"
+
 #include <network.h>
 #include <Arduino.h>
 
-
-//#include <network.h>
 //227:96:230:135 root
 //227:96:237:119
 
