@@ -61,7 +61,6 @@ void setup(){
 
     network.begin();
 
-
     //Select and initialize the middleware strategy
     //middlewareSelectStrategy(STRATEGY_INJECT);
     //initMiddlewareStrategyInject((void*) metrics,sizeof(MetricTableEntry),setMetricValue,encodeMetricEntry,decodeMetricEntry);
