@@ -2,6 +2,8 @@
 
 #include "core/middleware/strategies/strategy_interface.h"
 #include "core/logger/logger.h"
+#include "core/table/table.h"
+#include "core/time_hal/time_hal.h"
 #include <cstdint>
 #include <cstdio>
 
@@ -61,6 +63,7 @@ class Network {
                                         ,void (*decodeTopologyMetricFunction)(char*,void *), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t));
     void setParentMetric(void*metric); // Sets this node metric and sends it to the root for it to be able to discriminate between parent candidates
     void* getParentMetric(uint8_t *nodeIP); //Gets the metric associated to a node as parent this method is only available at the root node
+
     // ================== MESSAGE ROUTING ====================
     void sendMessageToRoot(char* messageBuffer,size_t bufferSize,const char* messagePayload); // Sends a message to the root node
     void sendMessageToParent(char* messageBuffer,size_t bufferSize,const char* messagePayload);// Sends a message to the parent node

@@ -1,7 +1,7 @@
 #ifndef NN_PARAMS_H
 #define NN_PARAMS_H
 
-#include <stdint.h>
+#include <cstdint>
 
 
 // Supported activation functions

@@ -1,8 +1,7 @@
 #ifndef NEURAL_NETWORK_MANAGER_H
 #define NEURAL_NETWORK_MANAGER_H
 
-#include <cstdio>
-#include <cmath>
+
 #include "../nn_types.h"
 #include "routing.h"
 #include "messages.h"
@@ -10,6 +9,8 @@
 #include "../nn_configurations.h"
 #include "../core/neuron_manager.h"
 
+#include <cstdio>
+#include <cmath>
 
 extern TableInfo* neuronToNodeTable;
 
