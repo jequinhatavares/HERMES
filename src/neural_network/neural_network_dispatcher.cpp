@@ -1,9 +1,12 @@
-#include "neural_network.h"
+#include "neural_network_dispatcher.h"
 
-void OnNetworkJoin(uint8_t *parentIP){
+void onNetworkJoin(uint8_t *parentIP){
+    uint8_t myIP[4];
+    network.getNodeIP(myIP);
     // Send a message to the root node notifying it that this node is a potential neural network worker,
     // including the device class (e.g., ESP8266, NodeMCU, or Raspberry Pi).
-    network.sendMessageToRoot(appBuffer, sizeof(appBuffer),);
+    encodeWorkerRegistration(appPayload, sizeof(appPayload),myIP,deviceType);
+    network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
 }
 
 
@@ -12,6 +15,10 @@ void handleNeuralNetworkMessage(uint8_t* originatorIP,uint8_t* destinationIP,cha
 
     sscanf(messageBuffer, "%d",&type);
     switch (type) {
+        case NN_WORKER_REGISTRATION:
+            if(network.iamRoot) handleACKMessage(messageBuffer);
+            else LOG(APP,ERROR,"This node received a message meant for the coordinator (root) node. Message: %s", messageBuffer);
+            break;
         case NN_ASSIGN_COMPUTATION:
             handleNeuronMessage(messageBuffer);
             break;
@@ -47,4 +54,6 @@ void neuralNetworkOnTimer(){
      * Once all neurons have been assigned to physical nodes, wait for acknowledgments from those devices.
      * If the timeout expires and some neurons remain unacknowledged, resend the assignments for those neurons.***/
     if(network.iamRoot) manageNeuralNetwork();
+
+
 }
