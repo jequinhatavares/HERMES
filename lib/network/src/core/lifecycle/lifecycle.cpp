@@ -24,7 +24,10 @@ void (*middlewareOnNetworkEventCallback)(int,uint8_t *) = nullptr;
 // Defaults to routing layer level chooseParent function if not overridden.
 ParentInfo (*middlewareChooseParentCallback)(ParentInfo *,int) = chooseParent;
 
+//Callback that executes APP periodic Tasks
 void (*onAppPeriodicTaskCallback)() = nullptr;
+//Callback that executes APP specific code when the node joins the network
+void (*onNodeJoinNetworkAppCallback)(uint8_t *)= nullptr;
 
 // State machine structure holding the current state and a transition table mapping states to handler functions.
 StateMachine SM_ = {
@@ -272,9 +275,12 @@ State joinNetwork(Event event){
     }
 
 
+
     reachableNetworks.len = 0 ;
     LOG(NETWORK,INFO,"------------------ Node successfully added to the network -------------------\n");
     connectedToMainTree = true;
+
+    if(onNodeJoinNetworkAppCallback)onNodeJoinNetworkAppCallback(parent);
     //changeWifiMode(3);
     return sActive;
 }

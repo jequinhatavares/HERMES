@@ -421,6 +421,11 @@ void Network::onPeriodicAppTask(void (*callback)()) {
     onAppPeriodicTaskCallback = callback;
 }
 
+void Network::onNetworkJoin(void (*callback)(uint8_t *)) {
+    onNodeJoinNetworkAppCallback = callback;
+}
+
+
 void Network::getNodeMAC(uint8_t *MAC) {
     if(MAC == nullptr)return;
     getMyMAC(MAC);
@@ -453,5 +458,6 @@ void *Network::getParentMetric(uint8_t *nodeIP) {
 
     return nullptr;
 }
+
 
 

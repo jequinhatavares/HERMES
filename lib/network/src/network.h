@@ -39,6 +39,8 @@ class Network {
     void onACKReceived(void (*callback)(uint8_t*, uint8_t*, char*));    // Set the function that handles incoming ACK messages
     void onPeriodicAppTask(void (*callback)());                         // Registers a periodic application task callback
 
+    void onNetworkJoin(void (*callback)(uint8_t* parentIP));
+
     // ================== MIDDLEWARE  =================
     void middlewareSelectStrategy(StrategyType strategyType);   // Sets the middleware routing strategy to use
     void middlewareInfluenceRouting(char* dataMessage);         // Allows application layer to influence routing decisions (uses the currently selected middleware strategy)
