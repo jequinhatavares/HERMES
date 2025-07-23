@@ -1,6 +1,7 @@
 {
   "name": "MeshNetwork",
   "version": "1.0.0",
+  "include": "src",
   "description": "",
   "keywords": ["mesh", "networking", "esp32", "esp8266","raspberrypi","routing", "middleware", "platformio"],
   "repository": {
@@ -21,4 +22,5 @@
   },
   "frameworks": ["arduino"],
   "platforms": ["espressif32", "espressif8266","Linux ARM"]
+
 }

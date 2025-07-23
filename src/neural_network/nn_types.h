@@ -4,12 +4,14 @@
 #include <cstdint>
 
 typedef enum NeuralNetworkMessageType{
-    NN_ASSIGN_COMPUTATION, //O Message from the coordinator assigning neurons to nodes
-    NN_ASSIGN_OUTPUTS,     //1 Message from the coordinator specifying which neurons require the output of the assigned neuron
-    NN_NEURON_OUTPUT,      //2 Message from a node transmitting its computed neuron output
-    NN_FORWARD,            //3 Message from the coordinator to trigger a new inference operation
-    NN_NACK,               //4 Message from a node indicating that some required inputs are missing
-    NN_ACK,                //5 Message from a node to the coordinator acknowledging receipt of neuron assignment
+    NN_ASSIGN_COMPUTATION,  //O Message from the coordinator assigning neurons to nodes
+    NN_ASSIGN_OUTPUTS,      //1 Message from the coordinator specifying which neurons require the output of the assigned neuron
+    NN_NEURON_OUTPUT,       //2 Message from a node transmitting its computed neuron output
+    NN_FORWARD,             //3 Message from the coordinator to trigger a new inference operation
+    NN_NACK,                //4 Message from a node indicating that some required inputs are missing
+    NN_ACK,                 //5 Message from a node to the coordinator acknowledging receipt of neuron assignment
+    NN_WORKER_REGISTRATION, //6 Message sent from a node to the root node to register as a potential neural network worker,
+                            //including device type information (ESP8266, ESP32, or Raspberry Pi).
 }NeuralNetworkMessageType;
 
 

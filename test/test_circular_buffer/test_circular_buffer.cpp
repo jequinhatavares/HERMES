@@ -1,5 +1,11 @@
 #include <unity.h>
-#include "snake_queue.h"
+//#include "core/circular_buffer/snake_queue.h"
+
+#include "../../lib/network/src/core/circular_buffer/snake_queue.h"
+//#include <MeshNetwork/src/core/circular_buffer/snake_queue.h>
+
+
+// To run this test: pio test -e native -f "test_circular_buffer" -v
 
 static CircularBuffer cb_ = {
         .head=0,
