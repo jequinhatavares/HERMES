@@ -6,6 +6,7 @@
 #include "../app_globals.h"
 
 
+void OnNetworkJoin(uint8_t *parentIP);
 
 void handleNeuralNetworkMessage(uint8_t* originatorIP,uint8_t* destinationIP,char* messageBuffer);
 void neuralNetworkOnTimer();

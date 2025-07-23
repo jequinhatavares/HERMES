@@ -1,5 +1,11 @@
 #include "neural_network.h"
 
+void OnNetworkJoin(uint8_t *parentIP){
+    // Send a message to the root node notifying it that this node is a potential neural network worker,
+    // including the device class (e.g., ESP8266, NodeMCU, or Raspberry Pi).
+    network.sendMessageToRoot(appBuffer, sizeof(appBuffer),);
+}
+
 
 void handleNeuralNetworkMessage(uint8_t* originatorIP,uint8_t* destinationIP,char* messageBuffer){
     NeuralNetworkMessageType type;

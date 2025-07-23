@@ -505,6 +505,9 @@ void handleACKMessage(char* messageBuffer){
     receivedAllNeuronAcks = isNetworkAcknowledge;
 }
 
+void handleWorkerRegistration(char*messageBuffer){
+
+}
 
 
 void manageNeuralNetwork(){
@@ -584,8 +587,6 @@ void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices){
         messageOffset = 0;
         unACKNeurons = false;
         i=0;
-
     }
-
 }
 
