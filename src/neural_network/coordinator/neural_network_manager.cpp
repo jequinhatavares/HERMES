@@ -10,8 +10,10 @@
 unsigned long neuronAssignmentTime;
 
 bool areNeuronsAssigned = false;
-
 bool receivedAllNeuronAcks = false;
+bool inferenceRunning = false;
+
+int nnSequenceNumber=0;
 
 uint8_t workersIPs[10][4];
 uint8_t workersDeviceTypes[10];
@@ -331,6 +333,14 @@ void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t tar
 
 }
 
+void distributeInputNeurons(uint8_t nodes[][4],uint8_t nrNodes){
+    uint8_t numInputNeurons = neuralNetwork.layers[0].numInputs;
+    for (int i = 0; i < numInputNeurons; ++i) {
+        encodeInputAssignMessage(appPayload, sizeof(appPayload),i);
+        network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodes[i]);
+    }
+}
+
 void assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]){
     uint8_t *neuronId;
     NeuronEntry *neuronEntry;
@@ -481,6 +491,12 @@ void encodeForwardMessage(char*messageBuffer, size_t bufferSize, int inferenceId
 }
 
 
+void encodeInputAssignMessage(char*messageBuffer,size_t bufferSize,uint8_t neuronId){
+    //NN_ASSIGN_INPUT [neuronID]
+    snprintf(messageBuffer, bufferSize, "%d %hhu",NN_ASSIGN_INPUTS,neuronId);
+}
+
+
 void handleACKMessage(char* messageBuffer){
     // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
     char *saveptr1, *token;
@@ -504,6 +520,7 @@ void handleACKMessage(char* messageBuffer){
         token = strtok_r(NULL, " ",&saveptr1);
     }
 
+    //Check if with the received ACK all neurons have been acknowledged
     for (int i = 0; i < neuronToNodeTable->numberOfItems; i++) {
         neuronEntry = (NeuronEntry*)tableValueAtIndex(neuronToNodeTable,i);
         if(neuronEntry != nullptr){
@@ -539,8 +556,16 @@ void manageNeuralNetwork(){
     unsigned long currentTime = getCurrentTime();
     //Check if the number of devices in the network is enough to distribute the neural network neurons between physical devices
     if(totalWorkers>=MIN_WORKERS){
-
+        distributeNeuralNetwork(&neuralNetwork,workersIPs,totalWorkers);
+        neuronAssignmentTime = getCurrentTime();
     }
+
+    // If all neurons have acknowledged and no inference cycle is currently running, start a new inference cycle
+    if(receivedAllNeuronAcks && !inferenceRunning){
+        nnSequenceNumber +=2;
+        encodeForwardMessage(appPayload, sizeof(appPayload),nnSequenceNumber);
+    }
+
     // Check if the expected time for ack arrival from all nodes had passed
     if((currentTime-neuronAssignmentTime) >= ACK_TIMEOUT && areNeuronsAssigned && !receivedAllNeuronAcks){
         onACKTimeOut();

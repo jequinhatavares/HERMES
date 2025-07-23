@@ -35,12 +35,14 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
 void assignOutputTargetsToNetwork(uint8_t nodes[][4],uint8_t nrNodes);
 void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]);
 void assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]);
+void distributeInputNeurons(uint8_t nodes[][4],uint8_t nrNodes);
 
 void encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type);
 int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize,uint8_t neuronId, uint8_t inputSize, uint8_t * inputSaveOrder,const float*weightsValues, float bias);
 void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes);
 void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronIds, uint8_t nNeurons, uint8_t subTopic, uint8_t pubTopic);
 void encodeForwardMessage(char*messageBuffer, size_t bufferSize, int inferenceId);
+void encodeInputAssignMessage(char*messageBuffer, size_t bufferSize,uint8_t neuronId);
 
 void handleACKMessage(char* messageBuffer);
 void handleWorkerRegistration(char*messageBuffer);
