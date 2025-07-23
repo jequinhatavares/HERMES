@@ -334,10 +334,24 @@ void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t tar
 }
 
 void distributeInputNeurons(uint8_t nodes[][4],uint8_t nrNodes){
+    NeuronEntry neuronEntry;
     uint8_t numInputNeurons = neuralNetwork.layers[0].numInputs;
-    for (int i = 0; i < numInputNeurons; ++i) {
+    if(numInputNeurons > nrNodes){
+            LOG(APP, ERROR, "Error: number of input neurons exceeds the number of available nodes");
+        return;
+    }
+    for (int i = 0; i < numInputNeurons; i++) {
+        //Encode ad send the message assigning the input neuron to the physical device
         encodeInputAssignMessage(appPayload, sizeof(appPayload),i);
         network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodes[i]);
+
+        // Add the neuron-to-node mapping to the table
+        assignIP(neuronEntry.nodeIP,nodes[i]);
+        neuronEntry.layer = 0;
+        neuronEntry.indexInLayer = i;
+        neuronEntry.isAcknowledged = false;
+
+        tableAdd(neuronToNodeTable,&i,&neuronEntry);
     }
 }
 
