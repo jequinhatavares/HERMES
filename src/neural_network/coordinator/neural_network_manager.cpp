@@ -571,6 +571,8 @@ void manageNeuralNetwork(){
     //Check if the number of devices in the network is enough to distribute the neural network neurons between physical devices
     if(totalWorkers>=MIN_WORKERS){
         distributeNeuralNetwork(&neuralNetwork,workersIPs,totalWorkers);
+        assignOutputTargetsToNetwork(workersIPs,totalWorkers);
+        distributeInputNeurons(workersIPs,totalWorkers);
         neuronAssignmentTime = getCurrentTime();
     }
 
