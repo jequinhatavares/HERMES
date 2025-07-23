@@ -13,6 +13,14 @@ bool areNeuronsAssigned = false;
 
 bool receivedAllNeuronAcks = false;
 
+uint8_t workersIPs[10][4];
+uint8_t workersDeviceTypes[10];
+
+uint8_t totalWorkers=0;
+uint8_t numESP8266Workers=0;
+uint8_t numESP32Workers=0;
+uint8_t numRPiWorkers=0;
+
 /***
  * Neural Network Computations Assignment table
  *
@@ -74,6 +82,7 @@ void setNeuronEntry(void* av, void* bv){
 
 void initNeuralNetwork(){
     tableInit(neuronToNodeTable,neurons,neuronMap, sizeof(NeuronId),sizeof(NeuronEntry));
+
 }
 
 void printNeuronEntry(TableEntry* Table){
@@ -505,13 +514,33 @@ void handleACKMessage(char* messageBuffer){
     receivedAllNeuronAcks = isNetworkAcknowledge;
 }
 
-void handleWorkerRegistration(char*messageBuffer){
+void handleWorkerRegistration(char* messageBuffer){
+    uint8_t nodeIP[4],deviceClass;
 
+    //NN_WORKER_REGISTRATION [Node IP] [Device Type]
+    sscanf(messageBuffer, "%*d %hhu.%hhu.%hhu.%hhu %hhu",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&deviceClass);
+
+    //Register the node as a worker node with the corresponding device class
+    assignIP(workersIPs[totalWorkers],nodeIP);
+    workersDeviceTypes[totalWorkers]=deviceClass;
+
+    if(static_cast<DeviceType>(deviceClass) == DeviceType::DEVICE_ESP8266){
+        numESP8266Workers++;
+    }else if(static_cast<DeviceType>(deviceClass) == DeviceType::DEVICE_ESP32){
+        numESP32Workers++;
+    }else if(static_cast<DeviceType>(deviceClass) == DeviceType::DEVICE_RPI){
+        numRPiWorkers++;
+    }
+    totalWorkers++;
 }
 
 
 void manageNeuralNetwork(){
     unsigned long currentTime = getCurrentTime();
+    //Check if the number of devices in the network is enough to distribute the neural network neurons between physical devices
+    if(totalWorkers>=MIN_WORKERS){
+
+    }
     // Check if the expected time for ack arrival from all nodes had passed
     if((currentTime-neuronAssignmentTime) >= ACK_TIMEOUT && areNeuronsAssigned && !receivedAllNeuronAcks){
         onACKTimeOut();

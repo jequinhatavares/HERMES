@@ -10,7 +10,7 @@ extern char appBuffer[250];
 
 typedef enum class DeviceType{
     DEVICE_ESP8266,
-    DEVICE_ESP_32,
+    DEVICE_ESP32,
     DEVICE_RPI,
 }DeviceType;
 

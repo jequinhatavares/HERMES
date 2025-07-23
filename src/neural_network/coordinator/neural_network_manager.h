@@ -2,14 +2,11 @@
 #define NEURAL_NETWORK_MANAGER_H
 
 
-//#include "routing.h"
-//#include "messages.h"
 #include "../nn_types.h"
 #include "nn_parameters.h"
 #include "../nn_configurations.h"
 #include "../worker/neuron_manager.h"
 #include "../../app_globals.h"
-
 
 #include <cstdio>
 #include <cmath>
@@ -46,6 +43,7 @@ void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronId
 void encodeForwardMessage(char*messageBuffer, size_t bufferSize, int inferenceId);
 
 void handleACKMessage(char* messageBuffer);
+void handleWorkerRegistration(char*messageBuffer);
 
 void manageNeuralNetwork();
 void onACKTimeOut();

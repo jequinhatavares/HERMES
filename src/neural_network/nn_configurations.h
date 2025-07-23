@@ -28,6 +28,10 @@
 
 #define ACK_TIMEOUT 3000
 
+#define MIN_WORKERS 5
+
+
+
 
 
 #endif //NN_CONFIGURATIONS_H
