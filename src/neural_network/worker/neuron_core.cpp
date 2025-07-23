@@ -1,14 +1,14 @@
 #include "neuron_core.h"
 
 
-NeuronId neuronIds[MAX_NEURONS];
-float* weights[MAX_NEURONS];     // Each neuron has its own weight array allocated at weights[NeuronStorageIndex]
-float* inputs[MAX_NEURONS];      // Each neuron has its own input buffer allocated at weights[NeuronStorageIndex]
-NeuronId* saveOrders[MAX_NEURONS];    // Each neuron has its own save order allocated at weights[NeuronStorageIndex]
-float biases[MAX_NEURONS];       // Each neuron has its own bias allocated at weights[NeuronStorageIndex]
-uint8_t inputSizes[MAX_NEURONS];     // Each neuron has its own input size allocated at weights[NeuronStorageIndex]
+NeuronId neuronIds[MAX_NEURONS];    // Each node can compute until MAX_NEURONS each one with a node Id
+float* weights[MAX_NEURONS];        // Each neuron has its own weight array allocated at weights[NeuronStorageIndex]
+float* inputs[MAX_NEURONS];         // Each neuron has its own input buffer allocated at weights[NeuronStorageIndex]
+NeuronId* saveOrders[MAX_NEURONS];  // Each neuron has its own save order allocated at weights[NeuronStorageIndex]
+float biases[MAX_NEURONS];          // Each neuron has its own bias allocated at weights[NeuronStorageIndex]
+uint8_t inputSizes[MAX_NEURONS];    // Each neuron has its own input size allocated at weights[NeuronStorageIndex]
 
-int neuronsCount = 0;             //Number of neurons currently computed by this node
+int neuronsCount = 0;               //Number of neurons currently computed by this node
 
 
 /**

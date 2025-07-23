@@ -95,6 +95,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
     // Initialize the neuron ID to the first neuron in the first hidden layer (i.e., the first ID after the last input neuron)
     uint8_t currentNeuronId= net->layers[0].numInputs;
     char tmpBuffer[150];
+    size_t tmpBufferSize= sizeof(tmpBuffer);
     NeuronEntry neuronEntry;
 
     // Count the neurons in the hidden layers, as only these will be assigned to nodes in the network
@@ -106,7 +107,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
     neuronsPerNode = ceil( numHiddenNeurons / nrNodes);
 
     // Encode the message header for the first node’s neuron assignments
-    encodeMessageHeader(tmpBuffer, sizeof(tmpBuffer),NN_ASSIGN_COMPUTATION);
+    encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_COMPUTATION);
     messageOffset += snprintf(appPayload, sizeof(appPayload),"%s",tmpBuffer);
 
     LOG(APP, INFO, "Neural network initialized with %d neurons (avg. %d neurons per node)\n", net->numNeurons, neuronsPerNode);
@@ -142,7 +143,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
                 continue;
             }
 
-            encodeAssignNeuronMessage(tmpBuffer, sizeof(tmpBuffer),
+            encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,
                                            currentNeuronId,net->layers[i].numInputs,inputIndexMap,
                                            &net->layers[i].weights[j * net->layers[i].numInputs],net->layers[i].biases[j]);
 
@@ -181,7 +182,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
                 messageOffset = 0;
                 strcpy(appPayload,"");
                 // Encode the message header for the next node’s neuron assignments
-                encodeMessageHeader(tmpBuffer, sizeof(tmpBuffer),NN_ASSIGN_COMPUTATION);
+                encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_COMPUTATION);
                 messageOffset += snprintf(appPayload, sizeof(appPayload),"%s",tmpBuffer);
             }
         }
@@ -248,7 +249,6 @@ void assignOutputTargetsToNetwork(uint8_t nodes[][4],uint8_t nrNodes){
             //LOG(APP,INFO,"Encoded message: %s\n",appPayload);
             //Todo send Message for the node
             network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodes[j]);
-
             nNeurons = 0;
         }
 
@@ -313,6 +313,7 @@ void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t tar
             encodeAssignOutputMessage(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,inputNodesIPs,nNodes);
             offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
             //Todo send Message for the node
+            network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,targetNodeIP);
         }
 
         nNeurons = 0;
@@ -361,6 +362,7 @@ void assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t target
             encodePubSubInfo(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,i,i+1);
             offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
             //Todo send Message for the node
+            network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,targetNodeIP);
         }
 
         nNeurons = 0;
@@ -416,7 +418,7 @@ int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize, uint8_t ne
 
 void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes){
     int offset = 0;
-    //|[neuron ID1] [neuron ID2] ... [IP Address 1] [IP Address 2] ...
+    //|[N Neurons] [neuron ID1] [neuron ID2] ...[N Nodes] [IP Address 1] [IP Address 2] ...
 
     offset = snprintf(messageBuffer, bufferSize, "|");
 
@@ -513,37 +515,77 @@ void manageNeuralNetwork(){
     }
 }
 
-void onACKTimeOut(){
+void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices){
     NeuronId *currentId;
     NeuronEntry *neuronEntry;
-    uint8_t layer, indexInLayer,*inputIndexMap;
+    uint8_t currentLayer, currentIndexInLayer,*inputIndexMap;
     char tmpBuffer[50];
     size_t tmpBufferSize = sizeof(tmpBuffer);
+    int i=0,messageOffset=0;
+    bool unACKNeurons = false;
 
-    for(int i=0; i< neuronToNodeTable->numberOfItems;i++){
-        currentId = (NeuronId*)tableKey(neuronToNodeTable,i);
-        neuronEntry = (NeuronEntry*)tableRead(neuronToNodeTable,currentId);
+    /*** First iterate over physical devices that have been assigned neurons, since messages are aggregated and sent
+     * per device (not per neuron). That is, if a device is assigned multiple neurons, the assignments are sent
+     * together in a single message, not in separate messages. ***/
+    for (uint8_t k = 0; k < nDevices; k++){
+        // Encode the message header for the first node’s neuron assignments
+        encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_COMPUTATION);
+        messageOffset += snprintf(appPayload, sizeof(appPayload),"%s",tmpBuffer);
 
-        /*** If the neuron was not acknowledged by the node that was supposed to compute it,
-             the message assigning the neurons to that node must be remade and resent.***/
-        if(!neuronEntry->isAcknowledged){
-            layer = neuronEntry->layer;
-            indexInLayer = neuronEntry->indexInLayer;
+        /***
+         * Aggregates all unacknowledged neurons from the same nodeIP. Since the message that assigns neurons to nodes
+         * is sent as a single, aggregated message per node (i.e., it includes all the neurons the node is expected
+         * to compute), if that message is lost, none of the neurons assigned to that node are acknowledged.
+         ***/
+        while(i <neuronToNodeTable->numberOfItems){
+            currentId = (NeuronId*)tableKey(neuronToNodeTable,i);
+            neuronEntry = (NeuronEntry*)tableRead(neuronToNodeTable,currentId);
 
-            //Remake the part of the message that maps the inputs into the input vector
-            inputIndexMap = new uint8_t [neuralNetwork.layers[layer].numInputs];
-            for (uint8_t j = 0; j < neuralNetwork.layers[layer].numInputs ; j++){
-                inputIndexMap[j] = *currentId+(j-neuralNetwork.layers[layer].numInputs);
+            /***
+             * If the neuron was not acknowledged by the node, and it belongs to the current physical device along
+             * with other unacknowledged neurons, then include it in the assigning message together with the others.
+             ***/
+            if( neuronEntry!=nullptr && isIPEqual(nodeIP[k],neuronEntry->nodeIP) && !neuronEntry->isAcknowledged){
+                currentLayer = neuronEntry->layer;
+                currentIndexInLayer = neuronEntry->indexInLayer;
+                unACKNeurons = true;
+
+                //Remake the part of the message that maps the inputs into the input vector
+                inputIndexMap = new uint8_t [neuralNetwork.layers[currentLayer].numInputs];
+                for (uint8_t j = 0; j < neuralNetwork.layers[currentLayer].numInputs ; j++){
+                    inputIndexMap[j] = *currentId+(j-neuralNetwork.layers[currentLayer].numInputs);
+                }
+
+                //Encode the part assigning neuron information (weights, bias, inputs etc..)
+                encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,
+                                          *currentId,neuralNetwork.layers[currentLayer].numInputs,inputIndexMap,
+                                          &neuralNetwork.layers[currentLayer].weights[currentIndexInLayer * neuralNetwork.layers[currentLayer].numInputs],
+                                          neuralNetwork.layers[currentLayer].biases[currentIndexInLayer]);
+
+                messageOffset += snprintf(appPayload + messageOffset, sizeof(appPayload) - messageOffset,"%s",tmpBuffer);
+
+                delete [] inputIndexMap;
             }
-
-            encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,
-                                      *currentId,neuralNetwork.layers[layer].numInputs,inputIndexMap,
-                                      &neuralNetwork.layers[indexInLayer].weights[indexInLayer * neuralNetwork.layers[layer].numInputs],neuralNetwork.layers[layer].biases[indexInLayer]);
-
-            //TODO SEND the message to the node
-            delete [] inputIndexMap;
-
+            i++;
         }
+
+        //Send the message to the node
+        if (unACKNeurons){
+            //Send the message assigning weights bias and inputs
+            network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodeIP[k]);
+
+            //Then send the message assigning the output targets
+            assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodeIP[k]);
+            network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodeIP[k]);
+        }
+
+        //Reset the variables for the next unacknowledged neurons from other physical node
+        strcpy(appPayload,"");
+        messageOffset = 0;
+        unACKNeurons = false;
+        i=0;
+
     }
+
 }
 
