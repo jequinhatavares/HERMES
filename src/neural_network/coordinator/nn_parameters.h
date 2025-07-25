@@ -16,21 +16,21 @@ typedef enum ActivationType{
 
 // Neural Network Layer Definition
 typedef struct Layer{
-    uint8_t numInputs;      // Input dimensions
-    uint8_t numOutputs;     // Output dimensions (neurons)
-    ActivationType activation; // Activation function
-    const float* weights;     // Weights (size: inputs × outputs)
-    const float* biases;      // Biases (size = outputs)
+    uint8_t numInputs;          // Input dimensions
+    uint8_t numOutputs;         // Output dimensions (neurons)
+    ActivationType activation;  // Activation function
+    const float* weights;       // Weights (size: inputs × outputs)
+    const float* biases;        // Biases (size = outputs)
 } Layer;
 
 // Top-level Neural Network Structure
 typedef struct NeuralNetwork{
-    uint8_t inputSize;      // Input layer size
-    uint8_t outputSize;     // Output layer size
-    uint8_t numHiddenLayers; // Hidden layers count
-    uint8_t numLayers;      // Total layers (hidden + output)
-    uint8_t numNeurons;      // Total Number of neurons in the NN
-    const Layer* layers;      // Layer array
+    uint8_t inputSize;          // Input layer size
+    uint8_t outputSize;         // Output layer size
+    uint8_t numHiddenLayers;    // Hidden layers count
+    uint8_t numLayers;          // Total layers (hidden + output)
+    uint8_t numNeurons;         // Total Number of neurons in the NN
+    const Layer* layers;        // Layer array
 } NeuralNetwork;
 
 // Declare neural network reference
@@ -95,7 +95,7 @@ static const Layer _layers[3] = {
 };
 
 // Network instance
-const NeuralNetwork network = {
+const NeuralNetwork neuralNetwork = {
     .inputSize = 2,
     .outputSize = 2,
     .numHiddenLayers = 2,

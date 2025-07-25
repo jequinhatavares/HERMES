@@ -1,7 +1,7 @@
 #ifndef WIFIROUTING_APP_GLOBALS_H
 #define WIFIROUTING_APP_GLOBALS_H
 
-#include "network.h"
+#include <network.h>
 
 extern class Network network;  // Just a declaration
 

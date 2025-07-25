@@ -55,5 +55,4 @@ void neuralNetworkOnTimer(){
      * If the timeout expires and some neurons remain unacknowledged, resend the assignments for those neurons.***/
     if(network.iamRoot) manageNeuralNetwork();
 
-
 }
