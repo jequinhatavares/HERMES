@@ -1,6 +1,6 @@
 #include <unity.h>
 
-#include "logger.h"
+#include "../lib/network/src/core/logger/logger.h"
 
 void test_logger(){
     currentLogLevel = DEBUG;
