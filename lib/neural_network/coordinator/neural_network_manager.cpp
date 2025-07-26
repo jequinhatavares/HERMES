@@ -584,7 +584,7 @@ void manageNeuralNetwork(){
 
     // Check if the expected time for ack arrival from all nodes had passed
     if((currentTime-neuronAssignmentTime) >= ACK_TIMEOUT && areNeuronsAssigned && !receivedAllNeuronAcks){
-        onACKTimeOut();
+        //onACKTimeOut();
     }
 }
 

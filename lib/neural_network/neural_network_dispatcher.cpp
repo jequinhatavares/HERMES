@@ -1,6 +1,23 @@
 #include "neural_network_dispatcher.h"
 
 
+#ifdef ESP8266
+DeviceType deviceType = DeviceType::DEVICE_ESP8266;
+#endif
+
+#ifdef ESP32
+DeviceType deviceType = DeviceType::DEVICE_ESP8266;
+#endif
+
+#ifdef raspberrypi_3b
+DeviceType deviceType = DeviceType::DEVICE_ESP8266;
+#endif
+
+// For unit test on native platform
+#ifdef NATIVE
+DeviceType deviceType = DeviceType::DEVICE_ESP8266;
+#endif
+
 char appPayload[200];
 char appBuffer[250];
 

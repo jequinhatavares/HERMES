@@ -11,8 +11,6 @@
 #include "../app_globals.h"
 
 
-
-
 typedef uint32_t BitField;
 
 extern float outputValues[MAX_NEURONS];
