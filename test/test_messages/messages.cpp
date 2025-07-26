@@ -1,41 +1,36 @@
 #include <unity.h>
 #include <cstdio>
 #include <string.h>
-#include "messages.h"
+
+#include "../lib/network/src/core/routing/messages.h"
 
 //pio test -e native -f "test_messages" -v
 
 void test_pdr_correct(){
     char msg[20] = "";
-    messageParameters params;
-    params.IP1[0] = 1; params.IP1[1] = 1; params.IP1[2] = 1; params.IP1[3] = 1;
+    uint8_t IP1[4]={1,1,1,1};
 
-    encodeMessage(msg,sizeof(msg),PARENT_DISCOVERY_REQUEST, params);
+    encodeParentDiscoveryRequest(msg,sizeof(msg),IP1);
     //printf(msg);
     TEST_ASSERT(strcmp(msg, "0 1.1.1.1") == 0);
 }
 
 void test_pir_incorrect(){
     char msg[20] = "";
-    messageParameters params;
-    params.IP1[0] = 1; params.IP1[1] = 1; params.IP1[2] = 1; params.IP1[3] = 1;
+    uint8_t IP1[4]={1,1,1,1};
+    int hopDistance=1, nChildren=1;
 
-    encodeMessage(msg,sizeof(msg), PARENT_INFO_RESPONSE, params);
+    encodeParentInfoResponse(msg,sizeof(msg),IP1,hopDistance,nChildren);
     //printf(msg);
-    TEST_ASSERT(strcmp(msg, "") == 0);
+    TEST_ASSERT(strcmp(msg, "1 1.1.1.1 1 1") == 0);
 }
 
 void test_data_messages_encoding(){
-    char msg[20] = "Hello", messageBuffer[100];
-    char correctMessage[100]= "8 1.1.1.1 2.2.2.2 Hello";
-    messageParameters params;
-    params.IP1[0] = 1; params.IP1[1] = 1; params.IP1[2] = 1; params.IP1[3] = 1;
-    params.IP2[0] = 2; params.IP2[1] = 2; params.IP2[2] = 2; params.IP2[3] = 2;
+    char payload[20] = "Hello", messageBuffer[100];
+    char correctMessage[100]= "9 1.1.1.1 2.2.2.2 Hello";
+    uint8_t senderIP[4]={1,1,1,1},destinationIP[4]={2,2,2,2};
 
-    strcpy(params.payload, msg);
-
-    encodeMessage(messageBuffer,sizeof(messageBuffer),DATA_MESSAGE,params);
-
+    encodeDataMessage(messageBuffer,sizeof(messageBuffer),payload,senderIP,destinationIP);
 
     printf("Encoded Message: %s\n", messageBuffer);
 
@@ -43,20 +38,13 @@ void test_data_messages_encoding(){
 }
 
 void test_data_messages_encoding_with_string(){
-    char correctMessage[100]= "10 Hello 1.1.1.1 2.2.2.2", messageBuffer[100];
-    messageParameters params;
-    params.IP1[0] = 1; params.IP1[1] = 1; params.IP1[2] = 1; params.IP1[3] = 1;
-    params.IP2[0] = 2; params.IP2[1] = 2; params.IP2[2] = 2; params.IP2[3] = 2;
+    char payload[20] = "Hello Test", messageBuffer[50];
+    char correctMessage[100]= "9 1.1.1.1 2.2.2.2 Hello Test";
+    uint8_t senderIP[4]={1,1,1,1},destinationIP[4]={2,2,2,2};
 
-    strcpy(params.payload, "Hello");
+    encodeDataMessage(messageBuffer,sizeof(messageBuffer),payload,senderIP,destinationIP);
 
-    encodeMessage(messageBuffer,sizeof(messageBuffer),DATA_MESSAGE,params);
-
-
-    printf("Encoded Message2: %s, size of buffer:%i\n", messageBuffer, sizeof(messageBuffer));
-    printf("StrCmp: %i\n", strcmp(messageBuffer,correctMessage));
-
-    //TEST_ASSERT(strcmp(messageBuffer,correctMessage) == 0);
+    TEST_ASSERT(strcmp(messageBuffer,correctMessage) == 0);
 }
 
 
@@ -131,7 +119,7 @@ void test_DATA_messages_invalid_encoding(){
     char incorrectMessage3[100]= "8 HELLO 1.1.1.1";
     TEST_ASSERT(isMessageValid(DATA_MESSAGE,incorrectMessage3) == false);
 
-    char correctMessage[100]= "8 1.1.1.1 2.2.2.2 HELLO";
+    char correctMessage[100]= "9 1.1.1.1 2.2.2.2 HELLO";
     TEST_ASSERT(isMessageValid(DATA_MESSAGE,correctMessage) == true);
 
 }
