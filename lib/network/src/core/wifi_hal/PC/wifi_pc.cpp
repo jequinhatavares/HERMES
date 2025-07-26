@@ -28,7 +28,7 @@ void startWifiAP(const char* SSID, const char* Pass, uint8_t* localIP, uint8_t* 
 
 void searchAP(const char* SSID){}
 
-bool connectToAP(const char * SSID, const char * PASS) {}
+bool connectToAP(const char * SSID, const char * PASS) {return true;}
 
 void stopWifiAP(){}
 
