@@ -142,32 +142,32 @@ void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typ
 
         case PUBSUB_SUBSCRIBE:
             //Message sent when a one subscribes to a certain topic
-            //13 1 [sender IP] [Subscriber IP] [Topic]
+            //13 0 [sender IP] [Subscriber IP] [Topic]
             snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE,
                      myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
             break;
         case PUBSUB_UNSUBSCRIBE:
             //Message sent when a one unsubscribes to a certain topic
-            //13 2 [sender IP] [Unsubscriber IP] [Topic]
+            //13 1 [sender IP] [Unsubscriber IP] [Topic]
             snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",MIDDLEWARE_MESSAGE,PUBSUB_UNSUBSCRIBE,
                      myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
             break;
         case PUBSUB_ADVERTISE:
             // Message used to advertise that the node is publishing a new topic
-            //13 3 [sender IP] [Publisher IP] [Published Topic]
+            //13 2 [sender IP] [Publisher IP] [Published Topic]
             snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",MIDDLEWARE_MESSAGE,PUBSUB_ADVERTISE,
                      myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
             break;
         case PUBSUB_UNADVERTISE:
             // Message used to advertise that the node is unpublishing a topic
-            //13 4 [sender IP] [Publisher IP] [UnPublished Topic]
+            //13 3 [sender IP] [Publisher IP] [UnPublished Topic]
             snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",MIDDLEWARE_MESSAGE,PUBSUB_UNADVERTISE,
                      myIP[0],myIP[1],myIP[2],myIP[3],myIP[0],myIP[1],myIP[2],myIP[3],topic);
             break;
 
         case PUBSUB_NODE_UPDATE:
             // Message used to advertise all publish-subscribe information of the node
-            //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List] //maxsize:48+1
+            //13 4 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List] //maxsize:48+1
             nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
 
             if (nodePubSubInfo != nullptr) {
@@ -190,7 +190,7 @@ void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typ
             break;
 
         case PUBSUB_TABLE_UPDATE:
-            //13 6 [sender IP] |[node IP] [Published Topic List] [Subscribed Topics List] |[node IP] [Published Topic List] [Subscribed Topics List]...
+            //13 5 [sender IP] |[node IP] [Published Topic List] [Subscribed Topics List] |[node IP] [Published Topic List] [Subscribed Topics List]...
             offset = snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu |",MIDDLEWARE_MESSAGE,PUBSUB_TABLE_UPDATE,
                      myIP[0],myIP[1],myIP[2],myIP[3]);
             for (i = 0; i < pubsubTable->numberOfItems; i++) {
