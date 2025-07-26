@@ -1,18 +1,16 @@
 #include <unity.h>
 #include <stdio.h>
 #include <../lib/network/src/core/logger/logger.h>
-#include <../src/neural_network/worker/neuron_core.h>
-#include <../src/neural_network/worker/neuron_manager.h>
+
+#include "../lib/neural_network/worker/neuron_core.h"
+#include "../lib/neural_network/worker/neuron_manager.h"
 
 #define NEURAL_NET_IMPL
 
 
-#include <../src/neural_network/coordinator/neural_network_manager.h>
-#include "../src/neural_network/coordinator/nn_parameters.h"
-#include "../src/app_globals.h"
-
-
-
+#include "../lib/neural_network/coordinator/neural_network_manager.h"
+#include "../lib/neural_network/coordinator/nn_parameters.h"
+#include "../lib/neural_network/app_globals.h"
 #include "../lib/network/src/core/table/table.h"
 
 //pio test -e native -f "test_neural_network" -v //verbose mode all prints appear

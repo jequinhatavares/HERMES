@@ -32,6 +32,4 @@
 
 
 
-
-
 #endif //NN_CONFIGURATIONS_H

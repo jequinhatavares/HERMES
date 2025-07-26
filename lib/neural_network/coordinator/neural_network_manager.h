@@ -6,7 +6,7 @@
 #include "nn_parameters.h"
 #include "../nn_configurations.h"
 #include "../worker/neuron_manager.h"
-#include "../../app_globals.h"
+#include "../app_globals.h"
 
 #include <cstdio>
 #include <cmath>

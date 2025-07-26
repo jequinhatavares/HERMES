@@ -1,5 +1,11 @@
 #include "neural_network_dispatcher.h"
 
+
+char appPayload[200];
+char appBuffer[250];
+
+class Network network;
+
 void onNetworkJoin(uint8_t *parentIP){
     uint8_t myIP[4];
     network.getNodeIP(myIP);

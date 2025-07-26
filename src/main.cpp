@@ -4,10 +4,6 @@
 #include <network.h>
 #include <Arduino.h>
 
-char appPayload[200];
-char appBuffer[250];
-
-class Network network;
 
 //227:96:230:135 root
 //227:96:237:119

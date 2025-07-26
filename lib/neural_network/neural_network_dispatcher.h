@@ -3,7 +3,7 @@
 
 #include "coordinator/neural_network_manager.h"
 #include "worker/neuron_manager.h"
-#include "../app_globals.h"
+#include "app_globals.h"
 
 
 void onNetworkJoin(uint8_t *parentIP);

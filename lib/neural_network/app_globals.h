@@ -3,7 +3,7 @@
 
 #include <network.h>
 
-extern class Network network;  // Just a declaration
+extern class Network network;
 
 extern char appPayload[200];
 extern char appBuffer[250];

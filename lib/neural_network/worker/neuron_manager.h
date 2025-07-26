@@ -6,12 +6,9 @@
 #include <cstdio>
 #include <cstdint>
 
-//#include "time_hal.h"
-//#include "messages.h"
-//#include "routing.h"
 #include "../nn_types.h"
 #include "neuron_core.h"
-#include "../../app_globals.h"
+#include "../app_globals.h"
 
 
 

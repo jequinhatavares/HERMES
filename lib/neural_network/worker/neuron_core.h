@@ -6,7 +6,7 @@
 #include "../nn_configurations.h"
 #include "../nn_types.h"
 
-#include "../../app_globals.h"
+#include "../app_globals.h"
 
 
 
