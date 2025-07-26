@@ -1,5 +1,5 @@
 #include <unity.h>
-#include "state_machine.h"
+#include "../lib/network/src/core/state_machine/state_machine.h"
 
 #define State_One ((State) 0)
 #define State_Two ((State) 1)

@@ -1,7 +1,7 @@
 #include <unity.h>
 #include <cstdio>
 #include <stdint.h>
-#include <logger.h>
+#include <../lib/network/src/core/logger/logger.h>
 
 
 //pio test -e native -f "test_middleware_topology" -v

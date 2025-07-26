@@ -1,9 +1,8 @@
 #include <unity.h>
 #include <cstdio>
 #include <string.h>
-#include "../lib/middleware/strategies/strategy_inject/strategy_inject.h"
-#include "middleware.h"
-#include "table.h"
+#include "../lib/network/src/core/middleware/middleware.h"
+#include "../lib/network/src/core/table/table.h"
 
 //pio test -e native -f "test_middleware_generic" -v
 MetricTableEntry metrics[TABLE_MAX_SIZE];

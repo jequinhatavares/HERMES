@@ -1,8 +1,8 @@
 #include <unity.h>
 #include <cstdio>
 
-#include "routing.h"
-#include "messages.h"
+#include "../lib/network/src/core/routing/routing.h"
+#include "../lib/network/src/core/routing/messages.h"
 
 void printRoutingStruct2(TableEntry* Table){
     printf("Node[%d.%d.%d.%d] -> NextHop[%d.%d.%d.%d] | (Distance: %d)\n",((uint8_t*)Table->key)[0],((uint8_t*)Table->key)[1],((uint8_t*)Table->key)[2],((uint8_t*)Table->key)[3],

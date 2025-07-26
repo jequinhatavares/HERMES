@@ -1,18 +1,19 @@
 #include <unity.h>
 #include <stdio.h>
-#include <../lib/logger/logger.h>
-#include <../lib/neural_network/core/neuron_core.h>
-#include <../lib/neural_network/core/neuron_manager.h>
+#include <../lib/network/src/core/logger/logger.h>
+#include <../src/neural_network/worker/neuron_core.h>
+#include <../src/neural_network/worker/neuron_manager.h>
 
 #define NEURAL_NET_IMPL
 
 
-#include <../lib/neural_network/coordinator/neural_network_manager.h>
-#include "../lib/neural_network/coordinator/nn_parameters.h"
+#include <../src/neural_network/coordinator/neural_network_manager.h>
+#include "../src/neural_network/coordinator/nn_parameters.h"
+#include "../src/app_globals.h"
 
 
 
-#include "table.h"
+#include "../lib/network/src/core/table/table.h"
 
 //pio test -e native -f "test_neural_network" -v //verbose mode all prints appear
 //pio test -e native -f "test_neural_network" // to just see the test results
@@ -249,9 +250,9 @@ void test_handle_NACK(){
 
     handleNeuralNetworkMessage(receivedMessage);
 
-    printf("Encoded Message:%s\n",smallSendBuffer);
+    printf("Encoded Message:%s\n",appBuffer);
     printf("Correct Message:%s\n",correctMessage);
-    TEST_ASSERT(strcmp(smallSendBuffer,correctMessage) == 0);
+    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);
     freeAllNeuronMemory();
 }
 
@@ -437,38 +438,38 @@ void test_assign_outputs() {
     uint8_t neuron2 = 2, neuron3 = 3, neuron4 = 4, neuron5 = 5, neuron6 = 6, neuron7 = 7, neuron8 = 8, neuron9 = 9;
 
     initNeuralNetwork();
-    distributeNeuralNetwork(&network, nodes, 4);
+    distributeNeuralNetwork(neuralNetwork, nodes, 4);
     //assignOutputTargetsToNetwork(nodes,4);
 
-    assignOutputTargetsToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[0]);
+    assignOutputTargetsToNode(appBuffer, sizeof(appBuffer),nodes[0]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, 2,neuron2,neuron3,
              2,nodes[2][0],nodes[2][1],nodes[2][3],nodes[2][3]
              ,nodes[3][0],nodes[3][1],nodes[3][3],nodes[3][3]);
     //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",largeSendBuffer);
-    TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);
+    //printf("Encoded Message:%s\n",appBuffer);
+    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);
 
-    assignOutputTargetsToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[1]);
+    assignOutputTargetsToNode(appBuffer, sizeof(appBuffer),nodes[1]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",NN_ASSIGN_OUTPUTS,2,neuron4,neuron5
            ,2,nodes[2][0],nodes[2][1],nodes[2][3],nodes[2][3]
             ,nodes[3][0],nodes[3][1],nodes[3][3],nodes[3][3]);
     //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",largeSendBuffer);
-    TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);
+    //printf("Encoded Message:%s\n",appBuffer);
+    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);
 
-    assignOutputTargetsToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[2]);
+    assignOutputTargetsToNode(appBuffer, sizeof(appBuffer),nodes[2]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu",NN_ASSIGN_OUTPUTS,2,neuron6,neuron7
             ,1,myIP[0],myIP[1],myIP[3],myIP[3]);
     //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",largeSendBuffer);
-    TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);/******/
+    //printf("Encoded Message:%s\n",appBuffer);
+    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);/******/
 
-    assignOutputTargetsToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[3]);
+    assignOutputTargetsToNode(appBuffer, sizeof(appBuffer),nodes[3]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS,2,neuron8,neuron9
             ,1,myIP[0],myIP[1],myIP[3],myIP[3]);
     //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",largeSendBuffer);
-    TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);
+    //printf("Encoded Message:%s\n",appBuffer);
+    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);
 
     tableClean(neuronToNodeTable);
 }
@@ -490,29 +491,29 @@ void test_assign_pubsub_info() {
     distributeNeuralNetwork(&network, nodes, 4);
     //assignOutputTargetsToNetwork(nodes,4);
 
-    assignPubSubInfoToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[0]);
+    assignPubSubInfoToNode(appBuffer, sizeof(appBuffer),nodes[0]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron2,neuron3,0,1);
     //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",largeSendBuffer);
-    TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);
+    //printf("Encoded Message:%s\n",appBuffer);
+    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);
 
-    assignPubSubInfoToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[1]);
+    assignPubSubInfoToNode(appBuffer, sizeof(appBuffer),nodes[1]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron4,neuron5,0,1);
     //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",largeSendBuffer);
-    TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);
+    //printf("Encoded Message:%s\n",appBuffer);
+    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);
 
-    assignPubSubInfoToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[2]);
+    assignPubSubInfoToNode(appBuffer, sizeof(appBuffer),nodes[2]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron6,neuron7,1,2);
     //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",largeSendBuffer);
-    TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);
+    //printf("Encoded Message:%s\n",appBuffer);
+    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);
 
-    assignPubSubInfoToNode(largeSendBuffer, sizeof(largeSendBuffer),nodes[3]);
+    assignPubSubInfoToNode(appBuffer, sizeof(appBuffer),nodes[3]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron8,neuron9,1,2);
     //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",largeSendBuffer);
-    TEST_ASSERT(strcmp(largeSendBuffer,correctMessage) == 0);/******/
+    //printf("Encoded Message:%s\n",appBuffer);
+    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);/******/
 
     tableClean(neuronToNodeTable);
 }
