@@ -304,11 +304,10 @@ bool isMessageValid(int expectedMessageType,char* msg){
             break;
         }
         case DATA_MESSAGE: {
-            /***uint8_t IP1[4], IP2[4];
+            uint8_t IP1[4], IP2[4];
             char payload[200];
-            return (sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %199s", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
-                           &IP2[0], &IP2[1], &IP2[2], &IP2[3], payload) == 10);***/
-            return true;
+            return (sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
+                           &IP2[0], &IP2[1], &IP2[2], &IP2[3]) == 9);
             break;
         }
         case ACK_MESSAGE: {
