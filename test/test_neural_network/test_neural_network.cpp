@@ -18,6 +18,7 @@
 //pio test -e native -f "test_neural_network" -v //verbose mode all prints appear
 //pio test -e native -f "test_neural_network" // to just see the test results
 
+uint8_t myAPIP[4];
 void printBitField(uint32_t bits, uint8_t size) {
     for (int i = size - 1; i >= 0; --i) {
         printf("%u", (bits >> i) & 1);
@@ -359,7 +360,7 @@ void test_distribute_neurons(){
     uint8_t neuron2=2,neuron3=3,neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
 
     initNeuralNetwork();
-    distributeNeuralNetwork(&network, nodes,4);
+    distributeNeuralNetwork(&neuralNetwork, nodes,4);
     //tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
 
     NeuronEntry* neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron2);
@@ -412,13 +413,13 @@ void test_distribute_neurons(){
 
     neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron10);
     TEST_ASSERT(neuronEntry != nullptr);
-    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,myIP));
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,myAPIP));
     TEST_ASSERT(neuronEntry->layer == 2);
     TEST_ASSERT(neuronEntry->indexInLayer == 0);/******/
 
     neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron11);
     TEST_ASSERT(neuronEntry != nullptr);
-    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,myIP));
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,myAPIP));
     TEST_ASSERT(neuronEntry->layer == 2);
     TEST_ASSERT(neuronEntry->indexInLayer == 1);/******/
 
@@ -438,7 +439,7 @@ void test_assign_outputs() {
     uint8_t neuron2 = 2, neuron3 = 3, neuron4 = 4, neuron5 = 5, neuron6 = 6, neuron7 = 7, neuron8 = 8, neuron9 = 9;
 
     initNeuralNetwork();
-    distributeNeuralNetwork(neuralNetwork, nodes, 4);
+    distributeNeuralNetwork(&neuralNetwork, nodes, 4);
     //assignOutputTargetsToNetwork(nodes,4);
 
     assignOutputTargetsToNode(appBuffer, sizeof(appBuffer),nodes[0]);
@@ -459,14 +460,14 @@ void test_assign_outputs() {
 
     assignOutputTargetsToNode(appBuffer, sizeof(appBuffer),nodes[2]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu",NN_ASSIGN_OUTPUTS,2,neuron6,neuron7
-            ,1,myIP[0],myIP[1],myIP[3],myIP[3]);
+            ,1,myAPIP[0],myAPIP[1],myAPIP[3],myAPIP[3]);
     //printf("Correct Message:%s\n",correctMessage);
     //printf("Encoded Message:%s\n",appBuffer);
     TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);/******/
 
     assignOutputTargetsToNode(appBuffer, sizeof(appBuffer),nodes[3]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS,2,neuron8,neuron9
-            ,1,myIP[0],myIP[1],myIP[3],myIP[3]);
+            ,1,myAPIP[0],myAPIP[1],myAPIP[3],myAPIP[3]);
     //printf("Correct Message:%s\n",correctMessage);
     //printf("Encoded Message:%s\n",appBuffer);
     TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);
@@ -488,7 +489,7 @@ void test_assign_pubsub_info() {
     uint8_t neuron2 = 2, neuron3 = 3, neuron4 = 4, neuron5 = 5, neuron6 = 6, neuron7 = 7, neuron8 = 8, neuron9 = 9;
 
     initNeuralNetwork();
-    distributeNeuralNetwork(&network, nodes, 4);
+    distributeNeuralNetwork(&neuralNetwork, nodes, 4);
     //assignOutputTargetsToNetwork(nodes,4);
 
     assignPubSubInfoToNode(appBuffer, sizeof(appBuffer),nodes[0]);
@@ -531,7 +532,7 @@ void setUp(void){
     currentLogLevel = DEBUG;
 
     uint8_t IP[4] = {1,1,1,1};
-    assignIP(myIP,IP);
+    assignIP(myAPIP,IP);
 }
 
 void tearDown(void){}
