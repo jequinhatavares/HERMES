@@ -644,10 +644,15 @@ void onNACKTimeout(){
 }
 
 void clearAllNeuronMemory(){
+    uint8_t blankIP[4]={0,0,0,0};
     for (int i = 0; i < MAX_NEURONS; ++i) {
         resetAll(receivedInputs[i]);
         receivedInputs[i] = 0;
         outputValues[i]=0;
         isOutputComputed[i]= false;
+        for (int j = 0; j < outputTargets[i].nTargets; ++j) {
+            assignIP(outputTargets[i].outputTargets[j],blankIP);
+        }
+        outputTargets[i].nTargets=0;
     }
 }
