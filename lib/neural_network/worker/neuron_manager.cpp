@@ -632,3 +632,12 @@ void onNACKTimeout(){
     // If all outputs have been computed, the forward pass has ended at this node.
      forwardPassRunning = false;
 }
+
+void clearAllNeuronMemory(){
+    for (int i = 0; i < MAX_NEURONS; ++i) {
+        resetAll(receivedInputs[i]);
+        receivedInputs[i] = 0;
+        outputValues[i]=0;
+        isOutputComputed[i]= false;
+    }
+}

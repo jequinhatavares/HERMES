@@ -193,6 +193,7 @@ void test_handle_neuron_input(){
     TEST_ASSERT(outputValues[neuronStorageIndex] == 5);
 
     freeAllNeuronMemory();
+    clearAllNeuronMemory();
 
 }
 
@@ -481,35 +482,35 @@ void test_assign_outputs() {
     distributeNeuralNetwork(&neuralNetwork, nodes, 4);
     //assignOutputTargetsToNetwork(nodes,4);
 
-    assignOutputTargetsToNode(appBuffer, sizeof(appBuffer),nodes[0]);
+    assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodes[0]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, 2,neuron2,neuron3,
              2,nodes[2][0],nodes[2][1],nodes[2][3],nodes[2][3]
              ,nodes[3][0],nodes[3][1],nodes[3][3],nodes[3][3]);
-    //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",appBuffer);
-    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);
+    printf("Correct Message:%s\n",correctMessage);
+    printf("Encoded Message:%s\n",appPayload);
+    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
-    assignOutputTargetsToNode(appBuffer, sizeof(appBuffer),nodes[1]);
+    assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodes[1]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",NN_ASSIGN_OUTPUTS,2,neuron4,neuron5
            ,2,nodes[2][0],nodes[2][1],nodes[2][3],nodes[2][3]
             ,nodes[3][0],nodes[3][1],nodes[3][3],nodes[3][3]);
-    //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",appBuffer);
-    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);
+    printf("Correct Message:%s\n",correctMessage);
+    printf("Encoded Message:%s\n",appPayload);
+    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
-    assignOutputTargetsToNode(appBuffer, sizeof(appBuffer),nodes[2]);
+    assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodes[2]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu",NN_ASSIGN_OUTPUTS,2,neuron6,neuron7
             ,1,myAPIP[0],myAPIP[1],myAPIP[3],myAPIP[3]);
-    //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",appBuffer);
-    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);/******/
+    printf("Correct Message:%s\n",correctMessage);
+    printf("Encoded Message:%s\n",appPayload);
+    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/
 
-    assignOutputTargetsToNode(appBuffer, sizeof(appBuffer),nodes[3]);
+    assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodes[3]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS,2,neuron8,neuron9
             ,1,myAPIP[0],myAPIP[1],myAPIP[3],myAPIP[3]);
-    //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",appBuffer);
-    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);
+    printf("Correct Message:%s\n",correctMessage);
+    printf("Encoded Message:%s\n",appPayload);
+    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
     tableClean(neuronToNodeTable);
 }
@@ -531,29 +532,29 @@ void test_assign_pubsub_info() {
     distributeNeuralNetwork(&neuralNetwork, nodes, 4);
     //assignOutputTargetsToNetwork(nodes,4);
 
-    assignPubSubInfoToNode(appBuffer, sizeof(appBuffer),nodes[0]);
+    assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[0]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron2,neuron3,0,1);
     //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",appBuffer);
-    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);
+    //printf("Encoded Message:%s\n",appPayload);
+    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
-    assignPubSubInfoToNode(appBuffer, sizeof(appBuffer),nodes[1]);
+    assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[1]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron4,neuron5,0,1);
     //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",appBuffer);
-    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);
+    //printf("Encoded Message:%s\n",appPayload);
+    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
-    assignPubSubInfoToNode(appBuffer, sizeof(appBuffer),nodes[2]);
+    assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[2]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron6,neuron7,1,2);
     //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",appBuffer);
-    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);
+    //printf("Encoded Message:%s\n",appPayload);
+    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
-    assignPubSubInfoToNode(appBuffer, sizeof(appBuffer),nodes[3]);
+    assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[3]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron8,neuron9,1,2);
     //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",appBuffer);
-    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);/******/
+    //printf("Encoded Message:%s\n",appPayload);
+    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/
 
     tableClean(neuronToNodeTable);
 }
@@ -570,34 +571,37 @@ void setUp(void){
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
 
-    uint8_t IP[4] = {1,1,1,1};
+    uint8_t IP[4] = {0,0,0,0};
     assignIP(myAPIP,IP);
 }
 
-void tearDown(void){}
+void tearDown(void){
+    strcpy(appPayload,"");
+    strcpy(appBuffer,"");
+}
 
 int main(int argc, char** argv){
     UNITY_BEGIN();
-    /***RUN_TEST(test_memory_allocation);
+    RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
 
     RUN_TEST(test_handle_message_assign_neuron_one_neuron);
     RUN_TEST(test_handle_message_assign_neuron_multiple_neurons);
     RUN_TEST(test_handle_message_assign_neuron_with_more_than_max_neurons);
-    RUN_TEST(test_handle_neuron_input);
+    RUN_TEST(test_handle_neuron_input);/******/
     RUN_TEST(test_handle_assign_output_targets);
-    RUN_TEST(test_handle_assign_pubsub_info);***/
+    RUN_TEST(test_handle_assign_pubsub_info);
     RUN_TEST(test_handle_NACK_without_computed_output);
     RUN_TEST(test_handle_NACK_with_computed_output);
 
-     /***RUN_TEST(test_encode_message_assign_neuron);
-     RUN_TEST(test_encode_message_neuron_output);
-     RUN_TEST(test_encode_NACK_message);
-     RUN_TEST(test_encode_ACK_message);
+    RUN_TEST(test_encode_message_assign_neuron);
+    RUN_TEST(test_encode_message_neuron_output);
+    RUN_TEST(test_encode_NACK_message);
+    RUN_TEST(test_encode_ACK_message);
 
-      RUN_TEST(test_bit_fields);
-      RUN_TEST(test_distribute_neurons);
-      RUN_TEST(test_assign_outputs);
-      RUN_TEST(test_assign_pubsub_info); ***/
+    RUN_TEST(test_bit_fields);
+    RUN_TEST(test_distribute_neurons);
+    RUN_TEST(test_assign_outputs);
+    RUN_TEST(test_assign_pubsub_info); /******/
     UNITY_END();
 }

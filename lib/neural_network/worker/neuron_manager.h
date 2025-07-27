@@ -52,6 +52,8 @@ void manageNeuron();
 void onInputWaitTimeout();
 void onNACKTimeout();
 
+void clearAllNeuronMemory();
+
  //TODO por esta função num sitio melhor
 
 /**
