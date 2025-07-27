@@ -283,7 +283,7 @@ void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t tar
     /***  The messages in this function are constructed layer by layer. Messages are made based on aggregation of the
      * neurons computed in the same layer, since these neurons need to send their outputs to the same neurons or nodes
      * in the next layer. ***/
-    for (uint8_t i = 0; i < neuralNetwork.numLayers; i++) {
+    for (uint8_t i = 0; i < neuralNetwork.numLayers+1; i++) {
         /*** The neurons in the next layer require the outputs of the current layer as input. Therefore, we need to
          * identify which nodes are responsible for computing the next layer's neurons. These are the nodes to which
          * the current layer's neurons must send their outputs. ***/
