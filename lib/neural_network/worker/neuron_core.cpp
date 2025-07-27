@@ -145,6 +145,17 @@ bool isInputRequired(NeuronId neuronId,NeuronId inputId){
     return false;
 }
 
+/**
+ * computesNeuron
+ * Checks if a specific neuron is handled/computed by this node
+ *
+ * @param neuronId The ID of the neuron to check
+ * @return true If the neuron is handled by this node
+ *         false otherwise
+ */
+bool computesNeuron(NeuronId neuronId){
+    return(getNeuronStorageIndex(neuronId) != -1);
+}
 
 /**
  * setInput

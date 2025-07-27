@@ -10,7 +10,6 @@
 
 
 
-
 extern NeuronId neuronIds[MAX_NEURONS];
 extern float* weights[MAX_NEURONS];
 extern float* inputs[MAX_NEURONS];
@@ -22,10 +21,14 @@ extern int neuronsCount;
 
 
 void configureNeuron(NeuronId neuronId, uint8_t receivedInputSize, float* receivedWeights, float receivedBias, NeuronId* receivedOrder);
+
 int getNeuronStorageIndex(NeuronId neuronId);
 int getInputStorageIndex(NeuronId neuronId, NeuronId inputId);
 int getInputSize(NeuronId neuronId);
+
 bool isInputRequired(NeuronId neuronId,NeuronId inputId);
+bool computesNeuron(NeuronId neuronId);
+
 void setInput(NeuronId neuronId,float inputValue, NeuronId sourceNodeId);
 float computeNeuronOutput(NeuronId neuronId);
 void freeAllNeuronMemory();

@@ -591,7 +591,7 @@ void manageNeuralNetwork(){
 void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices){
     NeuronId *currentId;
     NeuronEntry *neuronEntry;
-    uint8_t currentLayer, currentIndexInLayer,*inputIndexMap;
+    uint8_t currentLayerIndex, currentIndexInLayer,*inputIndexMap;
     char tmpBuffer[50];
     size_t tmpBufferSize = sizeof(tmpBuffer);
     int i=0,messageOffset=0;
@@ -619,21 +619,23 @@ void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices){
              * with other unacknowledged neurons, then include it in the assigning message together with the others.
              ***/
             if( neuronEntry!=nullptr && isIPEqual(nodeIP[k],neuronEntry->nodeIP) && !neuronEntry->isAcknowledged){
-                currentLayer = neuronEntry->layer;
+                // The current layer index needs to be normalized because the neuronToNode table uses 0 for the input
+                // layer, while in the NN structure, index 0 corresponds to the first hidden layer.
+                currentLayerIndex = neuronEntry->layer - 1;
                 currentIndexInLayer = neuronEntry->indexInLayer;
                 unACKNeurons = true;
 
                 //Remake the part of the message that maps the inputs into the input vector
-                inputIndexMap = new uint8_t [neuralNetwork.layers[currentLayer].numInputs];
-                for (uint8_t j = 0; j < neuralNetwork.layers[currentLayer].numInputs ; j++){
-                    inputIndexMap[j] = *currentId+(j-neuralNetwork.layers[currentLayer].numInputs);
+                inputIndexMap = new uint8_t [neuralNetwork.layers[currentLayerIndex].numInputs];
+                for (uint8_t j = 0; j < neuralNetwork.layers[currentLayerIndex].numInputs ; j++){
+                    inputIndexMap[j] = *currentId+(j-neuralNetwork.layers[currentLayerIndex].numInputs);
                 }
 
                 //Encode the part assigning neuron information (weights, bias, inputs etc..)
                 encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,
-                                          *currentId,neuralNetwork.layers[currentLayer].numInputs,inputIndexMap,
-                                          &neuralNetwork.layers[currentLayer].weights[currentIndexInLayer * neuralNetwork.layers[currentLayer].numInputs],
-                                          neuralNetwork.layers[currentLayer].biases[currentIndexInLayer]);
+                                          *currentId,neuralNetwork.layers[currentLayerIndex].numInputs,inputIndexMap,
+                                          &neuralNetwork.layers[currentLayerIndex].weights[currentIndexInLayer * neuralNetwork.layers[currentLayerIndex].numInputs],
+                                          neuralNetwork.layers[currentLayerIndex].biases[currentIndexInLayer]);
 
                 messageOffset += snprintf(appPayload + messageOffset, sizeof(appPayload) - messageOffset,"%s",tmpBuffer);
 
