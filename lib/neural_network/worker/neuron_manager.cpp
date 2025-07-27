@@ -153,8 +153,8 @@ void handleAssignComputationsMessage(char*messageBuffer){
  * Format: |[Number of neurons] [Output Neuron IDs...] [Number of targets] [Target IPs...]
  */
 void handleAssignOutput(char* messageBuffer){
-    uint8_t nNeurons,nTargets,targetIP[4];
-    NeuronId neuronID[MAX_NEURONS];
+    uint8_t nNeurons,nTargets,targetIP[4],nComputedNeurons=0;
+    NeuronId neuronID[MAX_NEURONS], currentNeuronId;
     char tmpBuffer[10];
     size_t tmpBufferSize = sizeof(tmpBuffer);
     char *spaceToken,*neuronEntry;
@@ -181,7 +181,14 @@ void handleAssignOutput(char* messageBuffer){
         //spaceToken now pointing to the list of neuron Ids
         spaceToken = strtok_r(NULL, " ", &saveptr2);
         for (int i = 0; i < nNeurons; i++) {
-            neuronID[i]= atoi(spaceToken);
+            currentNeuronId= atoi(spaceToken);
+            /*** If the neuron targeted by this assignment is not computed by this node, it won't be added to the list
+             *  of neurons to acknowledge. This implies that a message containing the node assignments was lost,
+             *  so by not acknowledging the neuron, the root will resend the assignment. ***/
+            if(computesNeuron(currentNeuronId)){
+                neuronID[i] = currentNeuronId;
+                nComputedNeurons ++;
+            }
             //LOG(NETWORK,DEBUG," neuronID: %hhu\n",neuronID[i]);
             //Move on the next input to index map
             spaceToken = strtok_r(NULL, " ", &saveptr2);
@@ -197,13 +204,13 @@ void handleAssignOutput(char* messageBuffer){
             sscanf(spaceToken,"%hhu.%hhu.%hhu.%hhu",&targetIP[0],&targetIP[1],&targetIP[2],&targetIP[3]);
             //LOG(NETWORK,DEBUG,"IP: %hhu.%hhu.%hhu.%hhu\n",targetIP[0],targetIP[1],targetIP[2],targetIP[3]);
             // Update the list of target nodes associated with the parsed neurons
-            updateOutputTargets(nNeurons, neuronID, targetIP);
+            updateOutputTargets(nComputedNeurons, neuronID, targetIP);
             //Move on the next input to index map
             spaceToken = strtok_r(NULL, " ", &saveptr2);
         }
 
         for (int i = 0; i < nNeurons; i++) {
-            encodeACKMessage(tmpBuffer,tmpBufferSize,neuronID,nNeurons);
+            encodeACKMessage(tmpBuffer,tmpBufferSize,neuronID,nComputedNeurons);
             offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%s",tmpBuffer);
         }
 
