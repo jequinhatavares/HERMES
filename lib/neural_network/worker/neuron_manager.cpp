@@ -162,7 +162,7 @@ void handleAssignOutput(char* messageBuffer){
     int offset=0;
 
     //Encode the message header of the ACK message
-    offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%d ",NN_ACK);
+    offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%d",NN_ACK);
 
 
     //DATA_MESSAGE NN_ASSIGN_OUTPUT |[Number of neurons] [Output Neuron ID 1] [Output Neuron ID 2]...[Number of targets] [Target IP 1] [Target IP 2]... |
@@ -186,8 +186,9 @@ void handleAssignOutput(char* messageBuffer){
              *  of neurons to acknowledge. This implies that a message containing the node assignments was lost,
              *  so by not acknowledging the neuron, the root will resend the assignment. ***/
             if(computesNeuron(currentNeuronId)){
-                neuronID[i] = currentNeuronId;
+                neuronID[nComputedNeurons] = currentNeuronId;
                 nComputedNeurons ++;
+                LOG(APP,DEBUG,"NeuronId: %hhu\n",currentNeuronId);
             }
             //LOG(NETWORK,DEBUG," neuronID: %hhu\n",neuronID[i]);
             //Move on the next input to index map
@@ -209,13 +210,13 @@ void handleAssignOutput(char* messageBuffer){
             spaceToken = strtok_r(NULL, " ", &saveptr2);
         }
 
-        for (int i = 0; i < nNeurons; i++) {
-            encodeACKMessage(tmpBuffer,tmpBufferSize,neuronID,nComputedNeurons);
-            offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%s",tmpBuffer);
-        }
+
+        encodeACKMessage(tmpBuffer,tmpBufferSize,neuronID,nComputedNeurons);
+        offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%s",tmpBuffer);
 
         //Move on to the next layer neurons
         neuronEntry = strtok_r(NULL, "|",&saveptr1);
+        nComputedNeurons=0;
     }
 
     //TODO send the ACK to the root node
@@ -530,10 +531,12 @@ void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAck
     //NN_ACK [Acknowledged Neuron ID 1] [Acknowledged Neuron ID 2]...
 
     //offset = snprintf(messageBuffer,bufferSize,"%d ",NN_ACK);
+    LOG(APP,DEBUG,"ACK count:%hhu\n",ackNeuronCount);
 
     // Encode the IDs of neurons whose required inputs are missing
     for (int i = 0; i < ackNeuronCount; i++) {
-        offset += snprintf(messageBuffer+offset,bufferSize-offset,"%hhu ",neuronAckList[i]);
+        LOG(APP,DEBUG,"ACK neuron:%hhu\n",neuronAckList[i]);
+        offset += snprintf(messageBuffer+offset,bufferSize-offset," %hhu",neuronAckList[i]);
     }
 
 }

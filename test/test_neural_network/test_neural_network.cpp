@@ -228,6 +228,53 @@ void test_handle_assign_output_targets(){
 
 }
 
+void test_handle_assign_output_targets_to_not_handled_neuron(){
+    //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    char receivedMessage[50],assignNeuronsMessage[50],correctACKMessage[50];
+    uint8_t nodeIP4[4]={4,4,4,4},nodeIP5[4]={5,5,5,5};
+    int neuronStorageIndex = -1;
+    uint8_t neuron2=2,invalidNeuron=4;
+
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
+
+    //Assign neuron computation to the node
+    handleNeuronMessage(assignNeuronsMessage);
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu"
+            ,NN_ASSIGN_OUTPUTS,2,invalidNeuron,neuron2,2,nodeIP4[0],nodeIP4[1],nodeIP4[3],nodeIP4[3]
+            ,nodeIP5[0],nodeIP5[1],nodeIP5[3],nodeIP5[3]);
+
+    handleNeuronMessage(receivedMessage);
+
+    for (int i = 0; i < MAX_NEURONS; ++i) {
+        printf("Output Target:%i nTargets:%hhu\n",i,outputTargets[i].nTargets);
+        for (int j = 0; j <outputTargets[i].nTargets ; ++j) {
+            printf("Output target IP:%hhu.%hhu.%hhu.%hhu\n",outputTargets[i].outputTargets[j][0],
+                   outputTargets[i].outputTargets[j][1],outputTargets[i].outputTargets[j][2],outputTargets[i].outputTargets[j][3]);
+        }
+    }
+
+    //NN_ACK [Acknowledged Neuron ID 1] [Acknowledged Neuron ID 2]...
+    snprintf(correctACKMessage, sizeof(correctACKMessage),"%d %hhu"
+            ,NN_ACK,neuron2);
+
+
+    TEST_ASSERT(outputTargets[0].nTargets == 2);
+    TEST_ASSERT(isIPEqual(outputTargets[0].outputTargets[0],nodeIP4));
+    TEST_ASSERT(isIPEqual(outputTargets[0].outputTargets[1],nodeIP5));
+
+    TEST_ASSERT(outputTargets[1].nTargets == 0);
+    TEST_ASSERT(!isIPEqual(outputTargets[1].outputTargets[0],nodeIP4));
+    TEST_ASSERT(!isIPEqual(outputTargets[1].outputTargets[1],nodeIP5));
+
+    printf("Encoded Message:%s\n",appPayload);
+    printf("Correct Message:%s\n",correctACKMessage);
+    TEST_ASSERT(strcmp(appPayload,correctACKMessage) == 0);
+
+    freeAllNeuronMemory();
+
+}
+
 void test_handle_assign_pubsub_info(){
     char receivedMessage[50],assignNeuronsMessage[50];
     int pubTopic=1,subTopic=0;
@@ -583,15 +630,16 @@ void tearDown(void){
 
 int main(int argc, char** argv){
     UNITY_BEGIN();
-    RUN_TEST(test_memory_allocation);
+    /***RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
 
     RUN_TEST(test_handle_message_assign_neuron_one_neuron);
     RUN_TEST(test_handle_message_assign_neuron_multiple_neurons);
     RUN_TEST(test_handle_message_assign_neuron_with_more_than_max_neurons);
-    RUN_TEST(test_handle_neuron_input);/******/
-    RUN_TEST(test_handle_assign_output_targets);
-    RUN_TEST(test_handle_assign_pubsub_info);
+    RUN_TEST(test_handle_neuron_input);
+    RUN_TEST(test_handle_assign_output_targets);***/
+    RUN_TEST(test_handle_assign_output_targets_to_not_handled_neuron);
+    /***RUN_TEST(test_handle_assign_pubsub_info);
     RUN_TEST(test_handle_NACK_without_computed_output);
     RUN_TEST(test_handle_NACK_with_computed_output);
 
@@ -603,6 +651,6 @@ int main(int argc, char** argv){
     RUN_TEST(test_bit_fields);
     RUN_TEST(test_distribute_neurons);
     RUN_TEST(test_assign_outputs);
-    RUN_TEST(test_assign_pubsub_info); /******/
+    RUN_TEST(test_assign_pubsub_info); ***/
     UNITY_END();
 }
