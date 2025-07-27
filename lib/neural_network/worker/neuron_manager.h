@@ -16,7 +16,6 @@ typedef uint32_t BitField;
 extern float outputValues[MAX_NEURONS];
 
 
-
 /***typedef struct OutputTarget{
     uint8_t (*outputTargets)[4];  // pointer to array of 4-byte IPs
     uint8_t nTargets;

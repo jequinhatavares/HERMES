@@ -322,12 +322,19 @@ void handleNACKMessage(char*messageBuffer){
         // Extract the ID of the neuron whose output is currently missing
         currentId = atoi(token);
 
+        LOG(APP,DEBUG,"NACK neuronID: %hhu\n",currentId);
+
         neuronStorageIndex = getNeuronStorageIndex(currentId);
+
+        LOG(APP,DEBUG,"neuron storage index: %d\n",neuronStorageIndex);
+
 
         // If this node manages the neuron in the NACK, process the NACK
         // If the output is not yet computed, the node will send it to the respective destinations once it is
         if(neuronStorageIndex != -1) {
             // If the output is already computed, resend it to the neuron that missed it
+            LOG(APP,DEBUG,"The output is computed?: %d\n",isOutputComputed[neuronStorageIndex]);
+
             if(isOutputComputed[neuronStorageIndex]){
                 //Encode the message containing the neuron output value
                 encodeNeuronOutputMessage(appPayload,sizeof(appPayload),currentId,outputValues[neuronStorageIndex]);

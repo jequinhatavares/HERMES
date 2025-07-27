@@ -91,10 +91,12 @@ void test_handle_message_assign_neuron_one_neuron(){
 
 void test_handle_message_assign_neuron_multiple_neurons(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
-    char receivedMessage[50] ="0 |3 2 1 2 2.0 2.0 1 |2 2 1 2 2.0 2.0 1";
+    char receivedMessage[50];
     float weightsValues[2]={2.0,2.0}, bias=1;
     int saveOrderValues[2] ={1,2}, inputSize=2;
     int neuronId1=3,neuronId2=2,neuronStorageIndex1=-1,neuronStorageIndex2=-1;
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d |3 2 1 2 2.0 2.0 1 |2 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
 
     handleNeuronMessage(receivedMessage);
 
@@ -124,10 +126,12 @@ void test_handle_message_assign_neuron_multiple_neurons(){
 
 void test_handle_message_assign_neuron_with_more_than_max_neurons(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
-    char receivedMessage[100] ="8 0 |3 2 1 2 2.0 2.0 1 |2 2 1 2 2.0 2.0 1|7 2 1 2 2.0 2.0 1";
+    char receivedMessage[100];
     float weightsValues[2]={2.0,2.0}, bias=1;
     int saveOrderValues[2] ={1,2}, inputSize=2;
     int neuronId1=3,neuronId2=2,neuronId3=7,neuronStorageIndex1=-1,neuronStorageIndex2=-1,neuronStorageIndex3=-1;
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d |3 2 1 2 2.0 2.0 1 |2 2 1 2 2.0 2.0 1|7 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
 
     handleNeuronMessage(receivedMessage);
 
@@ -160,27 +164,30 @@ void test_handle_message_assign_neuron_with_more_than_max_neurons(){
 
 void test_handle_neuron_input(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
-    char receivedMessage[50] ="8 0 |3 2 1 2 2.0 2.0 1", messageWithInput[50];
+    char receivedMessage[50], messageWithInput[50];
     float weightsValues[2]={2.0,2.0}, bias=1;
     int saveOrderValues[2] ={1,2}, inputSize=2, neuronId = 3,outputNeuron1 = 1,outputNeuron2 = 2;
     int neuronStorageIndex = -1;
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d |3 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
 
     //message containing neuron assignments
     handleNeuronMessage(receivedMessage);
 
     neuronStorageIndex = getNeuronStorageIndex(neuronId);
+    TEST_ASSERT(neuronStorageIndex  != -1);
 
-    snprintf(messageWithInput, sizeof(messageWithInput),"8 %d %i %hhu %g"
+    //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
+    snprintf(messageWithInput, sizeof(messageWithInput),"%d %i %hhu %g"
             ,NN_NEURON_OUTPUT,0,outputNeuron1,1.0);
 
     handleNeuronMessage(messageWithInput);
 
-    snprintf(messageWithInput, sizeof(messageWithInput),"8 %d %i %hhu %g"
+    snprintf(messageWithInput, sizeof(messageWithInput),"%d %i %hhu %g"
             ,NN_NEURON_OUTPUT,0,outputNeuron2,1.0);
 
     handleNeuronMessage(messageWithInput);
 
-    TEST_ASSERT(neuronStorageIndex  != -1);
     printf("Calculated Output:%f\n",outputValues[neuronStorageIndex]);
 
     TEST_ASSERT(outputValues[neuronStorageIndex] == 5);
@@ -192,15 +199,17 @@ void test_handle_neuron_input(){
 
 void test_handle_assign_output_targets(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
-    char receivedMessage[50],assignNeuronsMessage[50]="8 0 |3 2 1 2 2.0 2.0 1 |2 2 1 2 2.0 2.0 1";
+    char receivedMessage[50],assignNeuronsMessage[50];
     uint8_t nodeIP4[4]={4,4,4,4},nodeIP5[4]={5,5,5,5};
     int neuronStorageIndex = -1;
     uint8_t neuron2=2,neuron3=3;
 
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |3 2 1 2 2.0 2.0 1 |2 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
+
     //Assign neuron computation to the node
     handleNeuronMessage(assignNeuronsMessage);
 
-    snprintf(receivedMessage, sizeof(receivedMessage),"8 %d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu"
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu"
             ,NN_ASSIGN_OUTPUTS,2,neuron2,neuron3,2,nodeIP4[0],nodeIP4[1],nodeIP4[3],nodeIP4[3]
             ,nodeIP5[0],nodeIP5[1],nodeIP5[3],nodeIP5[3]);
 
@@ -219,44 +228,71 @@ void test_handle_assign_output_targets(){
 }
 
 void test_handle_assign_pubsub_info(){
-    char receivedMessage[50],assignNeuronsMessage[50]="8 0 |3 2 1 2 2.0 2.0 1 |2 2 1 2 2.0 2.0 1";
+    char receivedMessage[50],assignNeuronsMessage[50];
     int pubTopic=1,subTopic=0;
     uint8_t neuron2=2,neuron3=3;
+
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |3 2 1 2 2.0 2.0 1 |2 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
+
 
     //Assign neuron computation to the node
     handleNeuronMessage(assignNeuronsMessage);
 
-    snprintf(receivedMessage, sizeof(receivedMessage),"8 %d |%hhu %hhu %hhu %i %i"
-            ,NN_ASSIGN_OUTPUTS,2,neuron2,neuron3,subTopic,pubTopic);
+    snprintf(receivedMessage, sizeof(receivedMessage),"8 %d |%hhu %hhu %hhu %i %i",NN_ASSIGN_OUTPUTS,2,neuron2,neuron3,subTopic,pubTopic);
 
     handleAssignPubSubInfo(receivedMessage);
 
     freeAllNeuronMemory();
 }
 
-void test_handle_NACK(){
-    char receivedMessage[50],assignNeuronsMessage[50]="8 0 |2 2 1 2 2.0 2.0 1 |3 2 1 2 2.0 2.0 1";
+void test_handle_NACK_without_computed_output(){
+    char receivedMessage[50],assignNeuronsMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
-    char correctMessage[50];
+    char correctMessage[50]="";
     int pubTopic=1,subTopic=0;
     uint8_t neuron2=2,neuron3=3;
     float outputValue = 1.0;
 
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 1 2 2.0 2.0 1 |3 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
+
     //Assign neuron computation to the node
     handleNeuronMessage(assignNeuronsMessage);
 
-    snprintf(receivedMessage, sizeof(receivedMessage),"8 %d %hhu",NN_NACK,neuron2);
-
-    //Init the output value
-    outputValues[0] = 1.0;
-
-    snprintf(correctMessage, sizeof(correctMessage),"%d %i %hhu %g",NN_NEURON_OUTPUT,0,neuron2,outputValue);
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d %hhu",NN_NACK,neuron2);
 
     handleNeuronMessage(receivedMessage);
 
-    printf("Encoded Message:%s\n",appBuffer);
+    printf("Encoded Message:%s\n",appPayload);
     printf("Correct Message:%s\n",correctMessage);
-    TEST_ASSERT(strcmp(appBuffer,correctMessage) == 0);
+    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
+    freeAllNeuronMemory();
+}
+
+void test_handle_NACK_with_computed_output(){
+    char receivedMessage[50],assignNeuronsMessage[50];
+    //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
+    char correctMessage[50];
+    int pubTopic=1,subTopic=0;
+    uint8_t neuron2=2,neuron3=3;
+    float outputValue = 5.0;
+
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 1 2 2.0 2.0 1 |3 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
+    handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 1 1.0",NN_NEURON_OUTPUT);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 2 1.0",NN_NEURON_OUTPUT);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d %hhu",NN_NACK,neuron2);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(correctMessage, sizeof(correctMessage),"%d %i %hhu %g",NN_NEURON_OUTPUT,0,neuron2,outputValue);
+
+    printf("Encoded Message:%s\n",appPayload);
+    printf("Correct Message:%s\n",correctMessage);
+    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
     freeAllNeuronMemory();
 }
 
@@ -543,24 +579,25 @@ void tearDown(void){}
 int main(int argc, char** argv){
     UNITY_BEGIN();
     /***RUN_TEST(test_memory_allocation);
-    RUN_TEST(test_neuron_output_calculation);***/
+    RUN_TEST(test_neuron_output_calculation);
 
     RUN_TEST(test_handle_message_assign_neuron_one_neuron);
-    /***RUN_TEST(test_handle_message_assign_neuron_multiple_neurons);
+    RUN_TEST(test_handle_message_assign_neuron_multiple_neurons);
     RUN_TEST(test_handle_message_assign_neuron_with_more_than_max_neurons);
     RUN_TEST(test_handle_neuron_input);
     RUN_TEST(test_handle_assign_output_targets);
-    RUN_TEST(test_handle_assign_pubsub_info);
-    RUN_TEST(test_handle_NACK);
+    RUN_TEST(test_handle_assign_pubsub_info);***/
+    RUN_TEST(test_handle_NACK_without_computed_output);
+    RUN_TEST(test_handle_NACK_with_computed_output);
 
-    RUN_TEST(test_encode_message_assign_neuron);
-    RUN_TEST(test_encode_message_neuron_output);
-    RUN_TEST(test_encode_NACK_message);
-    RUN_TEST(test_encode_ACK_message);
+     /***RUN_TEST(test_encode_message_assign_neuron);
+     RUN_TEST(test_encode_message_neuron_output);
+     RUN_TEST(test_encode_NACK_message);
+     RUN_TEST(test_encode_ACK_message);
 
-     RUN_TEST(test_bit_fields);
-     RUN_TEST(test_distribute_neurons);
-     RUN_TEST(test_assign_outputs);
-     RUN_TEST(test_assign_pubsub_info); ***/
+      RUN_TEST(test_bit_fields);
+      RUN_TEST(test_distribute_neurons);
+      RUN_TEST(test_assign_outputs);
+      RUN_TEST(test_assign_pubsub_info); ***/
     UNITY_END();
 }
