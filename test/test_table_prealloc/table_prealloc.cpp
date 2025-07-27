@@ -138,7 +138,7 @@ void test_add_remove(){
     TEST_ASSERT(index2 == index);
 
     tablePrint(T,printHeader,printNodeStruct);
-    Entry* result3 = (Entry*)tableRead(T, key2);
+    Entry* result3 = (Entry*)tableRead(T,key2);
 
     TEST_ASSERT((*result3).IP[0] == valueCopy2[0]);
     TEST_ASSERT((*result3).hopDistance == value2.hopDistance);/****/

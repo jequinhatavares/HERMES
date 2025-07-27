@@ -144,7 +144,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
                 // Add the neuron-to-node mapping to the table
                 network.getNodeIP(myIP);
                 assignIP(neuronEntry.nodeIP,myIP);
-                neuronEntry.layer = i;
+                neuronEntry.layer = i+1;
                 neuronEntry.indexInLayer = j;
                 neuronEntry.isAcknowledged = false;
                 tableAdd(neuronToNodeTable,&currentNeuronId,&neuronEntry);
@@ -162,7 +162,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
 
             // Add the neuron-to-node mapping to the table
             assignIP(neuronEntry.nodeIP,nodes[assignedDevices]);
-            neuronEntry.layer = i;
+            neuronEntry.layer = i+1;
             neuronEntry.indexInLayer = j;
             neuronEntry.isAcknowledged = false;
 
@@ -340,7 +340,7 @@ void distributeInputNeurons(uint8_t nodes[][4],uint8_t nrNodes){
             LOG(APP, ERROR, "Error: number of input neurons exceeds the number of available nodes");
         return;
     }
-    for (int i = 0; i < numInputNeurons; i++) {
+    for (int i = 0; i < numInputNeurons; i++){
         //Encode ad send the message assigning the input neuron to the physical device
         encodeInputAssignMessage(appPayload, sizeof(appPayload),i);
         network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodes[i]);
@@ -369,17 +369,17 @@ void assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t target
     /***  The messages in this function are constructed layer by layer. Messages are made based on aggregation of the
      * neurons computed in the same layer, since these neurons need to send their outputs to the same neurons or nodes
      * in the next layer. ***/
-    for (uint8_t i = 0; i < neuralNetwork.numLayers; i++) {
-
+    for (uint8_t i = 0; i < neuralNetwork.numLayers + 1; i++) {
         /*** Identify the neurons computed by the target node at the current layer and build a message
-           * with the subscriptions ad publications that the node does ***/
+           * with the subscriptions and publications that the node does ***/
         for (int k = 0; k < neuronToNodeTable->numberOfItems; ++k) {
             neuronId = (uint8_t*)tableKey(neuronToNodeTable,k);
             neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
 
             if(neuronEntry != nullptr){
                 //Search in the neuronToNodeTable for the neurons at a specific layer computed by a specif node
-                if(isIPEqual(neuronEntry->nodeIP,targetNodeIP) && neuronEntry->layer == i){
+                //The i has to be normalized because the layers encoded in the table begin at the input layer
+                if(isIPEqual(neuronEntry->nodeIP,targetNodeIP) && neuronEntry->layer  == i){
                     //LOG(APP,INFO,"Neuron ID: %hhu \n",*neuronId);
                     outputNeurons[nNeurons] = *neuronId;
                     nNeurons ++;
@@ -392,7 +392,7 @@ void assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t target
             //LOG(APP,DEBUG,"number of neurons: %hhu number of targetNodeIP: %hhu\n",nNeurons,nNodes);
             /*** Neurons in a given layer will publish to a topic corresponding to their layer number,
                 and subscribe to the topics published by neurons in the previous layer.***/
-            encodePubSubInfo(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,i,i+1);
+            encodePubSubInfo(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,i-1,i);
             offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
             //Todo send Message for the node
             network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,targetNodeIP);
