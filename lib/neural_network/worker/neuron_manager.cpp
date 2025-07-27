@@ -88,7 +88,7 @@ void handleAssignComputationsMessage(char*messageBuffer){
     char *spaceToken,*neuronEntry;
     char *saveptr1, *saveptr2;
 
-    //DATA_MESSAGE NN_ASSIGN_COMPUTATION [destinationIP] |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    //NN_ASSIGN_COMPUTATION [destinationIP] |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     neuronEntry = strtok_r(messageBuffer, "|",&saveptr1);
     //Discard the message types
     neuronEntry = strtok_r(NULL, "|",&saveptr1);
@@ -153,8 +153,6 @@ void handleAssignComputationsMessage(char*messageBuffer){
  * Format: |[Number of neurons] [Output Neuron IDs...] [Number of targets] [Target IPs...]
  */
 void handleAssignOutput(char* messageBuffer){
-    NeuralNetworkMessageType type;
-    sscanf(messageBuffer, "%*d %d",&type);
     uint8_t nNeurons,nTargets,targetIP[4];
     NeuronId neuronID[MAX_NEURONS];
     char tmpBuffer[10];
@@ -283,7 +281,7 @@ void handleAssignPubSubInfo(char* messageBuffer){
  */
 void handleForwardMessage(char *messageBuffer){
     int inferenceId;
-    sscanf(messageBuffer, "%*d %*d %i",&inferenceId);
+    sscanf(messageBuffer, "%*d %i",&inferenceId);
 
     currentInferenceId = inferenceId;
 
@@ -361,7 +359,7 @@ void handleNeuronOutputMessage(char*messageBuffer){
     bool outputsComputed=true;
     NeuronId outputNeuronId;
 
-    sscanf(messageBuffer, "%*d %*d %i %hhu %f",&inferenceId,&outputNeuronId,&inputValue);
+    sscanf(messageBuffer, "%*d %i %hhu %f",&inferenceId,&outputNeuronId,&inputValue);
 
     /***If the inferenceId received in the message is lower than the current inferenceId, the message belongs to
      * an outdated inference cycle and should be discarded ***/
