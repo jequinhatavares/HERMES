@@ -547,9 +547,13 @@ void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAck
 //TODO Header
 void encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type){
     //NN_WORKER_REGISTRATION [Node IP] [Device Type]
-    snprintf(messageBuffer,bufferSize,"%hhu.%hhu.%hhu.%hhu %d",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],static_cast<int>(type));
+    snprintf(messageBuffer,bufferSize,"%d %hhu.%hhu.%hhu.%hhu %d",NN_WORKER_REGISTRATION,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],static_cast<int>(type));
 }
-
+//TODO Header
+void encodeInputRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4]){
+    //NN_INPUT_REGISTRATION [Node IP] [Device Type]
+    snprintf(messageBuffer,bufferSize,"%hhu.%hhu.%hhu.%hhu %d",NN_INPUT_REGISTRATION,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
+}
 
 
 /**
