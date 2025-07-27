@@ -11,7 +11,9 @@ unsigned long neuronAssignmentTime;
 
 bool areNeuronsAssigned = false;
 bool receivedAllNeuronAcks = false;
+
 bool inferenceRunning = false;
+unsigned long inferenceStartTime;
 
 int nnSequenceNumber=0;
 
@@ -580,12 +582,18 @@ void manageNeuralNetwork(){
     if(receivedAllNeuronAcks && !inferenceRunning){
         nnSequenceNumber +=2;
         encodeForwardMessage(appPayload, sizeof(appPayload),nnSequenceNumber);
+        inferenceStartTime=getCurrentTime();
     }
 
     // Check if the expected time for ack arrival from all nodes had passed
     if((currentTime-neuronAssignmentTime) >= ACK_TIMEOUT && areNeuronsAssigned && !receivedAllNeuronAcks){
         //onACKTimeOut();
     }
+
+    if((currentTime-inferenceStartTime) >= INFERENCE_TIMEOUT && inferenceRunning){
+        //TODO something where
+    }
+
 }
 
 void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices){

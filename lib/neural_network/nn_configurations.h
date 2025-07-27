@@ -28,6 +28,8 @@
 
 #define ACK_TIMEOUT 3000
 
+#define INFERENCE_TIMEOUT 3000
+
 #define MIN_WORKERS 5
 
 
