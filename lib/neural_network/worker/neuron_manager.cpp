@@ -266,11 +266,14 @@ void handleAssignPubSubInfo(char* messageBuffer){
 
         //spaceToken now pointing to the subTopic
         subTopic = atoi(spaceToken);
+        if(subTopic != -1)//TODO Subscribe to topic
         //LOG(NETWORK, DEBUG, "subTopic: %i\n", subTopic);
 
         //spaceToken now pointing to the pubTopic
         spaceToken = strtok_r(NULL, " ", &saveptr2);
         pubTopic = atoi(spaceToken);
+        if(pubTopic != -1)//TODO Subscribe to topic
+
         //LOG(NETWORK, DEBUG, "pubTopic: %i\n", pubTopic);
 
         //Move on to the next layer neurons
