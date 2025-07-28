@@ -313,7 +313,7 @@ void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t tar
             neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
 
             if(neuronEntry != nullptr){
-                //Search in the neuronToNodeTable for the neurons at a specific layer computed by a specif node
+                //Search in the neuronToNodeTable for the neurons at a specific layer computed by the target node that have not been acknowledged
                 if(isIPEqual(neuronEntry->nodeIP,targetNodeIP) && neuronEntry->layer == i){
                     //LOG(APP,INFO,"Neuron ID: %hhu \n",*neuronId);
                     outputNeurons[nNeurons] = *neuronId;
@@ -334,13 +334,62 @@ void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t tar
         nNodes = 0;
     }
 
-
     // Check if the target node has any assigned neurons. This safeguards against cases where the function is given a
     // targetIP with no neuron assignments, in such cases, there's no need to send a message.
     if(neuronsAssignedToNode){
         network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,targetNodeIP);
     }
 
+
+}
+
+void assignOutputTargetsToNeurons(char* messageBuffer,size_t bufferSize,NeuronId *neuronIDs,uint8_t nNeurons,uint8_t targetNodeIP[4]){
+    NeuronId *neuronId;
+    NeuronEntry *neuronEntry;
+    uint8_t outputNeurons[TOTAL_NEURONS];
+    uint8_t inputNodesIPs[TABLE_MAX_SIZE][4], nNodes = 0;
+    int offset = 0;
+    char tmpBuffer[50];
+    size_t tmpBufferSize = sizeof(tmpBuffer);
+    bool neuronsAssignedToNode=false;
+
+    encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_OUTPUTS);
+    offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
+
+    /***  This function builds the message neuron by neuron. It finds each neuron to assign outputs to,
+     * retrieves its output targets and appends the neuron and corresponding targets to the message.***/
+    for (int i = 0; i < neuronToNodeTable->numberOfItems; i++){
+        neuronId = (uint8_t*)tableKey(neuronToNodeTable,i);
+        if (neuronId == nullptr)continue;
+
+        // If the current neuronId is not in the list of neurons that should receive the output target assignment skip it
+        if (!isNeuronInList(neuronIDs,nNeurons,*neuronId)) continue;
+
+        /*** The neurons in the next layer require the outputs of the current layer as input. Therefore, we need to
+         * identify which nodes are responsible for computing the next layer's neurons. These are the nodes to which
+         * the current layer's neurons must send their outputs. ***/
+        for (int l = 0; l < neuronToNodeTable->numberOfItems; l++){
+            neuronId = (uint8_t*)tableKey(neuronToNodeTable,l);
+            neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
+            if(neuronEntry != nullptr){
+                // Check if the current node is responsible for computing a neuron in the next layer and is not already in the list
+                if(!isIPinList(neuronEntry->nodeIP,inputNodesIPs,nNodes) && (neuronEntry->layer == i+1)){
+                    assignIP(inputNodesIPs[nNodes],neuronEntry->nodeIP);
+                    //LOG(APP,INFO,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
+                    nNodes++;
+                }
+            }
+        }
+
+
+        //LOG(APP,DEBUG,"number of neurons: %hhu number of targetNodeIP: %hhu\n",nNeurons,nNodes);
+        encodeAssignOutputMessage(tmpBuffer,tmpBufferSize,neuronId,1,inputNodesIPs,nNodes);
+        offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
+
+        nNodes = 0;
+    }
+
+    network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,targetNodeIP);
 
 }
 
@@ -713,3 +762,9 @@ void onACKTimeOutInputLayer(){
     }
 }
 
+bool isNeuronInList(NeuronId *neuronsList, uint8_t nNeurons, NeuronId targetNeuronId){
+    for (uint8_t i = 0; i < nNeurons; i++) {
+        if(neuronsList[i] == targetNeuronId) return true;
+    }
+    return false;
+}

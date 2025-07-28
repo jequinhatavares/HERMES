@@ -34,6 +34,7 @@ void initNeuralNetwork();
 void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_t nrNodes);
 void assignOutputTargetsToNetwork(uint8_t nodes[][4],uint8_t nrNodes);
 void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]);
+void assignOutputTargetsToNeurons(char* messageBuffer,size_t bufferSize,NeuronId *neuronIDs,uint8_t nNeurons,uint8_t targetNodeIP[4]);
 void assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]);
 void distributeInputNeurons(uint8_t nodes[][4],uint8_t nrNodes);
 
@@ -50,5 +51,7 @@ void handleWorkerRegistration(char*messageBuffer);
 void manageNeuralNetwork();
 void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices);
 void onACKTimeOutInputLayer();
+
+bool isNeuronInList(NeuronId *neuronsList, uint8_t nNeurons, NeuronId targetNeuronId);
 
 #endif //NEURAL_NETWORK_MANAGER_H
