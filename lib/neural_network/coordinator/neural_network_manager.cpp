@@ -148,7 +148,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
                 assignIP(neuronEntry.nodeIP,myIP);
                 neuronEntry.layer = i+1;
                 neuronEntry.indexInLayer = j;
-                neuronEntry.isAcknowledged = false;
+                neuronEntry.isAcknowledged = true;
                 tableAdd(neuronToNodeTable,&currentNeuronId,&neuronEntry);
 
                 // Increment the count of neurons assigned to this node, and the current NeuronID
@@ -540,7 +540,7 @@ void handleACKMessage(char* messageBuffer){
     for (int i = 0; i < neuronToNodeTable->numberOfItems; i++) {
         neuronEntry = (NeuronEntry*)tableValueAtIndex(neuronToNodeTable,i);
         if(neuronEntry != nullptr){
-            isNetworkAcknowledge =neuronEntry->isAcknowledged && isNetworkAcknowledge;
+            isNetworkAcknowledge = neuronEntry->isAcknowledged && isNetworkAcknowledge;
         }
     }
 
@@ -617,16 +617,16 @@ void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices){
          * Aggregates all unacknowledged neurons from the same nodeIP. Since the message that assigns neurons to nodes
          * is sent as a single, aggregated message per node (i.e., it includes all the neurons the node is expected
          * to compute), if that message is lost, none of the neurons assigned to that node are acknowledged.
-         ***/
+        ***/
         while(i <neuronToNodeTable->numberOfItems){
             currentId = (NeuronId*)tableKey(neuronToNodeTable,i);
             neuronEntry = (NeuronEntry*)tableRead(neuronToNodeTable,currentId);
 
             /***
-             * If the neuron was not acknowledged by the node, and it belongs to the current physical device along
+             * If the neuron was not acknowledged by the node and it belongs to the current physical device along
              * with other unacknowledged neurons, then include it in the assigning message together with the others.
              ***/
-            if( neuronEntry!=nullptr && isIPEqual(nodeIP[k],neuronEntry->nodeIP) && !neuronEntry->isAcknowledged){
+            if(neuronEntry != nullptr && isIPEqual(nodeIP[k],neuronEntry->nodeIP) && !neuronEntry->isAcknowledged && neuronEntry->layer!=0){
                 // The current layer index needs to be normalized because the neuronToNode table uses 0 for the input
                 // layer, while in the NN structure, index 0 corresponds to the first hidden layer.
                 currentLayerIndex = neuronEntry->layer - 1;
@@ -638,6 +638,8 @@ void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices){
                 for (uint8_t j = 0; j < neuralNetwork.layers[currentLayerIndex].numInputs ; j++){
                     inputIndexMap[j] = *currentId+(j-neuralNetwork.layers[currentLayerIndex].numInputs);
                 }
+
+                //If the neuron is not from the input layer
 
                 //Encode the part assigning neuron information (weights, bias, inputs etc..)
                 encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,
@@ -667,6 +669,34 @@ void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices){
         messageOffset = 0;
         unACKNeurons = false;
         i=0;
+    }
+}
+
+void onACKTimeOutInputLayer(uint8_t nodeIP[][4],uint8_t nDevices){
+    NeuronId *currentId;
+    NeuronEntry *neuronEntry;
+    int i=0;
+
+    /*** First iterate over physical devices that have been assigned neurons, since messages are aggregated and sent
+     * per device (not per neuron). That is, if a device is assigned multiple neurons, the assignments are sent
+     * together in a single message, not in separate messages. ***/
+    for (i=0;i<neuronToNodeTable->numberOfItems; i++){
+        currentId = (NeuronId*)tableKey(neuronToNodeTable,i);
+        neuronEntry = (NeuronEntry*)tableRead(neuronToNodeTable,currentId);
+        // If a input neuron was not acknowledged then send the message to the node responsible for computing it
+        if(neuronEntry != nullptr && !neuronEntry->isAcknowledged && neuronEntry->layer==0){
+
+            //Encode the message assigning the input neuron to the node
+            encodeInputAssignMessage(appPayload, sizeof(appPayload),*currentId);
+            network.sendMessageToNode(appBuffer,sizeof(appBuffer),appPayload,neuronEntry->nodeIP);
+
+            strcpy(appPayload,"");
+            strcpy(appBuffer,"");
+
+            //Then send the message assigning the output targets
+            assignOutputTargetsToNode(appPayload, sizeof(appPayload),neuronEntry->nodeIP);
+            network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,neuronEntry->nodeIP);
+        }
     }
 }
 

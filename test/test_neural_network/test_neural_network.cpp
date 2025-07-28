@@ -396,6 +396,7 @@ void test_handle_NACK_with_computed_output(){
 }
 
 
+
 void test_encode_message_assign_neuron(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char correctMessage[50] ="|3 2 1 2 2 2 1",buffer[200];
@@ -563,6 +564,51 @@ void test_distribute_neurons(){
 
     tableClean(neuronToNodeTable);
 
+}
+
+
+void test_coordinator_handle_ACK(){
+    char receivedMessage[50],ackMessage[50];
+    //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
+    char correctMessage[50];
+    int pubTopic=1,subTopic=0;
+    uint8_t neuron2=2,neuron3=3;
+    float outputValue = 5.0;
+
+    uint8_t nodes[4][4] = {
+            {2,2,2,2},
+            {3,3,3,3},
+            {4,4,4,4},
+            {5,5,5,5},
+    };
+
+    uint8_t neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
+
+    initNeuralNetwork();
+    distributeNeuralNetwork(&neuralNetwork, nodes,4);
+
+    // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
+    snprintf(ackMessage, sizeof(ackMessage),"%d 2 3",NN_ACK);
+    handleNeuronMessage(ackMessage);//Assign neuron computation to the node
+
+    snprintf(ackMessage, sizeof(ackMessage),"%d 3 4",NN_ACK);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(ackMessage, sizeof(ackMessage),"%d 5 6",NN_ACK);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(ackMessage, sizeof(ackMessage),"%d 7 8",NN_ACK);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(ackMessage, sizeof(ackMessage),"%d 7 8",NN_ACK);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(correctMessage, sizeof(correctMessage),"%d %i %hhu %g",NN_NEURON_OUTPUT,0,neuron2,outputValue);
+
+    printf("Encoded Message:%s\n",appPayload);
+    printf("Correct Message:%s\n",correctMessage);
+    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
+    freeAllNeuronMemory();
 }
 
 void test_assign_outputs() {
