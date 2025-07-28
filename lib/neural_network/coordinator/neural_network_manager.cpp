@@ -94,7 +94,7 @@ void printNeuronEntry(TableEntry* Table){
          *(NeuronId*)Table->key,((NeuronEntry *)Table->value)->nodeIP[0],((NeuronEntry *)Table->value)->nodeIP[1]
         ,((NeuronEntry *)Table->value)->nodeIP[2],((NeuronEntry *)Table->value)->nodeIP[3],
         ((NeuronEntry *)Table->value)->layer,((NeuronEntry *)Table->value)->indexInLayer,
-        ((NeuronEntry *)Table->value)->layer,((NeuronEntry *)Table->value)->isAcknowledged);
+        ((NeuronEntry *)Table->value)->isAcknowledged);
 }
 
 void printNeuronTableHeader(){
