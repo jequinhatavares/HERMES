@@ -314,7 +314,7 @@ void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t tar
 
             if(neuronEntry != nullptr){
                 //Search in the neuronToNodeTable for the neurons at a specific layer computed by the target node that have not been acknowledged
-                if(isIPEqual(neuronEntry->nodeIP,targetNodeIP) && neuronEntry->layer == i){
+                if(isIPEqual(neuronEntry->nodeIP,targetNodeIP) && neuronEntry->layer == i && !neuronEntry->isAcknowledged){
                     //LOG(APP,INFO,"Neuron ID: %hhu \n",*neuronId);
                     outputNeurons[nNeurons] = *neuronId;
                     nNeurons ++;
