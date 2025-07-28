@@ -4,7 +4,6 @@
 
 #include "neural_network_manager.h"
 
-
 #define TOTAL_NEURONS 12
 
 unsigned long neuronAssignmentTime;
@@ -355,15 +354,7 @@ void distributeInputNeurons(uint8_t inputNodes[][4],uint8_t nrNodes){
         neuronEntry.indexInLayer = i;
         neuronEntry.isAcknowledged = false;
 
-        LOG(APP, ERROR, "Adding the Neuron: %hhu with value:nodeIP:%hhu.%hhu.%hhu.%hhu layer:%hhu indexInLayer:%hhu \n",i
-            ,neuronEntry.nodeIP[0],neuronEntry.nodeIP[1],neuronEntry.nodeIP[2],neuronEntry.nodeIP[3],neuronEntry.layer,neuronEntry.indexInLayer);
-
-
         tableAdd(neuronToNodeTable,&i,&neuronEntry);
-
-        LOG(APP, ERROR, "Table after insert\n");
-
-        tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
 
     }
 }
@@ -382,7 +373,7 @@ void assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t target
     /***  The messages in this function are constructed layer by layer. Messages are made based on aggregation of the
      * neurons computed in the same layer, since these neurons need to send their outputs to the same neurons or nodes
      * in the next layer. ***/
-    for (uint8_t i = 0; i < neuralNetwork.numLayers + 1; i++) {
+    for (int8_t i = 0; i < neuralNetwork.numLayers + 1; i++) {
         /*** Identify the neurons computed by the target node at the current layer and build a message
            * with the subscriptions and publications that the node does ***/
         for (int k = 0; k < neuronToNodeTable->numberOfItems; ++k) {
@@ -405,7 +396,7 @@ void assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t target
             //LOG(APP,DEBUG,"number of neurons: %hhu number of targetNodeIP: %hhu\n",nNeurons,nNodes);
             /*** Neurons in a given layer will publish to a topic corresponding to their layer number,
                 and subscribe to the topics published by neurons in the previous layer.***/
-            encodePubSubInfo(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,i-1,i);
+            encodePubSubInfo(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,(int8_t)(i-1),i);
             offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
             //Todo send Message for the node
             network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,targetNodeIP);
@@ -486,7 +477,7 @@ void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t *
     }
 }
 
-void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronIds, uint8_t nNeurons, uint8_t subTopic, uint8_t pubTopic){
+void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronIDs, uint8_t nNeurons, int8_t subTopic, int8_t pubTopic){
     int offset = 0;
     // |[Number of Neurons] [neuron ID1] [neuron ID2] [Subscription 1] [Pub 1]
 
@@ -496,21 +487,21 @@ void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronId
 
     // Encode the IDs of neurons that the Pub/sub info is about
     for (uint8_t i = 0; i < nNeurons; i++) {
-        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",neuronIds[i]);
+        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",neuronIDs[i]);
     }
 
     // Encode the total number of subscriptions
     //offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",nSubTopics);
 
 
-    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",subTopic);
+    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d ",subTopic);
 
 
     // Encode the total number of published topics
     //offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",nPubTopics);
 
 
-    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu",pubTopic);
+    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d",pubTopic);
 }
 
 void encodeForwardMessage(char*messageBuffer, size_t bufferSize, int inferenceId){
@@ -540,7 +531,7 @@ void handleACKMessage(char* messageBuffer){
         // Extract the ID of the neuron
         currentId = atoi(token);
 
-        LOG(APP,DEBUG,"Acknowledged neuron Id: %hhu\n",currentId);
+        //LOG(APP,DEBUG,"Acknowledged neuron Id: %hhu\n",currentId);
         neuronEntry = (NeuronEntry*)tableRead(neuronToNodeTable,&currentId);
         if(neuronEntry != nullptr){
             neuronEntry->isAcknowledged = true;
@@ -684,7 +675,7 @@ void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices){
     }
 }
 
-void onACKTimeOutInputLayer(uint8_t nodeIP[][4],uint8_t nDevices){
+void onACKTimeOutInputLayer(){
     NeuronId *currentId;
     NeuronEntry *neuronEntry;
     int i=0;
