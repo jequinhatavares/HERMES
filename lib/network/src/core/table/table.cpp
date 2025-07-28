@@ -35,7 +35,7 @@
  * @param value_size Size of each value in bytes.
  */
 void tableInit(TableInfo * T, void* keys, void* values, size_t key_size, size_t value_size){
-    for (int i = 0; i < TABLE_MAX_SIZE; i++) {
+    for (int i = 0; i < T->maxNumberOfItems; i++) {
         T->table[i].key = (char*)keys + (i * key_size);
         T->table[i].value = (char*)values + (i * value_size);
     }
@@ -107,7 +107,8 @@ void* tableRead(TableInfo* T, void* key){
  */
 void tableAdd(TableInfo* T, void* key, void* value){
 
-    if(T->numberOfItems == TABLE_MAX_SIZE) return;
+    if(T->numberOfItems == T->maxNumberOfItems)return;
+
 #ifndef PREALLOCATE_TABLE
     T->table[T->numberOfItems].key=key;
     T->table[T->numberOfItems].value=value;

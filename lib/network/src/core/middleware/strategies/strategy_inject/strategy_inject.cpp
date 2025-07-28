@@ -35,6 +35,7 @@ unsigned long lastMiddlewareUpdateTimeInject = 0;
 TableEntry mTable[TABLE_MAX_SIZE];
 TableInfo MTable = {
         .numberOfItems = 0,
+        .maxNumberOfItems = TABLE_MAX_SIZE,
         .isEqual = isIPEqual,
         .table = mTable,
         .setKey = setIP,

@@ -54,12 +54,12 @@ void setup(){
     //To auto initialize the root node has the node with the IP 135.230.96.1
     if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96)
     {
-        network.setAsRoot(true);
+        //network.setAsRoot(true);
     }
     waitForEnter();
 
 
-    network.begin();
+    //network.begin();
 
     //Select and initialize the middleware strategy
     //middlewareSelectStrategy(STRATEGY_INJECT);
@@ -95,7 +95,7 @@ void setup(){
 }
 
 void loop(){
-   network.run();
+   //network.run();
 }
 #endif
 

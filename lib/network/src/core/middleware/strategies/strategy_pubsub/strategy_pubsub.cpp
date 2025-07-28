@@ -34,6 +34,7 @@ PubSubContext pubsubContext ={
 TableEntry psTable[TABLE_MAX_SIZE];
 TableInfo PSTable = {
         .numberOfItems = 0,
+        .maxNumberOfItems = TABLE_MAX_SIZE,
         .isEqual = isIPEqual,
         .table = psTable,
         .setKey = setIP,

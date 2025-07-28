@@ -46,6 +46,7 @@ void (*onRootReachableCallback)() = nullptr;
 TableEntry rTable[TABLE_MAX_SIZE];
 TableInfo RTable = {
     .numberOfItems = 0,
+    .maxNumberOfItems = TABLE_MAX_SIZE,
     .isEqual = isIPEqual,
     .table = rTable,
     .setKey = setIP,
@@ -75,6 +76,7 @@ RoutingTableEntry routingTableEntries[TABLE_MAX_SIZE];
 TableEntry cTable[TABLE_MAX_SIZE];
 TableInfo CTable = {
         .numberOfItems=0,
+        .maxNumberOfItems = TABLE_MAX_SIZE,
         .isEqual = isIPEqual,
         .table = cTable,
         .setKey = setIP,

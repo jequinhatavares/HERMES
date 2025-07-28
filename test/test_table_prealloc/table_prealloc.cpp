@@ -64,6 +64,7 @@ void test_create_table_info(){
     TableEntry table[10];
     TableInfo t ={
             .numberOfItems = 0,
+            .maxNumberOfItems=TABLE_MAX_SIZE,
             .isEqual = vectorEqual,
             .table = table,
             .setKey = setIP,
@@ -90,6 +91,7 @@ void test_add_remove(){
     TableEntry table[10];
     TableInfo t ={
             .numberOfItems = 0,
+            .maxNumberOfItems=TABLE_MAX_SIZE,
             .isEqual = vectorEqual,
             .table = table,
             .setKey = setIP,

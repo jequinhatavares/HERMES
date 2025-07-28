@@ -37,6 +37,7 @@ bool hasTopologyMetric = false;
 TableEntry tTable[TABLE_MAX_SIZE];
 TableInfo TTable = {
         .numberOfItems = 0,
+        .maxNumberOfItems = TABLE_MAX_SIZE,
         .isEqual = isIPEqual,
         .table = tTable,
         .setKey = setIP,

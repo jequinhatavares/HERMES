@@ -6,6 +6,8 @@
 //#include "network_config.h"
 
 #include <cstddef>
+#include "../logger/logger.h"
+
 
 
 #ifndef TABLE_MAX_SIZE
@@ -29,6 +31,7 @@ typedef struct TableEntry{
 
 typedef struct TableInfo{
     int numberOfItems;
+    int maxNumberOfItems;
     bool (*isEqual)(void* a, void* b);
     TableEntry* table;
 //#ifdef PREALLOCATE_TABLE
