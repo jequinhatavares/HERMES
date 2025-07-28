@@ -344,8 +344,8 @@ void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t tar
 }
 
 void assignOutputTargetsToNeurons(char* messageBuffer,size_t bufferSize,NeuronId *neuronIDs,uint8_t nNeurons,uint8_t targetNodeIP[4]){
-    NeuronId *neuronId;
-    NeuronEntry *neuronEntry;
+    NeuronId *neuronId,*neuronId2;
+    NeuronEntry *neuronEntry,*neuronEntry2;
     uint8_t outputNeurons[TOTAL_NEURONS];
     uint8_t inputNodesIPs[TABLE_MAX_SIZE][4], nNodes = 0;
     int offset = 0;
@@ -360,7 +360,10 @@ void assignOutputTargetsToNeurons(char* messageBuffer,size_t bufferSize,NeuronId
      * retrieves its output targets and appends the neuron and corresponding targets to the message.***/
     for (int i = 0; i < neuronToNodeTable->numberOfItems; i++){
         neuronId = (uint8_t*)tableKey(neuronToNodeTable,i);
-        if (neuronId == nullptr)continue;
+        neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
+
+        if (neuronEntry == nullptr)continue;
+        LOG(APP,DEBUG,"Neuron: %hhu\n",*neuronId);
 
         // If the current neuronId is not in the list of neurons that should receive the output target assignment skip it
         if (!isNeuronInList(neuronIDs,nNeurons,*neuronId)) continue;
@@ -369,12 +372,12 @@ void assignOutputTargetsToNeurons(char* messageBuffer,size_t bufferSize,NeuronId
          * identify which nodes are responsible for computing the next layer's neurons. These are the nodes to which
          * the current layer's neurons must send their outputs. ***/
         for (int l = 0; l < neuronToNodeTable->numberOfItems; l++){
-            neuronId = (uint8_t*)tableKey(neuronToNodeTable,l);
-            neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
-            if(neuronEntry != nullptr){
+            neuronId2 = (uint8_t*)tableKey(neuronToNodeTable,l);
+            neuronEntry2 = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId2);
+            if(neuronEntry2 != nullptr){
                 // Check if the current node is responsible for computing a neuron in the next layer and is not already in the list
-                if(!isIPinList(neuronEntry->nodeIP,inputNodesIPs,nNodes) && (neuronEntry->layer == i+1)){
-                    assignIP(inputNodesIPs[nNodes],neuronEntry->nodeIP);
+                if(!isIPinList(neuronEntry2->nodeIP,inputNodesIPs,nNodes) && (neuronEntry2->layer == neuronEntry->layer+1)){
+                    assignIP(inputNodesIPs[nNodes],neuronEntry2->nodeIP);
                     //LOG(APP,INFO,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
                     nNodes++;
                 }
@@ -382,7 +385,6 @@ void assignOutputTargetsToNeurons(char* messageBuffer,size_t bufferSize,NeuronId
         }
 
 
-        //LOG(APP,DEBUG,"number of neurons: %hhu number of targetNodeIP: %hhu\n",nNeurons,nNodes);
         encodeAssignOutputMessage(tmpBuffer,tmpBufferSize,neuronId,1,inputNodesIPs,nNodes);
         offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
 
@@ -725,7 +727,6 @@ void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices){
         }
 
         //Reset the variables for the next unacknowledged neurons from other physical node
-        //strcpy(appPayload,"");
         messageOffset = 0;
         unACKNeurons = false;
         i=0;
@@ -755,12 +756,13 @@ void onACKTimeOutInputLayer(){
             strcpy(appPayload,"");
             strcpy(appBuffer,"");
 
-            //Then send the message assigning the output targets
-            assignOutputTargetsToNode(appPayload, sizeof(appPayload),neuronEntry->nodeIP);
+            // Then send the message assigning output targets only to the specific input node
+            assignOutputTargetsToNeurons(appPayload, sizeof(appPayload),currentId,1,neuronEntry->nodeIP);
             network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,neuronEntry->nodeIP);
         }
     }
 }
+
 
 bool isNeuronInList(NeuronId *neuronsList, uint8_t nNeurons, NeuronId targetNeuronId){
     for (uint8_t i = 0; i < nNeurons; i++) {
