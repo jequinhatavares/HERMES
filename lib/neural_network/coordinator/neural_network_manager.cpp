@@ -667,7 +667,7 @@ void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices){
         }
 
         //Reset the variables for the next unacknowledged neurons from other physical node
-        strcpy(appPayload,"");
+        //strcpy(appPayload,"");
         messageOffset = 0;
         unACKNeurons = false;
         i=0;
