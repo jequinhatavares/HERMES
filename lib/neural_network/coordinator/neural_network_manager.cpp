@@ -90,10 +90,11 @@ void initNeuralNetwork(){
 }
 
 void printNeuronEntry(TableEntry* Table){
-    LOG(APP,INFO,"Neuron %hhu → NodeIP[%hhu.%hhu.%hhu.%hhu] (Layer: %hhu) (Index in Layer: %hhu) \n",
+    LOG(APP,INFO,"Neuron %hhu → NodeIP[%hhu.%hhu.%hhu.%hhu] (Layer: %hhu) (Index in Layer: %hhu) (isAcknowledged: %d) \n",
          *(NeuronId*)Table->key,((NeuronEntry *)Table->value)->nodeIP[0],((NeuronEntry *)Table->value)->nodeIP[1]
         ,((NeuronEntry *)Table->value)->nodeIP[2],((NeuronEntry *)Table->value)->nodeIP[3],
-        ((NeuronEntry *)Table->value)->layer,((NeuronEntry *)Table->value)->indexInLayer);
+        ((NeuronEntry *)Table->value)->layer,((NeuronEntry *)Table->value)->indexInLayer,
+        ((NeuronEntry *)Table->value)->layer,((NeuronEntry *)Table->value)->isAcknowledged);
 }
 
 void printNeuronTableHeader(){
@@ -529,6 +530,7 @@ void handleACKMessage(char* messageBuffer){
         // Extract the ID of the neuron
         currentId = atoi(token);
 
+        LOG(APP,DEBUG,"Acknowledged neuron Id: %hhu\n",currentId);
         neuronEntry = (NeuronEntry*)tableRead(neuronToNodeTable,&currentId);
         if(neuronEntry != nullptr){
             neuronEntry->isAcknowledged = true;

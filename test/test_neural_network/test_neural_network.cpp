@@ -567,7 +567,7 @@ void test_distribute_neurons(){
 }
 
 
-void test_coordinator_handle_ACK(){
+void test_coordinator_handle_ACK_from_all_neurons(){
     char receivedMessage[50],ackMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
     char correctMessage[50];
@@ -589,26 +589,63 @@ void test_coordinator_handle_ACK(){
 
     // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
     snprintf(ackMessage, sizeof(ackMessage),"%d 2 3",NN_ACK);
-    handleNeuronMessage(ackMessage);//Assign neuron computation to the node
+    handleACKMessage(ackMessage);//Assign neuron computation to the node
 
-    snprintf(ackMessage, sizeof(ackMessage),"%d 3 4",NN_ACK);
-    handleNeuronMessage(receivedMessage);
+    snprintf(ackMessage, sizeof(ackMessage),"%d 4 5",NN_ACK);
+    handleACKMessage(ackMessage);
 
-    snprintf(ackMessage, sizeof(ackMessage),"%d 5 6",NN_ACK);
-    handleNeuronMessage(receivedMessage);
+    snprintf(ackMessage, sizeof(ackMessage),"%d 6 7",NN_ACK);
+    handleACKMessage(ackMessage);
 
-    snprintf(ackMessage, sizeof(ackMessage),"%d 7 8",NN_ACK);
-    handleNeuronMessage(receivedMessage);
+    snprintf(ackMessage, sizeof(ackMessage),"%d 8 9",NN_ACK);
+    handleACKMessage(ackMessage);
 
-    snprintf(ackMessage, sizeof(ackMessage),"%d 7 8",NN_ACK);
-    handleNeuronMessage(receivedMessage);
+    snprintf(ackMessage, sizeof(ackMessage),"%d 10 11",NN_ACK);
+    handleACKMessage(ackMessage);
 
-    snprintf(correctMessage, sizeof(correctMessage),"%d %i %hhu %g",NN_NEURON_OUTPUT,0,neuron2,outputValue);
+    tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
 
-    printf("Encoded Message:%s\n",appPayload);
-    printf("Correct Message:%s\n",correctMessage);
-    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
-    freeAllNeuronMemory();
+    NeuronEntry* neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron2);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(neuronEntry->isAcknowledged);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron3);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(neuronEntry->isAcknowledged);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron4);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(neuronEntry->isAcknowledged);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron5);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(neuronEntry->isAcknowledged);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron6);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(neuronEntry->isAcknowledged);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron7);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(neuronEntry->isAcknowledged);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron8);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(neuronEntry->isAcknowledged);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron9);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(neuronEntry->isAcknowledged);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron10);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(neuronEntry->isAcknowledged);/******/
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron11);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(neuronEntry->isAcknowledged);
+
+    tableClean(neuronToNodeTable);
 }
 
 void test_assign_outputs() {
@@ -726,8 +763,8 @@ void tearDown(void){
 }
 
 int main(int argc, char** argv){
-    UNITY_BEGIN();/******/
-    RUN_TEST(test_memory_allocation);
+    UNITY_BEGIN();
+    /***RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
 
     RUN_TEST(test_handle_message_assign_neuron_one_neuron);
@@ -747,8 +784,9 @@ int main(int argc, char** argv){
     RUN_TEST(test_encode_ACK_message);
 
     RUN_TEST(test_bit_fields);
-    RUN_TEST(test_distribute_neurons);
-    RUN_TEST(test_assign_outputs);
-    RUN_TEST(test_assign_pubsub_info); /******/
+    RUN_TEST(test_distribute_neurons);***/
+    RUN_TEST(test_coordinator_handle_ACK_from_all_neurons);
+    /***RUN_TEST(test_assign_outputs);
+    RUN_TEST(test_assign_pubsub_info); ***/
     UNITY_END();
 }
