@@ -43,6 +43,7 @@ uint8_t numRPiWorkers=0;
 TableEntry ntnTable[TOTAL_NEURONS];
 TableInfo NTNTable = {
         .numberOfItems = 0,
+        .maxNumberOfItems = TOTAL_NEURONS,
         .isEqual = isIDEqual,
         .table = ntnTable,
         .setKey = setNeuronId,
@@ -336,7 +337,7 @@ void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t tar
 
 }
 
-void distributeInputNeurons(uint8_t nodes[][4],uint8_t nrNodes){
+void distributeInputNeurons(uint8_t inputNodes[][4],uint8_t nrNodes){
     NeuronEntry neuronEntry;
     uint8_t numInputNeurons = neuralNetwork.layers[0].numInputs;
     if(numInputNeurons > nrNodes){
@@ -346,15 +347,24 @@ void distributeInputNeurons(uint8_t nodes[][4],uint8_t nrNodes){
     for (int i = 0; i < numInputNeurons; i++){
         //Encode ad send the message assigning the input neuron to the physical device
         encodeInputAssignMessage(appPayload, sizeof(appPayload),i);
-        network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodes[i]);
+        network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,inputNodes[i]);
 
         // Add the neuron-to-node mapping to the table
-        assignIP(neuronEntry.nodeIP,nodes[i]);
+        assignIP(neuronEntry.nodeIP,inputNodes[i]);
         neuronEntry.layer = 0;
         neuronEntry.indexInLayer = i;
         neuronEntry.isAcknowledged = false;
 
+        LOG(APP, ERROR, "Adding the Neuron: %hhu with value:nodeIP:%hhu.%hhu.%hhu.%hhu layer:%hhu indexInLayer:%hhu \n",i
+            ,neuronEntry.nodeIP[0],neuronEntry.nodeIP[1],neuronEntry.nodeIP[2],neuronEntry.nodeIP[3],neuronEntry.layer,neuronEntry.indexInLayer);
+
+
         tableAdd(neuronToNodeTable,&i,&neuronEntry);
+
+        LOG(APP, ERROR, "Table after insert\n");
+
+        tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
+
     }
 }
 

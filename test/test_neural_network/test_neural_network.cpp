@@ -566,6 +566,42 @@ void test_distribute_neurons(){
 
 }
 
+void test_assign_input_neurons(){
+    uint8_t nodes[4][4] = {
+            {2,2,2,2},
+            {3,3,3,3},
+            {4,4,4,4},
+            {5,5,5,5},
+    };
+
+    uint8_t neuron2=2,neuron3=3,neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
+    uint8_t inputNeuron0 = 0,inputNeuron1 = 1;
+    initNeuralNetwork();
+    distributeNeuralNetwork(&neuralNetwork, nodes,4);
+
+    distributeInputNeurons( nodes,4);
+
+    tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
+
+    printf("Table size:%d\n",neuronToNodeTable->numberOfItems);
+
+    NeuronEntry* neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&inputNeuron0);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[0]));
+    TEST_ASSERT(neuronEntry->layer == 0);
+    TEST_ASSERT(neuronEntry->indexInLayer == 0);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&inputNeuron1);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[1]));
+    TEST_ASSERT(neuronEntry->layer == 0);
+    TEST_ASSERT(neuronEntry->indexInLayer == 1);
+    /******/
+
+    tableClean(neuronToNodeTable);
+
+}
+
 
 void test_coordinator_handle_ACK_from_all_neurons(){
     //In this test the ACK from the neurons 8 and 9 are missing
@@ -668,6 +704,57 @@ void test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout(){
 
     initNeuralNetwork();
     distributeNeuralNetwork(&neuralNetwork, nodes,4);
+
+    // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
+    snprintf(ackMessage, sizeof(ackMessage),"%d 2 3",NN_ACK);
+    handleACKMessage(ackMessage);//Assign neuron computation to the node
+
+    snprintf(ackMessage, sizeof(ackMessage),"%d 4 5",NN_ACK);
+    handleACKMessage(ackMessage);
+
+    snprintf(ackMessage, sizeof(ackMessage),"%d 6 7",NN_ACK);
+    handleACKMessage(ackMessage);
+
+    snprintf(ackMessage, sizeof(ackMessage),"%d 10 11",NN_ACK);
+    handleACKMessage(ackMessage);
+
+    tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
+
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, 2,neuron8,neuron9,
+             1,myAPIP[0],myAPIP[1],myAPIP[3],myAPIP[3]);
+
+    onACKTimeOut(nodes,4);
+
+    printf("Encoded Message:%s\n",appPayload);
+    printf("Correct Message:%s\n",correctMessage);
+    TEST_ASSERT(strcmp(correctMessage,appPayload) == 0);
+
+    tableClean(neuronToNodeTable);
+}
+
+
+
+void test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout(){
+    char receivedMessage[50],ackMessage[50];
+    //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
+    char correctMessage[50];
+    int pubTopic=1,subTopic=0;
+    uint8_t neuron2=2,neuron3=3;
+    float outputValue = 5.0;
+
+    uint8_t nodes[4][4] = {
+            {2,2,2,2},
+            {3,3,3,3},
+            {4,4,4,4},
+            {5,5,5,5},
+    };
+
+    uint8_t neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
+
+    initNeuralNetwork();
+    distributeNeuralNetwork(&neuralNetwork, nodes,4);
+
+    distributeInputNeurons(nodes,4);
 
     // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
     snprintf(ackMessage, sizeof(ackMessage),"%d 2 3",NN_ACK);
@@ -833,10 +920,11 @@ int main(int argc, char** argv){
     RUN_TEST(test_encode_ACK_message);
 
     RUN_TEST(test_bit_fields);
-    RUN_TEST(test_distribute_neurons);
-    RUN_TEST(test_coordinator_handle_ACK_from_all_neurons);***/
+    RUN_TEST(test_distribute_neurons);***/
+    RUN_TEST(test_assign_input_neurons);
+    /***RUN_TEST(test_coordinator_handle_ACK_from_all_neurons);
     RUN_TEST(test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout);
-    /*** RUN_TEST(test_assign_outputs);
+     RUN_TEST(test_assign_outputs);
      RUN_TEST(test_assign_pubsub_info); ***/
     UNITY_END();
 }
