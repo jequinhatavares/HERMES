@@ -279,6 +279,7 @@ void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t tar
     int offset = 0;
     char tmpBuffer[50];
     size_t tmpBufferSize = sizeof(tmpBuffer);
+    bool neuronsAssignedToNode=false;
 
     encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_OUTPUTS);
     offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
@@ -286,11 +287,11 @@ void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t tar
     /***  The messages in this function are constructed layer by layer. Messages are made based on aggregation of the
      * neurons computed in the same layer, since these neurons need to send their outputs to the same neurons or nodes
      * in the next layer. ***/
-    for (uint8_t i = 0; i < neuralNetwork.numLayers+1; i++) {
+    for (uint8_t i = 0; i < neuralNetwork.numLayers+1; i++){
         /*** The neurons in the next layer require the outputs of the current layer as input. Therefore, we need to
          * identify which nodes are responsible for computing the next layer's neurons. These are the nodes to which
          * the current layer's neurons must send their outputs. ***/
-        for (int l = 0; l < neuronToNodeTable->numberOfItems; l++) {
+        for (int l = 0; l < neuronToNodeTable->numberOfItems; l++){
             neuronId = (uint8_t*)tableKey(neuronToNodeTable,l);
             neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
             if(neuronEntry != nullptr){
@@ -326,13 +327,20 @@ void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t tar
             //LOG(APP,DEBUG,"number of neurons: %hhu number of targetNodeIP: %hhu\n",nNeurons,nNodes);
             encodeAssignOutputMessage(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,inputNodesIPs,nNodes);
             offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
-            //Todo send Message for the node
-            network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,targetNodeIP);
+            neuronsAssignedToNode = true;
         }
 
         nNeurons = 0;
         nNodes = 0;
     }
+
+
+    // Check if the target node has any assigned neurons. This safeguards against cases where the function is given a
+    // targetIP with no neuron assignments, in such cases, there's no need to send a message.
+    if(neuronsAssignedToNode){
+        network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,targetNodeIP);
+    }
+
 
 }
 
@@ -688,6 +696,8 @@ void onACKTimeOutInputLayer(){
         neuronEntry = (NeuronEntry*)tableRead(neuronToNodeTable,currentId);
         // If a input neuron was not acknowledged then send the message to the node responsible for computing it
         if(neuronEntry != nullptr && !neuronEntry->isAcknowledged && neuronEntry->layer==0){
+
+            //LOG(APP,DEBUG,);
 
             //Encode the message assigning the input neuron to the node
             encodeInputAssignMessage(appPayload, sizeof(appPayload),*currentId);
