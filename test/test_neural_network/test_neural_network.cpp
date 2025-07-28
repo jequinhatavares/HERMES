@@ -732,6 +732,56 @@ void test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout(){
     tableClean(neuronToNodeTable);
 }
 
+void test_coordinator_handle_ACK_missing_for_some_worker_neuron_of_same_node_on_ack_timeout(){
+    //In this test neuron 9 is not acknowledged
+    char receivedMessage[50],ackMessage[50];
+    //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
+    char correctMessage[50];
+    int pubTopic=1,subTopic=0;
+    uint8_t neuron2=2,neuron3=3;
+    float outputValue = 5.0;
+
+    uint8_t nodes[4][4] = {
+            {2,2,2,2},
+            {3,3,3,3},
+            {4,4,4,4},
+            {5,5,5,5},
+    };
+
+    uint8_t neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
+
+    initNeuralNetwork();
+    distributeNeuralNetwork(&neuralNetwork, nodes,4);
+
+    // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
+    snprintf(ackMessage, sizeof(ackMessage),"%d 2 3",NN_ACK);
+    handleACKMessage(ackMessage);//Assign neuron computation to the node
+
+    snprintf(ackMessage, sizeof(ackMessage),"%d 4 5",NN_ACK);
+    handleACKMessage(ackMessage);
+
+    snprintf(ackMessage, sizeof(ackMessage),"%d 6 7",NN_ACK);
+    handleACKMessage(ackMessage);
+
+    snprintf(ackMessage, sizeof(ackMessage),"%d 8",NN_ACK);
+    handleACKMessage(ackMessage);
+
+    snprintf(ackMessage, sizeof(ackMessage),"%d 10 11",NN_ACK);
+    handleACKMessage(ackMessage);
+
+    //tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
+
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, 1,neuron9,
+             1,myAPIP[0],myAPIP[1],myAPIP[3],myAPIP[3]);
+
+    onACKTimeOut(nodes,4);
+
+    //printf("Encoded Message:%s\n",appPayload);
+    //printf("Correct Message:%s\n",correctMessage);
+    TEST_ASSERT(strcmp(correctMessage,appPayload) == 0);
+
+    tableClean(neuronToNodeTable);
+}
 
 
 void test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout(){
@@ -771,8 +821,8 @@ void test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout(){
 
     onACKTimeOutInputLayer();
 
-    printf("Encoded Message:%s\n",appPayload);
-    printf("Correct Message:%s\n",correctMessage);
+    //printf("Encoded Message:%s\n",appPayload);
+    //printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(correctMessage,appPayload) == 0);
 
     tableClean(neuronToNodeTable);
@@ -921,6 +971,7 @@ int main(int argc, char** argv){
     RUN_TEST(test_assign_input_neurons);
     RUN_TEST(test_coordinator_handle_ACK_from_all_neurons);
     RUN_TEST(test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout);
+    RUN_TEST(test_coordinator_handle_ACK_missing_for_some_worker_neuron_of_same_node_on_ack_timeout);
     RUN_TEST(test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout);
     RUN_TEST(test_assign_outputs);
     RUN_TEST(test_assign_pubsub_info);/*** ***/

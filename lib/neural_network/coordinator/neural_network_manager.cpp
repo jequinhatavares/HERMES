@@ -363,7 +363,7 @@ void assignOutputTargetsToNeurons(char* messageBuffer,size_t bufferSize,NeuronId
         neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
 
         if (neuronEntry == nullptr)continue;
-        LOG(APP,DEBUG,"Neuron: %hhu\n",*neuronId);
+        //LOG(APP,DEBUG,"Neuron: %hhu\n",*neuronId);
 
         // If the current neuronId is not in the list of neurons that should receive the output target assignment skip it
         if (!isNeuronInList(neuronIDs,nNeurons,*neuronId)) continue;
@@ -746,8 +746,6 @@ void onACKTimeOutInputLayer(){
         neuronEntry = (NeuronEntry*)tableRead(neuronToNodeTable,currentId);
         // If a input neuron was not acknowledged then send the message to the node responsible for computing it
         if(neuronEntry != nullptr && !neuronEntry->isAcknowledged && neuronEntry->layer==0){
-
-            //LOG(APP,DEBUG,);
 
             //Encode the message assigning the input neuron to the node
             encodeInputAssignMessage(appPayload, sizeof(appPayload),*currentId);
