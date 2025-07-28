@@ -581,7 +581,7 @@ void test_assign_input_neurons(){
 
     distributeInputNeurons( nodes,4);
 
-    tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
+    //tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
 
     printf("Table size:%d\n",neuronToNodeTable->numberOfItems);
 
@@ -718,15 +718,15 @@ void test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout(){
     snprintf(ackMessage, sizeof(ackMessage),"%d 10 11",NN_ACK);
     handleACKMessage(ackMessage);
 
-    tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
+    //tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
 
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, 2,neuron8,neuron9,
              1,myAPIP[0],myAPIP[1],myAPIP[3],myAPIP[3]);
 
     onACKTimeOut(nodes,4);
 
-    printf("Encoded Message:%s\n",appPayload);
-    printf("Correct Message:%s\n",correctMessage);
+    //printf("Encoded Message:%s\n",appPayload);
+    //printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(correctMessage,appPayload) == 0);
 
     tableClean(neuronToNodeTable);
@@ -735,11 +735,12 @@ void test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout(){
 
 
 void test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout(){
+    //In this test the neuron 1 is not acknowledge by node 3.3.3.3
     char receivedMessage[50],ackMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
     char correctMessage[50];
     int pubTopic=1,subTopic=0;
-    uint8_t neuron2=2,neuron3=3;
+    uint8_t inputNeuron0=0,inputNeuron1=1;
     float outputValue = 5.0;
 
     uint8_t nodes[4][4] = {
@@ -756,25 +757,19 @@ void test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout(){
 
     distributeInputNeurons(nodes,4);
 
-    // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
-    snprintf(ackMessage, sizeof(ackMessage),"%d 2 3",NN_ACK);
-    handleACKMessage(ackMessage);//Assign neuron computation to the node
-
-    snprintf(ackMessage, sizeof(ackMessage),"%d 4 5",NN_ACK);
-    handleACKMessage(ackMessage);
-
-    snprintf(ackMessage, sizeof(ackMessage),"%d 6 7",NN_ACK);
-    handleACKMessage(ackMessage);
-
-    snprintf(ackMessage, sizeof(ackMessage),"%d 10 11",NN_ACK);
-    handleACKMessage(ackMessage);
-
     tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
 
-    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, 2,neuron8,neuron9,
-             1,myAPIP[0],myAPIP[1],myAPIP[3],myAPIP[3]);
+    // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
+    snprintf(ackMessage, sizeof(ackMessage),"%d 0",NN_ACK);
+    handleACKMessage(ackMessage);//Assign neuron computation to the node
 
-    onACKTimeOut(nodes,4);
+    onACKTimeOutInputLayer();
+
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, 1,inputNeuron1,
+             2,nodes[0][0],nodes[0][1],nodes[0][3],nodes[0][3],
+            nodes[1][0],nodes[1][1],nodes[1][3],nodes[1][3]);
+
+    onACKTimeOutInputLayer();
 
     printf("Encoded Message:%s\n",appPayload);
     printf("Correct Message:%s\n",correctMessage);
@@ -830,6 +825,7 @@ void test_assign_outputs() {
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
     tableClean(neuronToNodeTable);
+
 }
 
 
@@ -870,8 +866,8 @@ void test_assign_pubsub_info() {
 
     assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[3]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron8,neuron9,1,2);
-    //printf("Correct Message:%s\n",correctMessage);
-    //printf("Encoded Message:%s\n",appPayload);
+    printf("Correct Message:%s\n",correctMessage);
+    printf("Encoded Message:%s\n",appPayload);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/
 
     tableClean(neuronToNodeTable);
@@ -896,11 +892,12 @@ void setUp(void){
 void tearDown(void){
     strcpy(appPayload,"");
     strcpy(appBuffer,"");
+    tableClean(neuronToNodeTable);
 }
 
 int main(int argc, char** argv){
-    UNITY_BEGIN();
-    /***RUN_TEST(test_memory_allocation);
+    UNITY_BEGIN();/*** ***/
+    RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
 
     RUN_TEST(test_handle_message_assign_neuron_one_neuron);
@@ -920,11 +917,12 @@ int main(int argc, char** argv){
     RUN_TEST(test_encode_ACK_message);
 
     RUN_TEST(test_bit_fields);
-    RUN_TEST(test_distribute_neurons);***/
+    RUN_TEST(test_distribute_neurons);
     RUN_TEST(test_assign_input_neurons);
-    /***RUN_TEST(test_coordinator_handle_ACK_from_all_neurons);
+    RUN_TEST(test_coordinator_handle_ACK_from_all_neurons);
     RUN_TEST(test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout);
-     RUN_TEST(test_assign_outputs);
-     RUN_TEST(test_assign_pubsub_info); ***/
+    RUN_TEST(test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout);
+    RUN_TEST(test_assign_outputs);
+    RUN_TEST(test_assign_pubsub_info);/*** ***/
     UNITY_END();
 }
