@@ -27,6 +27,56 @@ void printBitField(uint32_t bits, uint8_t size) {
     printf("\n");
 }
 
+//This function mirrors a function implemented but that cannot be tested directly just like this
+void assignComputationsToNeuronsWithMissingAcks(uint8_t targetIP[4]){
+    NeuronId *currentId;
+    NeuronEntry *neuronEntry;
+    uint8_t currentLayerIndex, currentIndexInLayer,*inputIndexMap;
+    char tmpBuffer[50];
+    size_t tmpBufferSize = sizeof(tmpBuffer);
+    int i=0,messageOffset=0;
+
+    // Encode the message header for the first node’s neuron assignments
+    encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_COMPUTATION);
+    messageOffset += snprintf(appPayload, sizeof(appPayload),"%s",tmpBuffer);
+
+    while(i <neuronToNodeTable->numberOfItems){
+        currentId = (NeuronId*)tableKey(neuronToNodeTable,i);
+        neuronEntry = (NeuronEntry*)tableRead(neuronToNodeTable,currentId);
+
+        /***
+         * If the neuron was not acknowledged by the node and it belongs to the current physical device along
+         * with other unacknowledged neurons, then include it in the assigning message together with the others.
+         ***/
+        if(neuronEntry != nullptr && isIPEqual(targetIP,neuronEntry->nodeIP) && !neuronEntry->isAcknowledged && neuronEntry->layer!=0){
+            // The current layer index needs to be normalized because the neuronToNode table uses 0 for the input
+            // layer, while in the NN structure, index 0 corresponds to the first hidden layer.
+            currentLayerIndex = neuronEntry->layer - 1;
+            currentIndexInLayer = neuronEntry->indexInLayer;
+
+            //Remake the part of the message that maps the inputs into the input vector
+            inputIndexMap = new uint8_t [neuralNetwork.layers[currentLayerIndex].numInputs];
+            for (uint8_t j = 0; j < neuralNetwork.layers[currentLayerIndex].numInputs ; j++){
+                inputIndexMap[j] = *currentId+(j-neuralNetwork.layers[currentLayerIndex].numInputs);
+            }
+
+            //If the neuron is not from the input layer
+
+            //Encode the part assigning neuron information (weights, bias, inputs etc..)
+            encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,
+                                      *currentId,neuralNetwork.layers[currentLayerIndex].numInputs,inputIndexMap,
+                                      &neuralNetwork.layers[currentLayerIndex].weights[currentIndexInLayer * neuralNetwork.layers[currentLayerIndex].numInputs],
+                                      neuralNetwork.layers[currentLayerIndex].biases[currentIndexInLayer]);
+
+            messageOffset += snprintf(appPayload + messageOffset, sizeof(appPayload) - messageOffset,"%s",tmpBuffer);
+
+            delete [] inputIndexMap;
+        }
+            i++;
+
+    }
+}
+
 
 /*** ****************************** Tests ****************************** ***/
 
@@ -404,6 +454,7 @@ void test_encode_message_assign_neuron(){
     uint8_t saveOrderValues[2] ={1,2}, inputSize=2, neuronId = 3;
 
     encodeAssignNeuronMessage(buffer, sizeof(buffer),neuronId,inputSize,saveOrderValues,weightsValues,bias);
+
 
     printf("Encoded Message:%s\n",buffer);
     printf("Correct Message:%s\n",correctMessage);
@@ -828,6 +879,58 @@ void test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout(){
     tableClean(neuronToNodeTable);
 }
 
+void test_coordinator_assign_computations_on_ack_timeout(){
+    //In this test the neuron 2,3 is not acknowledge by node 2.2.2.2
+
+    char receivedMessage[50],ackMessage[50];
+    //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
+    char correctMessage[50];
+    int pubTopic=1,subTopic=0;
+    uint8_t neuron2=2,neuron3=3;
+    float outputValue = 5.0;
+
+    uint8_t nodes[4][4] = {
+            {2,2,2,2},
+            {3,3,3,3},
+            {4,4,4,4},
+            {5,5,5,5},
+    };
+
+    uint8_t neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
+
+    initNeuralNetwork();
+    distributeNeuralNetwork(&neuralNetwork, nodes,4);
+
+    // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
+
+    snprintf(ackMessage, sizeof(ackMessage),"%d 3",NN_ACK);
+    handleACKMessage(ackMessage);
+
+    snprintf(ackMessage, sizeof(ackMessage),"%d 4 5",NN_ACK);
+    handleACKMessage(ackMessage);
+
+    snprintf(ackMessage, sizeof(ackMessage),"%d 6 7",NN_ACK);
+    handleACKMessage(ackMessage);
+
+    snprintf(ackMessage, sizeof(ackMessage),"%d 8 9",NN_ACK);
+    handleACKMessage(ackMessage);
+
+    snprintf(ackMessage, sizeof(ackMessage),"%d 10 11",NN_ACK);
+    handleACKMessage(ackMessage);
+
+    //tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
+
+    assignComputationsToNeuronsWithMissingAcks(nodes[0]);
+
+    //|[Neuron ID] [Input Size] [Input Save Order] [weights values] [bias]
+    snprintf(correctMessage, sizeof(correctMessage),"%d |2 2 0 1 0.5 -0.2 0.1", NN_ASSIGN_COMPUTATION);
+
+    printf("Encoded Message:%s\n",appPayload);
+    printf("Correct Message:%s\n",correctMessage);
+    TEST_ASSERT(strcmp(correctMessage,appPayload) == 0);
+
+}
+
 
 void test_assign_outputs() {
     char correctMessage[100];
@@ -973,6 +1076,7 @@ int main(int argc, char** argv){
     RUN_TEST(test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout);
     RUN_TEST(test_coordinator_handle_ACK_missing_for_some_worker_neuron_of_same_node_on_ack_timeout);
     RUN_TEST(test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout);
+    RUN_TEST(test_coordinator_assign_computations_on_ack_timeout);
     RUN_TEST(test_assign_outputs);
     RUN_TEST(test_assign_pubsub_info);/*** ***/
     UNITY_END();
