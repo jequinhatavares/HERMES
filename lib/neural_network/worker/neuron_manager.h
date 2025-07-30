@@ -49,6 +49,8 @@ void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId missingNe
 void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount);
 void encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type);
 
+void generateInputData();
+
 void manageNeuron();
 
 void onInputWaitTimeout();

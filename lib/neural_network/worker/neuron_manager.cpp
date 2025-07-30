@@ -326,6 +326,7 @@ void handleForwardMessage(char *messageBuffer){
 
     nackTriggered = false;
 
+    if(nrInputNeurons>0);
 }
 
 /**
@@ -574,6 +575,11 @@ void encodeInputRegistration(char* messageBuffer, size_t bufferSize,uint8_t node
     snprintf(messageBuffer,bufferSize,"%d %hhu.%hhu.%hhu.%hhu %d",NN_INPUT_REGISTRATION,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],static_cast<int>(type));
 }
 
+void generateInputData(){
+    float sensorData;
+    //sensorData = inputGenerationCallback();
+    //Todo send the input to those nodes that need it and if i am one of those save the input
+}
 
 /**
  * manageNeuron
