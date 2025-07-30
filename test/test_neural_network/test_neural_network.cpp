@@ -266,13 +266,13 @@ void test_handle_assign_output_targets(){
 
     handleNeuronMessage(receivedMessage);
 
-    TEST_ASSERT(outputTargets[0].nTargets == 2);
-    TEST_ASSERT(isIPEqual(outputTargets[0].targetsIPs[0],nodeIP4));
-    TEST_ASSERT(isIPEqual(outputTargets[0].targetsIPs[1],nodeIP5));
+    TEST_ASSERT(neuronTargets[0].nTargets == 2);
+    TEST_ASSERT(isIPEqual(neuronTargets[0].targetsIPs[0],nodeIP4));
+    TEST_ASSERT(isIPEqual(neuronTargets[0].targetsIPs[1],nodeIP5));
 
-    TEST_ASSERT(outputTargets[1].nTargets == 2);
-    TEST_ASSERT(isIPEqual(outputTargets[1].targetsIPs[0],nodeIP4));
-    TEST_ASSERT(isIPEqual(outputTargets[1].targetsIPs[1],nodeIP5));
+    TEST_ASSERT(neuronTargets[1].nTargets == 2);
+    TEST_ASSERT(isIPEqual(neuronTargets[1].targetsIPs[0],nodeIP4));
+    TEST_ASSERT(isIPEqual(neuronTargets[1].targetsIPs[1],nodeIP5));
 
     freeAllNeuronMemory();
     clearAllNeuronMemory();
@@ -298,10 +298,10 @@ void test_handle_assign_output_targets_to_not_handled_neuron(){
     handleNeuronMessage(receivedMessage);
 
     for (int i = 0; i < MAX_NEURONS; ++i) {
-        printf("Output Target:%i nTargets:%hhu\n",i,outputTargets[i].nTargets);
-        for (int j = 0; j <outputTargets[i].nTargets ; ++j) {
-            printf("Output target IP:%hhu.%hhu.%hhu.%hhu\n",outputTargets[i].targetsIPs[j][0],
-                   outputTargets[i].targetsIPs[j][1],outputTargets[i].targetsIPs[j][2],outputTargets[i].targetsIPs[j][3]);
+        printf("Output Target:%i nTargets:%hhu\n",i,neuronTargets[i].nTargets);
+        for (int j = 0; j <neuronTargets[i].nTargets ; ++j) {
+            printf("Output target IP:%hhu.%hhu.%hhu.%hhu\n",neuronTargets[i].targetsIPs[j][0],
+                   neuronTargets[i].targetsIPs[j][1],neuronTargets[i].targetsIPs[j][2],neuronTargets[i].targetsIPs[j][3]);
         }
     }
 
@@ -310,13 +310,13 @@ void test_handle_assign_output_targets_to_not_handled_neuron(){
             ,NN_ACK,neuron2);
 
 
-    TEST_ASSERT(outputTargets[0].nTargets == 2);
-    TEST_ASSERT(isIPEqual(outputTargets[0].targetsIPs[0],nodeIP4));
-    TEST_ASSERT(isIPEqual(outputTargets[0].targetsIPs[1],nodeIP5));
+    TEST_ASSERT(neuronTargets[0].nTargets == 2);
+    TEST_ASSERT(isIPEqual(neuronTargets[0].targetsIPs[0],nodeIP4));
+    TEST_ASSERT(isIPEqual(neuronTargets[0].targetsIPs[1],nodeIP5));
 
-    TEST_ASSERT(outputTargets[1].nTargets == 0);
-    TEST_ASSERT(!isIPEqual(outputTargets[1].targetsIPs[0],nodeIP4));
-    TEST_ASSERT(!isIPEqual(outputTargets[1].targetsIPs[1],nodeIP5));
+    TEST_ASSERT(neuronTargets[1].nTargets == 0);
+    TEST_ASSERT(!isIPEqual(neuronTargets[1].targetsIPs[0],nodeIP4));
+    TEST_ASSERT(!isIPEqual(neuronTargets[1].targetsIPs[1],nodeIP5));
 
     printf("Encoded Message:%s\n",appPayload);
     printf("Correct Message:%s\n",correctACKMessage);
@@ -347,10 +347,10 @@ void test_handle_assign_output_targets_multiple_layer_neurons(){
     handleNeuronMessage(receivedMessage);
 
     for (int i = 0; i < MAX_NEURONS; ++i) {
-        printf("Output Target:%i nTargets:%hhu\n",i,outputTargets[i].nTargets);
-        for (int j = 0; j <outputTargets[i].nTargets ; ++j) {
-            printf("Output target IP:%hhu.%hhu.%hhu.%hhu\n",outputTargets[i].targetsIPs[j][0],
-                   outputTargets[i].targetsIPs[j][1],outputTargets[i].targetsIPs[j][2],outputTargets[i].targetsIPs[j][3]);
+        printf("Output Target:%i nTargets:%hhu\n",i,neuronTargets[i].nTargets);
+        for (int j = 0; j <neuronTargets[i].nTargets ; ++j) {
+            printf("Output target IP:%hhu.%hhu.%hhu.%hhu\n",neuronTargets[i].targetsIPs[j][0],
+                   neuronTargets[i].targetsIPs[j][1],neuronTargets[i].targetsIPs[j][2],neuronTargets[i].targetsIPs[j][3]);
         }
     }
 
@@ -359,11 +359,11 @@ void test_handle_assign_output_targets_multiple_layer_neurons(){
             ,NN_ACK,neuron2,neuron3);
 
 
-    TEST_ASSERT(outputTargets[0].nTargets == 1);
-    TEST_ASSERT(isIPEqual(outputTargets[0].targetsIPs[0],nodeIP4));
+    TEST_ASSERT(neuronTargets[0].nTargets == 1);
+    TEST_ASSERT(isIPEqual(neuronTargets[0].targetsIPs[0],nodeIP4));
 
-    TEST_ASSERT(outputTargets[1].nTargets == 1);
-    TEST_ASSERT(isIPEqual(outputTargets[1].targetsIPs[0],nodeIP5));
+    TEST_ASSERT(neuronTargets[1].nTargets == 1);
+    TEST_ASSERT(isIPEqual(neuronTargets[1].targetsIPs[0],nodeIP5));
 
     printf("Encoded Message:%s\n",appPayload);
     printf("Correct Message:%s\n",correctACKMessage);

@@ -473,6 +473,9 @@ void processNeuronInput(NeuronId outputNeuronId,int inferenceId,float inputValue
                 neuronOutput = computeNeuronOutput(currentNeuronID);
                 outputValues[neuronStorageIndex] = neuronOutput;
 
+                // If other neurons handled by this node require its output as their input, provide the input values to them.
+                //todo
+
                 //LOG(APP,DEBUG,"Output inside function:%f\n",neuronOutput);
                 //reset the bit field for the next NN run
                 resetAll(receivedInputs[neuronStorageIndex]);//TODO PASS THIS FOR WHE THE FOWARD MESSAGE IS RECEIVED
