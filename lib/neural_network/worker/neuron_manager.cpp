@@ -400,9 +400,6 @@ void handleNACKMessage(char*messageBuffer){
 
         token = strtok_r(NULL, " ",&saveptr1);
     }
-
-    //TODO broadCast the NACK: With our without my computed neurons
-
 }
 
 
