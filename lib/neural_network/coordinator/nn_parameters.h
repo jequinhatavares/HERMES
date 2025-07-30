@@ -19,8 +19,8 @@ typedef struct Layer{
     uint8_t numInputs;          // Input dimensions
     uint8_t numOutputs;         // Output dimensions (neurons)
     ActivationType activation;  // Activation function
-    const float* weights;       // Weights (size: inputs × outputs)
-    const float* biases;        // Biases (size = outputs)
+    float* weights;       // Weights (size: inputs × outputs)
+    float* biases;        // Biases (size = outputs)
 } Layer;
 
 // Top-level Neural Network Structure
@@ -30,7 +30,7 @@ typedef struct NeuralNetwork{
     uint8_t numHiddenLayers;    // Hidden layers count
     uint8_t numLayers;          // Total layers (hidden + output)
     uint8_t numNeurons;         // Total Number of neurons in the NN
-    const Layer* layers;        // Layer array
+    Layer* layers;        // Layer array
 } NeuralNetwork;
 
 // Declare neural network reference
@@ -42,35 +42,35 @@ extern const NeuralNetwork neuralNetwork;
 
 
 // --- Layer 0: Input (2) → Hidden (4) ---
-static const float _weights0[] = {
+static float _weights0[] = {
     // Weights for 2 inputs × 4 outputs (row-major)
     0.5f, -0.2f,   // Input 1 → Hidden 1, 2, 3, 4
     0.3f,  0.1f,
     -0.4f, 0.6f,
     0.8f, -0.7f
 };
-static const float _biases0[4] = { 0.1f, -0.1f, 0.2f, -0.2f };
+static float _biases0[4] = { 0.1f, -0.1f, 0.2f, -0.2f };
 
 // --- Layer 1: Hidden (4) → Hidden (4) ---
-static const float _weights1[] = {
+static float _weights1[] = {
     // Weights for 4 inputs × 4 outputs
     0.2f, -0.3f, 0.4f, -0.5f,
     0.1f,  0.6f, -0.7f, 0.8f,
     -0.9f, 0.5f, 0.3f, -0.1f,
     0.7f, -0.4f, 0.2f, 0.6f
 };
-static const float _biases1[] = { -0.3f, 0.4f, -0.5f, 0.6f };
+static float _biases1[] = { -0.3f, 0.4f, -0.5f, 0.6f };
 
 // --- Layer 2: Hidden (4) → Output (2) ---
-static const float _weights2[] = {
+static float _weights2[] = {
     // Weights for 4 inputs × 2 outputs
     0.9f, -0.8f,0.7f, -0.6f,
     0.5f, -0.4f,0.3f, -0.2f
 };
-static const float _biases2[2] = { 0.1f, -0.1f };
+static float _biases2[2] = { 0.1f, -0.1f };
 
 // Layer array
-static const Layer _layers[3] = {
+static Layer _layers[3] = {
     { // Layer 0 (Input → Hidden)
         .numInputs = 2,
         .numOutputs = 4,
