@@ -629,6 +629,14 @@ void handleWorkerRegistration(char* messageBuffer){
     totalWorkers++;
 }
 
+void handleInputRegistration(char* messageBuffer){
+    uint8_t nodeIP[4],deviceClass;
+
+    //NN_INPUT_REGISTRATION [Node IP] [Device Type]
+    sscanf(messageBuffer, "%*d %hhu.%hhu.%hhu.%hhu %hhu",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&deviceClass);
+
+}
+
 
 void manageNeuralNetwork(){
     unsigned long currentTime = getCurrentTime();

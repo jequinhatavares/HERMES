@@ -550,9 +550,9 @@ void encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nod
     snprintf(messageBuffer,bufferSize,"%d %hhu.%hhu.%hhu.%hhu %d",NN_WORKER_REGISTRATION,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],static_cast<int>(type));
 }
 //TODO Header
-void encodeInputRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4]){
+void encodeInputRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type){
     //NN_INPUT_REGISTRATION [Node IP] [Device Type]
-    snprintf(messageBuffer,bufferSize,"%hhu.%hhu.%hhu.%hhu %d",NN_INPUT_REGISTRATION,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
+    snprintf(messageBuffer,bufferSize,"%d %hhu.%hhu.%hhu.%hhu %d",NN_INPUT_REGISTRATION,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],static_cast<int>(type));
 }
 
 

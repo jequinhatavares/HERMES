@@ -47,6 +47,7 @@ void encodeInputAssignMessage(char*messageBuffer, size_t bufferSize,uint8_t neur
 
 void handleACKMessage(char* messageBuffer);
 void handleWorkerRegistration(char*messageBuffer);
+void handleInputRegistration(char* messageBuffer);
 
 void manageNeuralNetwork();
 void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices);
