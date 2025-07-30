@@ -260,4 +260,10 @@ void freeAllNeuronMemory() {
     }
 }
 
-
+//todo header
+bool isNeuronInList(NeuronId *neuronsList, uint8_t nNeurons, NeuronId targetNeuronId){
+    for (uint8_t i = 0; i < nNeurons; i++) {
+        if(neuronsList[i] == targetNeuronId) return true;
+    }
+    return false;
+}
