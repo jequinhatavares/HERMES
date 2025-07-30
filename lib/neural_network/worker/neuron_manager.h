@@ -50,7 +50,7 @@ void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAck
 void encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type);
 
 void processNeuronInput(NeuronId outputNeuronId,int inferenceId,float inputValue);
-void generateInputData();
+void generateInputData(NeuronId inputNeuronId);
 
 void manageNeuron();
 

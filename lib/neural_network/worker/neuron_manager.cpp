@@ -194,7 +194,7 @@ void handleAssignOutput(char* messageBuffer){
             /*** If the neuron targeted by this assignment is not computed by this node, it won't be added to the list
              *  of neurons to acknowledge. This implies that a message containing the node assignments was lost,
              *  so by not acknowledging the neuron, the root will resend the assignment. ***/
-            if(computesNeuron(currentNeuronId)){
+            if(computesNeuron(currentNeuronId) || isNeuronInList(inputNeurons,nrInputNeurons,currentNeuronId)){
                 neuronID[nComputedNeurons] = currentNeuronId;
                 nComputedNeurons ++;
                 LOG(APP,DEBUG,"NeuronId: %hhu\n",currentNeuronId);
@@ -218,7 +218,6 @@ void handleAssignOutput(char* messageBuffer){
             //Move on the next input to index map
             spaceToken = strtok_r(NULL, " ", &saveptr2);
         }
-
 
         encodeACKMessage(tmpBuffer,tmpBufferSize,neuronID,nComputedNeurons);
         offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%s",tmpBuffer);
@@ -246,6 +245,8 @@ void handleAssignInput(char* messageBuffer){
     //NN_ASSIGN_INPUT [neuronID]
     sscanf(messageBuffer, "%*d %hhu",&inputNeuronId);
     inputNeurons[nrInputNeurons] = inputNeuronId;
+    //todo
+    //inputNeuronAssignmentCallback(input Neuron Id)
     nrInputNeurons++;
 }
 
@@ -331,7 +332,11 @@ void handleForwardMessage(char *messageBuffer){
 
     nackTriggered = false;
 
-    if(nrInputNeurons>0)generateInputData();
+    //Generate the input of all input neurons hosted in this node
+    for (int i = 0; i < nrInputNeurons; ++i) {
+        generateInputData(inputNeurons[i]);
+    }
+
 }
 
 /**
@@ -602,20 +607,22 @@ void encodeInputRegistration(char* messageBuffer, size_t bufferSize,uint8_t node
     snprintf(messageBuffer,bufferSize,"%d %hhu.%hhu.%hhu.%hhu %d",NN_INPUT_REGISTRATION,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],static_cast<int>(type));
 }
 
-void generateInputData(NeuronId neuronId){
+void generateInputData(NeuronId inputNeuronId){
     uint8_t myLocalIP[4];
     float sensorData;
     int inputNeuronIndex = -1;
-    //sensorData = inputGenerationCallback();
+
+    //sensorData = inputGenerationCallback(inputNeuronId);
 
     // If this node is responsible for computing neurons that depend on this input, provide it directly to them.
-    processNeuronInput(neuronId,currentInferenceId,sensorData);
+    processNeuronInput(inputNeuronId,currentInferenceId,sensorData);
 
     // Encode the message to send to other nodes, containing my output value that serves as their input.
-    encodeNeuronOutputMessage(appPayload, sizeof(appPayload),neuronId,sensorData);
+    encodeNeuronOutputMessage(appPayload, sizeof(appPayload),inputNeuronId,sensorData);
 
     network.getNodeIP(myLocalIP);
 
+    //Send the generated input data to each one of the targets
     for (int i = 0; i <inputTargets.nTargets; ++i){
         // If this node hosts a neuron that depends on locally generated input, skip it there's no need to send a
         // message to itself since the input is already available.
