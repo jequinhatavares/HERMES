@@ -23,7 +23,10 @@ float outputValues[MAX_NEURONS];
 bool isOutputComputed[MAX_NEURONS]={ false};
 
 // To store the target nodes of each neuron output
-OutputTarget outputTargets[MAX_NEURONS];
+OutputTarget neuronTargets[MAX_NEURONS];
+
+// To store the target nodes of the input neuron
+OutputTarget inputTargets[MAX_INPUT_NEURONS];
 
 // Identifier of the current inference cycle, assigned by the root node
 int currentInferenceId = 0;
@@ -479,7 +482,21 @@ void handleNeuronOutputMessage(char*messageBuffer){
  */
 void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]){
     int neuronStorageIndex = -1;
+
+
     for (int i = 0; i < nNeurons; i++) {
+
+        //Verify if the current neuron is an input neuron
+        if(isNeuronInList(inputNeurons,nrInputNeurons,neuronId[i])){
+            // Add the new targetIP to the first available slot in the list
+            for (int j = 0; j < 4; j++) {
+                inputTargets[nrInputNeurons].targetsIPs[inputTargets[nrInputNeurons].nTargets][j] = targetIP[j];
+            }
+
+            //Increment the number of target nodes
+            inputTargets[nrInputNeurons].nTargets++;
+        }
+
         // For each neuron in the provided list, determine where it should be stored
         neuronStorageIndex = getNeuronStorageIndex(neuronId[i]);
 
@@ -487,15 +504,15 @@ void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4
         if(neuronStorageIndex == -1)continue;
 
         // Skip if the targetIP is already in the list of target devices
-        if(isIPinList(targetIP,outputTargets[neuronStorageIndex].outputTargets,outputTargets[neuronStorageIndex].nTargets)){
+        if(isIPinList(targetIP,neuronTargets[neuronStorageIndex].targetsIPs,neuronTargets[neuronStorageIndex].nTargets)){
             continue;
         }
         // Add the new targetIP to the first available slot in the list
-        for (int j = 0; j < 4; ++j) {
-            outputTargets[neuronStorageIndex].outputTargets[outputTargets[neuronStorageIndex].nTargets][j] = targetIP[j];
+        for (int j = 0; j < 4; j++) {
+            neuronTargets[neuronStorageIndex].targetsIPs[neuronTargets[neuronStorageIndex].nTargets][j] = targetIP[j];
         }
         //Increment the number of target nodes
-        outputTargets[neuronStorageIndex].nTargets++;
+        neuronTargets[neuronStorageIndex].nTargets++;
     }
 }
 
@@ -682,9 +699,9 @@ void clearAllNeuronMemory(){
         receivedInputs[i] = 0;
         outputValues[i]=0;
         isOutputComputed[i]= false;
-        for (int j = 0; j < outputTargets[i].nTargets; ++j) {
-            assignIP(outputTargets[i].outputTargets[j],blankIP);
+        for (int j = 0; j < neuronTargets[i].nTargets; ++j) {
+            assignIP(neuronTargets[i].targetsIPs[j],blankIP);
         }
-        outputTargets[i].nTargets=0;
+        neuronTargets[i].nTargets=0;
     }
 }
