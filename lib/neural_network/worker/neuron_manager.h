@@ -28,13 +28,15 @@ typedef struct OutputTarget{
 
 extern BitField receivedInputs[MAX_NEURONS];
 
-
 extern OutputTarget outputTargets[MAX_NEURONS];
+
+
+void handleNeuronMessage(char* messageBuffer);
 
 void handleNeuronMessage(char* messageBuffer);
 void handleAssignComputationsMessage(char*messageBuffer);
-void handleNeuralNetworkMessage(char* messageBuffer);
 void handleAssignOutput(char* messageBuffer);
+void handleAssignInput(char* messageBuffer);
 void handleAssignPubSubInfo(char* messageBuffer);
 void handleNACKMessage(char*messageBuffer);
 void handleNeuronOutputMessage(char*messageBuffer);

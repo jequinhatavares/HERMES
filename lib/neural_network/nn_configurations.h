@@ -20,6 +20,10 @@
 #define MAX_NEURONS 2
 #endif
 
+/*** This variable defines the maximum number of input neurons a node can host, which corresponds to the maximum
+ *   number of sensors it can integrate. Each sensor maps to exactly one input neuron.***/
+#define MAX_INPUT_NEURONS 1
+
 #define MAX_TARGET_OUTPUTS 4
 
 #define NACK_TIMEOUT 3000

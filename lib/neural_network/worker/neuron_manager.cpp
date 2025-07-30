@@ -28,6 +28,10 @@ OutputTarget outputTargets[MAX_NEURONS];
 // Identifier of the current inference cycle, assigned by the root node
 int currentInferenceId = 0;
 
+// Contains the input neurons that this node hosts
+NeuronId inputNeurons[MAX_INPUT_NEURONS];
+uint8_t nrInputNeurons=0;
+
 
 /**
  * handleNeuronMessage
@@ -49,6 +53,10 @@ void handleNeuronMessage(char* messageBuffer){
             handleAssignOutput(messageBuffer);
             break;
 
+        case NN_ASSIGN_INPUTS:
+            handleAssignInput(messageBuffer);
+            break;
+
         case NN_NEURON_OUTPUT:
             //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
             handleNeuronOutputMessage(messageBuffer);
@@ -62,10 +70,6 @@ void handleNeuronMessage(char* messageBuffer){
         case NN_NACK:
             //DATA_MESSAGE NN_NACK  [Missing Output ID 1] [Missing Output ID 2] ...
             handleNACKMessage(messageBuffer);
-            break;
-        case NN_ACK:
-            //NN_ACK [Acknowledged Neuron ID 1] [Acknowledged Neuron ID 2]...
-
             break;
 
         default:
@@ -223,6 +227,21 @@ void handleAssignOutput(char* messageBuffer){
     network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
 
 
+}
+
+/**
+ * handleAssignInput
+ * Processes messages from the coordinator node assigning this node a input neuron
+ *
+ * @param messageBuffer - Buffer containing the input neuron data
+ * Format: NN_ASSIGN_INPUT [neuronID]
+ */
+void handleAssignInput(char* messageBuffer){
+    NeuronId inputNeuronId;
+    //NN_ASSIGN_INPUT [neuronID]
+    sscanf(messageBuffer, "%*d %hhu",&inputNeuronId);
+    inputNeurons[nrInputNeurons] = inputNeuronId;
+    nrInputNeurons++;
 }
 
 
