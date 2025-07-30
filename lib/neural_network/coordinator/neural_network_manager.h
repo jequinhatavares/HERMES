@@ -5,7 +5,7 @@
 #include "../nn_types.h"
 #include "nn_parameters.h"
 #include "../nn_configurations.h"
-#include "../worker/neuron_manager.h"
+#include "../worker/neuron_core.h"
 #include "../app_globals.h"
 
 #include <cstdio>
@@ -53,6 +53,6 @@ void manageNeuralNetwork();
 void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices);
 void onACKTimeOutInputLayer();
 
-bool isNeuronInList(NeuronId *neuronsList, uint8_t nNeurons, NeuronId targetNeuronId);
+
 
 #endif //NEURAL_NETWORK_MANAGER_H
