@@ -25,13 +25,15 @@ bool isOutputComputed[MAX_NEURONS]={ false};
 // To store the target nodes of each neuron output
 OutputTarget neuronTargets[MAX_NEURONS];
 
-
 // Identifier of the current inference cycle, assigned by the root node
 int currentInferenceId = 0;
 
 // Contains the input neurons that this node hosts
 NeuronId inputNeurons[MAX_INPUT_NEURONS];
 uint8_t nrInputNeurons=0;
+
+// Contain the input values of the current inference iteration
+float inputNeuronsValues[MAX_INPUT_NEURONS];
 
 /*** Stores the target nodes of the input neurons. Since all input neurons belong to the same layer,
  * they share the same set of target nodes (i.e., the neurons in the next layer).
@@ -73,7 +75,7 @@ void handleNeuronMessage(char* messageBuffer){
             break;
 
         case NN_NACK:
-            //DATA_MESSAGE NN_NACK  [Missing Output ID 1] [Missing Output ID 2] ...
+            //DATA_MESSAGE NN_NACK [Missing Output ID 1] [Missing Output ID 2] ...
             handleNACKMessage(messageBuffer);
             break;
 
@@ -352,7 +354,7 @@ void handleNACKMessage(char*messageBuffer){
     //NN_NACK [Neuron ID with Missing Output 1] [Neuron ID with Missing Output 2] ...
     char *saveptr1, *token;
     NeuronId currentId;
-    int neuronStorageIndex = -1;
+    int neuronStorageIndex = -1,inputNeuronIndex;
     bool ownsNeuronInNack=false;
     token = strtok_r(messageBuffer, " ",&saveptr1);
 
@@ -383,6 +385,17 @@ void handleNACKMessage(char*messageBuffer){
             }
 
             ownsNeuronInNack = true;
+        }
+
+
+        if(isNeuronInList(inputNeurons,nrInputNeurons,currentId)){
+            // Search for the index where the input neuron ID is stored
+            for (int i = 0; i < nrInputNeurons; i++) {
+                if(inputNeurons[i] == currentId) inputNeuronIndex=i;
+            }
+            // The inputNeuronIndex indicates where the neuron's input value is stored in the inputValues vector
+            encodeNeuronOutputMessage(appPayload,sizeof(appPayload),currentId,inputNeuronsValues[inputNeuronIndex]);
+            //TODO send the message for the node whose input is missing
         }
 
         token = strtok_r(NULL, " ",&saveptr1);
