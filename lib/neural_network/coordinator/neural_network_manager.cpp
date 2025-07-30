@@ -152,6 +152,9 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
                 neuronEntry.isAcknowledged = true;
                 tableAdd(neuronToNodeTable,&currentNeuronId,&neuronEntry);
 
+                // Stores the parameters assigned to this node for later use in computing the output neuron values.
+                configureNeuron(currentNeuronId,net->layers[i].numInputs,&net->layers[i].weights[j * net->layers[i].numInputs],net->layers[i].biases[j], inputIndexMap);
+
                 // Increment the count of neurons assigned to this node, and the current NeuronID
                 currentNeuronId ++;
                 continue;
