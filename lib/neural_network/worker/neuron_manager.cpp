@@ -25,8 +25,6 @@ bool isOutputComputed[MAX_NEURONS]={ false};
 // To store the target nodes of each neuron output
 OutputTarget neuronTargets[MAX_NEURONS];
 
-// To store the target nodes of the input neuron
-OutputTarget inputTargets[MAX_INPUT_NEURONS];
 
 // Identifier of the current inference cycle, assigned by the root node
 int currentInferenceId = 0;
@@ -35,6 +33,10 @@ int currentInferenceId = 0;
 NeuronId inputNeurons[MAX_INPUT_NEURONS];
 uint8_t nrInputNeurons=0;
 
+/*** Stores the target nodes of the input neurons. Since all input neurons belong to the same layer,
+ * they share the same set of target nodes (i.e., the neurons in the next layer).
+ * Therefore, only one instance of the OutputTarget structure is needed. ***/
+OutputTarget inputTargets;
 
 /**
  * handleNeuronMessage
@@ -329,7 +331,7 @@ void handleForwardMessage(char *messageBuffer){
 
     nackTriggered = false;
 
-    if(nrInputNeurons>0);
+    if(nrInputNeurons>0)generateInputData();
 }
 
 /**
@@ -395,12 +397,22 @@ void handleNACKMessage(char*messageBuffer){
  * Format: [Inference Id] [Output Neuron ID] [Output Value]
  */
 void handleNeuronOutputMessage(char*messageBuffer){
-    int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1, currentNeuronID = 0, inferenceId;
-    float neuronOutput, inputValue;
-    bool outputsComputed=true;
+    int inferenceId;
+    float inputValue;
     NeuronId outputNeuronId;
 
     sscanf(messageBuffer, "%*d %i %hhu %f",&inferenceId,&outputNeuronId,&inputValue);
+
+    processNeuronInput(outputNeuronId,inferenceId,inputValue);
+
+
+}
+
+//TODO header
+void processNeuronInput(NeuronId outputNeuronId,int inferenceId,float inputValue){
+    int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1, currentNeuronID = 0;
+    float neuronOutput;
+    bool outputsComputed=true;
 
     /***If the inferenceId received in the message is lower than the current inferenceId, the message belongs to
      * an outdated inference cycle and should be discarded ***/
@@ -408,7 +420,7 @@ void handleNeuronOutputMessage(char*messageBuffer){
     /*** If the inferenceId from another neuron's output message is greater than the one currently stored,
      it means this node's sequence is outdated, possibly due to missing the coordinator's message
      that signaled the start of the forward propagation cycle.***/
-    else if(inferenceId > currentNeuronID){
+    else if(inferenceId > currentInferenceId){
         currentInferenceId = inferenceId;
         // Also reset other variables that should have been reset when the new forward message arrived
         forwardPassRunning = true;
@@ -420,40 +432,40 @@ void handleNeuronOutputMessage(char*messageBuffer){
         currentNeuronID = neuronIds[i];
 
         // Check if the current neuron requires the input produced by outputNeuronId
-       if(isInputRequired(currentNeuronID,outputNeuronId)){
-           // Find the index where the neuron is stored
-           neuronStorageIndex = getNeuronStorageIndex(currentNeuronID);
-           // Find the storage index of this specific input value for the given neuron
-           inputStorageIndex = getInputStorageIndex(currentNeuronID,outputNeuronId);
-           //Find the input size of the neuron
-           inputSize = getInputSize(currentNeuronID);
+        if(isInputRequired(currentNeuronID,outputNeuronId)){
+            // Find the index where the neuron is stored
+            neuronStorageIndex = getNeuronStorageIndex(currentNeuronID);
+            // Find the storage index of this specific input value for the given neuron
+            inputStorageIndex = getInputStorageIndex(currentNeuronID,outputNeuronId);
+            //Find the input size of the neuron
+            inputSize = getInputSize(currentNeuronID);
 
-           if(inputSize == -1 || inputStorageIndex == -1 || neuronStorageIndex == -1){
-               LOG(APP,ERROR,"ERROR: Invalid index detected: inputSize=%d, inputStorageIndex=%d, neuronStorageIndex=%d",
-                   inputSize, inputStorageIndex, neuronStorageIndex);
-               return;
-           }
+            if(inputSize == -1 || inputStorageIndex == -1 || neuronStorageIndex == -1){
+                LOG(APP,ERROR,"ERROR: Invalid index detected: inputSize=%d, inputStorageIndex=%d, neuronStorageIndex=%d",
+                    inputSize, inputStorageIndex, neuronStorageIndex);
+                return;
+            }
 
-           //Save the input value in the input vector
-           setInput(currentNeuronID,inputValue,outputNeuronId);
+            //Save the input value in the input vector
+            setInput(currentNeuronID,inputValue,outputNeuronId);
 
-           // Set the bit corresponding to the received input to 1
-           setBit(receivedInputs[neuronStorageIndex],inputStorageIndex);
+            // Set the bit corresponding to the received input to 1
+            setBit(receivedInputs[neuronStorageIndex],inputStorageIndex);
 
-           // Check if all inputs required by that specific neuron have been received
-           if(allBits(receivedInputs[neuronStorageIndex], inputSize)){
-               // If all inputs required by the neuron have been received, proceed with output computation
-               neuronOutput = computeNeuronOutput(currentNeuronID);
-               outputValues[neuronStorageIndex] = neuronOutput;
+            // Check if all inputs required by that specific neuron have been received
+            if(allBits(receivedInputs[neuronStorageIndex], inputSize)){
+                // If all inputs required by the neuron have been received, proceed with output computation
+                neuronOutput = computeNeuronOutput(currentNeuronID);
+                outputValues[neuronStorageIndex] = neuronOutput;
 
-               //LOG(APP,DEBUG,"Output inside function:%f\n",neuronOutput);
-               //reset the bit field for the next NN run
-               resetAll(receivedInputs[neuronStorageIndex]);//TODO PASS THIS FOR WHE THE FOWARD MESSAGE IS RECEIVED
+                //LOG(APP,DEBUG,"Output inside function:%f\n",neuronOutput);
+                //reset the bit field for the next NN run
+                resetAll(receivedInputs[neuronStorageIndex]);//TODO PASS THIS FOR WHE THE FOWARD MESSAGE IS RECEIVED
 
-               isOutputComputed[neuronStorageIndex] = true;
-               //TODO Send the output for the nodes that need him
-           }
-       }
+                isOutputComputed[neuronStorageIndex] = true;
+                //TODO Send the output for the nodes that need him
+            }
+        }
     }
 
     // Check whether the newly received input value completes the set of missing inputs.
@@ -470,8 +482,6 @@ void handleNeuronOutputMessage(char*messageBuffer){
     if(allOutputsComputed) forwardPassRunning = false;
 
 }
-
-
 /**
  * updateOutputTargets
  * Updates the list of target nodes for specified output neurons.
@@ -490,11 +500,11 @@ void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4
         if(isNeuronInList(inputNeurons,nrInputNeurons,neuronId[i])){
             // Add the new targetIP to the first available slot in the list
             for (int j = 0; j < 4; j++) {
-                inputTargets[nrInputNeurons].targetsIPs[inputTargets[nrInputNeurons].nTargets][j] = targetIP[j];
+                inputTargets.targetsIPs[inputTargets.nTargets][j] = targetIP[j];
             }
 
             //Increment the number of target nodes
-            inputTargets[nrInputNeurons].nTargets++;
+            inputTargets.nTargets++;
         }
 
         // For each neuron in the provided list, determine where it should be stored
@@ -592,10 +602,27 @@ void encodeInputRegistration(char* messageBuffer, size_t bufferSize,uint8_t node
     snprintf(messageBuffer,bufferSize,"%d %hhu.%hhu.%hhu.%hhu %d",NN_INPUT_REGISTRATION,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],static_cast<int>(type));
 }
 
-void generateInputData(){
+void generateInputData(NeuronId neuronId){
+    uint8_t myLocalIP[4];
     float sensorData;
+    int inputNeuronIndex = -1;
     //sensorData = inputGenerationCallback();
-    //Todo send the input to those nodes that need it and if i am one of those save the input
+
+    // If this node is responsible for computing neurons that depend on this input, provide it directly to them.
+    processNeuronInput(neuronId,currentInferenceId,sensorData);
+
+    // Encode the message to send to other nodes, containing my output value that serves as their input.
+    encodeNeuronOutputMessage(appPayload, sizeof(appPayload),neuronId,sensorData);
+
+    network.getNodeIP(myLocalIP);
+
+    for (int i = 0; i <inputTargets.nTargets; ++i){
+        // If this node hosts a neuron that depends on locally generated input, skip it there's no need to send a
+        // message to itself since the input is already available.
+       if(isIPEqual(myLocalIP,inputTargets.targetsIPs[i]))continue;
+       network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,inputTargets.targetsIPs[i]);
+    }
+
 }
 
 /**

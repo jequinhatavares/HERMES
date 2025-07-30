@@ -22,13 +22,13 @@ extern float outputValues[MAX_NEURONS];
 }OutputTarget;***/
 
 typedef struct OutputTarget{
-    uint8_t outputTargets[MAX_TARGET_OUTPUTS][4];
+    uint8_t targetsIPs[MAX_TARGET_OUTPUTS][4];
     uint8_t nTargets = 0;
 }OutputTarget;
 
 extern BitField receivedInputs[MAX_NEURONS];
 
-extern OutputTarget outputTargets[MAX_NEURONS];
+extern OutputTarget neuronTargets[MAX_NEURONS];
 
 
 void handleNeuronMessage(char* messageBuffer);
@@ -49,6 +49,7 @@ void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId missingNe
 void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount);
 void encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type);
 
+void processNeuronInput(NeuronId outputNeuronId,int inferenceId,float inputValue);
 void generateInputData();
 
 void manageNeuron();
