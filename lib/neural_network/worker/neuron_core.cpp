@@ -44,7 +44,7 @@ void configureNeuron(NeuronId neuronID, uint8_t receivedInputSize, float* receiv
 
     //Append the saveInput order to the list
     saveOrders[neuronsCount] = new NeuronId[receivedInputSize];
-    memcpy(saveOrders[neuronsCount], receivedOrder, sizeof(int) * receivedInputSize);
+    memcpy(saveOrders[neuronsCount], receivedOrder, sizeof(NeuronId) * receivedInputSize);
 
     //Initialize the node bias value
     biases[neuronsCount] = receivedBias;
