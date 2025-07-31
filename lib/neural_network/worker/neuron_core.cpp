@@ -255,9 +255,9 @@ void freeAllNeuronMemory() {
         biases[i] = 0.0f;
         inputSizes[i] = 0;
 
-        //Reset the number of neurons computed by this node to zero
-        neuronsCount = 0;
     }
+    //Reset the number of neurons computed by this node to zero
+    neuronsCount = 0;
 }
 
 //todo header
