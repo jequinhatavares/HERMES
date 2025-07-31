@@ -679,7 +679,8 @@ void onInputWaitTimeout(){
     uint8_t inputSize = -1;
     char tmpBuffer[20];
     size_t tmpBufferSize = sizeof(tmpBuffer);
-
+    NeuronId missingNeuronId;
+    int missingNeuronStorageIndex =-1;
     // The message aggregates the missing inputs from all neurons into a single message
     offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%d ",NN_NACK);
 
@@ -698,7 +699,25 @@ void onInputWaitTimeout(){
             for (int j = 0; j < inputSize; j++) {
                 // If the bit is not set, it means the input has not been received yet
                 if(!isBitSet(receivedInputs[neuronStorageIndex],j)){
-                    encodeNACKMessage(tmpBuffer, tmpBufferSize,saveOrders[neuronStorageIndex][j]);
+                    missingNeuronId = saveOrders[neuronStorageIndex][j];
+
+                    // If the missing input is from a neuron this node is responsible for, the missing input value is already available if it was computed
+                    /***if(isNeuronInList(inputNeurons,nrInputNeurons,missingNeuronId)){
+                        processNeuronInput(missingNeuronId,currentInferenceId,inputNeuronsValues[]);
+                    }else if(computesNeuron(missingNeuronId)){
+                        missingNeuronStorageIndex = getNeuronStorageIndex(missingNeuronId);
+                        if(missingNeuronStorageIndex != -1 && isOutputComputed[missingNeuronStorageIndex]){
+                            processNeuronInput(missingNeuronId,currentInferenceId,outputValues[missingNeuronStorageIndex]);
+                        }
+                    }***/
+
+                    // Don't include missing neurons handled by this node in the NACK. The neurons we manage feed their
+                    // outputs directly to dependent neurons.If an output isn't provided, it means it's not yet available
+                    if(isNeuronInList(inputNeurons,nrInputNeurons,missingNeuronId) ||computesNeuron(missingNeuronId)){
+                        continue;
+                    }
+
+                    encodeNACKMessage(tmpBuffer, tmpBufferSize,missingNeuronId);
                     offset += snprintf(appPayload+offset,sizeof(appPayload)-offset,"%s",tmpBuffer);
                 }
             }
