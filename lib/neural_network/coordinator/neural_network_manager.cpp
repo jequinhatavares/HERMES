@@ -639,6 +639,7 @@ void handleInputRegistration(char* messageBuffer){
     //NN_INPUT_REGISTRATION [Node IP] [Device Type]
     sscanf(messageBuffer, "%*d %hhu.%hhu.%hhu.%hhu %hhu",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&deviceClass);
 
+    if(totalInputs>=MAX_INPUT_NEURONS) LOG(APP,INFO, "Input node registrations have exceeded the number of available NN input nodes\n");
     //Register the node as a input node
     assignIP(inputsIPs[totalInputs],nodeIP);
     totalInputs++;
