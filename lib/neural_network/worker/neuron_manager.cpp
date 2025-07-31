@@ -420,14 +420,13 @@ void handleNeuronOutputMessage(char*messageBuffer){
 
     processNeuronInput(outputNeuronId,inferenceId,inputValue);
 
-
 }
 
 //TODO header
 void processNeuronInput(NeuronId outputNeuronId,int inferenceId,float inputValue){
     int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1, currentNeuronID = 0;
     float neuronOutput;
-    bool outputsComputed=true;
+    bool outputsComputed=true,neuronsRequireInput=false;
 
     /***If the inferenceId received in the message is lower than the current inferenceId, the message belongs to
      * an outdated inference cycle and should be discarded ***/
@@ -473,14 +472,21 @@ void processNeuronInput(NeuronId outputNeuronId,int inferenceId,float inputValue
                 neuronOutput = computeNeuronOutput(currentNeuronID);
                 outputValues[neuronStorageIndex] = neuronOutput;
 
-                // If other neurons handled by this node require its output as their input, provide the input values to them.
-                //todo
+                //Iterates through all neurons managed by this node to identify which require the computed output as their input
+                for (int j = 0; j < neuronsCount; j++) {
+                    if(isInputRequired(neuronIds[j],currentNeuronID)){
+                        neuronsRequireInput=true;
+                        break;
+                    }
+                }
+                // If any node requires the computed output, feed it to them by recursively calling this function
+                if(neuronsRequireInput)processNeuronInput(currentNeuronID,inferenceId,neuronOutput);
 
-                //LOG(APP,DEBUG,"Output inside function:%f\n",neuronOutput);
                 //reset the bit field for the next NN run
                 resetAll(receivedInputs[neuronStorageIndex]);//TODO PASS THIS FOR WHE THE FOWARD MESSAGE IS RECEIVED
 
                 isOutputComputed[neuronStorageIndex] = true;
+
                 //TODO Send the output for the nodes that need him
             }
         }
@@ -653,7 +659,7 @@ void manageNeuron(){
     unsigned long currentTime = getCurrentTime();
 
     // Check if the expected time for input arrival has already passed
-    if((currentTime-firstInputTimestamp) >= INPUT_WAIT_TIMEOUT && forwardPassRunning && !allOutputsComputed){
+    if(forwardPassRunning && (currentTime-firstInputTimestamp) >= INPUT_WAIT_TIMEOUT && !allOutputsComputed){
         onInputWaitTimeout();
     }
 
