@@ -564,7 +564,10 @@ void test_distribute_neurons(){
 
     initNeuralNetwork();
     distributeNeuralNetwork(&neuralNetwork, nodes,4);
-    //tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
+
+    //printNeuronInfo();
+
+    tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
 
     NeuronEntry* neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron2);
     TEST_ASSERT(neuronEntry != nullptr);
@@ -627,6 +630,7 @@ void test_distribute_neurons(){
     TEST_ASSERT(neuronEntry->indexInLayer == 1);/******/
 
     tableClean(neuronToNodeTable);
+    freeAllNeuronMemory();
 
 }
 
@@ -663,7 +667,7 @@ void test_assign_input_neurons(){
     /******/
 
     tableClean(neuronToNodeTable);
-
+    freeAllNeuronMemory();
 }
 
 
@@ -747,6 +751,8 @@ void test_coordinator_handle_ACK_from_all_neurons(){
     TEST_ASSERT(neuronEntry->isAcknowledged);
 
     tableClean(neuronToNodeTable);
+    freeAllNeuronMemory();
+
 }
 
 void test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout(){
@@ -794,6 +800,8 @@ void test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout(){
     TEST_ASSERT(strcmp(correctMessage,appPayload) == 0);
 
     tableClean(neuronToNodeTable);
+    freeAllNeuronMemory();
+
 }
 
 void test_coordinator_handle_ACK_missing_for_some_worker_neuron_of_same_node_on_ack_timeout(){
@@ -845,6 +853,8 @@ void test_coordinator_handle_ACK_missing_for_some_worker_neuron_of_same_node_on_
     TEST_ASSERT(strcmp(correctMessage,appPayload) == 0);
 
     tableClean(neuronToNodeTable);
+    freeAllNeuronMemory();
+
 }
 
 
@@ -890,6 +900,7 @@ void test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout(){
     TEST_ASSERT(strcmp(correctMessage,appPayload) == 0);
 
     tableClean(neuronToNodeTable);
+    freeAllNeuronMemory();
 }
 
 void test_coordinator_assign_computations_on_ack_timeout(){
@@ -942,6 +953,8 @@ void test_coordinator_assign_computations_on_ack_timeout(){
     printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(correctMessage,appPayload) == 0);
 
+    freeAllNeuronMemory();
+    tableClean(neuronToNodeTable);
 }
 
 
@@ -990,6 +1003,7 @@ void test_assign_outputs() {
     printf("Encoded Message:%s\n",appPayload);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
+    freeAllNeuronMemory();
     tableClean(neuronToNodeTable);
 
 }
@@ -1036,6 +1050,7 @@ void test_assign_pubsub_info() {
     printf("Encoded Message:%s\n",appPayload);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/
 
+    freeAllNeuronMemory();
     tableClean(neuronToNodeTable);
 }
 
@@ -1079,7 +1094,7 @@ int main(int argc, char** argv){
 
     RUN_TEST(test_encode_message_assign_neuron);
     RUN_TEST(test_encode_message_neuron_output);
-    //RUN_TEST(test_encode_assign_input_message);
+    RUN_TEST(test_encode_assign_input_message);
     RUN_TEST(test_encode_NACK_message);
     RUN_TEST(test_encode_ACK_message);
 
