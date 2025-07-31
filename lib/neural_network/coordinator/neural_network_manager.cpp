@@ -1,10 +1,8 @@
-#ifdef NEURAL_NET_IMPL
+#ifndef NEURAL_NET_IMPL
 #define NEURAL_NET_IMPL // Put the #define before the include to have access to the NN parameters
 #endif
 
 #include "neural_network_manager.h"
-
-#define TOTAL_NEURONS 12
 
 unsigned long neuronAssignmentTime;
 
@@ -16,8 +14,11 @@ unsigned long inferenceStartTime;
 
 int nnSequenceNumber=0;
 
-uint8_t workersIPs[10][4];
-uint8_t workersDeviceTypes[10];
+uint8_t workersIPs[TOTAL_NEURONS][4];
+uint8_t workersDeviceTypes[TOTAL_NEURONS];
+
+uint8_t inputsIPs[TOTAL_INPUT_NEURONS][4];
+uint8_t totalInputs=0;
 
 uint8_t totalWorkers=0;
 uint8_t numESP8266Workers=0;
@@ -637,6 +638,10 @@ void handleInputRegistration(char* messageBuffer){
 
     //NN_INPUT_REGISTRATION [Node IP] [Device Type]
     sscanf(messageBuffer, "%*d %hhu.%hhu.%hhu.%hhu %hhu",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&deviceClass);
+
+    //Register the node as a input node
+    assignIP(inputsIPs[totalInputs],nodeIP);
+    totalInputs++;
 
 }
 

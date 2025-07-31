@@ -40,6 +40,9 @@ extern const NeuralNetwork neuralNetwork;
 // This works by defining and initializing the variables only when NEURAL_NET_IMPL is defined
 #ifdef NEURAL_NET_IMPL
 
+#define TOTAL_NEURONS 12
+
+#define TOTAL_INPUT_NEURONS 2
 
 // --- Layer 0: Input (2) → Hidden (4) ---
 static float _weights0[] = {

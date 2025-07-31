@@ -623,7 +623,6 @@ void encodeInputRegistration(char* messageBuffer, size_t bufferSize,uint8_t node
 void generateInputData(NeuronId inputNeuronId){
     uint8_t myLocalIP[4];
     float sensorData;
-    int inputNeuronIndex = -1;
 
     //sensorData = inputGenerationCallback(inputNeuronId);
 
