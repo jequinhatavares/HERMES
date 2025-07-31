@@ -33,7 +33,6 @@ extern OutputTarget neuronTargets[MAX_NEURONS];
 
 void handleNeuronMessage(char* messageBuffer);
 
-void handleNeuronMessage(char* messageBuffer);
 void handleAssignComputationsMessage(char*messageBuffer);
 void handleAssignOutput(char* messageBuffer);
 void handleAssignInput(char* messageBuffer);

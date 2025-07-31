@@ -476,6 +476,19 @@ void test_encode_message_neuron_output(){
     TEST_ASSERT(strcmp(correctMessage,buffer) == 0);
 }
 
+void test_encode_assign_input_message(){
+    //NN_ASSIGN_INPUT [neuronID]
+    char correctMessage[50],buffer[200];
+    int inputNeuronId = 0;
+
+    snprintf(correctMessage, sizeof(correctMessage),"%d %hhu",NN_ASSIGN_INPUTS,inputNeuronId);
+
+    encodeInputAssignMessage(buffer, sizeof(buffer),inputNeuronId);
+
+    printf("Encoded Message:%s\n",buffer);
+    printf("Correct Message:%s\n",correctMessage);
+    TEST_ASSERT(strcmp(correctMessage,buffer) == 0);
+}
 void test_encode_NACK_message(){
     //DATA_MESSAGE NN_NACK [Neuron ID with Missing Output] [Missing Output ID 1] [Missing Output ID 2] ...
     char correctMessage[50],buffer[200];
@@ -1045,11 +1058,11 @@ void setUp(void){
 void tearDown(void){
     strcpy(appPayload,"");
     strcpy(appBuffer,"");
-    tableClean(neuronToNodeTable);
+   // tableClean(neuronToNodeTable);
 }
 
 int main(int argc, char** argv){
-    UNITY_BEGIN();/*** ***/
+    UNITY_BEGIN();/******/
     RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
 
@@ -1066,6 +1079,7 @@ int main(int argc, char** argv){
 
     RUN_TEST(test_encode_message_assign_neuron);
     RUN_TEST(test_encode_message_neuron_output);
+    //RUN_TEST(test_encode_assign_input_message);
     RUN_TEST(test_encode_NACK_message);
     RUN_TEST(test_encode_ACK_message);
 
@@ -1078,6 +1092,6 @@ int main(int argc, char** argv){
     RUN_TEST(test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout);
     RUN_TEST(test_coordinator_assign_computations_on_ack_timeout);
     RUN_TEST(test_assign_outputs);
-    RUN_TEST(test_assign_pubsub_info);/*** ***/
+    RUN_TEST(test_assign_pubsub_info); /******/
     UNITY_END();
 }
