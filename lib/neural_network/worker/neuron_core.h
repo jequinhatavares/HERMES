@@ -34,5 +34,6 @@ float computeNeuronOutput(NeuronId neuronId);
 void freeAllNeuronMemory();
 
 bool isNeuronInList(NeuronId *neuronsList, uint8_t nNeurons, NeuronId targetNeuronId);
+void printNeuronInfo();
 
 #endif //NEURAL_NETWORK_H

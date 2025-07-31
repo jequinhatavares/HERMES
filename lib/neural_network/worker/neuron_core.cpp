@@ -267,3 +267,45 @@ bool isNeuronInList(NeuronId *neuronsList, uint8_t nNeurons, NeuronId targetNeur
     }
     return false;
 }
+
+void printNeuronInfo() {
+    LOG(APP, INFO, "====================== Computed Neurons (%d total) ======================\n", neuronsCount);
+
+    for (int i = 0; i < neuronsCount; ++i) {
+        char line[512];
+        int offset = 0;
+
+        // Start the line with metadata
+        offset += snprintf(line + offset, sizeof(line) - offset,
+                           "Neuron %d | ID: %u | Bias: %.4f | InputSize: %u | Weights: [",
+                           i, neuronIds[i], biases[i], inputSizes[i]);
+
+        // Append weight values
+        for (int j = 0; j < inputSizes[i]; ++j) {
+            offset += snprintf(line + offset, sizeof(line) - offset, "%.4f", weights[i][j]);
+            if (j < inputSizes[i] - 1) offset += snprintf(line + offset, sizeof(line) - offset, ",");
+        }
+
+        // Append save order values
+        offset += snprintf(line + offset, sizeof(line) - offset, "] | SaveOrder: [");
+        for (int j = 0; j < inputSizes[i]; ++j) {
+            offset += snprintf(line + offset, sizeof(line) - offset, "%u", saveOrders[i][j]);
+            if (j < inputSizes[i] - 1) offset += snprintf(line + offset, sizeof(line) - offset, ",");
+        }
+
+        // Append input values
+        offset += snprintf(line + offset, sizeof(line) - offset, "] | Gathered inputs: [");
+        for (int j = 0; j < inputSizes[i]; ++j) {
+            offset += snprintf(line + offset, sizeof(line) - offset, "%.4f", inputs[i][j]);
+            if (j < inputSizes[i] - 1) offset += snprintf(line + offset, sizeof(line) - offset, ",");
+        }
+
+        // Close the line
+        offset += snprintf(line + offset, sizeof(line) - offset, "]");
+
+        // Finally log the full line
+        LOG(APP, INFO, "%s\n", line);
+    }
+
+    LOG(APP, INFO, "===================================\n");
+}
