@@ -16,11 +16,12 @@ int nnSequenceNumber=0;
 
 uint8_t workersIPs[TOTAL_NEURONS][4];
 uint8_t workersDeviceTypes[TOTAL_NEURONS];
+uint8_t totalWorkers=0;
 
 uint8_t inputsIPs[TOTAL_INPUT_NEURONS][4];
 uint8_t totalInputs=0;
 
-uint8_t totalWorkers=0;
+
 uint8_t numESP8266Workers=0;
 uint8_t numESP32Workers=0;
 uint8_t numRPiWorkers=0;
@@ -619,6 +620,11 @@ void handleWorkerRegistration(char* messageBuffer){
     //NN_WORKER_REGISTRATION [Node IP] [Device Type]
     sscanf(messageBuffer, "%*d %hhu.%hhu.%hhu.%hhu %hhu",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&deviceClass);
 
+    if(totalInputs>=MAX_NEURONS){
+        LOG(APP,INFO, "Worker node registrations have exceeded the number of available NN neurons\n");
+        return;
+    }
+
     //Register the node as a worker node with the corresponding device class
     assignIP(workersIPs[totalWorkers],nodeIP);
     workersDeviceTypes[totalWorkers]=deviceClass;
@@ -640,6 +646,7 @@ void handleInputRegistration(char* messageBuffer){
     sscanf(messageBuffer, "%*d %hhu.%hhu.%hhu.%hhu %hhu",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&deviceClass);
 
     if(totalInputs>=MAX_INPUT_NEURONS) LOG(APP,INFO, "Input node registrations have exceeded the number of available NN input nodes\n");
+
     //Register the node as a input node
     assignIP(inputsIPs[totalInputs],nodeIP);
     totalInputs++;
@@ -649,27 +656,38 @@ void handleInputRegistration(char* messageBuffer){
 
 void manageNeuralNetwork(){
     unsigned long currentTime = getCurrentTime();
-    //Check if the number of devices in the network is enough to distribute the neural network neurons between physical devices
-    if(totalWorkers>=MIN_WORKERS){
+
+    /*** Verify three conditions before distribution:
+        1. Sufficient physical devices exist in the network
+        2. Enough input nodes are registered
+        3. Neural network isn't already distributed across devices ***/
+    if(totalWorkers>=MIN_WORKERS && totalInputs == TOTAL_INPUT_NEURONS && !areNeuronsAssigned){
         distributeNeuralNetwork(&neuralNetwork,workersIPs,totalWorkers);
         assignOutputTargetsToNetwork(workersIPs,totalWorkers);
         distributeInputNeurons(workersIPs,totalWorkers);
         neuronAssignmentTime = getCurrentTime();
     }
 
+    /*** Node Assignment Verification:
+        1. Check if nodes have existing assignments
+        2. Verify not all ACKs for these assignments have arrived
+        3. Confirm TIME_OUT period has elapsed since assignment
+        If all conditions are met: Resend assignments to neurons with missing ACKs ***/
+    if( areNeuronsAssigned && !receivedAllNeuronAcks && (currentTime-neuronAssignmentTime) >= ACK_TIMEOUT ){
+        onACKTimeOut(workersIPs,totalWorkers);// Handles missing acknowledgment messages from hidden layer nodes
+        onACKTimeOutInputLayer();// Handles missing acknowledgment messages from input layer neurons
+    }
+
     // If all neurons have acknowledged and no inference cycle is currently running, start a new inference cycle
-    if(receivedAllNeuronAcks && !inferenceRunning){
+    if(!inferenceRunning && receivedAllNeuronAcks){
         nnSequenceNumber +=2;
         encodeForwardMessage(appPayload, sizeof(appPayload),nnSequenceNumber);
+        network.broadcastMessage(appBuffer,sizeof(appBuffer),appPayload);
         inferenceStartTime=getCurrentTime();
     }
 
-    // Check if the expected time for ack arrival from all nodes had passed
-    if((currentTime-neuronAssignmentTime) >= ACK_TIMEOUT && areNeuronsAssigned && !receivedAllNeuronAcks){
-        //onACKTimeOut();
-    }
-
-    if((currentTime-inferenceStartTime) >= INFERENCE_TIMEOUT && inferenceRunning){
+    // If an inference cycle is running but exceeds the timeout period without results, start a new inference cycle
+    if(inferenceRunning && (currentTime-inferenceStartTime) >= INFERENCE_TIMEOUT ){
         //TODO something where
     }
 
