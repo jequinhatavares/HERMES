@@ -1,4 +1,4 @@
-#ifndef NEURAL_NET_IMPL
+#ifdef NEURAL_NET_IMPL
 #define NEURAL_NET_IMPL // Put the #define before the include to have access to the NN parameters
 #endif
 

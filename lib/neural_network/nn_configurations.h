@@ -2,6 +2,11 @@
 #define NN_CONFIGURATIONS_H
 
 
+#define TOTAL_NEURONS 12
+
+#define TOTAL_INPUT_NEURONS 2
+
+
 #if defined(ESP8266)
 #define MAX_NEURONS 2
 #endif

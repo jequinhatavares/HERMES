@@ -402,7 +402,7 @@ void test_handle_NACK_without_computed_output(){
     uint8_t neuron2=2,neuron3=3;
     float outputValue = 1.0;
 
-    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 1 2 2.0 2.0 1 |3 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 0 1 2.0 2.0 1 |3 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
 
     //Assign neuron computation to the node
     handleNeuronMessage(assignNeuronsMessage);
@@ -425,13 +425,15 @@ void test_handle_NACK_with_computed_output(){
     uint8_t neuron2=2,neuron3=3;
     float outputValue = 5.0;
 
-    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 1 2 2.0 2.0 1 |3 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
+    //NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 0 1 2.0 2.0 1 |3 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
     handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
 
-    snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 1 1.0",NN_NEURON_OUTPUT);
+    //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 0 1.0",NN_NEURON_OUTPUT);
     handleNeuronMessage(receivedMessage);
 
-    snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 2 1.0",NN_NEURON_OUTPUT);
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 1 1.0",NN_NEURON_OUTPUT);
     handleNeuronMessage(receivedMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d %hhu",NN_NACK,neuron2);
@@ -441,7 +443,7 @@ void test_handle_NACK_with_computed_output(){
 
     printf("Encoded Message:%s\n",appPayload);
     printf("Correct Message:%s\n",correctMessage);
-    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
+    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/
     freeAllNeuronMemory();
 }
 
@@ -1077,8 +1079,8 @@ void tearDown(void){
 }
 
 int main(int argc, char** argv){
-    UNITY_BEGIN();/******/
-    RUN_TEST(test_memory_allocation);
+    UNITY_BEGIN();
+    /******/RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
 
     RUN_TEST(test_handle_message_assign_neuron_one_neuron);
