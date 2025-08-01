@@ -30,6 +30,8 @@ extern BitField receivedInputs[MAX_NEURONS];
 
 extern OutputTarget neuronTargets[MAX_NEURONS];
 
+extern bool isOutputComputed[MAX_NEURONS];
+
 
 void handleNeuronMessage(char* messageBuffer);
 
