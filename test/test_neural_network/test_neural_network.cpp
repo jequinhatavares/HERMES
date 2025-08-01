@@ -923,6 +923,55 @@ void test_distribute_neurons(){
 
 }
 
+
+void test_distribute_neural_network_to_one_device(){
+    uint8_t nodes[4][4] = {
+            {2,2,2,2},
+    };
+    uint8_t neuron2=2,neuron3=3,neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
+    char receivedMessage[50];
+
+    initNeuralNetwork();
+    distributeNeuralNetwork(&neuralNetwork, nodes,1);
+
+    //printNeuronInfo();
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d |2 2 0 1 2.0 2.0 1 |3 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d |4 2 0 1 2.0 2.0 1 |5 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d |6 4 2 3 4 5 2.0 2.0 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d |7 4 2 3 4 5 2.0 2.0 2.0 2.0 1 ",NN_ASSIGN_COMPUTATION);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d |8 4 2 3 4 5 2.0 2.0 2.0 2.0 1 |9 4 2 3 4 5 2.0 2.0 2.0 2.0 1 ",NN_ASSIGN_COMPUTATION);
+    handleNeuronMessage(receivedMessage);
+
+
+    printNeuronInfo();
+
+    //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 0 1.0",NN_NEURON_OUTPUT);
+    handleNeuronMessage(receivedMessage);
+
+    printNeuronInfo();
+
+    //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 1 1.0",NN_NEURON_OUTPUT);
+    handleNeuronMessage(receivedMessage);
+
+    printNeuronInfo();
+
+
+    tableClean(neuronToNodeTable);
+    freeAllNeuronMemory();
+
+}
+
 void test_assign_input_neurons(){
     uint8_t nodes[4][4] = {
             {2,2,2,2},
@@ -1379,13 +1428,15 @@ int main(int argc, char** argv){
     RUN_TEST(test_handle_assign_output_targets_multiple_layer_neurons);
     RUN_TEST(test_handle_assign_pubsub_info);
     RUN_TEST(test_handle_NACK_without_computed_output);
-    RUN_TEST(test_handle_NACK_with_computed_output);***/
+    RUN_TEST(test_handle_NACK_with_computed_output);
     RUN_TEST(test_handle_NACK_for_input_node);
 
     RUN_TEST(test_handle_assign_input_neuron_and_worker_neurons_and_assign_all_outputs);
     RUN_TEST(test_worker_neurons_from_multiple_layers_assigned);
     RUN_TEST(test_worker_compute_neuron_output_having_other_neurons_depending_on_that_output);
-    RUN_TEST(test_worker_input_node_producing_output_needed_by_other_worker);
+    RUN_TEST(test_worker_input_node_producing_output_needed_by_other_worker);***/
+
+    RUN_TEST(test_distribute_neural_network_to_one_device);
 
     /***RUN_TEST(test_encode_message_assign_neuron);
     RUN_TEST(test_encode_message_neuron_output);
