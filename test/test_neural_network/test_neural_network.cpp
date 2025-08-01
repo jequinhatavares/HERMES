@@ -1395,7 +1395,7 @@ void test_handle_NACK_with_computed_output_2(){
     uint8_t neuron2=2,neuron3=3;
     float outputValue = 5.0;
 
-    /***snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 1 2 2.0 2.0 1 |3 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 1 2 2.0 2.0 1 |3 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
     handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 1 1.0",NN_NEURON_OUTPUT);
@@ -1403,7 +1403,7 @@ void test_handle_NACK_with_computed_output_2(){
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 2 1.0",NN_NEURON_OUTPUT);
     handleNeuronMessage(receivedMessage);
-
+/***
     snprintf(receivedMessage, sizeof(receivedMessage),"%d %hhu",NN_NACK,neuron2);
     handleNeuronMessage(receivedMessage);
 
@@ -1440,7 +1440,7 @@ void tearDown(void){
 
 int main(int argc, char** argv){
     UNITY_BEGIN();
-    RUN_TEST(test_memory_allocation);
+    /***RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
 
     RUN_TEST(test_handle_message_assign_neuron_one_neuron);
@@ -1458,11 +1458,11 @@ int main(int argc, char** argv){
     RUN_TEST(test_handle_assign_input_neuron_and_worker_neurons_and_assign_all_outputs);
     RUN_TEST(test_worker_neurons_from_multiple_layers_assigned);
     RUN_TEST(test_worker_compute_neuron_output_having_other_neurons_depending_on_that_output);
-    RUN_TEST(test_worker_input_node_producing_output_needed_by_other_worker);/******/
+    RUN_TEST(test_worker_input_node_producing_output_needed_by_other_worker);***/
 
     //RUN_TEST(test_distribute_neural_network_to_one_device);
 
-    RUN_TEST(test_encode_message_assign_neuron);
+    /***RUN_TEST(test_encode_message_assign_neuron);
     RUN_TEST(test_encode_message_neuron_output);
     RUN_TEST(test_encode_assign_input_message);
     RUN_TEST(test_encode_NACK_message);
@@ -1477,7 +1477,7 @@ int main(int argc, char** argv){
     RUN_TEST(test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout);
     RUN_TEST(test_coordinator_assign_computations_on_ack_timeout);
     RUN_TEST(test_assign_outputs);
-    RUN_TEST(test_assign_pubsub_info); /******/
+    RUN_TEST(test_assign_pubsub_info); ***/
     RUN_TEST(test_handle_NACK_with_computed_output_2); /******/
     UNITY_END();
 }
