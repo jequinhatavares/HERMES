@@ -32,6 +32,10 @@ extern OutputTarget neuronTargets[MAX_NEURONS];
 
 extern bool isOutputComputed[MAX_NEURONS];
 
+// Contains the input neurons that this node hosts
+extern NeuronId inputNeurons[MAX_INPUT_NEURONS];
+
+extern OutputTarget inputTargets;
 
 void handleNeuronMessage(char* messageBuffer);
 

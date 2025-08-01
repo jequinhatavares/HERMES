@@ -220,7 +220,6 @@ void test_handle_neuron_input(){
     int neuronStorageIndex = -1;
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |3 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
-
     //message containing neuron assignments
     handleNeuronMessage(receivedMessage);
 
@@ -447,6 +446,67 @@ void test_handle_NACK_with_computed_output(){
     freeAllNeuronMemory();
 }
 
+void test_handle_assign_input_neuron_and_worker_neurons_and_assign_all_outputs(){
+    char receivedMessage[50],assignNeuronsMessage[50];
+    uint8_t nodes[4][4] = {
+            {2, 2, 2, 2},
+            {3, 3, 3, 3},
+            {4, 4, 4, 4},
+            {5, 5, 5, 5},
+    };
+
+    //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
+    char correctMessage[50];
+    int pubTopic=1,subTopic=0;
+    uint8_t neuron2=2,neuron3=3;
+    float outputValue = 5.0;
+
+    //NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 0 1 2.0 2.0 1 |3 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
+    handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
+
+    //NN_ASSIGN_INPUT [neuronID]
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d 0",NN_ASSIGN_INPUTS);
+    handleNeuronMessage(assignNeuronsMessage);
+
+    TEST_ASSERT(inputNeurons[0]==0);
+
+    //receiving the message assigning the outputs
+    //|[N Neurons] [neuron ID1] [neuron ID2] ...[N Nodes] [IP Address 1] [IP Address 2] ...
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d |2 2 3 2 2.2.2.2 3.3.3.3 |1 0 2 0.0.0.0 4.4.4.4",NN_ASSIGN_OUTPUTS);
+    handleNeuronMessage(receivedMessage);
+
+    TEST_ASSERT(neuronTargets[0].nTargets == 2);
+    TEST_ASSERT(isIPEqual(neuronTargets[0].targetsIPs[0],nodes[0]));
+    TEST_ASSERT(isIPEqual(neuronTargets[0].targetsIPs[1],nodes[1]));
+
+    TEST_ASSERT(neuronTargets[1].nTargets == 2);
+    TEST_ASSERT(isIPEqual(neuronTargets[1].targetsIPs[0],nodes[0]));
+    TEST_ASSERT(isIPEqual(neuronTargets[1].targetsIPs[1],nodes[1]));
+
+    TEST_ASSERT(inputTargets.nTargets == 2);
+    TEST_ASSERT(isIPEqual(inputTargets.targetsIPs[0],myAPIP));
+    TEST_ASSERT(isIPEqual(inputTargets.targetsIPs[1],nodes[2]));
+/***
+    //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 0 1.0",NN_NEURON_OUTPUT);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 1 1.0",NN_NEURON_OUTPUT);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d %hhu",NN_NACK,neuron2);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(correctMessage, sizeof(correctMessage),"%d %i %hhu %g",NN_NEURON_OUTPUT,0,neuron2,outputValue);
+
+    printf("Encoded Message:%s\n",appPayload);
+    printf("Correct Message:%s\n",correctMessage);
+    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);***/
+    clearAllNeuronMemory();
+    freeAllNeuronMemory();
+}
+
 void test_worker_neurons_from_multiple_layers_assigned(){
     char receivedMessage[50],assignNeuronsMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
@@ -526,7 +586,58 @@ void test_worker_compute_neuron_output_having_other_neurons_depending_on_that_ou
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 1 1.0",NN_NEURON_OUTPUT);
     handleNeuronMessage(receivedMessage);
 
-    printNeuronInfo();
+    //printNeuronInfo();
+
+    TEST_ASSERT(isOutputComputed[neuronStorageIndex2]);
+
+    inputStorageIndex6= getInputStorageIndex(neuronId6,neuronId2);
+    TEST_ASSERT(inputStorageIndex6 != -1);
+    TEST_ASSERT(inputStorageIndex6 == 0);
+    TEST_ASSERT(isBitSet(receivedInputs[neuronStorageIndex6],inputStorageIndex6));
+
+    /***snprintf(receivedMessage, sizeof(receivedMessage),"%d %hhu",NN_NACK,neuron2);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(correctMessage, sizeof(correctMessage),"%d %i %hhu %g",NN_NEURON_OUTPUT,0,neuron2,outputValue);
+
+    printf("Encoded Message:%s\n",appPayload);
+    printf("Correct Message:%s\n",correctMessage);
+    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/
+    clearAllNeuronMemory();
+    freeAllNeuronMemory();
+}
+
+void test_worker_produce_input_and_other_neurons_depending_on_that_output(){
+    char receivedMessage[50],assignNeuronsMessage[50];
+    //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
+    char correctMessage[50];
+    NeuronId neuronId2=2,neuronId6=6;
+    float outputValue = 5.0;
+    int neuronStorageIndex2,neuronStorageIndex6;
+    int inputStorageIndex6;
+
+    //NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
+    handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
+
+
+
+    neuronStorageIndex2 = getNeuronStorageIndex(neuronId2);
+    TEST_ASSERT(neuronStorageIndex2 != -1);
+    TEST_ASSERT(neuronStorageIndex2 == 0);
+
+    neuronStorageIndex6 = getNeuronStorageIndex(neuronId6);
+    TEST_ASSERT(neuronStorageIndex6 != -1);
+    TEST_ASSERT(neuronStorageIndex6 == 1);
+
+    //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 0 1.0",NN_NEURON_OUTPUT);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 1 1.0",NN_NEURON_OUTPUT);
+    handleNeuronMessage(receivedMessage);
+
+    //printNeuronInfo();
 
     TEST_ASSERT(isOutputComputed[neuronStorageIndex2]);
 
@@ -1193,6 +1304,7 @@ int main(int argc, char** argv){
     RUN_TEST(test_handle_NACK_without_computed_output);
     RUN_TEST(test_handle_NACK_with_computed_output);***/
 
+    RUN_TEST(test_handle_assign_input_neuron_and_worker_neurons_and_assign_all_outputs);
     RUN_TEST(test_worker_neurons_from_multiple_layers_assigned);
     RUN_TEST(test_worker_compute_neuron_output_having_other_neurons_depending_on_that_output);
 
