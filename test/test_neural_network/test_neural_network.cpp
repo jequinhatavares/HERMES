@@ -446,6 +446,38 @@ void test_handle_NACK_with_computed_output(){
     freeAllNeuronMemory();
 }
 
+
+void test_handle_NACK_for_input_node(){
+    char receivedMessage[50],assignNeuronsMessage[50];
+    //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
+    char correctMessage[50];
+    int pubTopic=1,subTopic=0;
+    uint8_t neuron2=2,neuron3=3,inputNeuron=0;
+    float outputValue = 5.0;
+
+    //NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 0 1 2.0 2.0 1 |3 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
+    handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
+
+    //NN_ASSIGN_INPUT [neuronID]
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d 0",NN_ASSIGN_INPUTS);
+    handleNeuronMessage(assignNeuronsMessage);
+
+    //NN_FORWARD [neuronId]
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d 0",NN_FORWARD);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d %hhu",NN_NACK,inputNeuron);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(correctMessage, sizeof(correctMessage),"%d %i %hhu %g",NN_NEURON_OUTPUT,0,inputNeuron,5.0);
+
+     printf("Encoded Message:%s\n",appPayload);
+     printf("Correct Message:%s\n",correctMessage);
+     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/
+    freeAllNeuronMemory();
+}
+
 void test_handle_assign_input_neuron_and_worker_neurons_and_assign_all_outputs(){
     char receivedMessage[50],assignNeuronsMessage[50];
     uint8_t nodes[4][4] = {
@@ -1348,12 +1380,12 @@ int main(int argc, char** argv){
     RUN_TEST(test_handle_assign_pubsub_info);
     RUN_TEST(test_handle_NACK_without_computed_output);
     RUN_TEST(test_handle_NACK_with_computed_output);***/
+    RUN_TEST(test_handle_NACK_for_input_node);
 
     RUN_TEST(test_handle_assign_input_neuron_and_worker_neurons_and_assign_all_outputs);
     RUN_TEST(test_worker_neurons_from_multiple_layers_assigned);
     RUN_TEST(test_worker_compute_neuron_output_having_other_neurons_depending_on_that_output);
     RUN_TEST(test_worker_input_node_producing_output_needed_by_other_worker);
-
 
     /***RUN_TEST(test_encode_message_assign_neuron);
     RUN_TEST(test_encode_message_neuron_output);

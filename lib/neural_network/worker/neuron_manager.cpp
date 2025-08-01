@@ -365,12 +365,10 @@ void handleNACKMessage(char*messageBuffer){
         // Extract the ID of the neuron whose output is currently missing
         currentId = atoi(token);
 
-        LOG(APP,DEBUG,"NACK neuronID: %hhu\n",currentId);
-
+        //LOG(APP,DEBUG,"NACK neuronID: %hhu\n",currentId);
         neuronStorageIndex = getNeuronStorageIndex(currentId);
 
-        LOG(APP,DEBUG,"neuron storage index: %d\n",neuronStorageIndex);
-
+        //LOG(APP,DEBUG,"neuron storage index: %d\n",neuronStorageIndex);
 
         // If this node manages the neuron in the NACK, process the NACK
         // If the output is not yet computed, the node will send it to the respective destinations once it is
@@ -390,9 +388,8 @@ void handleNACKMessage(char*messageBuffer){
 
         if(isNeuronInList(inputNeurons,nrInputNeurons,currentId)){
             // Search for the index where the input neuron ID is stored
-            for (int i = 0; i < nrInputNeurons; i++) {
-                if(inputNeurons[i] == currentId) inputNeuronIndex=i;
-            }
+            inputNeuronIndex= getInputNeuronStorageIndex(currentId);
+
             // The inputNeuronIndex indicates where the neuron's input value is stored in the inputValues vector
             encodeNeuronOutputMessage(appPayload,sizeof(appPayload),currentId,inputNeuronsValues[inputNeuronIndex]);
             //TODO send the message for the node whose input is missing
