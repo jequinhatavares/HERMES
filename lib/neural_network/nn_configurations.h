@@ -22,7 +22,7 @@
 #endif
 
 #if defined(NATIVE)
-#define MAX_NEURONS 12
+#define MAX_NEURONS 2
 #endif
 
 /*** This variable defines the maximum number of input neurons a node can host, which corresponds to the maximum
