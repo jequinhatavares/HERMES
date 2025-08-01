@@ -105,19 +105,19 @@ void handleAssignComputationsMessage(char*messageBuffer){
     neuronEntry = strtok_r(NULL, "|",&saveptr1);
 
     while (neuronEntry != nullptr){
-        //LOG(NETWORK,DEBUG," neuron entry token:%s\n",neuronEntry);
+        //LOG(APP,DEBUG," neuron entry token:%s\n",neuronEntry);
 
         // Position the spaceToken pointer at the beginning of the current neuron's data segment
         spaceToken = strtok_r(neuronEntry, " ",&saveptr2);
 
         //spaceToken now pointing to the Neuron number
         neuronID = atoi(spaceToken);
-        //LOG(NETWORK,DEBUG," neuronId token:%s\n",spaceToken);
+        //LOG(APP,DEBUG," neuronId token:%s\n",spaceToken);
 
         //spaceToken now pointing to the input size
         spaceToken = strtok_r(NULL, " ", &saveptr2);
         inputSize = atoi(spaceToken);
-        //LOG(NETWORK,DEBUG," inputSize token:%s\n",spaceToken);
+        //LOG(APP,DEBUG," inputSize token:%s\n",spaceToken);
 
         inputIndexMap = new NeuronId [inputSize];
         weightValues = new float[inputSize];
@@ -126,7 +126,7 @@ void handleAssignComputationsMessage(char*messageBuffer){
         spaceToken = strtok_r(NULL, " ", &saveptr2);
         for (int i = 0; i < inputSize; ++i) {
             inputIndexMap[i]= atoi(spaceToken);
-            //LOG(NETWORK,DEBUG," inputIndexMap token:%s\n",spaceToken);
+            //LOG(APP,DEBUG," inputIndexMap token:%s\n",spaceToken);
             //Move on the next input to index map
             spaceToken = strtok_r(NULL, " ", &saveptr2);
         }
@@ -134,14 +134,14 @@ void handleAssignComputationsMessage(char*messageBuffer){
         //spaceToken now pointing to the weights Vector
         for (int i = 0; i < inputSize; ++i) {
             weightValues[i]=atof(spaceToken);
-            //LOG(NETWORK,DEBUG," weightValues token:%s\n",spaceToken);
+            //LOG(APP,DEBUG," weightValues token:%s\n",spaceToken);
             //Move on the next input to index map
             spaceToken = strtok_r(NULL, " ", &saveptr2);
         }
 
         //spaceToken now pointing to the bias value
         bias=atof(spaceToken);
-        //LOG(NETWORK,DEBUG," bias token:%s\n",spaceToken);
+        //LOG(APP,DEBUG," bias token:%s\n",spaceToken);
 
         //Save the parsed neuron parameters
         configureNeuron(neuronID,inputSize,weightValues,bias, inputIndexMap);
@@ -187,7 +187,7 @@ void handleAssignOutput(char* messageBuffer){
 
         //spaceToken now pointing to the number of Neurons
         nNeurons = atoi(spaceToken);
-        //LOG(NETWORK,DEBUG," number of neurons: %hhu\n",nNeurons);
+        //LOG(APP,DEBUG," number of neurons: %hhu\n",nNeurons);
 
         //spaceToken now pointing to the list of neuron Ids
         spaceToken = strtok_r(NULL, " ", &saveptr2);
@@ -201,20 +201,20 @@ void handleAssignOutput(char* messageBuffer){
                 nComputedNeurons ++;
                 LOG(APP,DEBUG,"NeuronId: %hhu\n",currentNeuronId);
             }
-            //LOG(NETWORK,DEBUG," neuronID: %hhu\n",neuronID[i]);
+            //LOG(APP,DEBUG," neuronID: %hhu\n",neuronID[i]);
             //Move on the next input to index map
             spaceToken = strtok_r(NULL, " ", &saveptr2);
         }
 
         //spaceToken now pointing to the number of Neurons
         nTargets = atoi(spaceToken);
-        //LOG(NETWORK,DEBUG,"Nr targets: %hhu\n",nTargets);
+        //LOG(APP,DEBUG,"Nr targets: %hhu\n",nTargets);
 
         //spaceToken now pointing to the list of target nodes
         spaceToken = strtok_r(NULL, " ", &saveptr2);
         for (int i = 0; i < nTargets; i++) {
             sscanf(spaceToken,"%hhu.%hhu.%hhu.%hhu",&targetIP[0],&targetIP[1],&targetIP[2],&targetIP[3]);
-            //LOG(NETWORK,DEBUG,"IP: %hhu.%hhu.%hhu.%hhu\n",targetIP[0],targetIP[1],targetIP[2],targetIP[3]);
+            //LOG(APP,DEBUG,"IP: %hhu.%hhu.%hhu.%hhu\n",targetIP[0],targetIP[1],targetIP[2],targetIP[3]);
             // Update the list of target nodes associated with the parsed neurons
             updateOutputTargets(nComputedNeurons, neuronID, targetIP);
             //Move on the next input to index map
@@ -280,13 +280,13 @@ void handleAssignPubSubInfo(char* messageBuffer){
 
         //spaceToken now pointing to the number of Neurons
         nNeurons = atoi(spaceToken);
-        //LOG(NETWORK, DEBUG, " number of neurons: %hhu\n", nNeurons);
+        //LOG(APP, DEBUG, " number of neurons: %hhu\n", nNeurons);
 
         //spaceToken now pointing to the list of neuron Ids
         spaceToken = strtok_r(NULL, " ", &saveptr2);
         for (int i = 0; i < nNeurons; i++) {
             neuronID[i] = atoi(spaceToken);
-            //LOG(NETWORK, DEBUG, " neuronID: %hhu\n", neuronID[i]);
+            //LOG(APP, DEBUG, " neuronID: %hhu\n", neuronID[i]);
             //Move on the next input to index map
             spaceToken = strtok_r(NULL, " ", &saveptr2);
         }
@@ -294,14 +294,14 @@ void handleAssignPubSubInfo(char* messageBuffer){
         //spaceToken now pointing to the subTopic
         subTopic = atoi(spaceToken);
         if(subTopic != -1)//TODO Subscribe to topic
-        //LOG(NETWORK, DEBUG, "subTopic: %i\n", subTopic);
+        //LOG(APP, DEBUG, "subTopic: %i\n", subTopic);
 
         //spaceToken now pointing to the pubTopic
         spaceToken = strtok_r(NULL, " ", &saveptr2);
         pubTopic = atoi(spaceToken);
         if(pubTopic != -1)//TODO Subscribe to topic
 
-        //LOG(NETWORK, DEBUG, "pubTopic: %i\n", pubTopic);
+        //LOG(APP, DEBUG, "pubTopic: %i\n", pubTopic);
 
         //Move on to the next layer neurons
         neuronEntry = strtok_r(NULL, "|", &saveptr1);

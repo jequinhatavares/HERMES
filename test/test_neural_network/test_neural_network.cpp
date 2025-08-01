@@ -929,7 +929,7 @@ void test_distribute_neural_network_to_one_device(){
             {2,2,2,2},
     };
     uint8_t neuron2=2,neuron3=3,neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
-    char receivedMessage[50];
+    char receivedMessage[100];
 
     initNeuralNetwork();
     distributeNeuralNetwork(&neuralNetwork, nodes,1);
@@ -942,15 +942,11 @@ void test_distribute_neural_network_to_one_device(){
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |4 2 0 1 2.0 2.0 1 |5 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
     handleNeuronMessage(receivedMessage);
 
-    snprintf(receivedMessage, sizeof(receivedMessage),"%d |6 4 2 3 4 5 2.0 2.0 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
-    handleNeuronMessage(receivedMessage);
-
-    snprintf(receivedMessage, sizeof(receivedMessage),"%d |7 4 2 3 4 5 2.0 2.0 2.0 2.0 1 ",NN_ASSIGN_COMPUTATION);
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d |6 4 2 3 4 5 2.0 2.0 2.0 2.0 1 |7 4 2 3 4 5 2.0 2.0 2.0 2.0 1 ",NN_ASSIGN_COMPUTATION);
     handleNeuronMessage(receivedMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |8 4 2 3 4 5 2.0 2.0 2.0 2.0 1 |9 4 2 3 4 5 2.0 2.0 2.0 2.0 1 ",NN_ASSIGN_COMPUTATION);
     handleNeuronMessage(receivedMessage);
-
 
     printNeuronInfo();
 
@@ -965,7 +961,6 @@ void test_distribute_neural_network_to_one_device(){
     handleNeuronMessage(receivedMessage);
 
     printNeuronInfo();
-
 
     tableClean(neuronToNodeTable);
     freeAllNeuronMemory();
