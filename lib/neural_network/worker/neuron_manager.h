@@ -37,6 +37,8 @@ extern NeuronId inputNeurons[MAX_INPUT_NEURONS];
 
 extern OutputTarget inputTargets;
 
+extern float inputNeuronsValues[MAX_INPUT_NEURONS];
+
 void handleNeuronMessage(char* messageBuffer);
 
 void handleAssignComputationsMessage(char*messageBuffer);
@@ -56,7 +58,7 @@ void encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nod
 
 void processNeuronInput(NeuronId outputNeuronId,int inferenceId,float inputValue);
 void generateInputData(NeuronId inputNeuronId);
-
+int getInputNeuronStorageIndex(NeuronId neuronId);
 void manageNeuron();
 
 void onInputWaitTimeout();

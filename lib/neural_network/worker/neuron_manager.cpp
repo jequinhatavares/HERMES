@@ -628,9 +628,18 @@ void encodeInputRegistration(char* messageBuffer, size_t bufferSize,uint8_t node
 
 void generateInputData(NeuronId inputNeuronId){
     uint8_t myLocalIP[4];
-    float sensorData;
+    int inputNeuronStorageIndex=-1;
+    float sensorData=5.0;
 
     //sensorData = inputGenerationCallback(inputNeuronId);
+
+    inputNeuronStorageIndex= getInputNeuronStorageIndex(inputNeuronId);
+    if(inputNeuronStorageIndex==-1) {
+        LOG(APP,ERROR,"ERROR: Neuron %hhu is not registered as an input\n",inputNeuronId);
+        return;
+    }
+
+    inputNeuronsValues[inputNeuronStorageIndex] = sensorData;
 
     // If this node is responsible for computing neurons that depend on this input, provide it directly to them.
     processNeuronInput(inputNeuronId,currentInferenceId,sensorData);
@@ -775,4 +784,12 @@ void clearAllNeuronMemory(){
         }
         neuronTargets[i].nTargets=0;
     }
+}
+
+
+int getInputNeuronStorageIndex(NeuronId neuronId){
+    for (int i = 0; i < nrInputNeurons; i++) {
+        if (inputNeurons[i] == neuronId) return i;
+    }
+    return -1;
 }

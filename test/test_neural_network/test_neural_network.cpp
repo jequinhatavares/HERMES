@@ -621,7 +621,6 @@ void test_worker_produce_input_and_other_neurons_depending_on_that_output(){
     handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
 
 
-
     neuronStorageIndex2 = getNeuronStorageIndex(neuronId2);
     TEST_ASSERT(neuronStorageIndex2 != -1);
     TEST_ASSERT(neuronStorageIndex2 == 0);
@@ -646,16 +645,62 @@ void test_worker_produce_input_and_other_neurons_depending_on_that_output(){
     TEST_ASSERT(inputStorageIndex6 == 0);
     TEST_ASSERT(isBitSet(receivedInputs[neuronStorageIndex6],inputStorageIndex6));
 
-    /***snprintf(receivedMessage, sizeof(receivedMessage),"%d %hhu",NN_NACK,neuron2);
-    handleNeuronMessage(receivedMessage);
-
-    snprintf(correctMessage, sizeof(correctMessage),"%d %i %hhu %g",NN_NEURON_OUTPUT,0,neuron2,outputValue);
-
-    printf("Encoded Message:%s\n",appPayload);
-    printf("Correct Message:%s\n",correctMessage);
-    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/
     freeAllNeuronMemory();
 }
+
+
+void test_worker_input_node_producing_output_needed_by_other_worker(){
+    char receivedMessage[50],assignNeuronsMessage[50];
+    uint8_t nodes[4][4] = {
+            {2, 2, 2, 2},
+            {3, 3, 3, 3},
+            {4, 4, 4, 4},
+            {5, 5, 5, 5},
+    };
+
+    uint8_t neuron2=2,neuron3=3;
+    float outputValue = 5.0;
+    int inputStorageIndex2,inputStorageIndex3;
+    int neuronStorageIndex2,neuronStorageIndex3;
+
+    //NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 0 1 2.0 2.0 1 |3 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
+    handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
+
+    //NN_ASSIGN_INPUT [neuronID]
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d 0",NN_ASSIGN_INPUTS);
+    handleNeuronMessage(assignNeuronsMessage);
+
+    TEST_ASSERT(inputNeurons[0]==0);
+
+    //NN_FORWARD [neuronId]
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d 0",NN_FORWARD);
+    handleNeuronMessage(receivedMessage);
+
+    //printNeuronInfo();
+
+    TEST_ASSERT(inputNeuronsValues[0]==5.0);
+
+    //TEST_ASSERT(isOutputComputed[neuronStorageIndex2]);
+
+    neuronStorageIndex2= getNeuronStorageIndex(neuron2);
+    TEST_ASSERT(neuronStorageIndex2 != -1);
+    TEST_ASSERT(neuronStorageIndex2 == 0);
+    inputStorageIndex2= getInputStorageIndex(neuron2,0);
+    TEST_ASSERT(inputStorageIndex2 != -1);
+    TEST_ASSERT(isBitSet(receivedInputs[neuronStorageIndex2],inputStorageIndex2));
+
+    neuronStorageIndex3= getNeuronStorageIndex(neuron3);
+    TEST_ASSERT(neuronStorageIndex3 != -1);
+    TEST_ASSERT(neuronStorageIndex3 == 1);
+    inputStorageIndex3= getInputStorageIndex(neuron3,0);
+    //printBitField(receivedInputs[inputStorageIndex3],2);
+    TEST_ASSERT(isBitSet(receivedInputs[neuronStorageIndex3],inputStorageIndex3));
+/******/
+    clearAllNeuronMemory();
+    freeAllNeuronMemory();
+}
+
 
 
 
@@ -1307,6 +1352,7 @@ int main(int argc, char** argv){
     RUN_TEST(test_handle_assign_input_neuron_and_worker_neurons_and_assign_all_outputs);
     RUN_TEST(test_worker_neurons_from_multiple_layers_assigned);
     RUN_TEST(test_worker_compute_neuron_output_having_other_neurons_depending_on_that_output);
+    RUN_TEST(test_worker_input_node_producing_output_needed_by_other_worker);
 
 
     /***RUN_TEST(test_encode_message_assign_neuron);
