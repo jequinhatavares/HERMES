@@ -1540,16 +1540,16 @@ void tearDown(void){
 
 int main(int argc, char** argv){
     UNITY_BEGIN();
-    /***RUN_TEST(test_memory_allocation);
+    RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
 
     RUN_TEST(test_handle_message_assign_neuron_one_neuron);
     RUN_TEST(test_handle_message_assign_neuron_multiple_neurons);
     RUN_TEST(test_handle_message_assign_neuron_with_more_than_max_neurons);
     RUN_TEST(test_handle_neuron_input);
-    RUN_TEST(test_handle_assign_output_targets);***/
+    RUN_TEST(test_handle_assign_output_targets);/******/
     RUN_TEST(test_handle_assign_output_neuron);
-    /***RUN_TEST(test_handle_assign_output_targets_to_not_handled_neuron);
+    RUN_TEST(test_handle_assign_output_targets_to_not_handled_neuron);
     RUN_TEST(test_handle_assign_output_targets_multiple_layer_neurons);
     RUN_TEST(test_handle_assign_pubsub_info);
     RUN_TEST(test_handle_NACK_without_computed_output);
@@ -1579,7 +1579,7 @@ int main(int argc, char** argv){
     RUN_TEST(test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout);
     RUN_TEST(test_coordinator_assign_computations_on_ack_timeout);
     RUN_TEST(test_assign_outputs);
-    RUN_TEST(test_assign_pubsub_info); ***/
+    RUN_TEST(test_assign_pubsub_info);/*** ***/
 
     UNITY_END();
 }
