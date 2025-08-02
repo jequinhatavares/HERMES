@@ -550,6 +550,85 @@ void distributeInputNeurons(uint8_t inputNodes[][4],uint8_t nrNodes){
     }
 }
 
+void distributeOutputNeurons(const NeuralNetwork *net,uint8_t outputDevice[4]){
+    uint8_t outputLayer= net->numLayers - 1,*inputIndexMap;
+    uint8_t myIP[4];
+    network.getNodeIP(myIP);
+    NeuronId currentOutputNeuron=0;
+    NeuronEntry neuronEntry;
+    char tmpBuffer[150];
+    size_t tmpBufferSize= sizeof(tmpBuffer);
+    int messageOffset=0;
+
+    // Calculate the first output neuron ID by iterating through the layers and their respective number of inputs
+    for (int i = 0; i < net->numLayers-1; ++i) {
+        currentOutputNeuron += net->layers[i].numInputs;
+    }
+
+    /***Initialize the input index mapping before processing the output layer. The inputIndexMapping specifies the order
+     in which the node should store input values. It corresponds to an ordered list of neuron IDs from the previous
+     layer, since those neurons serve as inputs to the current layer.***/
+    inputIndexMap = new uint8_t [net->layers[outputLayer].numInputs];
+    for (uint8_t j = 0; j < net->layers[outputLayer].numInputs ; j++){
+        // For the first hidden layer, the input index mapping corresponds to the neuron IDs of the input layer (ranging from 0 to nrInputs - 1).
+        //if(i == 0)inputIndexMap[j] = j;
+        // For subsequent hidden layers range from (currentNeuronId - (neuronsInPreviousLayer)) to (currentNeuronId)
+        inputIndexMap[j] = currentOutputNeuron+(j-net->layers[outputLayer].numInputs);
+    }
+
+    if(!isIPEqual(outputDevice,myIP)){
+        encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_COMPUTATION);
+        messageOffset += snprintf(appPayload, sizeof(appPayload),"%s",tmpBuffer);
+    }
+
+    for (uint8_t j = 0; j < net->layers[outputLayer].numOutputs; j++){ // For each neuron in output layer
+
+        if (isIPEqual(outputDevice,myIP)){
+            // Add the neuron-to-node mapping to the table
+            network.getNodeIP(myIP);
+            assignIP(neuronEntry.nodeIP,myIP);
+            neuronEntry.layer = outputLayer+1;
+            neuronEntry.indexInLayer = j;
+            neuronEntry.isAcknowledged = true;
+
+            tableAdd(neuronToNodeTable,&currentOutputNeuron,&neuronEntry);
+
+            // Stores the parameters assigned to this node for later use in computing the output neuron values.
+            configureNeuron(currentOutputNeuron,net->layers[outputLayer].numInputs,
+                            &net->layers[outputLayer].weights[j * net->layers[outputLayer].numInputs],
+                            net->layers[outputLayer].biases[j], inputIndexMap);
+
+
+        }else{
+            // If this node doesn't compute the output layer, we must encode a message
+            //assigning the output neurons and their parameters to the correct node.
+            encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,
+                                      currentOutputNeuron,net->layers[outputLayer].numInputs,inputIndexMap,
+                                      &net->layers[outputLayer].weights[j * net->layers[outputLayer].numInputs],net->layers[outputLayer].biases[j]);
+
+            messageOffset += snprintf(appPayload + messageOffset, sizeof(appPayload) - messageOffset,"%s",tmpBuffer);
+            // Add the neuron-to-node mapping to the table
+            assignIP(neuronEntry.nodeIP,outputDevice);
+            neuronEntry.layer = outputLayer+1;
+            neuronEntry.indexInLayer = j;
+            neuronEntry.isAcknowledged = false;
+
+            tableAdd(neuronToNodeTable,&currentOutputNeuron,&neuronEntry);
+        }
+
+        // Increment the current NeuronID
+        currentOutputNeuron ++;
+
+    }
+
+    if(!isIPEqual(outputDevice,myIP)){
+        network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,outputDevice);
+    }
+
+    delete [] inputIndexMap;
+
+}
+
 void assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]){
     uint8_t *neuronId;
     NeuronEntry *neuronEntry;
@@ -702,7 +781,7 @@ void encodeForwardMessage(char*messageBuffer, size_t bufferSize, int inferenceId
 
 void encodeInputAssignMessage(char*messageBuffer,size_t bufferSize,uint8_t neuronId){
     //NN_ASSIGN_INPUT [neuronID]
-    snprintf(messageBuffer, bufferSize, "%d %hhu",NN_ASSIGN_INPUTS,neuronId);
+    snprintf(messageBuffer, bufferSize, "%d %hhu",NN_ASSIGN_INPUT,neuronId);
 }
 
 

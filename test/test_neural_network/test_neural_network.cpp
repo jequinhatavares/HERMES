@@ -460,7 +460,7 @@ void test_handle_NACK_for_input_node(){
     handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
 
     //NN_ASSIGN_INPUT [neuronID]
-    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d 0",NN_ASSIGN_INPUTS);
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d 0",NN_ASSIGN_INPUT);
     handleNeuronMessage(assignNeuronsMessage);
 
     //NN_FORWARD [neuronId]
@@ -498,7 +498,7 @@ void test_handle_assign_input_neuron_and_worker_neurons_and_assign_all_outputs()
     handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
 
     //NN_ASSIGN_INPUT [neuronID]
-    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d 0",NN_ASSIGN_INPUTS);
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d 0",NN_ASSIGN_INPUT);
     handleNeuronMessage(assignNeuronsMessage);
 
     TEST_ASSERT(inputNeurons[0]==0);
@@ -700,7 +700,7 @@ void test_worker_input_node_producing_output_needed_by_other_worker(){
     handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
 
     //NN_ASSIGN_INPUT [neuronID]
-    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d 0",NN_ASSIGN_INPUTS);
+    snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d 0",NN_ASSIGN_INPUT);
     handleNeuronMessage(assignNeuronsMessage);
 
     TEST_ASSERT(inputNeurons[0]==0);
@@ -770,7 +770,7 @@ void test_encode_assign_input_message(){
     char correctMessage[50],buffer[200];
     int inputNeuronId = 0;
 
-    snprintf(correctMessage, sizeof(correctMessage),"%d %hhu",NN_ASSIGN_INPUTS,inputNeuronId);
+    snprintf(correctMessage, sizeof(correctMessage),"%d %hhu",NN_ASSIGN_INPUT,inputNeuronId);
 
     encodeInputAssignMessage(buffer, sizeof(buffer),inputNeuronId);
 

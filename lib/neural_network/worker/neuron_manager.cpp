@@ -57,10 +57,10 @@ void handleNeuronMessage(char* messageBuffer){
             break;
 
         case NN_ASSIGN_OUTPUT_TARGETS:
-            handleAssignOutput(messageBuffer);
+            handleAssignOutputTargets(messageBuffer);
             break;
 
-        case NN_ASSIGN_INPUTS:
+        case NN_ASSIGN_INPUT:
             handleAssignInput(messageBuffer);
             break;
 
@@ -156,14 +156,14 @@ void handleAssignComputationsMessage(char*messageBuffer){
 
 
 /**
- * handleAssignOutput
+ * handleAssignOutputTargets
  * Processes NN_ASSIGN_OUTPUT messages to configure output targets for neurons (i.e., specifying which
  * nodes the output values should be sent to)
  *
  * @param messageBuffer - Buffer containing output assignment data
  * Format: |[Number of neurons] [Output Neuron IDs...] [Number of targets] [Target IPs...]
  */
-void handleAssignOutput(char* messageBuffer){
+void handleAssignOutputTargets(char* messageBuffer){
     uint8_t nNeurons,nTargets,targetIP[4],nComputedNeurons=0;
     NeuronId neuronID[MAX_NEURONS], currentNeuronId;
     char tmpBuffer[10];

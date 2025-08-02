@@ -42,7 +42,7 @@ extern float inputNeuronsValues[MAX_INPUT_NEURONS];
 void handleNeuronMessage(char* messageBuffer);
 
 void handleAssignComputationsMessage(char*messageBuffer);
-void handleAssignOutput(char* messageBuffer);
+void handleAssignOutputTargets(char* messageBuffer);
 void handleAssignInput(char* messageBuffer);
 void handleAssignPubSubInfo(char* messageBuffer);
 void handleNACKMessage(char*messageBuffer);
