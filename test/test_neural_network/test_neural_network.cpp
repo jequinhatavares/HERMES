@@ -174,6 +174,49 @@ void test_handle_message_assign_neuron_multiple_neurons(){
 
 }
 
+
+
+void test_handle_assign_output_neuron(){
+    //NN_ASSIGN_OUTPUT |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    char receivedMessage[100];
+    char correctMessage[50];
+    float weightsValues[4]={2.0,2.0,2.0,2.0}, bias=1;
+    int saveOrderValues[4] ={6,7,8,9}, inputSize=4;
+    int neuronId10=10,neuronId11=11,neuronStorageIndex10=-1,neuronStorageIndex11=-1;
+
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d |10 4 6 7 8 9 2 2.0 2.0 2.0 2.0 1 |11 4 6 7 8 9 2 2.0 2.0 2.0 2.0 1 ",NN_ASSIGN_OUTPUT);
+    handleNeuronMessage(receivedMessage);
+
+    snprintf(correctMessage, sizeof(correctMessage),"%d 10 11",NN_ACK);
+
+    neuronStorageIndex10 = getNeuronStorageIndex(neuronId10);
+    TEST_ASSERT(neuronStorageIndex10 != -1);
+    TEST_ASSERT(neuronStorageIndex10 == 0);
+
+    neuronStorageIndex11 = getNeuronStorageIndex(neuronId11);
+    TEST_ASSERT(neuronStorageIndex11 != -1);
+    TEST_ASSERT(neuronStorageIndex11 == 1);
+
+    printNeuronInfo();
+
+    for (int i = 0; i < inputSize; i++) {
+        //printf("weightsValues:%f savedWeights:%f\n",weightsValues[i],weights[neuronStorageIndex1][i]);
+        //printf("saveOrder:%i saveOrder:%i\n",saveOrderValues[i],saveOrders[neuronStorageIndex1][i]);
+        TEST_ASSERT(weights[neuronStorageIndex10][i] == weightsValues[i]);
+        TEST_ASSERT(saveOrders[neuronStorageIndex10][i] == saveOrderValues[i]);
+
+        TEST_ASSERT(weights[neuronStorageIndex11][i] == weightsValues[i]);
+        TEST_ASSERT(saveOrders[neuronStorageIndex11][i] == saveOrderValues[i]);
+    }
+
+    printf("Encoded Message:%s\n",appPayload);
+    printf("Correct Message:%s\n",correctMessage);
+    TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/
+
+    freeAllNeuronMemory();
+
+}
+
 void test_handle_message_assign_neuron_with_more_than_max_neurons(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[100];
@@ -277,6 +320,8 @@ void test_handle_assign_output_targets(){
     clearAllNeuronMemory();
 
 }
+
+
 
 void test_handle_assign_output_targets_to_not_handled_neuron(){
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
@@ -1502,8 +1547,9 @@ int main(int argc, char** argv){
     RUN_TEST(test_handle_message_assign_neuron_multiple_neurons);
     RUN_TEST(test_handle_message_assign_neuron_with_more_than_max_neurons);
     RUN_TEST(test_handle_neuron_input);
-    RUN_TEST(test_handle_assign_output_targets);
-    RUN_TEST(test_handle_assign_output_targets_to_not_handled_neuron);
+    RUN_TEST(test_handle_assign_output_targets);***/
+    RUN_TEST(test_handle_assign_output_neuron);
+    /***RUN_TEST(test_handle_assign_output_targets_to_not_handled_neuron);
     RUN_TEST(test_handle_assign_output_targets_multiple_layer_neurons);
     RUN_TEST(test_handle_assign_pubsub_info);
     RUN_TEST(test_handle_NACK_without_computed_output);
@@ -1524,9 +1570,9 @@ int main(int argc, char** argv){
     RUN_TEST(test_encode_ACK_message);
 
     RUN_TEST(test_bit_fields);
-    RUN_TEST(test_distribute_neurons);***/
+    RUN_TEST(test_distribute_neurons);
     RUN_TEST(test_distribute_neurons_with_balanced_algorithm);
-    /***RUN_TEST(test_assign_input_neurons);
+    RUN_TEST(test_assign_input_neurons);
     RUN_TEST(test_coordinator_handle_ACK_from_all_neurons);
     RUN_TEST(test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout);
     RUN_TEST(test_coordinator_handle_ACK_missing_for_some_worker_neuron_of_same_node_on_ack_timeout);
