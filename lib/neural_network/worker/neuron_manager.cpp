@@ -56,12 +56,15 @@ void handleNeuronMessage(char* messageBuffer){
             handleAssignComputationsMessage(messageBuffer);
             break;
 
-        case NN_ASSIGN_OUTPUT_TARGETS:
-            handleAssignOutputTargets(messageBuffer);
-            break;
-
         case NN_ASSIGN_INPUT:
             handleAssignInput(messageBuffer);
+            break;
+
+        case NN_ASSIGN_OUTPUT:
+            handleAssignOutput(messageBuffer);
+            break;
+        case NN_ASSIGN_OUTPUT_TARGETS:
+            handleAssignOutputTargets(messageBuffer);
             break;
 
         case NN_NEURON_OUTPUT:
@@ -229,10 +232,7 @@ void handleAssignOutputTargets(char* messageBuffer){
         nComputedNeurons=0;
     }
 
-    //TODO send the ACK to the root node
     network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
-
-
 }
 
 /**
@@ -252,6 +252,79 @@ void handleAssignInput(char* messageBuffer){
     nrInputNeurons++;
 }
 
+void handleAssignOutput(char* messageBuffer){
+    uint8_t inputSize;
+    NeuronId neuronID,*inputIndexMap;
+    float bias, *weightValues;
+    char *spaceToken,*neuronEntry;
+    char *saveptr1, *saveptr2;
+    int offset=0;
+    char tmpBuffer[10];
+    size_t tmpBufferSize = sizeof(tmpBuffer);
+
+    //Encode the message header of the ACK message
+    offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%d",NN_ACK);
+
+    //NN_ASSIGN_INPUT |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    neuronEntry = strtok_r(messageBuffer, "|",&saveptr1);
+    //Discard the message types
+    neuronEntry = strtok_r(NULL, "|",&saveptr1);
+
+    while (neuronEntry != nullptr){
+        //LOG(APP,DEBUG," neuron entry token:%s\n",neuronEntry);
+
+        // Position the spaceToken pointer at the beginning of the current neuron's data segment
+        spaceToken = strtok_r(neuronEntry, " ",&saveptr2);
+
+        //spaceToken now pointing to the Neuron number
+        neuronID = atoi(spaceToken);
+        //LOG(APP,DEBUG," neuronId token:%s\n",spaceToken);
+
+        //spaceToken now pointing to the input size
+        spaceToken = strtok_r(NULL, " ", &saveptr2);
+        inputSize = atoi(spaceToken);
+        //LOG(APP,DEBUG," inputSize token:%s\n",spaceToken);
+
+        inputIndexMap = new NeuronId [inputSize];
+        weightValues = new float[inputSize];
+
+        //spaceToken now pointing to the Input Save Order Vector
+        spaceToken = strtok_r(NULL, " ", &saveptr2);
+        for (int i = 0; i < inputSize; ++i) {
+            inputIndexMap[i]= atoi(spaceToken);
+            //LOG(APP,DEBUG," inputIndexMap token:%s\n",spaceToken);
+            //Move on the next input to index map
+            spaceToken = strtok_r(NULL, " ", &saveptr2);
+        }
+
+        //spaceToken now pointing to the weights Vector
+        for (int i = 0; i < inputSize; ++i) {
+            weightValues[i]=atof(spaceToken);
+            //LOG(APP,DEBUG," weightValues token:%s\n",spaceToken);
+            //Move on the next input to index map
+            spaceToken = strtok_r(NULL, " ", &saveptr2);
+        }
+
+        //spaceToken now pointing to the bias value
+        bias=atof(spaceToken);
+        //LOG(APP,DEBUG," bias token:%s\n",spaceToken);
+
+        //Save the parsed neuron parameters
+        configureNeuron(neuronID,inputSize,weightValues,bias, inputIndexMap);
+
+        //Add the parsed neuronID to the NACK message
+        encodeACKMessage(tmpBuffer,tmpBufferSize,&neuronID,1);
+        offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%s",tmpBuffer);
+
+        delete[] inputIndexMap;
+        delete[] weightValues;
+
+        //Move on to the next neuron
+        neuronEntry = strtok_r(NULL, "|",&saveptr1);
+    }
+
+    network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
+}
 
 /**
  * handleAssignPubSubInfo
@@ -602,11 +675,11 @@ void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAck
     //NN_ACK [Acknowledged Neuron ID 1] [Acknowledged Neuron ID 2]...
 
     //offset = snprintf(messageBuffer,bufferSize,"%d ",NN_ACK);
-    LOG(APP,DEBUG,"ACK count:%hhu\n",ackNeuronCount);
+    //LOG(APP,DEBUG,"ACK count:%hhu\n",ackNeuronCount);
 
     // Encode the IDs of neurons whose required inputs are missing
     for (int i = 0; i < ackNeuronCount; i++) {
-        LOG(APP,DEBUG,"ACK neuron:%hhu\n",neuronAckList[i]);
+        //LOG(APP,DEBUG,"ACK neuron:%hhu\n",neuronAckList[i]);
         offset += snprintf(messageBuffer+offset,bufferSize-offset," %hhu",neuronAckList[i]);
     }
 

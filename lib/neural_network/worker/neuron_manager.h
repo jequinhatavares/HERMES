@@ -44,6 +44,7 @@ void handleNeuronMessage(char* messageBuffer);
 void handleAssignComputationsMessage(char*messageBuffer);
 void handleAssignOutputTargets(char* messageBuffer);
 void handleAssignInput(char* messageBuffer);
+void handleAssignOutput(char* messageBuffer);
 void handleAssignPubSubInfo(char* messageBuffer);
 void handleNACKMessage(char*messageBuffer);
 void handleNeuronOutputMessage(char*messageBuffer);
