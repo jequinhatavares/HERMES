@@ -16,15 +16,20 @@ int nnSequenceNumber=0;
 
 uint8_t workersIPs[TOTAL_NEURONS][4];
 uint8_t workersDeviceTypes[TOTAL_NEURONS];
+uint8_t neuronsPerWorker[TOTAL_NEURONS];
 uint8_t totalWorkers=0;
+
+#define NODES_PER_ESP8266 1
+#define NODES_PER_ESP32 2
+#define NODES_PER_RPI 10
 
 uint8_t inputsIPs[TOTAL_INPUT_NEURONS][4];
 uint8_t totalInputs=0;
 
 
-uint8_t numESP8266Workers=0;
+/***uint8_t numESP8266Workers=0;
 uint8_t numESP32Workers=0;
-uint8_t numRPiWorkers=0;
+uint8_t numRPiWorkers=0;***/
 
 /***
  * Neural Network Computations Assignment table
@@ -630,12 +635,15 @@ void handleWorkerRegistration(char* messageBuffer){
     workersDeviceTypes[totalWorkers]=deviceClass;
 
     if(static_cast<DeviceType>(deviceClass) == DeviceType::DEVICE_ESP8266){
-        numESP8266Workers++;
+        neuronsPerWorker[totalWorkers] = NODES_PER_ESP8266;
+        //numESP8266Workers++;
     }else if(static_cast<DeviceType>(deviceClass) == DeviceType::DEVICE_ESP32){
-        numESP32Workers++;
+        neuronsPerWorker[totalWorkers] = NODES_PER_ESP32;
+        //numESP32Workers++;
     }else if(static_cast<DeviceType>(deviceClass) == DeviceType::DEVICE_RPI){
-        numRPiWorkers++;
-    }
+        neuronsPerWorker[totalWorkers] = NODES_PER_RPI;
+        //numRPiWorkers++;
+    }/******/
     totalWorkers++;
 }
 
