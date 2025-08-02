@@ -32,7 +32,7 @@ void printNeuronTableHeader();
 void initNeuralNetwork();
 
 void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_t nrNodes);
-void distributeNeuralNetworkBalanced(const NeuralNetwork *net, uint8_t devices[][4],uint8_t nrDevices, uint8_t neuronsPerDevice[],uint8_t outputDevice[4]);
+void distributeNeuralNetworkBalanced(const NeuralNetwork *net, uint8_t devices[][4],uint8_t nrDevices,uint8_t neuronsPerDevice[]);
 void assignOutputTargetsToNetwork(uint8_t nodes[][4],uint8_t nrNodes);
 void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]);
 void assignOutputTargetsToNeurons(char* messageBuffer,size_t bufferSize,NeuronId *neuronIDs,uint8_t nNeurons,uint8_t targetNodeIP[4]);

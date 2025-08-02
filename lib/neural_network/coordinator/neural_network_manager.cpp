@@ -221,7 +221,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
 
 
 
-void distributeNeuralNetworkBalanced(const NeuralNetwork *net, uint8_t devices[][4],uint8_t nrDevices, uint8_t neuronsPerDevice[],uint8_t outputDevice[4]){
+void distributeNeuralNetworkBalanced(const NeuralNetwork *net, uint8_t devices[][4],uint8_t nrDevices, uint8_t neuronsPerDevice[]){
     uint8_t neuronPerNodeCount = 0,*inputIndexMap;
     int assignedDevices = 0, messageOffset = 0;
     // Initialize the neuron ID to the first neuron in the first hidden layer (i.e., the first ID after the last input neuron)
@@ -523,9 +523,11 @@ void distributeOutputNeurons(const NeuralNetwork *net,uint8_t outputDevice[4]){
     int messageOffset=0;
 
     // Calculate the first output neuron ID by iterating through the layers and their respective number of inputs
-    for (int i = 0; i < net->numLayers-1; ++i) {
+    for (int i = 0; i < net->numLayers; ++i) {
         currentOutputNeuron += net->layers[i].numInputs;
     }
+
+    LOG(APP,DEBUG,"CurrentOutputNeuronId: %hhu\n",currentOutputNeuron);
 
     /***Initialize the input index mapping before processing the output layer. The inputIndexMapping specifies the order
      in which the node should store input values. It corresponds to an ordered list of neuron IDs from the previous
@@ -569,6 +571,7 @@ void distributeOutputNeurons(const NeuralNetwork *net,uint8_t outputDevice[4]){
                                       &net->layers[outputLayer].weights[j * net->layers[outputLayer].numInputs],net->layers[outputLayer].biases[j]);
 
             messageOffset += snprintf(appPayload + messageOffset, sizeof(appPayload) - messageOffset,"%s",tmpBuffer);
+
             // Add the neuron-to-node mapping to the table
             assignIP(neuronEntry.nodeIP,outputDevice);
             neuronEntry.layer = outputLayer+1;
