@@ -5,7 +5,7 @@
 
 typedef enum NeuralNetworkMessageType{
     NN_ASSIGN_COMPUTATION,  //O Message from the coordinator assigning neurons to nodes
-    NN_ASSIGN_OUTPUTS,      //1 Message from the coordinator specifying which neurons require the output of the assigned neuron
+    NN_ASSIGN_OUTPUT_TARGETS,      //1 Message from the coordinator specifying which neurons require the output of the assigned neuron
     NN_ASSIGN_INPUTS,       //2 Message sent by the coordinator node assigning a input node to a given physical node
     NN_NEURON_OUTPUT,       //3 Message from a node transmitting its computed neuron output
     NN_FORWARD,             //4 Message from the coordinator to trigger a new inference operation

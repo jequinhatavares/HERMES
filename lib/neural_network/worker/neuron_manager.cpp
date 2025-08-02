@@ -56,7 +56,7 @@ void handleNeuronMessage(char* messageBuffer){
             handleAssignComputationsMessage(messageBuffer);
             break;
 
-        case NN_ASSIGN_OUTPUTS:
+        case NN_ASSIGN_OUTPUT_TARGETS:
             handleAssignOutput(messageBuffer);
             break;
 

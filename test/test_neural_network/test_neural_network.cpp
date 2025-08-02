@@ -260,7 +260,7 @@ void test_handle_assign_output_targets(){
     handleNeuronMessage(assignNeuronsMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu"
-            ,NN_ASSIGN_OUTPUTS,2,neuron2,neuron3,2,nodeIP4[0],nodeIP4[1],nodeIP4[3],nodeIP4[3]
+            ,NN_ASSIGN_OUTPUT_TARGETS,2,neuron2,neuron3,2,nodeIP4[0],nodeIP4[1],nodeIP4[3],nodeIP4[3]
             ,nodeIP5[0],nodeIP5[1],nodeIP5[3],nodeIP5[3]);
 
     handleNeuronMessage(receivedMessage);
@@ -291,7 +291,7 @@ void test_handle_assign_output_targets_to_not_handled_neuron(){
     handleNeuronMessage(assignNeuronsMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu"
-            ,NN_ASSIGN_OUTPUTS,2,invalidNeuron,neuron2,2,nodeIP4[0],nodeIP4[1],nodeIP4[3],nodeIP4[3]
+            ,NN_ASSIGN_OUTPUT_TARGETS,2,invalidNeuron,neuron2,2,nodeIP4[0],nodeIP4[1],nodeIP4[3],nodeIP4[3]
             ,nodeIP5[0],nodeIP5[1],nodeIP5[3],nodeIP5[3]);
 
     handleNeuronMessage(receivedMessage);
@@ -340,7 +340,7 @@ void test_handle_assign_output_targets_multiple_layer_neurons(){
 
     //|[N Neurons] [neuron ID1] [neuron ID2] ...[N Nodes] [IP Address 1] [IP Address 2] ...
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |%hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu |%hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu"
-            ,NN_ASSIGN_OUTPUTS,1,neuron2,1,nodeIP4[0],nodeIP4[1],nodeIP4[3],nodeIP4[3]
+            ,NN_ASSIGN_OUTPUT_TARGETS,1,neuron2,1,nodeIP4[0],nodeIP4[1],nodeIP4[3],nodeIP4[3]
             ,1,neuron3,1,nodeIP5[0],nodeIP5[1],nodeIP5[3],nodeIP5[3]);
 
     handleNeuronMessage(receivedMessage);
@@ -384,7 +384,7 @@ void test_handle_assign_pubsub_info(){
     //Assign neuron computation to the node
     handleNeuronMessage(assignNeuronsMessage);
 
-    snprintf(receivedMessage, sizeof(receivedMessage),"8 %d |%hhu %hhu %hhu %i %i",NN_ASSIGN_OUTPUTS,2,neuron2,neuron3,subTopic,pubTopic);
+    snprintf(receivedMessage, sizeof(receivedMessage),"8 %d |%hhu %hhu %hhu %i %i",NN_ASSIGN_OUTPUT_TARGETS,2,neuron2,neuron3,subTopic,pubTopic);
 
     handleAssignPubSubInfo(receivedMessage);
 
@@ -505,7 +505,7 @@ void test_handle_assign_input_neuron_and_worker_neurons_and_assign_all_outputs()
 
     //receiving the message assigning the outputs
     //|[N Neurons] [neuron ID1] [neuron ID2] ...[N Nodes] [IP Address 1] [IP Address 2] ...
-    snprintf(receivedMessage, sizeof(receivedMessage),"%d |2 2 3 2 2.2.2.2 3.3.3.3 |1 0 2 0.0.0.0 4.4.4.4",NN_ASSIGN_OUTPUTS);
+    snprintf(receivedMessage, sizeof(receivedMessage),"%d |2 2 3 2 2.2.2.2 3.3.3.3 |1 0 2 0.0.0.0 4.4.4.4",NN_ASSIGN_OUTPUT_TARGETS);
     handleNeuronMessage(receivedMessage);
 
     TEST_ASSERT(neuronTargets[0].nTargets == 2);
@@ -1123,7 +1123,7 @@ void test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout(){
 
     //tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
 
-    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, 2,neuron8,neuron9,
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUT_TARGETS, 2,neuron8,neuron9,
              1,myAPIP[0],myAPIP[1],myAPIP[3],myAPIP[3]);
 
     onACKTimeOut(nodes,4);
@@ -1176,7 +1176,7 @@ void test_coordinator_handle_ACK_missing_for_some_worker_neuron_of_same_node_on_
 
     //tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
 
-    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, 1,neuron9,
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUT_TARGETS, 1,neuron9,
              1,myAPIP[0],myAPIP[1],myAPIP[3],myAPIP[3]);
 
     onACKTimeOut(nodes,4);
@@ -1222,7 +1222,7 @@ void test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout(){
 
     onACKTimeOutInputLayer();
 
-    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, 1,inputNeuron1,
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUT_TARGETS, 1,inputNeuron1,
              2,nodes[0][0],nodes[0][1],nodes[0][3],nodes[0][3],
             nodes[1][0],nodes[1][1],nodes[1][3],nodes[1][3]);
 
@@ -1307,7 +1307,7 @@ void test_assign_outputs() {
     //assignOutputTargetsToNetwork(nodes,4);
 
     assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodes[0]);
-    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS, 2,neuron2,neuron3,
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUT_TARGETS, 2,neuron2,neuron3,
              2,nodes[2][0],nodes[2][1],nodes[2][3],nodes[2][3]
              ,nodes[3][0],nodes[3][1],nodes[3][3],nodes[3][3]);
     printf("Correct Message:%s\n",correctMessage);
@@ -1315,7 +1315,7 @@ void test_assign_outputs() {
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
     assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodes[1]);
-    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",NN_ASSIGN_OUTPUTS,2,neuron4,neuron5
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",NN_ASSIGN_OUTPUT_TARGETS,2,neuron4,neuron5
            ,2,nodes[2][0],nodes[2][1],nodes[2][3],nodes[2][3]
             ,nodes[3][0],nodes[3][1],nodes[3][3],nodes[3][3]);
     printf("Correct Message:%s\n",correctMessage);
@@ -1323,14 +1323,14 @@ void test_assign_outputs() {
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
     assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodes[2]);
-    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu",NN_ASSIGN_OUTPUTS,2,neuron6,neuron7
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu",NN_ASSIGN_OUTPUT_TARGETS,2,neuron6,neuron7
             ,1,myAPIP[0],myAPIP[1],myAPIP[3],myAPIP[3]);
     printf("Correct Message:%s\n",correctMessage);
     printf("Encoded Message:%s\n",appPayload);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/
 
     assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodes[3]);
-    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUTS,2,neuron8,neuron9
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUT_TARGETS,2,neuron8,neuron9
             ,1,myAPIP[0],myAPIP[1],myAPIP[3],myAPIP[3]);
     printf("Correct Message:%s\n",correctMessage);
     printf("Encoded Message:%s\n",appPayload);
@@ -1360,25 +1360,25 @@ void test_assign_pubsub_info() {
 
     // |[Number of Neurons] [neuron ID1] [neuron ID2] [Subscription 1] [Pub 1]
     assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[0]);
-    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron2,neuron3,0,1);
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUT_TARGETS,2, neuron2,neuron3,0,1);
     printf("Correct Message:%s\n",correctMessage);
     printf("Encoded Message:%s\n",appPayload);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
     assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[1]);
-    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron4,neuron5,0,1);
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUT_TARGETS,2, neuron4,neuron5,0,1);
     //printf("Correct Message:%s\n",correctMessage);
     //printf("Encoded Message:%s\n",appPayload);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
     assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[2]);
-    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron6,neuron7,1,2);
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUT_TARGETS,2, neuron6,neuron7,1,2);
     //printf("Correct Message:%s\n",correctMessage);
     //printf("Encoded Message:%s\n",appPayload);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
     assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[3]);
-    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUTS,2, neuron8,neuron9,1,2);
+    snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUT_TARGETS,2, neuron8,neuron9,1,2);
     printf("Correct Message:%s\n",correctMessage);
     printf("Encoded Message:%s\n",appPayload);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/

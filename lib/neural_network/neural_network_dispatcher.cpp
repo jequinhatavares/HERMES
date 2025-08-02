@@ -45,7 +45,7 @@ void handleNeuralNetworkMessage(uint8_t* originatorIP,uint8_t* destinationIP,cha
         case NN_ASSIGN_COMPUTATION:
             handleNeuronMessage(messageBuffer);
             break;
-        case NN_ASSIGN_OUTPUTS:
+        case NN_ASSIGN_OUTPUT_TARGETS:
             handleNeuronMessage(messageBuffer);
             break;
         case NN_NEURON_OUTPUT:
