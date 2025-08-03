@@ -90,10 +90,12 @@ void test_memory_allocation(){
     neuronStorageIndex = core.getNeuronStorageIndex(neuronId);
     TEST_ASSERT(neuronStorageIndex != -1);
 
+    core.printNeuronInfo();
     for (int i = 0; i < inputSize; i++) {
         printf("weightsValues:%f savedWeights:%f\n",weightsValues[i],core.getNeuronWeightAtIndex(neuronId,i));
+        printf("weightsValues:%f savedInputs:%f\n",weightsValues[i],core.getNeuronWeightAtIndex(neuronId,i));
         TEST_ASSERT(core.getNeuronWeightAtIndex(neuronId,i) == weightsValues[i]);
-        TEST_ASSERT(core.getInputStorageIndex(neuronId,i) == saveOrderValues[i]);
+        TEST_ASSERT(core.getInputNeuronId(neuronId,i) == saveOrderValues[i]);
     }
 
 }
@@ -1578,14 +1580,14 @@ void tearDown(void){
 
 int main(int argc, char** argv){
     UNITY_BEGIN();
-    RUN_TEST(test_memory_allocation);
+    RUN_TEST(test_memory_allocation);/******/
     RUN_TEST(test_neuron_output_calculation);
 
     RUN_TEST(test_handle_message_assign_neuron_one_neuron);
     RUN_TEST(test_handle_message_assign_neuron_multiple_neurons);
     RUN_TEST(test_handle_message_assign_neuron_with_more_than_max_neurons);
     RUN_TEST(test_handle_neuron_input);
-    RUN_TEST(test_handle_assign_output_targets);/******/
+    RUN_TEST(test_handle_assign_output_targets);
     RUN_TEST(test_handle_assign_output_neuron);
     RUN_TEST(test_handle_assign_output_targets_to_not_handled_neuron);
     RUN_TEST(test_handle_assign_output_targets_multiple_layer_neurons);
@@ -1596,28 +1598,28 @@ int main(int argc, char** argv){
 
     RUN_TEST(test_handle_assign_input_neuron_and_worker_neurons_and_assign_all_outputs);
     RUN_TEST(test_worker_neurons_from_multiple_layers_assigned);
-    RUN_TEST(test_worker_compute_neuron_output_having_other_neurons_depending_on_that_output);
-    RUN_TEST(test_worker_input_node_producing_output_needed_by_other_worker);
+     RUN_TEST(test_worker_compute_neuron_output_having_other_neurons_depending_on_that_output);
+     RUN_TEST(test_worker_input_node_producing_output_needed_by_other_worker);
 
-    //RUN_TEST(test_distribute_neural_network_to_one_device);
+     //RUN_TEST(test_distribute_neural_network_to_one_device);
 
-    RUN_TEST(test_encode_message_assign_neuron);
-    RUN_TEST(test_encode_message_neuron_output);
-    RUN_TEST(test_encode_assign_input_message);
-    RUN_TEST(test_encode_NACK_message);
-    RUN_TEST(test_encode_ACK_message);
+     RUN_TEST(test_encode_message_assign_neuron);
+     RUN_TEST(test_encode_message_neuron_output);
+     RUN_TEST(test_encode_assign_input_message);
+     RUN_TEST(test_encode_NACK_message);
+     RUN_TEST(test_encode_ACK_message);
 
-    RUN_TEST(test_bit_fields);
-    RUN_TEST(test_distribute_neurons);
-    RUN_TEST(test_distribute_neurons_with_balanced_algorithm);
-    RUN_TEST(test_assign_input_neurons);
-    RUN_TEST(test_coordinator_handle_ACK_from_all_neurons);
-    RUN_TEST(test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout);
-    RUN_TEST(test_coordinator_handle_ACK_missing_for_some_worker_neuron_of_same_node_on_ack_timeout);
-    RUN_TEST(test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout);
-    RUN_TEST(test_coordinator_assign_computations_on_ack_timeout);
-    RUN_TEST(test_assign_outputs);
-    RUN_TEST(test_assign_pubsub_info);/*** ***/
+     RUN_TEST(test_bit_fields);
+     RUN_TEST(test_distribute_neurons);
+     RUN_TEST(test_distribute_neurons_with_balanced_algorithm);
+     RUN_TEST(test_assign_input_neurons);
+     RUN_TEST(test_coordinator_handle_ACK_from_all_neurons);
+     RUN_TEST(test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout);
+     RUN_TEST(test_coordinator_handle_ACK_missing_for_some_worker_neuron_of_same_node_on_ack_timeout);
+     RUN_TEST(test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout);
+     RUN_TEST(test_coordinator_assign_computations_on_ack_timeout);
+     RUN_TEST(test_assign_outputs);
+     RUN_TEST(test_assign_pubsub_info); /******/
 
     UNITY_END();
 }
