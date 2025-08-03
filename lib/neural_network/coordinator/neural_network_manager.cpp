@@ -5,8 +5,8 @@
 #include "neural_network_manager.h"
 
 unsigned long neuronAssignmentTime;
-
 bool areNeuronsAssigned = false;
+
 bool receivedAllNeuronAcks = false;
 
 bool inferenceRunning = false;
