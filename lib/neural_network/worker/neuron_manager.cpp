@@ -108,7 +108,7 @@ void NeuronManager::handleAssignComputationsMessage(char*messageBuffer){
         //LOG(APP,DEBUG," bias token:%s\n",spaceToken);
 
         //Save the parsed neuron parameters
-        configureNeuron(neuronID,inputSize,weightValues,bias, inputIndexMap);
+        neuronCore.configureNeuron(neuronID,inputSize,weightValues,bias, inputIndexMap);
 
         delete[] inputIndexMap;
         delete[] weightValues;
@@ -160,7 +160,7 @@ void NeuronManager::handleAssignOutputTargets(char* messageBuffer){
             /*** If the neuron targeted by this assignment is not computed by this node, it won't be added to the list
              *  of neurons to acknowledge. This implies that a message containing the node assignments was lost,
              *  so by not acknowledging the neuron, the root will resend the assignment. ***/
-            if(computesNeuron(currentNeuronId) || isNeuronInList(inputNeurons,nrInputNeurons,currentNeuronId)){
+            if(neuronCore.computesNeuron(currentNeuronId) || isNeuronInList(inputNeurons,nrInputNeurons,currentNeuronId)){
                 neuronID[nComputedNeurons] = currentNeuronId;
                 nComputedNeurons ++;
                 LOG(APP,DEBUG,"NeuronId: %hhu\n",currentNeuronId);
@@ -271,7 +271,7 @@ void NeuronManager::handleAssignOutput(char* messageBuffer){
         //LOG(APP,DEBUG," bias token:%s\n",spaceToken);
 
         //Save the parsed neuron parameters
-        configureNeuron(neuronID,inputSize,weightValues,bias, inputIndexMap);
+        neuronCore.configureNeuron(neuronID,inputSize,weightValues,bias, inputIndexMap);
 
         //Add the parsed neuronID to the NACK message
         encodeACKMessage(tmpBuffer,tmpBufferSize,&neuronID,1);
@@ -357,7 +357,7 @@ void NeuronManager::handleForwardMessage(char *messageBuffer){
 
     currentInferenceId = inferenceId;
 
-    for (int i = 0; i < neuronsCount; i++) {
+    for (int i = 0; i < neuronCore.neuronsCount; i++) {
         resetAll(receivedInputs[i]);
         isOutputComputed[i] = false;
     }
@@ -400,7 +400,7 @@ void NeuronManager::handleNACKMessage(char*messageBuffer){
         currentId = atoi(token);
 
         //LOG(APP,DEBUG,"NACK neuronID: %hhu\n",currentId);
-        neuronStorageIndex = getNeuronStorageIndex(currentId);
+        neuronStorageIndex = neuronCore.getNeuronStorageIndex(currentId);
 
         //LOG(APP,DEBUG,"neuron storage index: %d\n",neuronStorageIndex);
 
@@ -455,9 +455,10 @@ void NeuronManager::handleNeuronOutputMessage(char*messageBuffer){
 
 //TODO header
 void NeuronManager::processNeuronInput(NeuronId outputNeuronId,int inferenceId,float inputValue){
-    int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1, currentNeuronID = 0;
+    int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1;
     float neuronOutput;
     bool outputsComputed=true,neuronsRequireInput=false;
+    NeuronId currentNeuronID = 0,handledNeuronId;
 
     /***If the inferenceId received in the message is lower than the current inferenceId, the message belongs to
      * an outdated inference cycle and should be discarded ***/
@@ -473,17 +474,18 @@ void NeuronManager::processNeuronInput(NeuronId outputNeuronId,int inferenceId,f
         firstInputTimestamp = getCurrentTime();
     }
 
-    for (int i = 0; i < neuronsCount; i++) {
-        currentNeuronID = neuronIds[i];
+    for (int i = 0; i < neuronCore.neuronsCount; i++) {
+
+        currentNeuronID = neuronCore.getNeuronId(i);
 
         // Check if the current neuron requires the input produced by outputNeuronId
-        if(isInputRequired(currentNeuronID,outputNeuronId)){
+        if(neuronCore.isInputRequired(currentNeuronID,outputNeuronId)){
             // Find the index where the neuron is stored
-            neuronStorageIndex = getNeuronStorageIndex(currentNeuronID);
+            neuronStorageIndex = neuronCore.getNeuronStorageIndex(currentNeuronID);
             // Find the storage index of this specific input value for the given neuron
-            inputStorageIndex = getInputStorageIndex(currentNeuronID,outputNeuronId);
+            inputStorageIndex = neuronCore.getInputStorageIndex(currentNeuronID,outputNeuronId);
             //Find the input size of the neuron
-            inputSize = getInputSize(currentNeuronID);
+            inputSize = neuronCore.getInputSize(currentNeuronID);
 
             if(inputSize == -1 || inputStorageIndex == -1 || neuronStorageIndex == -1){
                 LOG(APP,ERROR,"ERROR: Invalid index detected: inputSize=%d, inputStorageIndex=%d, neuronStorageIndex=%d",
@@ -492,7 +494,7 @@ void NeuronManager::processNeuronInput(NeuronId outputNeuronId,int inferenceId,f
             }
 
             //Save the input value in the input vector
-            setInput(currentNeuronID,inputValue,outputNeuronId);
+            neuronCore.setInput(currentNeuronID,inputValue,outputNeuronId);
 
             // Set the bit corresponding to the received input to 1
             setBit(receivedInputs[neuronStorageIndex],inputStorageIndex);
@@ -500,12 +502,13 @@ void NeuronManager::processNeuronInput(NeuronId outputNeuronId,int inferenceId,f
             // Check if all inputs required by that specific neuron have been received
             if(allBits(receivedInputs[neuronStorageIndex], inputSize)){
                 // If all inputs required by the neuron have been received, proceed with output computation
-                neuronOutput = computeNeuronOutput(currentNeuronID);
+                neuronOutput = neuronCore.computeNeuronOutput(currentNeuronID);
                 outputValues[neuronStorageIndex] = neuronOutput;
 
                 //Iterates through all neurons managed by this node to identify which require the computed output as their input
-                for (int j = 0; j < neuronsCount; j++) {
-                    if(isInputRequired(neuronIds[j],currentNeuronID)){
+                for (int j = 0; j < neuronCore.neuronsCount; j++) {
+                    handledNeuronId = neuronCore.getNeuronId(j);
+                    if(handledNeuronId !=255 && neuronCore.isInputRequired(handledNeuronId,currentNeuronID)){
                         neuronsRequireInput=true;
                         break;
                     }
@@ -524,7 +527,7 @@ void NeuronManager::processNeuronInput(NeuronId outputNeuronId,int inferenceId,f
     }
 
     // Check whether the newly received input value completes the set of missing inputs.
-    for (int i = 0; i < neuronsCount; i++) {
+    for (int i = 0; i < neuronCore.neuronsCount; i++) {
         outputsComputed = isOutputComputed[i] && outputsComputed;
     }
 
@@ -563,7 +566,7 @@ void NeuronManager::updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uin
         }
 
         // For each neuron in the provided list, determine where it should be stored
-        neuronStorageIndex = getNeuronStorageIndex(neuronId[i]);
+        neuronStorageIndex = neuronCore.getNeuronStorageIndex(neuronId[i]);
 
         //Skit if the neuron is not managed by this node
         if(neuronStorageIndex == -1)continue;
@@ -783,11 +786,15 @@ void NeuronManager::onInputWaitTimeout(){
  */
 void NeuronManager::onNACKTimeout(){
     float outputValue;
+    NeuronId handledNeuronId;
     // Search for outputs that have not been computed yet and compute them, filling in any missing inputs with the values from the last inference.
-    for (int i = 0; i < neuronsCount; i++) {
+    for (int i = 0; i < neuronCore.neuronsCount; i++) {
         if(!isOutputComputed[i]){
+            handledNeuronId = neuronCore.getNeuronId(i);
+            if(handledNeuronId == 255)continue; //skip invalid values
+
             //Compute the neuron Output value
-            outputValue = computeNeuronOutput(neuronIds[i]);
+            outputValue = neuronCore.computeNeuronOutput(handledNeuronId);
             outputValues[i] = outputValue;
 
             //Mark the output as computed
