@@ -955,9 +955,53 @@ void NeuralNetworkCoordinator::onACKTimeOutInputLayer(){
     }
 }
 
-void
-NeuralNetworkCoordinator::handleNeuralNetworkMessage(uint8_t *senderIP, uint8_t *destinationIP, char *messageBuffer) {
+void NeuralNetworkCoordinator::handleNeuralNetworkMessage(uint8_t *senderIP, uint8_t *destinationIP, char *messageBuffer) {
+    NeuralNetworkMessageType type;
 
+    sscanf(messageBuffer, "%d",&type);
+    switch (type) {
+        case NN_WORKER_REGISTRATION:
+            handleWorkerRegistration(messageBuffer);
+            break;
+
+        case NN_INPUT_REGISTRATION:
+            handleInputRegistration(messageBuffer);
+            break;
+
+        case NN_ACK:
+            handleACKMessage(messageBuffer);
+            break;
+
+        case NN_ASSIGN_COMPUTATION:
+            handleNeuronMessage(senderIP, destinationIP,messageBuffer);
+            break;
+
+        case NN_ASSIGN_INPUT:
+            handleNeuronMessage(senderIP, destinationIP,messageBuffer);
+            break;
+
+        case NN_ASSIGN_OUTPUT:
+            handleNeuronMessage(senderIP, destinationIP,messageBuffer);
+            break;
+
+        case NN_ASSIGN_OUTPUT_TARGETS:
+            handleNeuronMessage(senderIP, destinationIP,messageBuffer);
+            break;
+
+        case NN_NEURON_OUTPUT:
+            handleNeuronMessage(senderIP, destinationIP,messageBuffer);
+            (messageBuffer);
+            break;
+        case NN_FORWARD:
+            handleNeuronMessage(senderIP, destinationIP,messageBuffer);
+            break;
+        case NN_NACK:
+            handleNeuronMessage(senderIP, destinationIP,messageBuffer);
+            break;
+
+        default:
+            break;
+    }
 }
 
 

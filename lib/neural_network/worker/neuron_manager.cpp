@@ -44,6 +44,7 @@ void NeuronManager::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP
             break;
 
         default:
+            LOG(APP,ERROR,"This node received a message meant for the coordinator node. Message: %s", messageBuffer);
             break;
     }
 }
