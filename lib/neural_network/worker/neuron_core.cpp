@@ -51,21 +51,21 @@ void NeuronCore::configureNeuron(NeuronId neuronID, uint8_t receivedInputSize, f
 }
 
 
-NeuronId NeuronCore::getNeuronId(int i) {
-    if(i>neuronsCount)return -1;
-    else return neuronIds[i];
+NeuronId NeuronCore::getNeuronId(int index) {
+    if(index>neuronsCount)return -1;
+    else return neuronIds[index];
 }
 
-NeuronId NeuronCore::getInputNeuronId(NeuronId neuronId, int j) {
+
+NeuronId NeuronCore::getInputNeuronId(NeuronId neuronId, int index) {
     int neuronStorageIndex = getNeuronStorageIndex(neuronId);
     if(neuronStorageIndex == -1) return -1;
 
     int neuronInputSize = inputSizes[neuronStorageIndex];
-    if(j<0 && j>neuronInputSize)return -1;
+    if(index<0 && index>neuronInputSize)return -1;
 
-    return saveOrders[neuronStorageIndex][j];
+    return saveOrders[neuronStorageIndex][index];
 }
-
 
 
 /**
@@ -130,6 +130,33 @@ int NeuronCore::getInputSize(NeuronId neuronId){
     if(neuronStorageIndex == -1) return -1;
 
     return inputSizes[neuronStorageIndex];
+}
+
+float NeuronCore::getNeuronWeightAtIndex(NeuronId neuronId, int index) {
+    int neuronStorageIndex = getNeuronStorageIndex(neuronId);
+
+    if(neuronStorageIndex==-1)return -999999;
+    if(index>=inputSizes[neuronStorageIndex] || index<0)return -999999;
+
+    return weights[neuronStorageIndex][index];
+}
+
+float NeuronCore::getBias(NeuronId neuronId) {
+    int neuronStorageIndex = getNeuronStorageIndex(neuronId);
+
+    if(neuronStorageIndex==-1)return -999999;
+
+    return biases[neuronStorageIndex];
+}
+
+float NeuronCore::getNeuronInputValue(NeuronId neuronId, NeuronId inputNeuronId) {
+    int neuronStorageIndex = getNeuronStorageIndex(neuronId);
+    if(neuronStorageIndex==-1)return -999999;
+
+    int inputStorageIndex = getInputStorageIndex(neuronId,inputNeuronId);
+    if(inputStorageIndex==-1)return -999999;
+
+    return inputs[neuronStorageIndex][inputStorageIndex];
 }
 
 
@@ -323,5 +350,6 @@ void NeuronCore::printNeuronInfo() {
 
     LOG(APP, INFO, "===================================\n");
 }
+
 
 
