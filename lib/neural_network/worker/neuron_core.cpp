@@ -1,15 +1,12 @@
 #include "neuron_core.h"
 
+NeuronCore::NeuronCore() {
 
-NeuronId neuronIds[MAX_NEURONS];    // Each node can compute until MAX_NEURONS each one with a node Id
-float* weights[MAX_NEURONS];        // Each neuron has its own weight array allocated at weights[NeuronStorageIndex]
-float* inputs[MAX_NEURONS];         // Each neuron has its own input buffer allocated at weights[NeuronStorageIndex]
-NeuronId* saveOrders[MAX_NEURONS];  // Each neuron has its own save order allocated at weights[NeuronStorageIndex]
-float biases[MAX_NEURONS];          // Each neuron has its own bias allocated at weights[NeuronStorageIndex]
-uint8_t inputSizes[MAX_NEURONS];    // Each neuron has its own input size allocated at weights[NeuronStorageIndex]
+}
 
-int neuronsCount = 0;               //Number of neurons currently computed by this node
-
+NeuronCore::~NeuronCore() {
+    freeAllNeuronMemory();
+}
 
 /**
  * configureNeuron
@@ -24,7 +21,7 @@ int neuronsCount = 0;               //Number of neurons currently computed by th
  * should be stored in the input vector).
  * @return void
  */
-void configureNeuron(NeuronId neuronID, uint8_t receivedInputSize, float* receivedWeights, float receivedBias, NeuronId* receivedOrder) {
+void NeuronCore::configureNeuron(NeuronId neuronID, uint8_t receivedInputSize, float* receivedWeights, float receivedBias, NeuronId* receivedOrder) {
     if (neuronsCount >= MAX_NEURONS) {
         LOG(APP,ERROR, "ERROR: Exceeded max neurons per node.\n");
         return;
@@ -62,7 +59,7 @@ void configureNeuron(NeuronId neuronID, uint8_t receivedInputSize, float* receiv
  * @param neuronId - Unique identifier of the neuron to locate
  * @return Storage index if found, -1 if neuron not managed by this node
  */
-int getNeuronStorageIndex(NeuronId neuronID){
+int NeuronCore::getNeuronStorageIndex(NeuronId neuronID){
     int neuronStorageIndex = -1;
 
     // Find the index in the local vectors (weights, inputs, saveOrder) where the neuron's parameters were stored
@@ -82,7 +79,7 @@ int getNeuronStorageIndex(NeuronId neuronID){
  * @return Index within the neuron's input vector where this input should be stored,
  *         or -1 if the neuron is not managed by this node or if inputId is not found.
  */
-int getInputStorageIndex(NeuronId neuronId, NeuronId inputId){
+int NeuronCore::getInputStorageIndex(NeuronId neuronId, NeuronId inputId){
     int neuronStorageIndex = -1, inputStorageIndex = -1;
 
     // Find the index in the local vectors (weights, inputs, saveOrder) where the neuron's parameters were stored
@@ -107,7 +104,7 @@ int getInputStorageIndex(NeuronId neuronId, NeuronId inputId){
  * @param neuronId - Identifier of the target neuron
  * @return Number of inputs if neuron found, -1 if neuron not managed by this node
  */
-int getInputSize(NeuronId neuronId){
+int NeuronCore::getInputSize(NeuronId neuronId){
     int neuronStorageIndex = -1;
 
     // Find the index in the local vectors (weights, inputs, saveOrder) where the neuron's parameters were stored
@@ -128,7 +125,7 @@ int getInputSize(NeuronId neuronId){
  * @return true If the neuron requires the specified input
  *         false If the neuron doesn't require the input or doesn't exist
  */
-bool isInputRequired(NeuronId neuronId,NeuronId inputId){
+bool NeuronCore::isInputRequired(NeuronId neuronId,NeuronId inputId){
     int neuronStorageIndex = -1, inputSize = 0;
 
     // Find the index in the local vectors (weights, inputs, saveOrder) where the neuron's parameters were stored
@@ -153,7 +150,7 @@ bool isInputRequired(NeuronId neuronId,NeuronId inputId){
  * @return true If the neuron is handled by this node
  *         false otherwise
  */
-bool computesNeuron(NeuronId neuronId){
+bool NeuronCore::computesNeuron(NeuronId neuronId){
     return(getNeuronStorageIndex(neuronId) != -1);
 }
 
@@ -166,7 +163,7 @@ bool computesNeuron(NeuronId neuronId){
  * @param sourceNodeId - ID of the node that generated the corresponding neuron output
  * @return void
  */
-void setInput(NeuronId neuronId, float inputValue, NeuronId sourceNodeId){
+void NeuronCore::setInput(NeuronId neuronId, float inputValue, NeuronId sourceNodeId){
     int inputStorageIndex = -1, neuronStorageIndex = -1;
 
     // Find the index in the local vectors (weights, inputs, saveOrder) where the neuron's parameters were stored
@@ -206,7 +203,7 @@ float ReLu(float x){
  * @param neuronId - Unique identifier of the neuron to compute
  * @return The computed output value of the neuron, or -99999.9 if the neuron is not found
  */
-float computeNeuronOutput(NeuronId neuronId){
+float NeuronCore::computeNeuronOutput(NeuronId neuronId){
     int neuronStorageIndex = -1;
     float sum = 0;
 
@@ -240,7 +237,7 @@ float computeNeuronOutput(NeuronId neuronId){
  *
  * @return void
  */
-void freeAllNeuronMemory() {
+void NeuronCore::freeAllNeuronMemory() {
     for (int i = 0; i < neuronsCount; ++i) {
         delete[] weights[i];
         delete[] inputs[i];
@@ -268,7 +265,7 @@ bool isNeuronInList(NeuronId *neuronsList, uint8_t nNeurons, NeuronId targetNeur
     return false;
 }
 
-void printNeuronInfo() {
+void NeuronCore::printNeuronInfo() {
     LOG(APP, INFO, "====================== Computed Neurons (%d total) ======================\n", neuronsCount);
 
     for (int i = 0; i < neuronsCount; ++i) {
@@ -309,3 +306,5 @@ void printNeuronInfo() {
 
     LOG(APP, INFO, "===================================\n");
 }
+
+

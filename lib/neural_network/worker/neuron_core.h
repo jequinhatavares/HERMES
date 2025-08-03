@@ -8,32 +8,47 @@
 
 #include "../app_globals.h"
 
+class NeuronCore {
 
+public:
+    NeuronId neuronIds[MAX_NEURONS];    // Each node can compute until MAX_NEURONS each one with a node Id
+    float* weights[MAX_NEURONS];        // Each neuron has its own weight array allocated at weights[NeuronStorageIndex]
+    float* inputs[MAX_NEURONS];         // Each neuron has its own input buffer allocated at weights[NeuronStorageIndex]
+    NeuronId* saveOrders[MAX_NEURONS];  // Each neuron has its own save order allocated at weights[NeuronStorageIndex]
+    float biases[MAX_NEURONS];          // Each neuron has its own bias allocated at weights[NeuronStorageIndex]
+    uint8_t inputSizes[MAX_NEURONS];    // Each neuron has its own input size allocated at weights[NeuronStorageIndex]
+    int neuronsCount = 0;               //Number of neurons currently computed by this node
 
-extern NeuronId neuronIds[MAX_NEURONS];
-extern float* weights[MAX_NEURONS];
-extern float* inputs[MAX_NEURONS];
-extern NeuronId* saveOrders[MAX_NEURONS];
-extern float biases[MAX_NEURONS];
-extern uint8_t inputSizes[MAX_NEURONS];
+    // Constructor / Destructor
+    NeuronCore();
+    ~NeuronCore();
 
-extern int neuronsCount;
+    void configureNeuron(NeuronId neuronId, uint8_t receivedInputSize, float* receivedWeights, float receivedBias, NeuronId* receivedOrder);
 
+    int getNeuronStorageIndex(NeuronId neuronId);
+    int getInputStorageIndex(NeuronId neuronId, NeuronId inputId);
+    int getInputSize(NeuronId neuronId);
 
-void configureNeuron(NeuronId neuronId, uint8_t receivedInputSize, float* receivedWeights, float receivedBias, NeuronId* receivedOrder);
+    bool isInputRequired(NeuronId neuronId,NeuronId inputId);
+    bool computesNeuron(NeuronId neuronId);
 
-int getNeuronStorageIndex(NeuronId neuronId);
-int getInputStorageIndex(NeuronId neuronId, NeuronId inputId);
-int getInputSize(NeuronId neuronId);
+    void setInput(NeuronId neuronId,float inputValue, NeuronId sourceNodeId);
+    float computeNeuronOutput(NeuronId neuronId);
 
-bool isInputRequired(NeuronId neuronId,NeuronId inputId);
-bool computesNeuron(NeuronId neuronId);
+    void freeAllNeuronMemory();
 
-void setInput(NeuronId neuronId,float inputValue, NeuronId sourceNodeId);
-float computeNeuronOutput(NeuronId neuronId);
-void freeAllNeuronMemory();
+    void printNeuronInfo();
+
+};
+
 
 bool isNeuronInList(NeuronId *neuronsList, uint8_t nNeurons, NeuronId targetNeuronId);
-void printNeuronInfo();
+
+
+
+
+
+
+
 
 #endif //NEURAL_NETWORK_H
