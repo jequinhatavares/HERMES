@@ -1,44 +1,5 @@
 #include "neuron_manager.h"
 
-// Variables used to track when the NACK mechanism was triggered, to manage this neuron's output in the presence of missing inputs
-unsigned long nackTriggerTime;
-bool nackTriggered = false;
-
-// Timestamp marking the start of the current forward propagation cycle
-unsigned long firstInputTimestamp;
-// Variable to track if a NN forward pass is currently running
-bool forwardPassRunning = false;
-
-// Indicates whether all outputs of the neurons owned by this node have been computed
-bool allOutputsComputed = false;
-        
-/*** Each node has a bitfield that indicates which inputs have been received during the current forward propagation
-  *  step of the neural network.receivedInputs[neuronIndex][inputIndex] == 1 means the input was received. ***/
-BitField receivedInputs[MAX_NEURONS] = {0};
-
-// Store the output value of each neuron
-float outputValues[MAX_NEURONS];
-
-// Indicates whether the output of a given neuron has already been computed
-bool isOutputComputed[MAX_NEURONS]={ false};
-
-// To store the target nodes of each neuron output
-OutputTarget neuronTargets[MAX_NEURONS];
-
-// Identifier of the current inference cycle, assigned by the root node
-int currentInferenceId = 0;
-
-// Contains the input neurons that this node hosts
-NeuronId inputNeurons[MAX_INPUT_NEURONS];
-uint8_t nrInputNeurons=0;
-
-// Contain the input values of the current inference iteration
-float inputNeuronsValues[MAX_INPUT_NEURONS];
-
-/*** Stores the target nodes of the input neurons. Since all input neurons belong to the same layer,
- * they share the same set of target nodes (i.e., the neurons in the next layer).
- * Therefore, only one instance of the OutputTarget structure is needed. ***/
-OutputTarget inputTargets;
 
 /**
  * handleNeuronMessage
@@ -46,7 +7,7 @@ OutputTarget inputTargets;
  *
  * @param messageBuffer - Buffer containing the received message
  */
-void handleNeuronMessage(char* messageBuffer){
+void NeuronManager::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,char* messageBuffer){
     NeuralNetworkMessageType type;
 
     sscanf(messageBuffer, "%d",&type);
@@ -95,7 +56,7 @@ void handleNeuronMessage(char* messageBuffer){
  * @param messageBuffer - Buffer containing computation assignment data
  * Format: |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
  */
-void handleAssignComputationsMessage(char*messageBuffer){
+void NeuronManager::handleAssignComputationsMessage(char*messageBuffer){
     uint8_t inputSize;
     NeuronId neuronID,*inputIndexMap;
     float bias, *weightValues;
@@ -166,7 +127,7 @@ void handleAssignComputationsMessage(char*messageBuffer){
  * @param messageBuffer - Buffer containing output assignment data
  * Format: |[Number of neurons] [Output Neuron IDs...] [Number of targets] [Target IPs...]
  */
-void handleAssignOutputTargets(char* messageBuffer){
+void NeuronManager::handleAssignOutputTargets(char* messageBuffer){
     uint8_t nNeurons,nTargets,targetIP[4],nComputedNeurons=0;
     NeuronId neuronID[MAX_NEURONS], currentNeuronId;
     char tmpBuffer[10];
@@ -242,7 +203,7 @@ void handleAssignOutputTargets(char* messageBuffer){
  * @param messageBuffer - Buffer containing the input neuron data
  * Format: NN_ASSIGN_INPUT [neuronID]
  */
-void handleAssignInput(char* messageBuffer){
+void NeuronManager::handleAssignInput(char* messageBuffer){
     NeuronId inputNeuronId;
     //NN_ASSIGN_INPUT [neuronID]
     sscanf(messageBuffer, "%*d %hhu",&inputNeuronId);
@@ -252,7 +213,7 @@ void handleAssignInput(char* messageBuffer){
     nrInputNeurons++;
 }
 
-void handleAssignOutput(char* messageBuffer){
+void NeuronManager::handleAssignOutput(char* messageBuffer){
     uint8_t inputSize;
     NeuronId neuronID,*inputIndexMap;
     float bias, *weightValues;
@@ -334,7 +295,7 @@ void handleAssignOutput(char* messageBuffer){
  * @param messageBuffer - Buffer containing pub/sub data
  * Format: |[Number of Neurons] [neuron IDs...] [Subscription] [Publication]
  */
-void handleAssignPubSubInfo(char* messageBuffer){
+void NeuronManager::handleAssignPubSubInfo(char* messageBuffer){
     NeuralNetworkMessageType type;
     sscanf(messageBuffer, "%*d %d",&type);
     uint8_t nNeurons,neuronID[MAX_NEURONS];
@@ -390,7 +351,7 @@ void handleAssignPubSubInfo(char* messageBuffer){
  *
  * @param messageBuffer - Buffer containing forward pass command
  */
-void handleForwardMessage(char *messageBuffer){
+void NeuronManager::handleForwardMessage(char *messageBuffer){
     int inferenceId;
     sscanf(messageBuffer, "%*d %i",&inferenceId);
 
@@ -423,7 +384,7 @@ void handleForwardMessage(char *messageBuffer){
  * @param messageBuffer - Buffer containing NACK information
  * Format: [Neuron ID with Missing Output 1] [Neuron ID with Missing Output 2]...
  */
-void handleNACKMessage(char*messageBuffer){
+void NeuronManager::handleNACKMessage(char*messageBuffer){
     //NN_NACK [Neuron ID with Missing Output 1] [Neuron ID with Missing Output 2] ...
     char *saveptr1, *token;
     NeuronId currentId;
@@ -481,7 +442,7 @@ void handleNACKMessage(char*messageBuffer){
  * @param messageBuffer - Buffer containing neuron output data
  * Format: [Inference Id] [Output Neuron ID] [Output Value]
  */
-void handleNeuronOutputMessage(char*messageBuffer){
+void NeuronManager::handleNeuronOutputMessage(char*messageBuffer){
     int inferenceId;
     float inputValue;
     NeuronId outputNeuronId;
@@ -493,7 +454,7 @@ void handleNeuronOutputMessage(char*messageBuffer){
 }
 
 //TODO header
-void processNeuronInput(NeuronId outputNeuronId,int inferenceId,float inputValue){
+void NeuronManager::processNeuronInput(NeuronId outputNeuronId,int inferenceId,float inputValue){
     int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1, currentNeuronID = 0;
     float neuronOutput;
     bool outputsComputed=true,neuronsRequireInput=false;
@@ -584,7 +545,7 @@ void processNeuronInput(NeuronId outputNeuronId,int inferenceId,float inputValue
  * @param neuronId - Array of neuron IDs
  * @param targetIP - IP address of the target node (IPv4 format)
  */
-void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]){
+void NeuronManager::updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]){
     int neuronStorageIndex = -1;
 
 
@@ -630,7 +591,7 @@ void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4
  * @param outputNeuronId - ID of the neuron producing the output
  * @param neuronOutput - Computed output value
  */
-void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId outputNeuronId, float neuronOutput){
+void NeuronManager::encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId outputNeuronId, float neuronOutput){
     int offset = 0;
     //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
     //Encode the neuron id that generated this output
@@ -650,7 +611,7 @@ void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId ou
  * @param bufferSize - Size of the output buffer
  * @param missingNeuron - ID of the neuron with missing output
  */
-void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId  missingNeuron){
+void NeuronManager::encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId  missingNeuron){
     int offset = 0;
     //DATA_MESSAGE NN_NACK [Neuron ID with Missing Output] [Missing Output ID 1] [Missing Output ID 2] ...
 
@@ -670,7 +631,7 @@ void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId  missingN
  * @param neuronAckList - Array of acknowledged neuron IDs
  * @param ackNeuronCount - Number of neurons in the ACK list
  */
-void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount){
+void NeuronManager::encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount){
     int offset = 0;
     //NN_ACK [Acknowledged Neuron ID 1] [Acknowledged Neuron ID 2]...
 
@@ -686,17 +647,17 @@ void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAck
 }
 
 //TODO Header
-void encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type){
+void NeuronManager::encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type){
     //NN_WORKER_REGISTRATION [Node IP] [Device Type]
     snprintf(messageBuffer,bufferSize,"%d %hhu.%hhu.%hhu.%hhu %d",NN_WORKER_REGISTRATION,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],static_cast<int>(type));
 }
 //TODO Header
-void encodeInputRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type){
+void NeuronManager::encodeInputRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type){
     //NN_INPUT_REGISTRATION [Node IP] [Device Type]
     snprintf(messageBuffer,bufferSize,"%d %hhu.%hhu.%hhu.%hhu %d",NN_INPUT_REGISTRATION,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],static_cast<int>(type));
 }
 
-void generateInputData(NeuronId inputNeuronId){
+void NeuronManager::generateInputData(NeuronId inputNeuronId){
     uint8_t myLocalIP[4];
     int inputNeuronStorageIndex=-1;
     float sensorData=5.0;
@@ -734,7 +695,7 @@ void generateInputData(NeuronId inputNeuronId){
  * Main neuron management function that handles NeuralNetwork timeouts.
  * Should be called regularly in the main loop.
  */
-void manageNeuron(){
+void NeuronManager::manageNeuron(){
     unsigned long currentTime = getCurrentTime();
 
     // Check if the expected time for input arrival has already passed
@@ -753,24 +714,27 @@ void manageNeuron(){
  * Handles situations where not all inputs arrive before the established timeout.
  * Triggers NACK messages containing the IDs of the missing input neurons.
  */
-void onInputWaitTimeout(){
+void NeuronManager::onInputWaitTimeout(){
     int neuronStorageIndex = -1,offset=0;
     uint8_t inputSize = -1;
     char tmpBuffer[20];
     size_t tmpBufferSize = sizeof(tmpBuffer);
-    NeuronId missingNeuronId;
+    NeuronId missingNeuronId, handledNeuronId;
     int missingNeuronStorageIndex =-1;
     // The message aggregates the missing inputs from all neurons into a single message
     offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%d ",NN_NACK);
 
     // Iterate through all neurons to determine which have incomplete input sets and identify the missing inputs
     // Since the IDs of neurons missing inputs are irrelevant to the nodes providing those inputs, the neuron IDs are not included in the message.
-    for (int i = 0; i < neuronsCount; i++) {
+    for (int i = 0; i < neuronCore.neuronsCount; i++) {
 
-        neuronStorageIndex = getNeuronStorageIndex(neuronIds[i]);
+        handledNeuronId = neuronCore.getNeuronId(i);
+        if(handledNeuronId == 255) continue;
+
+        neuronStorageIndex = neuronCore.getNeuronStorageIndex(handledNeuronId);
         if(neuronStorageIndex == -1) continue;
 
-        inputSize = inputSizes[neuronStorageIndex];
+        inputSize = neuronCore.getInputSize(handledNeuronId);
 
         // Check whether each neuron has received all its expected inputs and thus computed its output
         if(!isOutputComputed[neuronStorageIndex]){
@@ -778,7 +742,7 @@ void onInputWaitTimeout(){
             for (int j = 0; j < inputSize; j++) {
                 // If the bit is not set, it means the input has not been received yet
                 if(!isBitSet(receivedInputs[neuronStorageIndex],j)){
-                    missingNeuronId = saveOrders[neuronStorageIndex][j];
+                    missingNeuronId = neuronCore.getInputNeuronId(handledNeuronId,j);
 
                     // If the missing input is from a neuron this node is responsible for, the missing input value is already available if it was computed
                     /***if(isNeuronInList(inputNeurons,nrInputNeurons,missingNeuronId)){
@@ -792,7 +756,7 @@ void onInputWaitTimeout(){
 
                     // Don't include missing neurons handled by this node in the NACK. The neurons we manage feed their
                     // outputs directly to dependent neurons.If an output isn't provided, it means it's not yet available
-                    if(isNeuronInList(inputNeurons,nrInputNeurons,missingNeuronId) ||computesNeuron(missingNeuronId)){
+                    if(isNeuronInList(inputNeurons,nrInputNeurons,missingNeuronId) ||neuronCore.computesNeuron(missingNeuronId)){
                         continue;
                     }
 
@@ -817,7 +781,7 @@ void onInputWaitTimeout(){
  * In this case, the node proceeds with output calculations using the received inputs,
  * substituting any missing inputs with values from the previous iteration.
  */
-void onNACKTimeout(){
+void NeuronManager::onNACKTimeout(){
     float outputValue;
     // Search for outputs that have not been computed yet and compute them, filling in any missing inputs with the values from the last inference.
     for (int i = 0; i < neuronsCount; i++) {
@@ -842,7 +806,7 @@ void onNACKTimeout(){
      forwardPassRunning = false;
 }
 
-void clearAllNeuronMemory(){
+void NeuronManager::clearAllNeuronMemory(){
     uint8_t blankIP[4]={0,0,0,0};
     for (int i = 0; i < MAX_NEURONS; ++i) {
         resetAll(receivedInputs[i]);
@@ -857,7 +821,7 @@ void clearAllNeuronMemory(){
 }
 
 
-int getInputNeuronStorageIndex(NeuronId neuronId){
+int NeuronManager::getInputNeuronStorageIndex(NeuronId neuronId){
     for (int i = 0; i < nrInputNeurons; i++) {
         if (inputNeurons[i] == neuronId) return i;
     }

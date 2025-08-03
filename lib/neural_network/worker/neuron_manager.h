@@ -10,64 +10,96 @@
 #include "neuron_core.h"
 #include "../app_globals.h"
 
-
 typedef uint32_t BitField;
-
-extern float outputValues[MAX_NEURONS];
-
-
-/***typedef struct OutputTarget{
-    uint8_t (*outputTargets)[4];  // pointer to array of 4-byte IPs
-    uint8_t nTargets;
-}OutputTarget;***/
 
 typedef struct OutputTarget{
     uint8_t targetsIPs[MAX_TARGET_OUTPUTS][4];
     uint8_t nTargets = 0;
 }OutputTarget;
 
-extern BitField receivedInputs[MAX_NEURONS];
+class NeuronManager{
+public:
+    // Variables used to track when the NACK mechanism was triggered, to manage this neuron's output in the presence of missing inputs
+    unsigned long nackTriggerTime;
+    bool nackTriggered = false;
 
-extern OutputTarget neuronTargets[MAX_NEURONS];
+    // Timestamp marking the start of the current forward propagation cycle
+    unsigned long firstInputTimestamp;
+    // Variable to track if a NN forward pass is currently running
+    bool forwardPassRunning = false;
 
-extern bool isOutputComputed[MAX_NEURONS];
+    // Indicates whether all outputs of the neurons owned by this node have been computed
+    bool allOutputsComputed = false;
 
-// Contains the input neurons that this node hosts
-extern NeuronId inputNeurons[MAX_INPUT_NEURONS];
+    /*** Each node has a bitfield that indicates which inputs have been received during the current forward propagation
+    *  step of the neural network.receivedInputs[neuronIndex][inputIndex] == 1 means the input was received. ***/
+    BitField receivedInputs[MAX_NEURONS] = {0};
 
-extern OutputTarget inputTargets;
+    // Store the output value of each neuron
+    float outputValues[MAX_NEURONS];
 
-extern float inputNeuronsValues[MAX_INPUT_NEURONS];
+    // Indicates whether the output of a given neuron has already been computed
+    bool isOutputComputed[MAX_NEURONS]={ false};
 
-void handleNeuronMessage(char* messageBuffer);
+    // To store the target nodes of each neuron output
+    OutputTarget neuronTargets[MAX_NEURONS];
 
-void handleAssignComputationsMessage(char*messageBuffer);
-void handleAssignOutputTargets(char* messageBuffer);
-void handleAssignInput(char* messageBuffer);
-void handleAssignOutput(char* messageBuffer);
-void handleAssignPubSubInfo(char* messageBuffer);
-void handleNACKMessage(char*messageBuffer);
-void handleNeuronOutputMessage(char*messageBuffer);
-void handleForwardMessage(char *messageBuffer);
+    // Identifier of the current inference cycle, assigned by the root node
+    int currentInferenceId = 0;
 
-void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]);
+    // Contains the input neurons that this node hosts
+    NeuronId inputNeurons[MAX_INPUT_NEURONS];
+    uint8_t nrInputNeurons=0;
 
-void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId outputNeuronId, float neuronOutput);
-void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId missingNeuron);
-void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount);
-void encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type);
+    // Contain the input values of the current inference iteration
+    float inputNeuronsValues[MAX_INPUT_NEURONS];
 
-void processNeuronInput(NeuronId outputNeuronId,int inferenceId,float inputValue);
-void generateInputData(NeuronId inputNeuronId);
-int getInputNeuronStorageIndex(NeuronId neuronId);
-void manageNeuron();
+    /*** Stores the target nodes of the input neurons. Since all input neurons belong to the same layer,
+     * they share the same set of target nodes (i.e., the neurons in the next layer).
+     * Therefore, only one instance of the OutputTarget structure is needed. ***/
+    OutputTarget inputTargets;
 
-void onInputWaitTimeout();
-void onNACKTimeout();
+    void handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,char* messageBuffer);
 
-void clearAllNeuronMemory();
+    void manageNeuron();
 
- //TODO por esta função num sitio melhor
+    void clearAllNeuronMemory();
+
+private:
+    NeuronCore neuronCore; //owns the neuron core data & computations
+
+    void handleAssignComputationsMessage(char*messageBuffer);
+    void handleAssignOutputTargets(char* messageBuffer);
+    void handleAssignInput(char* messageBuffer);
+    void handleAssignOutput(char* messageBuffer);
+    void handleAssignPubSubInfo(char* messageBuffer);
+    void handleNACKMessage(char*messageBuffer);
+    void handleNeuronOutputMessage(char*messageBuffer);
+    void handleForwardMessage(char *messageBuffer);
+
+    void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]);
+
+    void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId outputNeuronId, float neuronOutput);
+    void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId missingNeuron);
+    void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount);
+    void encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type);
+
+    void processNeuronInput(NeuronId outputNeuronId,int inferenceId,float inputValue);
+    void generateInputData(NeuronId inputNeuronId);
+    int getInputNeuronStorageIndex(NeuronId neuronId);
+
+    void onInputWaitTimeout();
+    void onNACKTimeout();
+
+
+    void encodeInputRegistration(char *messageBuffer, size_t bufferSize, uint8_t *nodeIP, DeviceType type);
+};
+
+/***typedef struct OutputTarget{
+    uint8_t (*outputTargets)[4];  // pointer to array of 4-byte IPs
+    uint8_t nTargets;
+}OutputTarget;***/
+
 
 /**
  * setBit
