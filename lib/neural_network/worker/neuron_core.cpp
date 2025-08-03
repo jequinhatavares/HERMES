@@ -51,6 +51,23 @@ void NeuronCore::configureNeuron(NeuronId neuronID, uint8_t receivedInputSize, f
 }
 
 
+NeuronId NeuronCore::getNeuronId(int i) {
+    if(i>neuronsCount)return -1;
+    else return neuronIds[i];
+}
+
+NeuronId NeuronCore::getInputNeuronId(NeuronId neuronId, int j) {
+    int neuronStorageIndex = getNeuronStorageIndex(neuronId);
+    if(neuronStorageIndex == -1) return -1;
+
+    int neuronInputSize = inputSizes[neuronStorageIndex];
+    if(j<0 && j>neuronInputSize)return -1;
+
+    return saveOrders[neuronStorageIndex][j];
+}
+
+
+
 /**
  * getNeuronStorageIndex
  * Searches for the specified neuron ID among the neurons managed by this node and returns
