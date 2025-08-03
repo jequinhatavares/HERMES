@@ -413,7 +413,7 @@ void NeuronManager::handleNACKMessage(char*messageBuffer){
 
             if(isOutputComputed[neuronStorageIndex]){
                 //Encode the message containing the neuron output value
-                encodeNeuronOutputMessage(appPayload,sizeof(appPayload),currentId,outputValues[neuronStorageIndex]);
+                encodeNeuronOutputMessage(appPayload,sizeof(appPayload),currentInferenceId,currentId,outputValues[neuronStorageIndex]);
                 //TODO send the message
             }
 
@@ -426,7 +426,7 @@ void NeuronManager::handleNACKMessage(char*messageBuffer){
             inputNeuronIndex= getInputNeuronStorageIndex(currentId);
 
             // The inputNeuronIndex indicates where the neuron's input value is stored in the inputValues vector
-            encodeNeuronOutputMessage(appPayload,sizeof(appPayload),currentId,inputNeuronsValues[inputNeuronIndex]);
+            encodeNeuronOutputMessage(appPayload,sizeof(appPayload),currentInferenceId,currentId,inputNeuronsValues[inputNeuronIndex]);
             //TODO send the message for the node whose input is missing
         }
 
@@ -595,11 +595,11 @@ void NeuronManager::updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uin
  * @param outputNeuronId - ID of the neuron producing the output
  * @param neuronOutput - Computed output value
  */
-void NeuronManager::encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId outputNeuronId, float neuronOutput){
+void NeuronManager::encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int inferenceId,NeuronId outputNeuronId, float neuronOutput){
     int offset = 0;
     //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
     //Encode the neuron id that generated this output
-    offset = snprintf(messageBuffer,bufferSize,"%d %i %d ",NN_NEURON_OUTPUT,currentInferenceId,outputNeuronId);
+    offset = snprintf(messageBuffer,bufferSize,"%d %i %d ",NN_NEURON_OUTPUT,inferenceId,outputNeuronId);
 
     // Encode the computed output value
     snprintf(messageBuffer+offset,bufferSize-offset,"%g",neuronOutput);
@@ -680,7 +680,7 @@ void NeuronManager::generateInputData(NeuronId inputNeuronId){
     processNeuronInput(inputNeuronId,currentInferenceId,sensorData);
 
     // Encode the message to send to other nodes, containing my output value that serves as their input.
-    encodeNeuronOutputMessage(appPayload, sizeof(appPayload),inputNeuronId,sensorData);
+    encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,inputNeuronId,sensorData);
 
     network.getNodeIP(myLocalIP);
 

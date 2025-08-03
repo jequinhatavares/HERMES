@@ -37,7 +37,7 @@ void assignComputationsToNeuronsWithMissingAcks(uint8_t targetIP[4]){
     int i=0,messageOffset=0;
 
     // Encode the message header for the first node’s neuron assignments
-    encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_COMPUTATION);
+    NeuralNetworkCoordinator::encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_COMPUTATION);
     messageOffset += snprintf(appPayload, sizeof(appPayload),"%s",tmpBuffer);
 
     while(i <neuronToNodeTable->numberOfItems){
@@ -63,7 +63,7 @@ void assignComputationsToNeuronsWithMissingAcks(uint8_t targetIP[4]){
             //If the neuron is not from the input layer
 
             //Encode the part assigning neuron information (weights, bias, inputs etc..)
-            encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,
+            NeuralNetworkCoordinator::encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,
                                       *currentId,neuralNetwork.layers[currentLayerIndex].numInputs,inputIndexMap,
                                       &neuralNetwork.layers[currentLayerIndex].weights[currentIndexInLayer * neuralNetwork.layers[currentLayerIndex].numInputs],
                                       neuralNetwork.layers[currentLayerIndex].biases[currentIndexInLayer]);
@@ -798,14 +798,13 @@ void test_worker_input_node_producing_output_needed_by_other_worker(){
 
 
 void test_encode_message_assign_neuron(){
-    NeuronManager neuron;
-    uint8_t blankIP[4]={0,0,0,0};
+
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char correctMessage[50] ="|3 2 1 2 2 2 1",buffer[200];
     float weightsValues[2]={2.0,2.0}, bias=1;
     uint8_t saveOrderValues[2] ={1,2}, inputSize=2, neuronId = 3;
 
-    encodeAssignNeuronMessage(buffer, sizeof(buffer),neuronId,inputSize,saveOrderValues,weightsValues,bias);
+    NeuralNetworkCoordinator::encodeAssignNeuronMessage(buffer, sizeof(buffer),neuronId,inputSize,saveOrderValues,weightsValues,bias);
 
 
     printf("Encoded Message:%s\n",buffer);
@@ -823,7 +822,7 @@ void test_encode_message_neuron_output(){
 
     snprintf(correctMessage, sizeof(correctMessage),"%d %i %d %g",NN_NEURON_OUTPUT,0,outputNeuronId,neuronOutput);
 
-    neuron.encodeNeuronOutputMessage(buffer, sizeof(buffer),outputNeuronId, neuronOutput);
+    neuron.encodeNeuronOutputMessage(buffer, sizeof(buffer),0,outputNeuronId, neuronOutput);
 
     printf("Encoded Message:%s\n",buffer);
     printf("Correct Message:%s\n",correctMessage);
@@ -837,7 +836,7 @@ void test_encode_assign_input_message(){
 
     snprintf(correctMessage, sizeof(correctMessage),"%d %hhu",NN_ASSIGN_INPUT,inputNeuronId);
 
-    encodeInputAssignMessage(buffer, sizeof(buffer),inputNeuronId);
+    NeuralNetworkCoordinator::encodeInputAssignMessage(buffer, sizeof(buffer),inputNeuronId);
 
     printf("Encoded Message:%s\n",buffer);
     printf("Correct Message:%s\n",correctMessage);
@@ -910,6 +909,7 @@ void test_bit_fields(){
 /***********************- Test on coordinator node side -*************************/
 
 void test_distribute_neurons(){
+    NeuralNetworkCoordinator coordinator;
     uint8_t nodes[4][4] = {
             {2,2,2,2},
             {3,3,3,3},
@@ -919,8 +919,8 @@ void test_distribute_neurons(){
 
     uint8_t neuron2=2,neuron3=3,neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
 
-    initNeuralNetwork();
-    distributeNeuralNetwork(&neuralNetwork, nodes,4);
+    //initNeuralNetwork();
+    coordinator.distributeNeuralNetwork(&neuralNetwork, nodes,4);
 
     //printNeuronInfo();
 
@@ -987,12 +987,14 @@ void test_distribute_neurons(){
     TEST_ASSERT(neuronEntry->indexInLayer == 1);/******/
 
     tableClean(neuronToNodeTable);
-    freeAllNeuronMemory();
+    //freeAllNeuronMemory();
 
 }
 
 
 void test_distribute_neurons_with_balanced_algorithm(){
+    NeuralNetworkCoordinator coordinator;
+
     uint8_t nodes[4][4] = {
             {2,2,2,2},
             {3,3,3,3},
@@ -1003,9 +1005,9 @@ void test_distribute_neurons_with_balanced_algorithm(){
 
     uint8_t neuron2=2,neuron3=3,neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
 
-    initNeuralNetwork();
-    distributeNeuralNetworkBalanced(&neuralNetwork, nodes,4,neuronsPerNode);
-    distributeOutputNeurons(&neuralNetwork,myAPIP);
+    //initNeuralNetwork();
+    coordinator.distributeNeuralNetworkBalanced(&neuralNetwork, nodes,4,neuronsPerNode);
+    coordinator.distributeOutputNeurons(&neuralNetwork,myAPIP);
 
     //printNeuronInfo();
 
@@ -1072,19 +1074,22 @@ void test_distribute_neurons_with_balanced_algorithm(){
     TEST_ASSERT(neuronEntry->indexInLayer == 1);/******/
 
     tableClean(neuronToNodeTable);
-    freeAllNeuronMemory();
+    //freeAllNeuronMemory();
 
 }
 
 void test_distribute_neural_network_to_one_device(){
+    NeuronManager neuron;
+    //NeuralNetworkCoordinator coordinator;
+    uint8_t blankIP[4]={0,0,0,0};
     uint8_t nodes[4][4] = {
             {2,2,2,2},
     };
     uint8_t neuron2=2,neuron3=3,neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
     char receivedMessage[100];
 
-    initNeuralNetwork();
-    distributeNeuralNetwork(&neuralNetwork, nodes,1);
+    //initNeuralNetwork();
+    //neuron.distributeNeuralNetwork(&neuralNetwork, nodes,1);
 
     //printNeuronInfo();
 
@@ -1100,26 +1105,24 @@ void test_distribute_neural_network_to_one_device(){
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |8 4 2 3 4 5 2.0 2.0 2.0 2.0 1 |9 4 2 3 4 5 2.0 2.0 2.0 2.0 1 ",NN_ASSIGN_COMPUTATION);
     neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
-    printNeuronInfo();
+    neuron.neuronCore.printNeuronInfo();
 
     //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 0 1.0",NN_NEURON_OUTPUT);
     neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
-    printNeuronInfo();
-
     //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 1 1.0",NN_NEURON_OUTPUT);
     neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
-    printNeuronInfo();
-
     tableClean(neuronToNodeTable);
-    freeAllNeuronMemory();
+    //freeAllNeuronMemory();
 
 }
 
 void test_assign_input_neurons(){
+    NeuralNetworkCoordinator coordinator;
+    uint8_t blankIP[4]={0,0,0,0};
     uint8_t nodes[4][4] = {
             {2,2,2,2},
             {3,3,3,3},
@@ -1129,10 +1132,10 @@ void test_assign_input_neurons(){
 
     uint8_t neuron2=2,neuron3=3,neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
     uint8_t inputNeuron0 = 0,inputNeuron1 = 1;
-    initNeuralNetwork();
-    distributeNeuralNetwork(&neuralNetwork, nodes,4);
+    //initNeuralNetwork();
+    coordinator.distributeNeuralNetwork(&neuralNetwork, nodes,4);
 
-    distributeInputNeurons( nodes,4);
+    coordinator.distributeInputNeurons( nodes,4);
 
     //tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
 
@@ -1152,11 +1155,13 @@ void test_assign_input_neurons(){
     /******/
 
     tableClean(neuronToNodeTable);
-    freeAllNeuronMemory();
+    //freeAllNeuronMemory();
 }
 
 
 void test_coordinator_handle_ACK_from_all_neurons(){
+    NeuralNetworkCoordinator coordinator;
+    uint8_t blankIP[4]={0,0,0,0};
     //In this test the ACK from the neurons 8 and 9 are missing
     char receivedMessage[50],ackMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
@@ -1174,24 +1179,24 @@ void test_coordinator_handle_ACK_from_all_neurons(){
 
     uint8_t neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
 
-    initNeuralNetwork();
-    distributeNeuralNetwork(&neuralNetwork, nodes,4);
+
+    coordinator.distributeNeuralNetwork(&neuralNetwork, nodes,4);
 
     // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
     snprintf(ackMessage, sizeof(ackMessage),"%d 2 3",NN_ACK);
-    handleACKMessage(ackMessage);//Assign neuron computation to the node
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     snprintf(ackMessage, sizeof(ackMessage),"%d 4 5",NN_ACK);
-    handleACKMessage(ackMessage);
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);
 
     snprintf(ackMessage, sizeof(ackMessage),"%d 6 7",NN_ACK);
-    handleACKMessage(ackMessage);
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     snprintf(ackMessage, sizeof(ackMessage),"%d 8 9",NN_ACK);
-    handleACKMessage(ackMessage);
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     snprintf(ackMessage, sizeof(ackMessage),"%d 10 11",NN_ACK);
-    handleACKMessage(ackMessage);
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
 
@@ -1236,11 +1241,13 @@ void test_coordinator_handle_ACK_from_all_neurons(){
     TEST_ASSERT(neuronEntry->isAcknowledged);
 
     tableClean(neuronToNodeTable);
-    freeAllNeuronMemory();
+    //freeAllNeuronMemory();
 
 }
 
 void test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout(){
+    NeuralNetworkCoordinator coordinator;
+    uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],ackMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
     char correctMessage[50];
@@ -1257,39 +1264,41 @@ void test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout(){
 
     uint8_t neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
 
-    initNeuralNetwork();
-    distributeNeuralNetwork(&neuralNetwork, nodes,4);
+
+    coordinator.distributeNeuralNetwork(&neuralNetwork, nodes,4);
 
     // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
     snprintf(ackMessage, sizeof(ackMessage),"%d 2 3",NN_ACK);
-    handleACKMessage(ackMessage);//Assign neuron computation to the node
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     snprintf(ackMessage, sizeof(ackMessage),"%d 4 5",NN_ACK);
-    handleACKMessage(ackMessage);
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     snprintf(ackMessage, sizeof(ackMessage),"%d 6 7",NN_ACK);
-    handleACKMessage(ackMessage);
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     snprintf(ackMessage, sizeof(ackMessage),"%d 10 11",NN_ACK);
-    handleACKMessage(ackMessage);
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     //tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
 
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUT_TARGETS, 2,neuron8,neuron9,
              1,myAPIP[0],myAPIP[1],myAPIP[3],myAPIP[3]);
 
-    onACKTimeOut(nodes,4);
+    coordinator.onACKTimeOut(nodes,4);
 
     //printf("Encoded Message:%s\n",appPayload);
     //printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(correctMessage,appPayload) == 0);
 
     tableClean(neuronToNodeTable);
-    freeAllNeuronMemory();
+    //freeAllNeuronMemory();
 
 }
 
 void test_coordinator_handle_ACK_missing_for_some_worker_neuron_of_same_node_on_ack_timeout(){
+    NeuralNetworkCoordinator coordinator;
+    uint8_t blankIP[4]={0,0,0,0};
     //In this test neuron 9 is not acknowledged
     char receivedMessage[50],ackMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
@@ -1307,43 +1316,45 @@ void test_coordinator_handle_ACK_missing_for_some_worker_neuron_of_same_node_on_
 
     uint8_t neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
 
-    initNeuralNetwork();
-    distributeNeuralNetwork(&neuralNetwork, nodes,4);
+    //initNeuralNetwork();
+    coordinator.distributeNeuralNetwork(&neuralNetwork, nodes,4);
 
     // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
     snprintf(ackMessage, sizeof(ackMessage),"%d 2 3",NN_ACK);
-    handleACKMessage(ackMessage);//Assign neuron computation to the node
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     snprintf(ackMessage, sizeof(ackMessage),"%d 4 5",NN_ACK);
-    handleACKMessage(ackMessage);
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     snprintf(ackMessage, sizeof(ackMessage),"%d 6 7",NN_ACK);
-    handleACKMessage(ackMessage);
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     snprintf(ackMessage, sizeof(ackMessage),"%d 8",NN_ACK);
-    handleACKMessage(ackMessage);
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     snprintf(ackMessage, sizeof(ackMessage),"%d 10 11",NN_ACK);
-    handleACKMessage(ackMessage);
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     //tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
 
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUT_TARGETS, 1,neuron9,
              1,myAPIP[0],myAPIP[1],myAPIP[3],myAPIP[3]);
 
-    onACKTimeOut(nodes,4);
+    coordinator.onACKTimeOut(nodes,4);
 
     //printf("Encoded Message:%s\n",appPayload);
     //printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(correctMessage,appPayload) == 0);
 
     tableClean(neuronToNodeTable);
-    freeAllNeuronMemory();
+    //freeAllNeuronMemory();
 
 }
 
 
 void test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout(){
+    NeuralNetworkCoordinator coordinator;
+    uint8_t blankIP[4]={0,0,0,0};
     //In this test the neuron 1 is not acknowledge by node 3.3.3.3
     char receivedMessage[50],ackMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
@@ -1361,34 +1372,36 @@ void test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout(){
 
     uint8_t neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
 
-    initNeuralNetwork();
-    distributeNeuralNetwork(&neuralNetwork, nodes,4);
+    //initNeuralNetwork();
+    coordinator.distributeNeuralNetwork(&neuralNetwork, nodes,4);
 
-    distributeInputNeurons(nodes,4);
+    coordinator.distributeInputNeurons(nodes,4);
 
     tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
 
     // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
     snprintf(ackMessage, sizeof(ackMessage),"%d 0",NN_ACK);
-    handleACKMessage(ackMessage);//Assign neuron computation to the node
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
-    onACKTimeOutInputLayer();
+    coordinator.onACKTimeOutInputLayer();
 
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUT_TARGETS, 1,inputNeuron1,
              2,nodes[0][0],nodes[0][1],nodes[0][3],nodes[0][3],
             nodes[1][0],nodes[1][1],nodes[1][3],nodes[1][3]);
 
-    onACKTimeOutInputLayer();
+    coordinator.onACKTimeOutInputLayer();
 
     //printf("Encoded Message:%s\n",appPayload);
     //printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(correctMessage,appPayload) == 0);
 
     tableClean(neuronToNodeTable);
-    freeAllNeuronMemory();
+    //freeAllNeuronMemory();
 }
 
 void test_coordinator_assign_computations_on_ack_timeout(){
+    NeuralNetworkCoordinator coordinator;
+    uint8_t blankIP[4]={0,0,0,0};
     //In this test the neuron 2,3 is not acknowledge by node 2.2.2.2
 
     char receivedMessage[50],ackMessage[50];
@@ -1407,25 +1420,24 @@ void test_coordinator_assign_computations_on_ack_timeout(){
 
     uint8_t neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
 
-    initNeuralNetwork();
-    distributeNeuralNetwork(&neuralNetwork, nodes,4);
+    coordinator.distributeNeuralNetwork(&neuralNetwork, nodes,4);
 
     // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
 
     snprintf(ackMessage, sizeof(ackMessage),"%d 3",NN_ACK);
-    handleACKMessage(ackMessage);
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     snprintf(ackMessage, sizeof(ackMessage),"%d 4 5",NN_ACK);
-    handleACKMessage(ackMessage);
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     snprintf(ackMessage, sizeof(ackMessage),"%d 6 7",NN_ACK);
-    handleACKMessage(ackMessage);
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     snprintf(ackMessage, sizeof(ackMessage),"%d 8 9",NN_ACK);
-    handleACKMessage(ackMessage);
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     snprintf(ackMessage, sizeof(ackMessage),"%d 10 11",NN_ACK);
-    handleACKMessage(ackMessage);
+    coordinator.handleNeuralNetworkMessage(blankIP,blankIP,ackMessage);//Assign neuron computation to the node
 
     //tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
 
@@ -1438,12 +1450,14 @@ void test_coordinator_assign_computations_on_ack_timeout(){
     printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(correctMessage,appPayload) == 0);
 
-    freeAllNeuronMemory();
+    //freeAllNeuronMemory();
     tableClean(neuronToNodeTable);
 }
 
 
 void test_assign_outputs() {
+    NeuralNetworkCoordinator coordinator;
+    uint8_t blankIP[4]={0,0,0,0};
     char correctMessage[100];
     uint8_t nodes[4][4] = {
             {2, 2, 2, 2},
@@ -1454,11 +1468,10 @@ void test_assign_outputs() {
 
     uint8_t neuron2 = 2, neuron3 = 3, neuron4 = 4, neuron5 = 5, neuron6 = 6, neuron7 = 7, neuron8 = 8, neuron9 = 9;
 
-    initNeuralNetwork();
-    distributeNeuralNetwork(&neuralNetwork, nodes, 4);
+    coordinator.distributeNeuralNetwork(&neuralNetwork, nodes, 4);
     //assignOutputTargetsToNetwork(nodes,4);
 
-    assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodes[0]);
+    coordinator.assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodes[0]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUT_TARGETS, 2,neuron2,neuron3,
              2,nodes[2][0],nodes[2][1],nodes[2][3],nodes[2][3]
              ,nodes[3][0],nodes[3][1],nodes[3][3],nodes[3][3]);
@@ -1466,7 +1479,7 @@ void test_assign_outputs() {
     printf("Encoded Message:%s\n",appPayload);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
-    assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodes[1]);
+    coordinator.assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodes[1]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",NN_ASSIGN_OUTPUT_TARGETS,2,neuron4,neuron5
            ,2,nodes[2][0],nodes[2][1],nodes[2][3],nodes[2][3]
             ,nodes[3][0],nodes[3][1],nodes[3][3],nodes[3][3]);
@@ -1474,21 +1487,21 @@ void test_assign_outputs() {
     printf("Encoded Message:%s\n",appPayload);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
-    assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodes[2]);
+    coordinator.assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodes[2]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu",NN_ASSIGN_OUTPUT_TARGETS,2,neuron6,neuron7
             ,1,myAPIP[0],myAPIP[1],myAPIP[3],myAPIP[3]);
     printf("Correct Message:%s\n",correctMessage);
     printf("Encoded Message:%s\n",appPayload);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/
 
-    assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodes[3]);
+    coordinator.assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodes[3]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu", NN_ASSIGN_OUTPUT_TARGETS,2,neuron8,neuron9
             ,1,myAPIP[0],myAPIP[1],myAPIP[3],myAPIP[3]);
     printf("Correct Message:%s\n",correctMessage);
     printf("Encoded Message:%s\n",appPayload);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
-    freeAllNeuronMemory();
+    //freeAllNeuronMemory();
     tableClean(neuronToNodeTable);
 
 }
@@ -1496,6 +1509,8 @@ void test_assign_outputs() {
 
 
 void test_assign_pubsub_info() {
+    NeuralNetworkCoordinator coordinator;
+    uint8_t blankIP[4]={0,0,0,0};
     char correctMessage[100];
     uint8_t nodes[4][4] = {
             {2, 2, 2, 2},
@@ -1506,36 +1521,36 @@ void test_assign_pubsub_info() {
 
     uint8_t neuron2 = 2, neuron3 = 3, neuron4 = 4, neuron5 = 5, neuron6 = 6, neuron7 = 7, neuron8 = 8, neuron9 = 9;
 
-    initNeuralNetwork();
-    distributeNeuralNetwork(&neuralNetwork, nodes, 4);
+    //initNeuralNetwork();
+    coordinator.distributeNeuralNetwork(&neuralNetwork, nodes, 4);
     //assignOutputTargetsToNetwork(nodes,4);
 
     // |[Number of Neurons] [neuron ID1] [neuron ID2] [Subscription 1] [Pub 1]
-    assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[0]);
+    coordinator.assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[0]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUT_TARGETS,2, neuron2,neuron3,0,1);
     printf("Correct Message:%s\n",correctMessage);
     printf("Encoded Message:%s\n",appPayload);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
-    assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[1]);
+    coordinator.assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[1]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUT_TARGETS,2, neuron4,neuron5,0,1);
     //printf("Correct Message:%s\n",correctMessage);
     //printf("Encoded Message:%s\n",appPayload);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
-    assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[2]);
+    coordinator.assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[2]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUT_TARGETS,2, neuron6,neuron7,1,2);
     //printf("Correct Message:%s\n",correctMessage);
     //printf("Encoded Message:%s\n",appPayload);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
 
-    assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[3]);
+    coordinator.assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodes[3]);
     snprintf(correctMessage, sizeof(correctMessage),"%d |%hhu %hhu %hhu %hhu %hhu",NN_ASSIGN_OUTPUT_TARGETS,2, neuron8,neuron9,1,2);
     printf("Correct Message:%s\n",correctMessage);
     printf("Encoded Message:%s\n",appPayload);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/
 
-    freeAllNeuronMemory();
+    //freeAllNeuronMemory();
     tableClean(neuronToNodeTable);
 }
 

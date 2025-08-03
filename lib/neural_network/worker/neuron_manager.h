@@ -52,7 +52,7 @@ public:
 
     void clearAllNeuronMemory();
 
-    static void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId outputNeuronId, float neuronOutput);
+    static void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int inferenceId,NeuronId outputNeuronId, float neuronOutput);
     static void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId missingNeuron);
     static void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount);
     static void encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type);
@@ -73,7 +73,6 @@ private:
     // Identifier of the current inference cycle, assigned by the root node
     int currentInferenceId = 0;
 
-
     void handleAssignComputationsMessage(char*messageBuffer);
     void handleAssignOutputTargets(char* messageBuffer);
     void handleAssignInput(char* messageBuffer);
@@ -84,7 +83,6 @@ private:
     void handleForwardMessage(char *messageBuffer);
 
     void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]);
-
 
     void processNeuronInput(NeuronId outputNeuronId,int inferenceId,float inputValue);
     void generateInputData(NeuronId inputNeuronId);

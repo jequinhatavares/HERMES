@@ -37,6 +37,16 @@ public:
     void distributeInputNeurons(uint8_t nodes[][4],uint8_t nrNodes);
     void distributeOutputNeurons(const NeuralNetwork *net,uint8_t outputDevice[4]);
 
+    static void encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type);
+    static int  encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize,uint8_t neuronId, uint8_t inputSize, uint8_t * inputSaveOrder,const float*weightsValues, float bias);
+    static void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes);
+    static void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronIds, uint8_t nNeurons, int8_t subTopic, int8_t pubTopic);
+    static void encodeForwardMessage(char*messageBuffer, size_t bufferSize, int inferenceId);
+    static void encodeInputAssignMessage(char*messageBuffer, size_t bufferSize,uint8_t neuronId);
+
+    void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices);
+    void onACKTimeOutInputLayer();
+
     void manageNeuralNetwork();
 
 private:
@@ -60,19 +70,9 @@ private:
 
     void initNeuralNetwork();
 
-    void encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type);
-    int  encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize,uint8_t neuronId, uint8_t inputSize, uint8_t * inputSaveOrder,const float*weightsValues, float bias);
-    void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes);
-    void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronIds, uint8_t nNeurons, int8_t subTopic, int8_t pubTopic);
-    void encodeForwardMessage(char*messageBuffer, size_t bufferSize, int inferenceId);
-    void encodeInputAssignMessage(char*messageBuffer, size_t bufferSize,uint8_t neuronId);
-
     void handleACKMessage(char* messageBuffer);
     void handleWorkerRegistration(char*messageBuffer);
     void handleInputRegistration(char* messageBuffer);
-
-    void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices);
-    void onACKTimeOutInputLayer();
 
 };
 
