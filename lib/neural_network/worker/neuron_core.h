@@ -20,10 +20,11 @@ public:
     void configureNeuron(NeuronId neuronId, uint8_t receivedInputSize, float* receivedWeights, float receivedBias, NeuronId* receivedOrder);
 
     NeuronId getNeuronId(int index);
-    NeuronId getInputNeuronId(NeuronId neuronId, int index);
     int getNeuronStorageIndex(NeuronId neuronId);
     int getInputStorageIndex(NeuronId neuronId, NeuronId inputId);
     int getInputSize(NeuronId neuronId);
+
+    NeuronId getInputNeuronId(NeuronId neuronId, int index);
     float getNeuronWeightAtIndex(NeuronId neuronId,int index);
     float getBias(NeuronId neuronId);
     float getNeuronInputValue(NeuronId neuronId, NeuronId inputNeuronId);

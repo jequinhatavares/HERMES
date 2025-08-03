@@ -16,8 +16,8 @@
 
 #include "../lib/network/src/core/table/table.h"
 
-//pio test -e native -f "test_neural_network" -v //verbose mode all prints appear
-//pio test -e native -f "test_neural_network" // to just see the test results
+//pio test -e native -f "test_neural_network_coordinator" -v //verbose mode all prints appear
+//pio test -e native -f "test_neural_network_coordinator" // to just see the test results
 
 uint8_t myAPIP[4];
 void printBitField(uint32_t bits, uint8_t size) {
@@ -81,21 +81,21 @@ void assignComputationsToNeuronsWithMissingAcks(uint8_t targetIP[4]){
 /*** ****************************** Tests ****************************** ***/
 
 void test_memory_allocation(){
+    NeuronCore core;
     float weightsValues[3]={1.0,2.0,3.0}, bias=1;
     uint8_t inputSize = 3,saveOrderValues[3] ={1,2,3},neuronId = 1,neuronStorageIndex = -1;
 
-    configureNeuron(neuronId,inputSize, weightsValues,bias,saveOrderValues);
+    core.configureNeuron(neuronId,inputSize, weightsValues,bias,saveOrderValues);
 
-    neuronStorageIndex = getNeuronStorageIndex(neuronId);
+    neuronStorageIndex = core.getNeuronStorageIndex(neuronId);
     TEST_ASSERT(neuronStorageIndex != -1);
 
     for (int i = 0; i < inputSize; i++) {
-        printf("weightsValues:%f savedWeights:%f\n",weightsValues[i],weights[neuronStorageIndex][i]);
-        TEST_ASSERT(weights[neuronStorageIndex][i] == weightsValues[i]);
-        TEST_ASSERT(saveOrders[neuronStorageIndex][i] == saveOrderValues[i]);
+        printf("weightsValues:%f savedWeights:%f\n",weightsValues[i],core.getNeuronWeightAtIndex(neuronId,i));
+        TEST_ASSERT(core.getNeuronWeightAtIndex(neuronId,i) == weightsValues[i]);
+        TEST_ASSERT(core.getInputStorageIndex(neuronId,i) == saveOrderValues[i]);
     }
 
-    freeAllNeuronMemory();
 }
 
 void test_neuron_output_calculation(){
