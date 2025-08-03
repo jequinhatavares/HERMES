@@ -8,7 +8,7 @@
 
 #define NEURAL_NET_IMPL
 
-#include "../lib/neural_network/coordinator/neural_network_manager.h"
+#include "../lib/neural_network/coordinator/neural_network_coordinator.h"
 
 
 #include "../lib/neural_network/coordinator/nn_parameters.h"

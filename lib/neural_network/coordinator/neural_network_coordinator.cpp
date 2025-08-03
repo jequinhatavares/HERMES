@@ -2,29 +2,12 @@
 #define NEURAL_NET_IMPL // Put the #define before the include to have access to the NN parameters
 #endif
 
-#include "neural_network_manager.h"
+#include "neural_network_coordinator.h"
 
-unsigned long neuronAssignmentTime;
-bool areNeuronsAssigned = false;
-
-bool receivedAllNeuronAcks = false;
-
-bool inferenceRunning = false;
-unsigned long inferenceStartTime;
-
-int nnSequenceNumber=0;
-
-uint8_t workersIPs[TOTAL_NEURONS][4];
-uint8_t workersDeviceTypes[TOTAL_NEURONS];
-uint8_t neuronsPerWorker[TOTAL_NEURONS];
-uint8_t totalWorkers=0;
 
 #define NODES_PER_ESP8266 1
 #define NODES_PER_ESP32 2
 #define NODES_PER_RPI 10
-
-uint8_t inputsIPs[TOTAL_INPUT_NEURONS][4];
-uint8_t totalInputs=0;
 
 
 /***uint8_t numESP8266Workers=0;
@@ -91,7 +74,11 @@ void setNeuronEntry(void* av, void* bv){
     a->isAcknowledged = b->isAcknowledged;
 }
 
-void initNeuralNetwork(){
+NeuralNetworkCoordinator::NeuralNetworkCoordinator() {
+    initNeuralNetwork();
+}
+
+void NeuralNetworkCoordinator::initNeuralNetwork(){
     tableInit(neuronToNodeTable,neurons,neuronMap, sizeof(NeuronId),sizeof(NeuronEntry));
 
 }
@@ -109,7 +96,7 @@ void printNeuronTableHeader(){
 
 }
 
-void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_t nrNodes){
+void NeuralNetworkCoordinator::distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_t nrNodes){
     uint8_t neuronPerNodeCount = 0,*inputIndexMap;
     uint8_t numHiddenNeurons =0, neuronsPerNode;
     uint8_t myIP[4]={0,0,0,0};
@@ -161,7 +148,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
                 tableAdd(neuronToNodeTable,&currentNeuronId,&neuronEntry);
 
                 // Stores the parameters assigned to this node for later use in computing the output neuron values.
-                configureNeuron(currentNeuronId,net->layers[i].numInputs,&net->layers[i].weights[j * net->layers[i].numInputs],net->layers[i].biases[j], inputIndexMap);
+                neuronCore.configureNeuron(currentNeuronId,net->layers[i].numInputs,&net->layers[i].weights[j * net->layers[i].numInputs],net->layers[i].biases[j], inputIndexMap);
 
                 // Increment the count of neurons assigned to this node, and the current NeuronID
                 currentNeuronId ++;
@@ -221,7 +208,7 @@ void distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_
 
 
 
-void distributeNeuralNetworkBalanced(const NeuralNetwork *net, uint8_t devices[][4],uint8_t nrDevices, uint8_t neuronsPerDevice[]){
+void NeuralNetworkCoordinator::distributeNeuralNetworkBalanced(const NeuralNetwork *net, uint8_t devices[][4],uint8_t nrDevices, uint8_t neuronsPerDevice[]){
     uint8_t neuronPerNodeCount = 0,*inputIndexMap;
     int assignedDevices = 0, messageOffset = 0;
     // Initialize the neuron ID to the first neuron in the first hidden layer (i.e., the first ID after the last input neuron)
@@ -303,7 +290,7 @@ void distributeNeuralNetworkBalanced(const NeuralNetwork *net, uint8_t devices[]
 }
 
 
-void assignOutputTargetsToNetwork(uint8_t nodes[][4],uint8_t nrNodes){
+void NeuralNetworkCoordinator::assignOutputTargetsToNetwork(uint8_t nodes[][4],uint8_t nrNodes){
     uint8_t *neuronId;
     NeuronEntry *neuronEntry;
     uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
@@ -365,7 +352,7 @@ void assignOutputTargetsToNetwork(uint8_t nodes[][4],uint8_t nrNodes){
 
 }
 
-void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]){
+void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]){
     NeuronId *neuronId;
     NeuronEntry *neuronEntry;
     uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
@@ -437,7 +424,7 @@ void assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t tar
 
 }
 
-void assignOutputTargetsToNeurons(char* messageBuffer,size_t bufferSize,NeuronId *neuronIDs,uint8_t nNeurons,uint8_t targetNodeIP[4]){
+void NeuralNetworkCoordinator::assignOutputTargetsToNeurons(char* messageBuffer,size_t bufferSize,NeuronId *neuronIDs,uint8_t nNeurons,uint8_t targetNodeIP[4]){
     NeuronId *neuronId,*neuronId2;
     NeuronEntry *neuronEntry,*neuronEntry2;
     uint8_t outputNeurons[TOTAL_NEURONS];
@@ -489,7 +476,7 @@ void assignOutputTargetsToNeurons(char* messageBuffer,size_t bufferSize,NeuronId
 
 }
 
-void distributeInputNeurons(uint8_t inputNodes[][4],uint8_t nrNodes){
+void NeuralNetworkCoordinator::distributeInputNeurons(uint8_t inputNodes[][4],uint8_t nrNodes){
     NeuronEntry neuronEntry;
     uint8_t numInputNeurons = neuralNetwork.layers[0].numInputs;
     if(numInputNeurons > nrNodes){
@@ -512,7 +499,7 @@ void distributeInputNeurons(uint8_t inputNodes[][4],uint8_t nrNodes){
     }
 }
 
-void distributeOutputNeurons(const NeuralNetwork *net,uint8_t outputDevice[4]){
+void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,uint8_t outputDevice[4]){
     uint8_t outputLayer= net->numLayers - 1,*inputIndexMap;
     uint8_t myIP[4];
     network.getNodeIP(myIP);
@@ -558,7 +545,7 @@ void distributeOutputNeurons(const NeuralNetwork *net,uint8_t outputDevice[4]){
             tableAdd(neuronToNodeTable,&currentOutputNeuron,&neuronEntry);
 
             // Stores the parameters assigned to this node for later use in computing the output neuron values.
-            configureNeuron(currentOutputNeuron,net->layers[outputLayer].numInputs,
+            neuronCore.configureNeuron(currentOutputNeuron,net->layers[outputLayer].numInputs,
                             &net->layers[outputLayer].weights[j * net->layers[outputLayer].numInputs],
                             net->layers[outputLayer].biases[j], inputIndexMap);
 
@@ -593,7 +580,7 @@ void distributeOutputNeurons(const NeuralNetwork *net,uint8_t outputDevice[4]){
     delete [] inputIndexMap;
 }
 
-void assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]){
+void NeuralNetworkCoordinator::assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]){
     uint8_t *neuronId;
     NeuronEntry *neuronEntry;
     uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
@@ -641,7 +628,7 @@ void assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t target
 
 }
 
-void encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type){
+void NeuralNetworkCoordinator::encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type){
     if(type == NN_ASSIGN_COMPUTATION){
         snprintf(messageBuffer,bufferSize,"%i ",NN_ASSIGN_COMPUTATION);
     }else if(type == NN_ASSIGN_OUTPUT){
@@ -651,7 +638,7 @@ void encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMes
     }
 }
 
-int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize, uint8_t neuronId, uint8_t inputSize, uint8_t * inputSaveOrder, const float* weightsValues, float bias){
+int NeuralNetworkCoordinator::encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize, uint8_t neuronId, uint8_t inputSize, uint8_t * inputSaveOrder, const float* weightsValues, float bias){
     /*** Estimated size of a message assigning a neuron, assuming:
      - Neuron ID and input size each take 2 characters
      - One space between each element
@@ -689,7 +676,7 @@ int encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize, uint8_t ne
 
 }
 
-void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes){
+void NeuralNetworkCoordinator::encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes){
     int offset = 0;
     //|[N Neurons] [neuron ID1] [neuron ID2] ...[N Nodes] [IP Address 1] [IP Address 2] ...
 
@@ -713,7 +700,7 @@ void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t *
     }
 }
 
-void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronIDs, uint8_t nNeurons, int8_t subTopic, int8_t pubTopic){
+void NeuralNetworkCoordinator::encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronIDs, uint8_t nNeurons, int8_t subTopic, int8_t pubTopic){
     int offset = 0;
     // |[Number of Neurons] [neuron ID1] [neuron ID2] [Subscription 1] [Pub 1]
 
@@ -737,18 +724,18 @@ void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronID
     offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d",pubTopic);
 }
 
-void encodeForwardMessage(char*messageBuffer, size_t bufferSize, int inferenceId){
+void NeuralNetworkCoordinator::encodeForwardMessage(char*messageBuffer, size_t bufferSize, int inferenceId){
     snprintf(messageBuffer, bufferSize, "%d %i",NN_FORWARD,inferenceId);
 }
 
 
-void encodeInputAssignMessage(char*messageBuffer,size_t bufferSize,uint8_t neuronId){
+void NeuralNetworkCoordinator::encodeInputAssignMessage(char*messageBuffer,size_t bufferSize,uint8_t neuronId){
     //NN_ASSIGN_INPUT [neuronID]
     snprintf(messageBuffer, bufferSize, "%d %hhu",NN_ASSIGN_INPUT,neuronId);
 }
 
 
-void handleACKMessage(char* messageBuffer){
+void NeuralNetworkCoordinator::handleACKMessage(char* messageBuffer){
     // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
     char *saveptr1, *token;
     NeuronId currentId;
@@ -783,7 +770,7 @@ void handleACKMessage(char* messageBuffer){
     receivedAllNeuronAcks = isNetworkAcknowledge;
 }
 
-void handleWorkerRegistration(char* messageBuffer){
+void NeuralNetworkCoordinator::handleWorkerRegistration(char* messageBuffer){
     uint8_t nodeIP[4],deviceClass;
 
     //NN_WORKER_REGISTRATION [Node IP] [Device Type]
@@ -811,7 +798,7 @@ void handleWorkerRegistration(char* messageBuffer){
     totalWorkers++;
 }
 
-void handleInputRegistration(char* messageBuffer){
+void NeuralNetworkCoordinator::handleInputRegistration(char* messageBuffer){
     uint8_t nodeIP[4],deviceClass;
 
     //NN_INPUT_REGISTRATION [Node IP] [Device Type]
@@ -826,7 +813,7 @@ void handleInputRegistration(char* messageBuffer){
 }
 
 
-void manageNeuralNetwork(){
+void NeuralNetworkCoordinator::manageNeuralNetwork(){
     unsigned long currentTime = getCurrentTime();
 
     /*** Verify three conditions before distribution:
@@ -865,7 +852,7 @@ void manageNeuralNetwork(){
 
 }
 
-void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices){
+void NeuralNetworkCoordinator::onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices){
     NeuronId *currentId;
     NeuronEntry *neuronEntry;
     uint8_t currentLayerIndex, currentIndexInLayer,*inputIndexMap;
@@ -940,7 +927,7 @@ void onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices){
     }
 }
 
-void onACKTimeOutInputLayer(){
+void NeuralNetworkCoordinator::onACKTimeOutInputLayer(){
     NeuronId *currentId;
     NeuronEntry *neuronEntry;
     int i=0;
@@ -967,4 +954,11 @@ void onACKTimeOutInputLayer(){
         }
     }
 }
+
+void
+NeuralNetworkCoordinator::handleNeuralNetworkMessage(uint8_t *senderIP, uint8_t *destinationIP, char *messageBuffer) {
+
+}
+
+
 

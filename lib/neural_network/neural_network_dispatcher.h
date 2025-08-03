@@ -1,7 +1,7 @@
 #ifndef WIFIROUTING_NEURAL_NETWORK_DISPATCHER_H
 #define WIFIROUTING_NEURAL_NETWORK_DISPATCHER_H
 
-#include "coordinator/neural_network_manager.h"
+#include "coordinator/neural_network_coordinator.h"
 #include "worker/neuron_manager.h"
 #include "app_globals.h"
 
