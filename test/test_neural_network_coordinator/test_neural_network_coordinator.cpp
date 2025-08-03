@@ -99,47 +99,49 @@ void test_memory_allocation(){
 }
 
 void test_neuron_output_calculation(){
+    NeuronCore core;
+
     float weightsValues[3]={1.0,2.0,3.0}, bias=1, neuronOutput, correctNeuronOutput=15;
     uint8_t inputSize = 3,saveOrderValues[3] ={1,2,3},neuronId = 1;
 
-    configureNeuron(neuronId, inputSize, weightsValues,bias,saveOrderValues);
+    core.configureNeuron(neuronId, inputSize, weightsValues,bias,saveOrderValues);
 
-    setInput(neuronId,1,1);
-    setInput(neuronId,2,2);
-    setInput(neuronId,3,3);
+    core.setInput(neuronId,1,1);
+    core.setInput(neuronId,2,2);
+    core.setInput(neuronId,3,3);
 
-    neuronOutput = computeNeuronOutput(neuronId);
+    neuronOutput = core.computeNeuronOutput(neuronId);
 
     TEST_ASSERT(neuronOutput==correctNeuronOutput);/******/
-
-    freeAllNeuronMemory();
 
 }
 
 void test_handle_message_assign_neuron_one_neuron(){
+    NeuronManager neuron;
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[50];
     float weightsValues[2]={2.0,2.0}, bias=1;
     int saveOrderValues[2] ={1,2}, inputSize=2,neuronStorageIndex=-1,neuronId=3;
-
+    uint8_t blankIP[4]={0,0,0,0};
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |3 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
 
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
-    neuronStorageIndex = getNeuronStorageIndex(neuronId);
+    neuronStorageIndex = neuron.neuronCore.getNeuronStorageIndex(neuronId);
     TEST_ASSERT(neuronStorageIndex != -1);
 
     for (int i = 0; i < inputSize; i++) {
-        printf("weightsValues:%f savedWeights:%f\n",weightsValues[i],weights[neuronStorageIndex][i]);
-        printf("saveOrder:%i saveOrder:%i\n",saveOrderValues[i],saveOrders[neuronStorageIndex][i]);
-        TEST_ASSERT(weights[neuronStorageIndex][i] == weightsValues[i]);
-        TEST_ASSERT(saveOrders[neuronStorageIndex][i] == saveOrderValues[i]);
+        printf("weightsValues:%f savedWeights:%f\n",weightsValues[i],neuron.neuronCore.getNeuronWeightAtIndex(neuronId,i));
+        printf("saveOrder:%i saveOrder:%i\n",saveOrderValues[i],neuron.neuronCore.getInputNeuronId(neuronId,i));
+        TEST_ASSERT(neuron.neuronCore.getNeuronWeightAtIndex(neuronId,i) == weightsValues[i]);
+        TEST_ASSERT(neuron.neuronCore.getInputNeuronId(neuronId,i) == saveOrderValues[i]);
     }/******/
-    freeAllNeuronMemory();
 }
 
 
 void test_handle_message_assign_neuron_multiple_neurons(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[50];
     float weightsValues[2]={2.0,2.0}, bias=1;
@@ -148,35 +150,35 @@ void test_handle_message_assign_neuron_multiple_neurons(){
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |3 2 1 2 2.0 2.0 1 |2 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
 
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
-    neuronStorageIndex1 = getNeuronStorageIndex(neuronId1);
+    neuronStorageIndex1 = neuron.neuronCore.getNeuronStorageIndex(neuronId1);
     TEST_ASSERT(neuronStorageIndex1 != -1);
     TEST_ASSERT(neuronStorageIndex1 == 0);
 
-    neuronStorageIndex2 = getNeuronStorageIndex(neuronId2);
+    neuronStorageIndex2 = neuron.neuronCore.getNeuronStorageIndex(neuronId2);
 
     TEST_ASSERT(neuronStorageIndex2 != -1);
     TEST_ASSERT(neuronStorageIndex2 == 1);/******/
 
 
     for (int i = 0; i < inputSize; i++) {
-        printf("weightsValues:%f savedWeights:%f\n",weightsValues[i],weights[neuronStorageIndex1][i]);
-        printf("saveOrder:%i saveOrder:%i\n",saveOrderValues[i],saveOrders[neuronStorageIndex1][i]);
-        TEST_ASSERT(weights[neuronStorageIndex1][i] == weightsValues[i]);
-        TEST_ASSERT(saveOrders[neuronStorageIndex1][i] == saveOrderValues[i]);
+        printf("weightsValues:%f savedWeights:%f\n",weightsValues[i],neuron.neuronCore.getNeuronWeightAtIndex(neuronId1,i));
+        printf("saveOrder:%i saveOrder:%i\n",saveOrderValues[i],neuron.neuronCore.getInputNeuronId(neuronId1,i));
+        TEST_ASSERT(neuron.neuronCore.getNeuronWeightAtIndex(neuronId1,i) == weightsValues[i]);
+        TEST_ASSERT(neuron.neuronCore.getInputNeuronId(neuronId1,i) == saveOrderValues[i]);
 
-        TEST_ASSERT(weights[neuronStorageIndex2][i] == weightsValues[i]);
-        TEST_ASSERT(saveOrders[neuronStorageIndex2][i] == saveOrderValues[i]);/******/
+        TEST_ASSERT(neuron.neuronCore.getNeuronWeightAtIndex(neuronId2,i) == weightsValues[i]);
+        TEST_ASSERT(neuron.neuronCore.getInputNeuronId(neuronId2,i) == saveOrderValues[i]);/******/
     }
-
-    freeAllNeuronMemory();
 
 }
 
 
 
 void test_handle_assign_output_neuron(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     //NN_ASSIGN_OUTPUT |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[100];
     char correctMessage[50];
@@ -185,39 +187,39 @@ void test_handle_assign_output_neuron(){
     int neuronId10=10,neuronId11=11,neuronStorageIndex10=-1,neuronStorageIndex11=-1;
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |10 4 6 7 8 9 2 2.0 2.0 2.0 2.0 1 |11 4 6 7 8 9 2 2.0 2.0 2.0 2.0 1 ",NN_ASSIGN_OUTPUT);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     snprintf(correctMessage, sizeof(correctMessage),"%d 10 11",NN_ACK);
 
-    neuronStorageIndex10 = getNeuronStorageIndex(neuronId10);
+    neuronStorageIndex10 = neuron.neuronCore.getNeuronStorageIndex(neuronId10);
     TEST_ASSERT(neuronStorageIndex10 != -1);
     TEST_ASSERT(neuronStorageIndex10 == 0);
 
-    neuronStorageIndex11 = getNeuronStorageIndex(neuronId11);
+    neuronStorageIndex11 = neuron.neuronCore.getNeuronStorageIndex(neuronId11);
     TEST_ASSERT(neuronStorageIndex11 != -1);
     TEST_ASSERT(neuronStorageIndex11 == 1);
 
-    printNeuronInfo();
+    neuron.neuronCore.printNeuronInfo();
 
     for (int i = 0; i < inputSize; i++) {
         //printf("weightsValues:%f savedWeights:%f\n",weightsValues[i],weights[neuronStorageIndex1][i]);
         //printf("saveOrder:%i saveOrder:%i\n",saveOrderValues[i],saveOrders[neuronStorageIndex1][i]);
-        TEST_ASSERT(weights[neuronStorageIndex10][i] == weightsValues[i]);
-        TEST_ASSERT(saveOrders[neuronStorageIndex10][i] == saveOrderValues[i]);
+        TEST_ASSERT(neuron.neuronCore.getNeuronWeightAtIndex(neuronId10,i) == weightsValues[i]);
+        TEST_ASSERT(neuron.neuronCore.getInputNeuronId(neuronId10,i) == saveOrderValues[i]);
 
-        TEST_ASSERT(weights[neuronStorageIndex11][i] == weightsValues[i]);
-        TEST_ASSERT(saveOrders[neuronStorageIndex11][i] == saveOrderValues[i]);
+        TEST_ASSERT(neuron.neuronCore.getNeuronWeightAtIndex(neuronId11,i)== weightsValues[i]);
+        TEST_ASSERT(neuron.neuronCore.getInputNeuronId(neuronId11,i) == saveOrderValues[i]);
     }
 
     printf("Encoded Message:%s\n",appPayload);
     printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/
 
-    freeAllNeuronMemory();
-
 }
 
 void test_handle_message_assign_neuron_with_more_than_max_neurons(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[100];
     float weightsValues[2]={2.0,2.0}, bias=1;
@@ -226,36 +228,35 @@ void test_handle_message_assign_neuron_with_more_than_max_neurons(){
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |3 2 1 2 2.0 2.0 1 |2 2 1 2 2.0 2.0 1|7 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
 
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
-    neuronStorageIndex1 = getNeuronStorageIndex(neuronId1);
+    neuronStorageIndex1 = neuron.neuronCore.getNeuronStorageIndex(neuronId1);
     TEST_ASSERT(neuronStorageIndex1 != -1);
     TEST_ASSERT(neuronStorageIndex1 == 0);
 
-    neuronStorageIndex2 = getNeuronStorageIndex(neuronId2);
+    neuronStorageIndex2 = neuron.neuronCore.getNeuronStorageIndex(neuronId2);
     TEST_ASSERT(neuronStorageIndex2 != -1);
     TEST_ASSERT(neuronStorageIndex2 == 1);/******/
 
-    neuronStorageIndex3 = getNeuronStorageIndex(neuronId3);
+    neuronStorageIndex3 = neuron.neuronCore.getNeuronStorageIndex(neuronId3);
     TEST_ASSERT(neuronStorageIndex3 == -1);
 
 
     for (int i = 0; i < inputSize; i++) {
-        printf("weightsValues:%f savedWeights:%f\n",weightsValues[i],weights[neuronStorageIndex1][i]);
-        printf("saveOrder:%i saveOrder:%i\n",saveOrderValues[i],saveOrders[neuronStorageIndex1][i]);
-        TEST_ASSERT(weights[neuronStorageIndex1][i] == weightsValues[i]);
-        TEST_ASSERT(saveOrders[neuronStorageIndex1][i] == saveOrderValues[i]);
+        printf("weightsValues:%f savedWeights:%f\n",weightsValues[i],neuron.neuronCore.getNeuronWeightAtIndex(neuronId1,i));
+        printf("saveOrder:%i saveOrder:%i\n",saveOrderValues[i],neuron.neuronCore.getInputNeuronId(neuronId1,i));
+        TEST_ASSERT(neuron.neuronCore.getNeuronWeightAtIndex(neuronId1,i) == weightsValues[i]);
+        TEST_ASSERT(neuron.neuronCore.getInputNeuronId(neuronId1,i) == saveOrderValues[i]);
 
-        TEST_ASSERT(weights[neuronStorageIndex2][i] == weightsValues[i]);
-        TEST_ASSERT(saveOrders[neuronStorageIndex2][i] == saveOrderValues[i]);/******/
+        TEST_ASSERT(neuron.neuronCore.getNeuronWeightAtIndex(neuronId2,i) == weightsValues[i]);
+        TEST_ASSERT(neuron.neuronCore.getInputNeuronId(neuronId2,i) == saveOrderValues[i]);/******/
     }
-
-    freeAllNeuronMemory();
-
 }
 
 
 void test_handle_neuron_input(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[50], messageWithInput[50];
     float weightsValues[2]={2.0,2.0}, bias=1;
@@ -264,33 +265,35 @@ void test_handle_neuron_input(){
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |3 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
     //message containing neuron assignments
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
-    neuronStorageIndex = getNeuronStorageIndex(neuronId);
+    neuronStorageIndex = neuron.neuronCore.getNeuronStorageIndex(neuronId);
     TEST_ASSERT(neuronStorageIndex  != -1);
 
     //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
     snprintf(messageWithInput, sizeof(messageWithInput),"%d %i %hhu %g"
             ,NN_NEURON_OUTPUT,0,outputNeuron1,1.0);
 
-    handleNeuronMessage(messageWithInput);
+    neuron.handleNeuronMessage(blankIP,blankIP,messageWithInput);
 
     snprintf(messageWithInput, sizeof(messageWithInput),"%d %i %hhu %g"
             ,NN_NEURON_OUTPUT,0,outputNeuron2,1.0);
 
-    handleNeuronMessage(messageWithInput);
+    neuron.handleNeuronMessage(blankIP,blankIP,messageWithInput);
 
-    printf("Calculated Output:%f\n",outputValues[neuronStorageIndex]);
+    printf("Calculated Output:%f\n",neuron.outputValues[neuronStorageIndex]);
 
-    TEST_ASSERT(outputValues[neuronStorageIndex] == 5);
+    TEST_ASSERT(neuron.outputValues[neuronStorageIndex] == 5);
 
-    freeAllNeuronMemory();
-    clearAllNeuronMemory();
+
+    neuron.clearAllNeuronMemory();
 
 }
 
 
 void test_handle_assign_output_targets(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[50],assignNeuronsMessage[50];
     uint8_t nodeIP4[4]={4,4,4,4},nodeIP5[4]={5,5,5,5};
@@ -300,30 +303,30 @@ void test_handle_assign_output_targets(){
     snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |3 2 1 2 2.0 2.0 1 |2 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
 
     //Assign neuron computation to the node
-    handleNeuronMessage(assignNeuronsMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,assignNeuronsMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu"
             ,NN_ASSIGN_OUTPUT_TARGETS,2,neuron2,neuron3,2,nodeIP4[0],nodeIP4[1],nodeIP4[3],nodeIP4[3]
             ,nodeIP5[0],nodeIP5[1],nodeIP5[3],nodeIP5[3]);
 
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
-    TEST_ASSERT(neuronTargets[0].nTargets == 2);
-    TEST_ASSERT(isIPEqual(neuronTargets[0].targetsIPs[0],nodeIP4));
-    TEST_ASSERT(isIPEqual(neuronTargets[0].targetsIPs[1],nodeIP5));
+    TEST_ASSERT(neuron.neuronTargets[0].nTargets == 2);
+    TEST_ASSERT(isIPEqual(neuron.neuronTargets[0].targetsIPs[0],nodeIP4));
+    TEST_ASSERT(isIPEqual(neuron.neuronTargets[0].targetsIPs[1],nodeIP5));
 
-    TEST_ASSERT(neuronTargets[1].nTargets == 2);
-    TEST_ASSERT(isIPEqual(neuronTargets[1].targetsIPs[0],nodeIP4));
-    TEST_ASSERT(isIPEqual(neuronTargets[1].targetsIPs[1],nodeIP5));
+    TEST_ASSERT(neuron.neuronTargets[1].nTargets == 2);
+    TEST_ASSERT(isIPEqual(neuron.neuronTargets[1].targetsIPs[0],nodeIP4));
+    TEST_ASSERT(isIPEqual(neuron.neuronTargets[1].targetsIPs[1],nodeIP5));
 
-    freeAllNeuronMemory();
-    clearAllNeuronMemory();
-
+    neuron.clearAllNeuronMemory();
 }
 
 
-
 void test_handle_assign_output_targets_to_not_handled_neuron(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
+
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[50],assignNeuronsMessage[50],correctACKMessage[50];
     uint8_t nodeIP4[4]={4,4,4,4},nodeIP5[4]={5,5,5,5};
@@ -333,19 +336,19 @@ void test_handle_assign_output_targets_to_not_handled_neuron(){
     snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 1 2 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
 
     //Assign neuron computation to the node
-    handleNeuronMessage(assignNeuronsMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,assignNeuronsMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |%hhu %hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu"
             ,NN_ASSIGN_OUTPUT_TARGETS,2,invalidNeuron,neuron2,2,nodeIP4[0],nodeIP4[1],nodeIP4[3],nodeIP4[3]
             ,nodeIP5[0],nodeIP5[1],nodeIP5[3],nodeIP5[3]);
 
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     for (int i = 0; i < MAX_NEURONS; ++i) {
-        printf("Output Target:%i nTargets:%hhu\n",i,neuronTargets[i].nTargets);
-        for (int j = 0; j <neuronTargets[i].nTargets ; ++j) {
-            printf("Output target IP:%hhu.%hhu.%hhu.%hhu\n",neuronTargets[i].targetsIPs[j][0],
-                   neuronTargets[i].targetsIPs[j][1],neuronTargets[i].targetsIPs[j][2],neuronTargets[i].targetsIPs[j][3]);
+        printf("Output Target:%i nTargets:%hhu\n",i,neuron.neuronTargets[i].nTargets);
+        for (int j = 0; j <neuron.neuronTargets[i].nTargets ; ++j) {
+            printf("Output target IP:%hhu.%hhu.%hhu.%hhu\n",neuron.neuronTargets[i].targetsIPs[j][0],
+                   neuron.neuronTargets[i].targetsIPs[j][1],neuron.neuronTargets[i].targetsIPs[j][2],neuron.neuronTargets[i].targetsIPs[j][3]);
         }
     }
 
@@ -354,24 +357,26 @@ void test_handle_assign_output_targets_to_not_handled_neuron(){
             ,NN_ACK,neuron2);
 
 
-    TEST_ASSERT(neuronTargets[0].nTargets == 2);
-    TEST_ASSERT(isIPEqual(neuronTargets[0].targetsIPs[0],nodeIP4));
-    TEST_ASSERT(isIPEqual(neuronTargets[0].targetsIPs[1],nodeIP5));
+    TEST_ASSERT(neuron.neuronTargets[0].nTargets == 2);
+    TEST_ASSERT(isIPEqual(neuron.neuronTargets[0].targetsIPs[0],nodeIP4));
+    TEST_ASSERT(isIPEqual(neuron.neuronTargets[0].targetsIPs[1],nodeIP5));
 
-    TEST_ASSERT(neuronTargets[1].nTargets == 0);
-    TEST_ASSERT(!isIPEqual(neuronTargets[1].targetsIPs[0],nodeIP4));
-    TEST_ASSERT(!isIPEqual(neuronTargets[1].targetsIPs[1],nodeIP5));
+    TEST_ASSERT(neuron.neuronTargets[1].nTargets == 0);
+    TEST_ASSERT(!isIPEqual(neuron.neuronTargets[1].targetsIPs[0],nodeIP4));
+    TEST_ASSERT(!isIPEqual(neuron.neuronTargets[1].targetsIPs[1],nodeIP5));
 
     printf("Encoded Message:%s\n",appPayload);
     printf("Correct Message:%s\n",correctACKMessage);
     TEST_ASSERT(strcmp(appPayload,correctACKMessage) == 0);
 
-    freeAllNeuronMemory();
-    clearAllNeuronMemory();
+
+    neuron.clearAllNeuronMemory();
 
 }
 
 void test_handle_assign_output_targets_multiple_layer_neurons(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[50],assignNeuronsMessage[50],correctACKMessage[50];
     uint8_t nodeIP4[4]={4,4,4,4},nodeIP5[4]={5,5,5,5};
@@ -381,20 +386,20 @@ void test_handle_assign_output_targets_multiple_layer_neurons(){
     snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 0 1 2.0 2.0 1 |3 2 2 3 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
 
     //Assign neuron computation to the node
-    handleNeuronMessage(assignNeuronsMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,assignNeuronsMessage);
 
     //|[N Neurons] [neuron ID1] [neuron ID2] ...[N Nodes] [IP Address 1] [IP Address 2] ...
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |%hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu |%hhu %hhu %hhu %hhu.%hhu.%hhu.%hhu"
             ,NN_ASSIGN_OUTPUT_TARGETS,1,neuron2,1,nodeIP4[0],nodeIP4[1],nodeIP4[3],nodeIP4[3]
             ,1,neuron3,1,nodeIP5[0],nodeIP5[1],nodeIP5[3],nodeIP5[3]);
 
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     for (int i = 0; i < MAX_NEURONS; ++i) {
-        printf("Output Target:%i nTargets:%hhu\n",i,neuronTargets[i].nTargets);
-        for (int j = 0; j <neuronTargets[i].nTargets ; ++j) {
-            printf("Output target IP:%hhu.%hhu.%hhu.%hhu\n",neuronTargets[i].targetsIPs[j][0],
-                   neuronTargets[i].targetsIPs[j][1],neuronTargets[i].targetsIPs[j][2],neuronTargets[i].targetsIPs[j][3]);
+        printf("Output Target:%i nTargets:%hhu\n",i,neuron.neuronTargets[i].nTargets);
+        for (int j = 0; j <neuron.neuronTargets[i].nTargets ; ++j) {
+            printf("Output target IP:%hhu.%hhu.%hhu.%hhu\n",neuron.neuronTargets[i].targetsIPs[j][0],
+                   neuron.neuronTargets[i].targetsIPs[j][1],neuron.neuronTargets[i].targetsIPs[j][2],neuron.neuronTargets[i].targetsIPs[j][3]);
         }
     }
 
@@ -403,22 +408,23 @@ void test_handle_assign_output_targets_multiple_layer_neurons(){
             ,NN_ACK,neuron2,neuron3);
 
 
-    TEST_ASSERT(neuronTargets[0].nTargets == 1);
-    TEST_ASSERT(isIPEqual(neuronTargets[0].targetsIPs[0],nodeIP4));
+    TEST_ASSERT(neuron.neuronTargets[0].nTargets == 1);
+    TEST_ASSERT(isIPEqual(neuron.neuronTargets[0].targetsIPs[0],nodeIP4));
 
-    TEST_ASSERT(neuronTargets[1].nTargets == 1);
-    TEST_ASSERT(isIPEqual(neuronTargets[1].targetsIPs[0],nodeIP5));
+    TEST_ASSERT(neuron.neuronTargets[1].nTargets == 1);
+    TEST_ASSERT(isIPEqual(neuron.neuronTargets[1].targetsIPs[0],nodeIP5));
 
     printf("Encoded Message:%s\n",appPayload);
     printf("Correct Message:%s\n",correctACKMessage);
     TEST_ASSERT(strcmp(appPayload,correctACKMessage) == 0);
 
-    freeAllNeuronMemory();
-    clearAllNeuronMemory();
+    neuron.clearAllNeuronMemory();
 
 }
 
 void test_handle_assign_pubsub_info(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     int pubTopic=1,subTopic=0;
     uint8_t neuron2=2,neuron3=3;
@@ -427,18 +433,19 @@ void test_handle_assign_pubsub_info(){
 
 
     //Assign neuron computation to the node
-    handleNeuronMessage(assignNeuronsMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,assignNeuronsMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"8 %d |%hhu %hhu %hhu %i %i",NN_ASSIGN_OUTPUT_TARGETS,2,neuron2,neuron3,subTopic,pubTopic);
 
-    handleAssignPubSubInfo(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
-    freeAllNeuronMemory();
-    clearAllNeuronMemory();
+    neuron.clearAllNeuronMemory();
 
 }
 
 void test_handle_NACK_without_computed_output(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
     char correctMessage[50]="";
@@ -449,19 +456,20 @@ void test_handle_NACK_without_computed_output(){
     snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 0 1 2.0 2.0 1 |3 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
 
     //Assign neuron computation to the node
-    handleNeuronMessage(assignNeuronsMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,assignNeuronsMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d %hhu",NN_NACK,neuron2);
 
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     printf("Encoded Message:%s\n",appPayload);
     printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);
-    freeAllNeuronMemory();
 }
 
 void test_handle_NACK_with_computed_output(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
     char correctMessage[50];
@@ -471,28 +479,29 @@ void test_handle_NACK_with_computed_output(){
 
     //NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 0 1 2.0 2.0 1 |3 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
-    handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
+    neuron.handleNeuronMessage(blankIP,blankIP,assignNeuronsMessage);//Assign neuron computation to the node
 
     //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 0 1.0",NN_NEURON_OUTPUT);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 1 1.0",NN_NEURON_OUTPUT);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d %hhu",NN_NACK,neuron2);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     snprintf(correctMessage, sizeof(correctMessage),"%d %i %hhu %g",NN_NEURON_OUTPUT,0,neuron2,outputValue);
 
     printf("Encoded Message:%s\n",appPayload);
     printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/
-    freeAllNeuronMemory();
 }
 
 
 void test_handle_NACK_for_input_node(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
     char correctMessage[50];
@@ -502,28 +511,30 @@ void test_handle_NACK_for_input_node(){
 
     //NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 0 1 2.0 2.0 1 |3 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
-    handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
+    neuron.handleNeuronMessage(blankIP,blankIP,assignNeuronsMessage);//Assign neuron computation to the node
 
     //NN_ASSIGN_INPUT [neuronID]
     snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d 0",NN_ASSIGN_INPUT);
-    handleNeuronMessage(assignNeuronsMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,assignNeuronsMessage);
 
     //NN_FORWARD [neuronId]
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0",NN_FORWARD);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d %hhu",NN_NACK,inputNeuron);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     snprintf(correctMessage, sizeof(correctMessage),"%d %i %hhu %g",NN_NEURON_OUTPUT,0,inputNeuron,5.0);
 
      printf("Encoded Message:%s\n",appPayload);
      printf("Correct Message:%s\n",correctMessage);
      TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/
-    freeAllNeuronMemory();
+
 }
 
 void test_handle_assign_input_neuron_and_worker_neurons_and_assign_all_outputs(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     uint8_t nodes[4][4] = {
             {2, 2, 2, 2},
@@ -540,51 +551,52 @@ void test_handle_assign_input_neuron_and_worker_neurons_and_assign_all_outputs()
 
     //NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 0 1 2.0 2.0 1 |3 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
-    handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
+    neuron.handleNeuronMessage(blankIP,blankIP,assignNeuronsMessage);//Assign neuron computation to the node
 
     //NN_ASSIGN_INPUT [neuronID]
     snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d 0",NN_ASSIGN_INPUT);
-    handleNeuronMessage(assignNeuronsMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,assignNeuronsMessage);
 
-    TEST_ASSERT(inputNeurons[0]==0);
+    TEST_ASSERT(neuron.inputNeurons[0]==0);
 
     //receiving the message assigning the outputs
     //|[N Neurons] [neuron ID1] [neuron ID2] ...[N Nodes] [IP Address 1] [IP Address 2] ...
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |2 2 3 2 2.2.2.2 3.3.3.3 |1 0 2 0.0.0.0 4.4.4.4",NN_ASSIGN_OUTPUT_TARGETS);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
-    TEST_ASSERT(neuronTargets[0].nTargets == 2);
-    TEST_ASSERT(isIPEqual(neuronTargets[0].targetsIPs[0],nodes[0]));
-    TEST_ASSERT(isIPEqual(neuronTargets[0].targetsIPs[1],nodes[1]));
+    TEST_ASSERT(neuron.neuronTargets[0].nTargets == 2);
+    TEST_ASSERT(isIPEqual(neuron.neuronTargets[0].targetsIPs[0],nodes[0]));
+    TEST_ASSERT(isIPEqual(neuron.neuronTargets[0].targetsIPs[1],nodes[1]));
 
-    TEST_ASSERT(neuronTargets[1].nTargets == 2);
-    TEST_ASSERT(isIPEqual(neuronTargets[1].targetsIPs[0],nodes[0]));
-    TEST_ASSERT(isIPEqual(neuronTargets[1].targetsIPs[1],nodes[1]));
+    TEST_ASSERT(neuron.neuronTargets[1].nTargets == 2);
+    TEST_ASSERT(isIPEqual(neuron.neuronTargets[1].targetsIPs[0],nodes[0]));
+    TEST_ASSERT(isIPEqual(neuron.neuronTargets[1].targetsIPs[1],nodes[1]));
 
-    TEST_ASSERT(inputTargets.nTargets == 2);
-    TEST_ASSERT(isIPEqual(inputTargets.targetsIPs[0],myAPIP));
-    TEST_ASSERT(isIPEqual(inputTargets.targetsIPs[1],nodes[2]));
+    TEST_ASSERT(neuron.inputTargets.nTargets == 2);
+    TEST_ASSERT(isIPEqual(neuron.inputTargets.targetsIPs[0],myAPIP));
+    TEST_ASSERT(isIPEqual(neuron.inputTargets.targetsIPs[1],nodes[2]));
 /***
     //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 0 1.0",NN_NEURON_OUTPUT);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 1 1.0",NN_NEURON_OUTPUT);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d %hhu",NN_NACK,neuron2);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     snprintf(correctMessage, sizeof(correctMessage),"%d %i %hhu %g",NN_NEURON_OUTPUT,0,neuron2,outputValue);
 
     printf("Encoded Message:%s\n",appPayload);
     printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);***/
-    clearAllNeuronMemory();
-    freeAllNeuronMemory();
+    neuron.clearAllNeuronMemory();
 }
 
 void test_worker_neurons_from_multiple_layers_assigned(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
     char correctMessage[50];
@@ -599,17 +611,17 @@ void test_worker_neurons_from_multiple_layers_assigned(){
 
     //NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 0 1 2.0 2.0 1 |6 4 2 3 4 5 1.0 2.0 1.0 2.0 1",NN_ASSIGN_COMPUTATION);
-    handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
+    neuron.handleNeuronMessage(blankIP,blankIP,assignNeuronsMessage);//Assign neuron computation to the node
 
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
-    printNeuronInfo();
+    neuron.neuronCore.printNeuronInfo();
 
-    neuronStorageIndex1 = getNeuronStorageIndex(neuronId2);
+    neuronStorageIndex1 =  neuron.neuronCore.getNeuronStorageIndex(neuronId2);
     TEST_ASSERT(neuronStorageIndex1 != -1);
     TEST_ASSERT(neuronStorageIndex1 == 0);
 
-    neuronStorageIndex2 = getNeuronStorageIndex(neuronId6);
+    neuronStorageIndex2 =  neuron.neuronCore.getNeuronStorageIndex(neuronId6);
 
     TEST_ASSERT(neuronStorageIndex2 != -1);
     TEST_ASSERT(neuronStorageIndex2 == 1);/******/
@@ -618,24 +630,25 @@ void test_worker_neurons_from_multiple_layers_assigned(){
     for (int i = 0; i < inputSize2; i++) {
         //printf("weightsValues:%f savedWeights:%f\n",weightsValues2[i],weights[neuronStorageIndex1][i]);
         //printf("saveOrder:%i saveOrder:%i\n",saveOrderValues2[i],saveOrders[neuronStorageIndex1][i]);
-        TEST_ASSERT(weights[neuronStorageIndex1][i] == weightsValues2[i]);
-        TEST_ASSERT(saveOrders[neuronStorageIndex1][i] == saveOrderValues2[i]);
+        TEST_ASSERT(neuron.neuronCore.getNeuronWeightAtIndex(neuronId2,i) == weightsValues2[i]);
+        TEST_ASSERT(neuron.neuronCore.getInputNeuronId(neuronId2,i) == saveOrderValues2[i]);
     }
 
     for (int i = 0; i < inputSize6; i++) {
         //printf("weightsValues:%f savedWeights:%f\n",weightsValues6[i],weights[neuronStorageIndex2][i]);
         //printf("saveOrder:%i saveOrder:%i\n",saveOrderValues6[i],saveOrders[neuronStorageIndex2][i]);
-        TEST_ASSERT(weights[neuronStorageIndex2][i] == weightsValues6[i]);
-        TEST_ASSERT(saveOrders[neuronStorageIndex2][i] == saveOrderValues6[i]);
+        TEST_ASSERT(neuron.neuronCore.getNeuronWeightAtIndex(neuronId6,i) == weightsValues6[i]);
+        TEST_ASSERT(neuron.neuronCore.getInputNeuronId(neuronId6,i) == saveOrderValues6[i]);
 
     }
 
-    clearAllNeuronMemory();
-    freeAllNeuronMemory();
+    neuron.clearAllNeuronMemory();
 
 }
 
 void test_worker_compute_neuron_output_having_other_neurons_depending_on_that_output(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
     char correctMessage[50];
@@ -646,45 +659,47 @@ void test_worker_compute_neuron_output_having_other_neurons_depending_on_that_ou
 
     //NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 0 1 2.0 2.0 1 |6 4 2 3 4 5 1.0 2.0 1.0 2.0 1",NN_ASSIGN_COMPUTATION);
-    handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
+    neuron.handleNeuronMessage(blankIP,blankIP,assignNeuronsMessage);//Assign neuron computation to the node
 
-    neuronStorageIndex2 = getNeuronStorageIndex(neuronId2);
+    neuronStorageIndex2 = neuron.neuronCore.getNeuronStorageIndex(neuronId2);
     TEST_ASSERT(neuronStorageIndex2 != -1);
     TEST_ASSERT(neuronStorageIndex2 == 0);
 
-    neuronStorageIndex6 = getNeuronStorageIndex(neuronId6);
+    neuronStorageIndex6 = neuron.neuronCore.getNeuronStorageIndex(neuronId6);
     TEST_ASSERT(neuronStorageIndex6 != -1);
     TEST_ASSERT(neuronStorageIndex6 == 1);
 
     //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 0 1.0",NN_NEURON_OUTPUT);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 1 1.0",NN_NEURON_OUTPUT);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     //printNeuronInfo();
 
-    TEST_ASSERT(isOutputComputed[neuronStorageIndex2]);
+    TEST_ASSERT(neuron.isOutputComputed[neuronStorageIndex2]);
 
-    inputStorageIndex6= getInputStorageIndex(neuronId6,neuronId2);
+    inputStorageIndex6= neuron.neuronCore.getInputStorageIndex(neuronId6,neuronId2);
     TEST_ASSERT(inputStorageIndex6 != -1);
     TEST_ASSERT(inputStorageIndex6 == 0);
-    TEST_ASSERT(isBitSet(receivedInputs[neuronStorageIndex6],inputStorageIndex6));
+    TEST_ASSERT(isBitSet(neuron.receivedInputs[neuronStorageIndex6],inputStorageIndex6));
 
     /***snprintf(receivedMessage, sizeof(receivedMessage),"%d %hhu",NN_NACK,neuron2);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     snprintf(correctMessage, sizeof(correctMessage),"%d %i %hhu %g",NN_NEURON_OUTPUT,0,neuron2,outputValue);
 
     printf("Encoded Message:%s\n",appPayload);
     printf("Correct Message:%s\n",correctMessage);
     TEST_ASSERT(strcmp(appPayload,correctMessage) == 0);/******/
-    clearAllNeuronMemory();
-    freeAllNeuronMemory();
+    neuron.clearAllNeuronMemory();
+
 }
 
 void test_worker_produce_input_and_other_neurons_depending_on_that_output(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
     char correctMessage[50];
@@ -695,38 +710,39 @@ void test_worker_produce_input_and_other_neurons_depending_on_that_output(){
 
     //NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
-    handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
+    neuron.handleNeuronMessage(blankIP,blankIP,assignNeuronsMessage);//Assign neuron computation to the node
 
 
-    neuronStorageIndex2 = getNeuronStorageIndex(neuronId2);
+    neuronStorageIndex2 = neuron.neuronCore.getNeuronStorageIndex(neuronId2);
     TEST_ASSERT(neuronStorageIndex2 != -1);
     TEST_ASSERT(neuronStorageIndex2 == 0);
 
-    neuronStorageIndex6 = getNeuronStorageIndex(neuronId6);
+    neuronStorageIndex6 = neuron.neuronCore.getNeuronStorageIndex(neuronId6);
     TEST_ASSERT(neuronStorageIndex6 != -1);
     TEST_ASSERT(neuronStorageIndex6 == 1);
 
     //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 0 1.0",NN_NEURON_OUTPUT);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 1 1.0",NN_NEURON_OUTPUT);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     //printNeuronInfo();
 
-    TEST_ASSERT(isOutputComputed[neuronStorageIndex2]);
+    TEST_ASSERT(neuron.isOutputComputed[neuronStorageIndex2]);
 
-    inputStorageIndex6= getInputStorageIndex(neuronId6,neuronId2);
+    inputStorageIndex6= neuron.neuronCore.getInputStorageIndex(neuronId6,neuronId2);
     TEST_ASSERT(inputStorageIndex6 != -1);
     TEST_ASSERT(inputStorageIndex6 == 0);
-    TEST_ASSERT(isBitSet(receivedInputs[neuronStorageIndex6],inputStorageIndex6));
+    TEST_ASSERT(isBitSet(neuron.receivedInputs[neuronStorageIndex6],inputStorageIndex6));
 
-    freeAllNeuronMemory();
 }
 
 
 void test_worker_input_node_producing_output_needed_by_other_worker(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     uint8_t nodes[4][4] = {
             {2, 2, 2, 2},
@@ -742,46 +758,48 @@ void test_worker_input_node_producing_output_needed_by_other_worker(){
 
     //NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d |2 2 0 1 2.0 2.0 1 |3 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
-    handleNeuronMessage(assignNeuronsMessage);//Assign neuron computation to the node
+    neuron.handleNeuronMessage(blankIP,blankIP,assignNeuronsMessage);//Assign neuron computation to the node
 
     //NN_ASSIGN_INPUT [neuronID]
     snprintf(assignNeuronsMessage, sizeof(assignNeuronsMessage),"%d 0",NN_ASSIGN_INPUT);
-    handleNeuronMessage(assignNeuronsMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,assignNeuronsMessage);
 
-    TEST_ASSERT(inputNeurons[0]==0);
+    TEST_ASSERT(neuron.inputNeurons[0]==0);
 
     //NN_FORWARD [neuronId]
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0",NN_FORWARD);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     //printNeuronInfo();
 
-    TEST_ASSERT(inputNeuronsValues[0]==5.0);
+    TEST_ASSERT(neuron.inputNeuronsValues[0]==5.0);
 
     //TEST_ASSERT(isOutputComputed[neuronStorageIndex2]);
 
-    neuronStorageIndex2= getNeuronStorageIndex(neuron2);
+    neuronStorageIndex2= neuron.neuronCore.getNeuronStorageIndex(neuron2);
     TEST_ASSERT(neuronStorageIndex2 != -1);
     TEST_ASSERT(neuronStorageIndex2 == 0);
-    inputStorageIndex2= getInputStorageIndex(neuron2,0);
+    inputStorageIndex2 = neuron.neuronCore.getInputStorageIndex(neuron2,0);
     TEST_ASSERT(inputStorageIndex2 != -1);
-    TEST_ASSERT(isBitSet(receivedInputs[neuronStorageIndex2],inputStorageIndex2));
+    TEST_ASSERT(isBitSet(neuron.receivedInputs[neuronStorageIndex2],inputStorageIndex2));
 
-    neuronStorageIndex3= getNeuronStorageIndex(neuron3);
+    neuronStorageIndex3= neuron.neuronCore.getNeuronStorageIndex(neuron3);
     TEST_ASSERT(neuronStorageIndex3 != -1);
     TEST_ASSERT(neuronStorageIndex3 == 1);
-    inputStorageIndex3= getInputStorageIndex(neuron3,0);
+    inputStorageIndex3= neuron.neuronCore.getInputStorageIndex(neuron3,0);
     //printBitField(receivedInputs[inputStorageIndex3],2);
-    TEST_ASSERT(isBitSet(receivedInputs[neuronStorageIndex3],inputStorageIndex3));
+    TEST_ASSERT(isBitSet(neuron.receivedInputs[neuronStorageIndex3],inputStorageIndex3));
 /******/
-    clearAllNeuronMemory();
-    freeAllNeuronMemory();
+    neuron.clearAllNeuronMemory();
+
 }
 
 
 
 
 void test_encode_message_assign_neuron(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char correctMessage[50] ="|3 2 1 2 2 2 1",buffer[200];
     float weightsValues[2]={2.0,2.0}, bias=1;
@@ -796,6 +814,8 @@ void test_encode_message_assign_neuron(){
 }
 
 void test_encode_message_neuron_output(){
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
     char correctMessage[50],buffer[200];
     int outputNeuronId = 1;
@@ -803,7 +823,7 @@ void test_encode_message_neuron_output(){
 
     snprintf(correctMessage, sizeof(correctMessage),"%d %i %d %g",NN_NEURON_OUTPUT,0,outputNeuronId,neuronOutput);
 
-    encodeNeuronOutputMessage(buffer, sizeof(buffer),outputNeuronId, neuronOutput);
+    neuron.encodeNeuronOutputMessage(buffer, sizeof(buffer),outputNeuronId, neuronOutput);
 
     printf("Encoded Message:%s\n",buffer);
     printf("Correct Message:%s\n",correctMessage);
@@ -831,7 +851,7 @@ void test_encode_NACK_message(){
 
     snprintf(correctMessage, sizeof(correctMessage)," %d", missingInput);
 
-    encodeNACKMessage(buffer, sizeof(buffer),missingInput);
+    NeuronManager::encodeNACKMessage(buffer, sizeof(buffer),missingInput);
 
     printf("Encoded Message:%s\n",buffer);
     printf("Correct Message:%s\n",correctMessage);
@@ -845,7 +865,7 @@ void test_encode_ACK_message(){
 
     snprintf(correctMessage, sizeof(correctMessage)," %d %d %d %d", ackInputs[0],ackInputs[1],ackInputs[2],ackInputs[3]);
 
-    encodeACKMessage(buffer, sizeof(buffer),ackInputs,4);
+    NeuronManager::encodeACKMessage(buffer, sizeof(buffer),ackInputs,4);
 
     printf("Encoded Message:%s\n",buffer);
     printf("Correct Message:%s\n",correctMessage);
@@ -854,7 +874,10 @@ void test_encode_ACK_message(){
 
 
 void test_bit_fields(){
-    BitField& bits = receivedInputs[0];
+    NeuronManager neuron;
+    uint8_t blankIP[4]={0,0,0,0};
+
+    BitField& bits = neuron.receivedInputs[0];
 
     // 1. Test resetAll
     resetAll(bits);
@@ -1066,28 +1089,28 @@ void test_distribute_neural_network_to_one_device(){
     //printNeuronInfo();
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |2 2 0 1 2.0 2.0 1 |3 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |4 2 0 1 2.0 2.0 1 |5 2 0 1 2.0 2.0 1",NN_ASSIGN_COMPUTATION);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |6 4 2 3 4 5 2.0 2.0 2.0 2.0 1 |7 4 2 3 4 5 2.0 2.0 2.0 2.0 1 ",NN_ASSIGN_COMPUTATION);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     snprintf(receivedMessage, sizeof(receivedMessage),"%d |8 4 2 3 4 5 2.0 2.0 2.0 2.0 1 |9 4 2 3 4 5 2.0 2.0 2.0 2.0 1 ",NN_ASSIGN_COMPUTATION);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     printNeuronInfo();
 
     //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 0 1.0",NN_NEURON_OUTPUT);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     printNeuronInfo();
 
     //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
     snprintf(receivedMessage, sizeof(receivedMessage),"%d 0 1 1.0",NN_NEURON_OUTPUT);
-    handleNeuronMessage(receivedMessage);
+    neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
     printNeuronInfo();
 

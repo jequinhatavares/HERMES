@@ -19,6 +19,45 @@ typedef struct OutputTarget{
 
 class NeuronManager{
 public:
+    /*** Stores the target nodes of the input neurons. Since all input neurons belong to the same layer,
+     * they share the same set of target nodes (i.e., the neurons in the next layer).
+     * Therefore, only one instance of the OutputTarget structure is needed. ***/
+    OutputTarget inputTargets;
+
+    /*** Each node has a bitfield that indicates which inputs have been received during the current forward propagation
+   *  step of the neural network.receivedInputs[neuronIndex][inputIndex] == 1 means the input was received. ***/
+    BitField receivedInputs[MAX_NEURONS] = {0};
+
+    // Store the output value of each neuron
+    float outputValues[MAX_NEURONS];
+
+    // Indicates whether the output of a given neuron has already been computed
+    bool isOutputComputed[MAX_NEURONS]={ false};
+
+    // To store the target nodes of each neuron output
+    OutputTarget neuronTargets[MAX_NEURONS];
+
+    // Contains the input neurons that this node hosts
+    NeuronId inputNeurons[MAX_INPUT_NEURONS];
+    uint8_t nrInputNeurons=0;
+
+    // Contain the input values of the current inference iteration
+    float inputNeuronsValues[MAX_INPUT_NEURONS];
+
+
+    NeuronCore neuronCore; //owns the neuron core data & computations
+
+    void handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,char* messageBuffer);
+    void manageNeuron();
+
+    void clearAllNeuronMemory();
+
+    static void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId outputNeuronId, float neuronOutput);
+    static void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId missingNeuron);
+    static void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount);
+    static void encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type);
+
+private:
     // Variables used to track when the NACK mechanism was triggered, to manage this neuron's output in the presence of missing inputs
     unsigned long nackTriggerTime;
     bool nackTriggered = false;
@@ -31,42 +70,9 @@ public:
     // Indicates whether all outputs of the neurons owned by this node have been computed
     bool allOutputsComputed = false;
 
-    /*** Each node has a bitfield that indicates which inputs have been received during the current forward propagation
-    *  step of the neural network.receivedInputs[neuronIndex][inputIndex] == 1 means the input was received. ***/
-    BitField receivedInputs[MAX_NEURONS] = {0};
-
-    // Store the output value of each neuron
-    float outputValues[MAX_NEURONS];
-
-    // Indicates whether the output of a given neuron has already been computed
-    bool isOutputComputed[MAX_NEURONS]={ false};
-
-    // To store the target nodes of each neuron output
-    OutputTarget neuronTargets[MAX_NEURONS];
-
     // Identifier of the current inference cycle, assigned by the root node
     int currentInferenceId = 0;
 
-    // Contains the input neurons that this node hosts
-    NeuronId inputNeurons[MAX_INPUT_NEURONS];
-    uint8_t nrInputNeurons=0;
-
-    // Contain the input values of the current inference iteration
-    float inputNeuronsValues[MAX_INPUT_NEURONS];
-
-    /*** Stores the target nodes of the input neurons. Since all input neurons belong to the same layer,
-     * they share the same set of target nodes (i.e., the neurons in the next layer).
-     * Therefore, only one instance of the OutputTarget structure is needed. ***/
-    OutputTarget inputTargets;
-
-    void handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,char* messageBuffer);
-
-    void manageNeuron();
-
-    void clearAllNeuronMemory();
-
-private:
-    NeuronCore neuronCore; //owns the neuron core data & computations
 
     void handleAssignComputationsMessage(char*messageBuffer);
     void handleAssignOutputTargets(char* messageBuffer);
@@ -79,10 +85,6 @@ private:
 
     void updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]);
 
-    void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,NeuronId outputNeuronId, float neuronOutput);
-    void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId missingNeuron);
-    void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount);
-    void encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type);
 
     void processNeuronInput(NeuronId outputNeuronId,int inferenceId,float inputValue);
     void generateInputData(NeuronId inputNeuronId);
@@ -90,7 +92,6 @@ private:
 
     void onInputWaitTimeout();
     void onNACKTimeout();
-
 
     void encodeInputRegistration(char *messageBuffer, size_t bufferSize, uint8_t *nodeIP, DeviceType type);
 };
