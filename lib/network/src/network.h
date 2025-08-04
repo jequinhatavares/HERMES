@@ -31,7 +31,7 @@ class Network {
 
     // ==================== NETWORK CORE =====================
     void setAsRoot(bool isRoot);        // Set this node as root (call before begin())
-    void begin();                       // Initialize network components (call in setup())
+    void begin();                       // Initialize network components (call in setup()) and integrate the node into the network
     void run();                         // Called in loop() to the node to run the program
 
     // ==================== CALLBACKS ========================
@@ -42,6 +42,7 @@ class Network {
     void onNetworkJoin(void (*callback)(uint8_t* parentIP));
 
     // ================== MIDDLEWARE  =================
+    StrategyType getActivemiddlewareStrategy();
     void middlewareSelectStrategy(StrategyType strategyType);   // Sets the middleware routing strategy to use
     void middlewareInfluenceRouting(char* dataMessage);         // Allows application layer to influence routing decisions (uses the currently selected middleware strategy)
 

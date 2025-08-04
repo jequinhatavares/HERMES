@@ -100,6 +100,16 @@ void Network::run() {
         cliInteraction();
     #endif
 }
+/**
+ * getMiddlewareActiveStrategy
+ * Returns the active middleware strategy
+ *
+ * @param strategyType - The active strategy
+ * @return void
+ */
+StrategyType Network::getMiddlewareActiveStrategy() {
+    return STRATEGY_PUBSUB;
+}
 
 /**
  * middlewareSelectStrategy
@@ -461,6 +471,7 @@ void *Network::getParentMetric(uint8_t *nodeIP) {
 
     return nullptr;
 }
+
 
 
 
