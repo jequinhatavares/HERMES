@@ -427,12 +427,10 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
 void NeuralNetworkCoordinator::assignOutputTargetsToNeurons(char* messageBuffer,size_t bufferSize,NeuronId *neuronIDs,uint8_t nNeurons,uint8_t targetNodeIP[4]){
     NeuronId *neuronId,*neuronId2;
     NeuronEntry *neuronEntry,*neuronEntry2;
-    uint8_t outputNeurons[TOTAL_NEURONS];
     uint8_t inputNodesIPs[TABLE_MAX_SIZE][4], nNodes = 0;
     int offset = 0;
     char tmpBuffer[50];
     size_t tmpBufferSize = sizeof(tmpBuffer);
-    bool neuronsAssignedToNode=false;
 
     encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_OUTPUT_TARGETS);
     offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
@@ -464,7 +462,6 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNeurons(char* messageBuffer,
                 }
             }
         }
-
 
         encodeAssignOutputMessage(tmpBuffer,tmpBufferSize,neuronId,1,inputNodesIPs,nNodes);
         offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
@@ -776,7 +773,7 @@ void NeuralNetworkCoordinator::handleWorkerRegistration(char* messageBuffer){
     //NN_WORKER_REGISTRATION [Node IP] [Device Type]
     sscanf(messageBuffer, "%*d %hhu.%hhu.%hhu.%hhu %hhu",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&deviceClass);
 
-    if(totalInputs>=MAX_NEURONS){
+    if(totalWorkers>=MAX_NEURONS){
         LOG(APP,INFO, "Worker node registrations have exceeded the number of available NN neurons\n");
         return;
     }
@@ -804,7 +801,10 @@ void NeuralNetworkCoordinator::handleInputRegistration(char* messageBuffer){
     //NN_INPUT_REGISTRATION [Node IP] [Device Type]
     sscanf(messageBuffer, "%*d %hhu.%hhu.%hhu.%hhu %hhu",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&deviceClass);
 
-    if(totalInputs>=MAX_INPUT_NEURONS) LOG(APP,INFO, "Input node registrations have exceeded the number of available NN input nodes\n");
+    if(totalInputs>=MAX_INPUT_NEURONS){
+        LOG(APP,INFO, "Input node registrations have exceeded the number of available NN input nodes\n");
+        return;
+    }
 
     //Register the node as a input node
     assignIP(inputsIPs[totalInputs],nodeIP);
@@ -821,10 +821,28 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
         2. Enough input nodes are registered
         3. Neural network isn't already distributed across devices ***/
     if(totalWorkers>=MIN_WORKERS && totalInputs == TOTAL_INPUT_NEURONS && !areNeuronsAssigned){
-        distributeNeuralNetwork(&neuralNetwork,workersIPs,totalWorkers);
-        //if(network.)
-        assignOutputTargetsToNetwork(workersIPs,totalWorkers);
-        distributeInputNeurons(workersIPs,totalWorkers);
+        // Assign the input layer neurons to the input devices
+        distributeInputNeurons(workersIPs,totalInputs);
+        // Distribute the NN hidden layers to the available worker devices
+        distributeNeuralNetworkBalanced(&neuralNetwork,workersIPs,totalWorkers,neuronsPerWorker);
+        //Assign the output layer neurons
+        distributeInputNeurons(inputsIPs,totalWorkers);
+
+        if(network.getActivemiddlewareStrategy()==STRATEGY_NONE || network.getActivemiddlewareStrategy()==STRATEGY_TOPOLOGY){
+            //Assign the output targets of the assigned neurons
+            for (int i = 0; i < totalWorkers; i++) {
+                assignOutputTargetsToNode(appPayload, sizeof(appPayload),workersIPs[i]);
+                network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,workersIPs[i]);
+            }
+
+        }else if(network.getActivemiddlewareStrategy()==STRATEGY_PUBSUB){
+            //Assign the pub/sub info of the assigned neurons
+            for (int i = 0; i < totalWorkers; i++) {
+                assignPubSubInfoToNode(appPayload, sizeof(appPayload),workersIPs[i]);
+                network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,workersIPs[i]);
+            }
+        }
+
         neuronAssignmentTime = getCurrentTime();
     }
 
@@ -916,8 +934,12 @@ void NeuralNetworkCoordinator::onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices
             //Send the message assigning weights bias and inputs
             network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodeIP[k]);
 
-            //Then send the message assigning the output targets
-            assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodeIP[k]);
+            if(network.getActivemiddlewareStrategy()==STRATEGY_NONE || network.getActivemiddlewareStrategy()==STRATEGY_TOPOLOGY) {
+                //Then send the message assigning the output targets
+                assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodeIP[k]);
+            }else if(network.getActivemiddlewareStrategy()==STRATEGY_PUBSUB){
+                assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodeIP[k]);
+            }
             network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodeIP[k]);
         }
 
@@ -949,8 +971,13 @@ void NeuralNetworkCoordinator::onACKTimeOutInputLayer(){
             strcpy(appPayload,"");
             strcpy(appBuffer,"");
 
-            // Then send the message assigning output targets only to the specific input node
-            assignOutputTargetsToNeurons(appPayload, sizeof(appPayload),currentId,1,neuronEntry->nodeIP);
+            if(network.getActivemiddlewareStrategy()==STRATEGY_NONE || network.getActivemiddlewareStrategy()==STRATEGY_TOPOLOGY) {
+                // Then send the message assigning output targets only to the specific input node
+                assignOutputTargetsToNeurons(appPayload, sizeof(appPayload),currentId,1,neuronEntry->nodeIP);
+            }else if(network.getActivemiddlewareStrategy()==STRATEGY_PUBSUB){
+                //Then encode the message assigning pub/sub info only to the specific input node
+
+            }
             network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,neuronEntry->nodeIP);
         }
     }
@@ -991,7 +1018,6 @@ void NeuralNetworkCoordinator::handleNeuralNetworkMessage(uint8_t *senderIP, uin
 
         case NN_NEURON_OUTPUT:
             handleNeuronMessage(senderIP, destinationIP,messageBuffer);
-            (messageBuffer);
             break;
         case NN_FORWARD:
             handleNeuronMessage(senderIP, destinationIP,messageBuffer);
