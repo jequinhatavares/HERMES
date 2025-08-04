@@ -4,7 +4,6 @@
 #include <network.h>
 #include <Arduino.h>
 
-
 //227:96:230:135 root
 //227:96:237:119
 
@@ -52,9 +51,11 @@ void setup(){
     #endif
 
     //To auto initialize the root node has the node with the IP 135.230.96.1
+    network.getNodeMAC(MAC);
+    //To auto initialize the root node has the node with the IP 135.230.96.1
     if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96)
     {
-        //network.setAsRoot(true);
+        network.setAsRoot(true);
     }
     waitForEnter();
 

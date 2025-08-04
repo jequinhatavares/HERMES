@@ -7,6 +7,9 @@
 #include "core/logger/logger.h"
 #include "core/middleware/middleware.h"
 
+//network instance declaration
+Network network;
+
 /**
  * setAsRoot
  *
