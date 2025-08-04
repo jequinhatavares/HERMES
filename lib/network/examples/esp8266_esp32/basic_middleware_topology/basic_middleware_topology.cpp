@@ -1,7 +1,7 @@
 #include <network.h>
 #include <Arduino.h>
 
-class Network network;
+//class Network network;
 
 //Put Here the MAC of the node you wish to be root
 uint8_t rootMAC[6] = {0,0,0,96,230,135};
@@ -83,8 +83,6 @@ void setup() {
         network.setAsRoot(true);
     }
 
-    network.begin();
-
     // Select the middleware strategy Topology
     network.middlewareSelectStrategy(STRATEGY_TOPOLOGY);
 
@@ -97,6 +95,9 @@ void setup() {
             decodeTopologyMetricEntry, // - decodeTopologyMetricEntry: function to deserialize received metric data
             chooseParentByProcessingCapacity // - chooseParentByProcessingCapacity: function used by the root to select the best parent for a new node based on metrics
     );
+
+    network.begin();
+
 
     /***
      * In the Topology strategy, there is no need to explicitly call network.middlewareInfluenceRouting(),
