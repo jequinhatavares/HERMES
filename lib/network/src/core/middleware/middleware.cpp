@@ -253,3 +253,13 @@ void* middlewareGetStrategyContext(){
 bool isMiddlewareStrategyActive(StrategyType strategyType){
     return strategyType == activeStrategyType;
 }
+
+/**
+ * middlewareActiveStrategy
+ * Returns the active middleware strategy
+ *
+ * @return StrategyType- The active Strategy type
+ */
+StrategyType middlewareActiveStrategy(){
+    return activeStrategyType;
+}

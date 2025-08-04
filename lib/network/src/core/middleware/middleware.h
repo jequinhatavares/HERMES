@@ -23,6 +23,8 @@ void middlewareOnTimer();
 void middlewareOnNetworkEvent(int networkEvent, uint8_t involvedIP[4]);
 void* middlewareGetStrategyContext();
 bool isMiddlewareStrategyActive(StrategyType strategyType);
+StrategyType middlewareActiveStrategy();
+
 
 
 #endif //MIDDLEWARE_H
