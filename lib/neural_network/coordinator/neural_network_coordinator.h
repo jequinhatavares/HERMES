@@ -74,6 +74,7 @@ private:
     void handleWorkerRegistration(char*messageBuffer);
     void handleInputRegistration(char* messageBuffer);
 
+    void assignPubSubInfoToNeuron(char *messageBuffer, size_t bufferSize, NeuronId neuronId);
 };
 
 bool isIDEqual(void* av, void* bv);

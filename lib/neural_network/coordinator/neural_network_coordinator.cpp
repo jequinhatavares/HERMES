@@ -625,6 +625,29 @@ void NeuralNetworkCoordinator::assignPubSubInfoToNode(char* messageBuffer,size_t
 
 }
 
+
+void NeuralNetworkCoordinator::assignPubSubInfoToNeuron(char* messageBuffer,size_t bufferSize,NeuronId neuronId){
+    NeuronEntry *neuronEntry;
+    uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
+    int offset = 0;
+    char tmpBuffer[50];
+    size_t tmpBufferSize = sizeof(tmpBuffer);
+
+    encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_OUTPUT_TARGETS);
+    offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
+
+    neuronEntry = (NeuronEntry*)tableRead(neuronToNodeTable,&neuronId);
+    if(neuronEntry != nullptr){
+        /*** Neurons in a given layer will publish to a topic corresponding to their layer number,
+                and subscribe to the topics published by neurons in the previous layer.***/
+        encodePubSubInfo(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,neuronEntry->layer-1,neuronEntry->layer);
+        offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
+        network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,neuronEntry->nodeIP);
+    }
+
+
+}
+
 void NeuralNetworkCoordinator::encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type){
     if(type == NN_ASSIGN_COMPUTATION){
         snprintf(messageBuffer,bufferSize,"%i ",NN_ASSIGN_COMPUTATION);
@@ -832,14 +855,14 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
             //Assign the output targets of the assigned neurons
             for (int i = 0; i < totalWorkers; i++) {
                 assignOutputTargetsToNode(appPayload, sizeof(appPayload),workersIPs[i]);
-                network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,workersIPs[i]);
+                //network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,workersIPs[i]);
             }
 
         }else if(network.getActivemiddlewareStrategy()==STRATEGY_PUBSUB){
             //Assign the pub/sub info of the assigned neurons
             for (int i = 0; i < totalWorkers; i++) {
                 assignPubSubInfoToNode(appPayload, sizeof(appPayload),workersIPs[i]);
-                network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,workersIPs[i]);
+                //network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,workersIPs[i]);
             }
         }
 
@@ -854,6 +877,7 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
     if( areNeuronsAssigned && !receivedAllNeuronAcks && (currentTime-neuronAssignmentTime) >= ACK_TIMEOUT ){
         onACKTimeOut(workersIPs,totalWorkers);// Handles missing acknowledgment messages from hidden layer nodes
         onACKTimeOutInputLayer();// Handles missing acknowledgment messages from input layer neurons
+        neuronAssignmentTime = getCurrentTime();
     }
 
     // If all neurons have acknowledged and no inference cycle is currently running, start a new inference cycle
@@ -940,7 +964,7 @@ void NeuralNetworkCoordinator::onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices
             }else if(network.getActivemiddlewareStrategy()==STRATEGY_PUBSUB){
                 assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodeIP[k]);
             }
-            network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodeIP[k]);
+            //network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodeIP[k]);
         }
 
         //Reset the variables for the next unacknowledged neurons from other physical node
@@ -976,9 +1000,9 @@ void NeuralNetworkCoordinator::onACKTimeOutInputLayer(){
                 assignOutputTargetsToNeurons(appPayload, sizeof(appPayload),currentId,1,neuronEntry->nodeIP);
             }else if(network.getActivemiddlewareStrategy()==STRATEGY_PUBSUB){
                 //Then encode the message assigning pub/sub info only to the specific input node
-
+                assignPubSubInfoToNeuron(appPayload, sizeof(appPayload),*currentId);
             }
-            network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,neuronEntry->nodeIP);
+            //network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,neuronEntry->nodeIP);
         }
     }
 }
