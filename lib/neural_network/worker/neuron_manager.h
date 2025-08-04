@@ -78,7 +78,7 @@ private:
     void handleAssignInput(char* messageBuffer);
     void handleAssignOutput(char* messageBuffer);
     void handleAssignPubSubInfo(char* messageBuffer);
-    void handleNACKMessage(char*messageBuffer);
+    void handleNACKMessage(char*messageBuffer,uint8_t*senderIP);
     void handleNeuronOutputMessage(char*messageBuffer);
     void handleForwardMessage(char *messageBuffer);
 

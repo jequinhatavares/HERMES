@@ -40,7 +40,7 @@ void NeuronManager::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP
 
         case NN_NACK:
             //DATA_MESSAGE NN_NACK [Missing Output ID 1] [Missing Output ID 2] ...
-            handleNACKMessage(messageBuffer);
+            handleNACKMessage(messageBuffer,senderIP);
             break;
 
         default:
@@ -383,9 +383,10 @@ void NeuronManager::handleForwardMessage(char *messageBuffer){
  * sends their output values (if already available).
  *
  * @param messageBuffer - Buffer containing NACK information
+ * @param senderIP - IP address of the generator of the NACK message
  * Format: [Neuron ID with Missing Output 1] [Neuron ID with Missing Output 2]...
  */
-void NeuronManager::handleNACKMessage(char*messageBuffer){
+void NeuronManager::handleNACKMessage(char*messageBuffer,uint8_t *senderIP){
     //NN_NACK [Neuron ID with Missing Output 1] [Neuron ID with Missing Output 2] ...
     char *saveptr1, *token;
     NeuronId currentId;
@@ -415,6 +416,7 @@ void NeuronManager::handleNACKMessage(char*messageBuffer){
                 //Encode the message containing the neuron output value
                 encodeNeuronOutputMessage(appPayload,sizeof(appPayload),currentInferenceId,currentId,outputValues[neuronStorageIndex]);
                 //TODO send the message
+                network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,senderIP);
             }
 
             ownsNeuronInNack = true;
