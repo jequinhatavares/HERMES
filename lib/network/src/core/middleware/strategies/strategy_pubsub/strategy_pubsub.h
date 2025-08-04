@@ -22,7 +22,7 @@ typedef enum TopicTypes{
     CAMERA,
 }TopicTypes;
 
-#define MAX_TOPICS 3
+#define MAX_TOPICS 3 //Max topics that a node can publish
 
 extern TableInfo* pubsubTable;
 

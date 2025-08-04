@@ -44,18 +44,20 @@ public:
     // Contain the input values of the current inference iteration
     float inputNeuronsValues[MAX_INPUT_NEURONS];
 
-
     NeuronCore neuronCore; //owns the neuron core data & computations
 
     void handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,char* messageBuffer);
     void manageNeuron();
 
-    void clearAllNeuronMemory();
+    void registerNodeAsInput();
+    void registerNodeAsWorker();
 
     static void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int inferenceId,NeuronId outputNeuronId, float neuronOutput);
     static void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId missingNeuron);
     static void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount);
     static void encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type);
+
+    void clearAllNeuronMemory();
 
 private:
     // Variables used to track when the NACK mechanism was triggered, to manage this neuron's output in the presence of missing inputs

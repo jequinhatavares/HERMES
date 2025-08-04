@@ -822,6 +822,7 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
         3. Neural network isn't already distributed across devices ***/
     if(totalWorkers>=MIN_WORKERS && totalInputs == TOTAL_INPUT_NEURONS && !areNeuronsAssigned){
         distributeNeuralNetwork(&neuralNetwork,workersIPs,totalWorkers);
+        //if(network.)
         assignOutputTargetsToNetwork(workersIPs,totalWorkers);
         distributeInputNeurons(workersIPs,totalWorkers);
         neuronAssignmentTime = getCurrentTime();

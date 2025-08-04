@@ -21,7 +21,7 @@ DeviceType deviceType = DeviceType::DEVICE_ESP8266;
 char appPayload[200];
 char appBuffer[250];
 
-class Network network;
+//class Network network;
 
 void onNetworkJoin(uint8_t *parentIP){
     uint8_t myIP[4];

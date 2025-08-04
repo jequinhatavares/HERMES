@@ -837,3 +837,21 @@ int NeuronManager::getInputNeuronStorageIndex(NeuronId neuronId){
     }
     return -1;
 }
+
+void NeuronManager::registerNodeAsInput(){
+    uint8_t myIP[4];
+    network.getNodeIP(myIP);
+    //encode the input registration message
+    encodeInputRegistration(appPayload, sizeof(appPayload),myIP,deviceType);
+    // Send the message to the neural network coordinator (the root node)
+    network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
+}
+
+void NeuronManager::registerNodeAsWorker() {
+    uint8_t myIP[4];
+    network.getNodeIP(myIP);
+    //encode the input registration message
+    encodeWorkerRegistration(appPayload, sizeof(appPayload),myIP,deviceType);
+    // Send the message to the neural network coordinator (the root node)
+    network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
+}
