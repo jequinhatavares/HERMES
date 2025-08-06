@@ -15,7 +15,7 @@
 typedef struct Strategy{
     //void (*init)(void);
     void (*handleMessage)(char *messageBuffer,size_t bufferSize);
-    void (*influenceRouting)(char *dataMessage);
+    void (*influenceRouting)(char* messageEncodeBuffer,size_t encodeBufferSize,char *dataPayload);
     void (*onTimer)();
     void (*onNetworkEvent)(int context, uint8_t contextIP[4]);
     void *(*getContext)(); // strategy-specific functions

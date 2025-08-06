@@ -45,7 +45,7 @@ void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStruc
 void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int typeTopology);
 void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize);
 void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]);
-void influenceRoutingStrategyTopology(char* dataMessage);
+void influenceRoutingStrategyTopology(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload);
 void onTimerStrategyTopology();
 void* getContextStrategyTopology();
 

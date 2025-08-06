@@ -53,7 +53,7 @@ void initStrategyPubSub(void (*encodeTopicFunction)(char*,size_t,void *),void (*
 void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typePubSub, int8_t topic);
 void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize);
 void onNetworkEventStrategyPubSub(int networkEvent, uint8_t involvedIP[4]);
-void influenceRoutingStrategyPubSub(char* dataMessage);
+void influenceRoutingStrategyPubSub(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload);
 void onTimerStrategyPubSub();
 void* getContextStrategyPubSub();
 
