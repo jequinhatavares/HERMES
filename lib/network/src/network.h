@@ -44,7 +44,7 @@ class Network {
     // ================== MIDDLEWARE  =================
     StrategyType getActivemiddlewareStrategy();
     void middlewareSelectStrategy(StrategyType strategyType);   // Sets the middleware routing strategy to use
-    void middlewareInfluenceRouting(char* dataMessage);         // Allows application layer to influence routing decisions (uses the currently selected middleware strategy)
+    void middlewareInfluenceRouting(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload);         // Allows application layer to influence routing decisions (uses the currently selected middleware strategy)
 
     // ================ STRATEGY: INJECT =====================
     // Configures the Inject strategy

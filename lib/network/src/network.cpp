@@ -131,8 +131,8 @@ void Network::middlewareSelectStrategy(StrategyType strategyType){
  * @param dataMessage - Pointer to the message data for which the middleware can influence the next routing direction
  * @return void
  */
-void Network::middlewareInfluenceRouting(char *dataMessage) {
-    ::middlewareInfluenceRouting(dataMessage);
+void Network::middlewareInfluenceRouting(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload) {
+    ::middlewareInfluenceRouting(messageEncodeBuffer,encodeBufferSize,dataMessagePayload);
 }
 
 
