@@ -17,7 +17,7 @@ void (*middlewareOnTimerCallback)() = nullptr;
 // Callback pointer for middleware to handle incoming middleware messages
 void (*middlewareHandleMessageCallback)(char*,size_t) = nullptr;
 // Callback pointer for middleware to influence routing decisions
-void (*middlewareInfluenceRoutingCallback)(char*) = nullptr;
+void (*middlewareInfluenceRoutingCallback)(char*,size_t,char*) = nullptr;
 // Callback pointer for middleware to be notified of network events
 void (*middlewareOnNetworkEventCallback)(int,uint8_t *) = nullptr;
 // Callback pointer for middleware to select a preferred parent from a list.

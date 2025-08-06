@@ -136,7 +136,7 @@ void initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyM
  * @param dataMessage - Pointer to the message data for which the middleware can influence the next routing direction
  * @return void
  */
-void middlewareInfluenceRouting(char* dataMessage){
+void middlewareInfluenceRouting(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload){
     if(activeStrategyType == STRATEGY_NONE) return;
     if(activeStrategy == nullptr){
         LOG(MIDDLEWARE,ERROR,"ERROR: Trying to influence routing without selecting a middleware strategy\n");
@@ -148,7 +148,7 @@ void middlewareInfluenceRouting(char* dataMessage){
     }
     if(activeStrategyType == STRATEGY_NONE) return;
 
-    activeStrategy->influenceRouting(dataMessage);
+    activeStrategy->influenceRouting(messageEncodeBuffer,encodeBufferSize,dataMessagePayload);
 }
 
 /**
