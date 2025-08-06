@@ -27,6 +27,8 @@ void NeuronManager::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP
         case NN_ASSIGN_OUTPUT_TARGETS:
             if(network.getActivemiddlewareStrategy()==STRATEGY_NONE || network.getActivemiddlewareStrategy()==STRATEGY_TOPOLOGY) {
                 handleAssignOutputTargets(messageBuffer);
+            }else if(network.getActivemiddlewareStrategy()==STRATEGY_PUBSUB){
+                handleAssignPubSubInfo(messageBuffer);
             }
             break;
 
