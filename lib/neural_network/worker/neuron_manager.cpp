@@ -332,13 +332,14 @@ void NeuronManager::handleAssignPubSubInfo(char* messageBuffer){
 
         //spaceToken now pointing to the subTopic
         subTopic = atoi(spaceToken);
-        if(subTopic != -1)//TODO Subscribe to topic
+        if(subTopic != -1) network.subscribeToTopic(static_cast<int8_t>(subTopic));
         //LOG(APP, DEBUG, "subTopic: %i\n", subTopic);
 
         //spaceToken now pointing to the pubTopic
         spaceToken = strtok_r(NULL, " ", &saveptr2);
         pubTopic = atoi(spaceToken);
-        if(pubTopic != -1)//TODO Subscribe to topic
+
+        if(pubTopic != -1) network.advertiseTopic(static_cast<int8_t>(pubTopic));
 
         //LOG(APP, DEBUG, "pubTopic: %i\n", pubTopic);
 
@@ -537,7 +538,7 @@ void NeuronManager::processNeuronInput(NeuronId inputNeuronId,int inferenceId,fl
                 // Encode the message with the neuron output
                 encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,currentNeuronID,neuronOutput);
                 if(network.getActivemiddlewareStrategy()==STRATEGY_NONE || network.getActivemiddlewareStrategy()==STRATEGY_TOPOLOGY){
-                    //Send the computed neuron output value to every target node that need it
+                    // Send the computed neuron output value to every target node that need it
                     for (int j = 0; j < neuronTargets[neuronStorageIndex].nTargets; j++) {
                         // If the target node is this node, there is no need to send the message to myself
                         // since the neuron's output can be directly fed into the local input without transmission.
@@ -545,9 +546,9 @@ void NeuronManager::processNeuronInput(NeuronId inputNeuronId,int inferenceId,fl
                         network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,neuronTargets[neuronStorageIndex].targetsIPs[j]);
                     }
                 }else if(network.getActivemiddlewareStrategy()==STRATEGY_PUBSUB){
-
+                    // With the pub/sub strategy simply call the function to influence routing and the middleware will deal with who needs the output
+                    network.middlewareInfluenceRouting(appBuffer, sizeof(appBuffer),appPayload);
                 }
-
 
             }
         }
@@ -577,7 +578,6 @@ void NeuronManager::processNeuronInput(NeuronId inputNeuronId,int inferenceId,fl
  */
 void NeuronManager::updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]){
     int neuronStorageIndex = -1;
-
 
     for (int i = 0; i < nNeurons; i++) {
 
