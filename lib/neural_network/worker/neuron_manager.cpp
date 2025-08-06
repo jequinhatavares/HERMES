@@ -461,11 +461,15 @@ void NeuronManager::handleNeuronOutputMessage(char*messageBuffer){
 }
 
 //TODO header
-void NeuronManager::processNeuronInput(NeuronId outputNeuronId,int inferenceId,float inputValue){
+void NeuronManager::processNeuronInput(NeuronId inputNeuronId,int inferenceId,float inputValue){
     int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1;
     float neuronOutput;
     bool outputsComputed=true,neuronsRequireInput=false;
     NeuronId currentNeuronID = 0,handledNeuronId;
+    uint8_t myIP[4];
+
+    //Get the node IP
+    network.getNodeIP(myIP);
 
     /***If the inferenceId received in the message is lower than the current inferenceId, the message belongs to
      * an outdated inference cycle and should be discarded ***/
@@ -486,11 +490,11 @@ void NeuronManager::processNeuronInput(NeuronId outputNeuronId,int inferenceId,f
         currentNeuronID = neuronCore.getNeuronId(i);
 
         // Check if the current neuron requires the input produced by outputNeuronId
-        if(neuronCore.isInputRequired(currentNeuronID,outputNeuronId)){
+        if(neuronCore.isInputRequired(currentNeuronID,inputNeuronId)){
             // Find the index where the neuron is stored
             neuronStorageIndex = neuronCore.getNeuronStorageIndex(currentNeuronID);
             // Find the storage index of this specific input value for the given neuron
-            inputStorageIndex = neuronCore.getInputStorageIndex(currentNeuronID,outputNeuronId);
+            inputStorageIndex = neuronCore.getInputStorageIndex(currentNeuronID,inputNeuronId);
             //Find the input size of the neuron
             inputSize = neuronCore.getInputSize(currentNeuronID);
 
@@ -501,7 +505,7 @@ void NeuronManager::processNeuronInput(NeuronId outputNeuronId,int inferenceId,f
             }
 
             //Save the input value in the input vector
-            neuronCore.setInput(currentNeuronID,inputValue,outputNeuronId);
+            neuronCore.setInput(currentNeuronID,inputValue,inputNeuronId);
 
             // Set the bit corresponding to the received input to 1
             setBit(receivedInputs[neuronStorageIndex],inputStorageIndex);
@@ -515,7 +519,7 @@ void NeuronManager::processNeuronInput(NeuronId outputNeuronId,int inferenceId,f
                 //Iterates through all neurons managed by this node to identify which require the computed output as their input
                 for (int j = 0; j < neuronCore.neuronsCount; j++) {
                     handledNeuronId = neuronCore.getNeuronId(j);
-                    if(handledNeuronId !=255 && neuronCore.isInputRequired(handledNeuronId,currentNeuronID)){
+                    if(handledNeuronId != 255 && neuronCore.isInputRequired(handledNeuronId,currentNeuronID)){
                         neuronsRequireInput=true;
                         break;
                     }
@@ -528,7 +532,20 @@ void NeuronManager::processNeuronInput(NeuronId outputNeuronId,int inferenceId,f
 
                 isOutputComputed[neuronStorageIndex] = true;
 
-                //TODO Send the output for the nodes that need him
+                encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,currentNeuronID,neuronOutput);
+                if(network.getActivemiddlewareStrategy()==STRATEGY_NONE || network.getActivemiddlewareStrategy()==STRATEGY_TOPOLOGY){
+                    //Send the computed neuron output value to every target node that need it
+                    for (int j = 0; j < neuronTargets[neuronStorageIndex].nTargets; j++) {
+                        // If the target node is this node, there is no need to send the message to myself
+                        // since the neuron's output can be directly fed into the local input without transmission.
+                        if(isIPEqual(myIP,neuronTargets[neuronStorageIndex].targetsIPs[j])) continue;
+                        network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,neuronTargets[neuronStorageIndex].targetsIPs[j]);
+                    }
+                }else if(network.getActivemiddlewareStrategy()==STRATEGY_PUBSUB){
+
+                }
+
+                    //TODO Send the output for the nodes that need him
             }
         }
     }
