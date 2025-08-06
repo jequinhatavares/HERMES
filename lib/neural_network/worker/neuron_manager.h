@@ -56,6 +56,8 @@ public:
     static void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId missingNeuron);
     static void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount);
     static void encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type);
+    static void encodeInputRegistration(char *messageBuffer, size_t bufferSize, uint8_t *nodeIP, DeviceType type);
+    void decodeNeuronTopic(char* dataMessage, int8_t* topicType);
 
     void clearAllNeuronMemory();
 
@@ -75,6 +77,9 @@ private:
     // Identifier of the current inference cycle, assigned by the root node
     int currentInferenceId = 0;
 
+    // saves the topics that each node publishes
+    int8_t neuronToTopicMap[MAX_NEURONS];
+
     void handleAssignComputationsMessage(char*messageBuffer);
     void handleAssignOutputTargets(char* messageBuffer);
     void handleAssignInput(char* messageBuffer);
@@ -93,7 +98,6 @@ private:
     void onInputWaitTimeout();
     void onNACKTimeout();
 
-    void encodeInputRegistration(char *messageBuffer, size_t bufferSize, uint8_t *nodeIP, DeviceType type);
 };
 
 /***typedef struct OutputTarget{

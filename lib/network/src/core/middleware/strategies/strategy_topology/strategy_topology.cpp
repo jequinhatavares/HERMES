@@ -242,8 +242,7 @@ void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]){
             break;
     }
 }
-void influenceRoutingStrategyTopology(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload){
-}
+void influenceRoutingStrategyTopology(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload){}
 void onTimerStrategyTopology(){
     unsigned long currentTime = getCurrentTime();
     //Periodically send this node's metric to all other nodes in the network

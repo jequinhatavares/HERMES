@@ -306,7 +306,7 @@ void NeuronManager::handleAssignPubSubInfo(char* messageBuffer){
     uint8_t nNeurons,neuronID[MAX_NEURONS];
     char *spaceToken,*neuronEntry;
     char *saveptr1, *saveptr2;
-    int pubTopic,subTopic;
+    int pubTopic,subTopic,neuronStorageIndex;
     // |[Number of Neurons] [neuron ID1] [neuron ID2] [Subscription 1] [Pub 1]
 
     neuronEntry = strtok_r(messageBuffer, "|",&saveptr1);
@@ -339,7 +339,14 @@ void NeuronManager::handleAssignPubSubInfo(char* messageBuffer){
         spaceToken = strtok_r(NULL, " ", &saveptr2);
         pubTopic = atoi(spaceToken);
 
-        if(pubTopic != -1) network.advertiseTopic(static_cast<int8_t>(pubTopic));
+        if(pubTopic != -1){
+            network.advertiseTopic(static_cast<int8_t>(pubTopic));
+            for (int i = 0; i < nNeurons; i++) {
+                neuronStorageIndex = neuronCore.getNeuronStorageIndex(neuronID[i]);
+                //If the neuron if one of neurons handled by this node then save the topic that the neuron publishes
+                if(neuronStorageIndex != -1) neuronToTopicMap[neuronStorageIndex]= static_cast<int8_t>(pubTopic);
+            }
+        }
 
         //LOG(APP, DEBUG, "pubTopic: %i\n", pubTopic);
 
@@ -878,4 +885,23 @@ void NeuronManager::registerNodeAsWorker() {
     encodeWorkerRegistration(appPayload, sizeof(appPayload),myIP,deviceType);
     // Send the message to the neural network coordinator (the root node)
     network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
+}
+
+void NeuronManager::decodeNeuronTopic(char* dataMessage, int8_t* topicType){
+    NeuronId outputNeuronId;
+    int neuronStorageIndex;
+    //Remove the output neuron id from the message
+    sscanf(dataMessage, "%*d %*i %hhu",&outputNeuronId);
+
+    neuronStorageIndex=neuronCore.getNeuronStorageIndex(outputNeuronId);
+    //If the neuron whose output in being produced is an input neuron then the topic type is equal to zero
+    //input layer neurons publish the layer 0 topic
+    if(isNeuronInList(inputNeurons,nrInputNeurons,outputNeuronId)){
+        *topicType = 0;
+        return;
+    }else if(neuronStorageIndex != -1){
+        *topicType = neuronToTopicMap[neuronStorageIndex];
+    }
+    *topicType = -1;
+
 }
