@@ -1,6 +1,5 @@
 #include "neuron_manager.h"
 
-
 /**
  * handleNeuronMessage
  * Processes all incoming neural network neuron related messages
@@ -22,10 +21,13 @@ void NeuronManager::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP
             break;
 
         case NN_ASSIGN_OUTPUT:
-            handleAssignOutput(messageBuffer);
+            handleAssignOutputNeuron(messageBuffer);
             break;
+
         case NN_ASSIGN_OUTPUT_TARGETS:
-            handleAssignOutputTargets(messageBuffer);
+            if(network.getActivemiddlewareStrategy()==STRATEGY_NONE || network.getActivemiddlewareStrategy()==STRATEGY_TOPOLOGY) {
+                handleAssignOutputTargets(messageBuffer);
+            }
             break;
 
         case NN_NEURON_OUTPUT:
@@ -64,7 +66,7 @@ void NeuronManager::handleAssignComputationsMessage(char*messageBuffer){
     char *spaceToken,*neuronEntry;
     char *saveptr1, *saveptr2;
 
-    //NN_ASSIGN_COMPUTATION [destinationIP] |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    //NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     neuronEntry = strtok_r(messageBuffer, "|",&saveptr1);
     //Discard the message types
     neuronEntry = strtok_r(NULL, "|",&saveptr1);
@@ -214,7 +216,7 @@ void NeuronManager::handleAssignInput(char* messageBuffer){
     nrInputNeurons++;
 }
 
-void NeuronManager::handleAssignOutput(char* messageBuffer){
+void NeuronManager::handleAssignOutputNeuron(char* messageBuffer){
     uint8_t inputSize;
     NeuronId neuronID,*inputIndexMap;
     float bias, *weightValues;
@@ -227,7 +229,7 @@ void NeuronManager::handleAssignOutput(char* messageBuffer){
     //Encode the message header of the ACK message
     offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%d",NN_ACK);
 
-    //NN_ASSIGN_INPUT |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    //NN_ASSIGN_OUTPUT |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     neuronEntry = strtok_r(messageBuffer, "|",&saveptr1);
     //Discard the message types
     neuronEntry = strtok_r(NULL, "|",&saveptr1);
