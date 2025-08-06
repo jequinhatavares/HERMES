@@ -303,17 +303,24 @@ void NeuronManager::handleAssignOutputNeuron(char* messageBuffer){
 void NeuronManager::handleAssignPubSubInfo(char* messageBuffer){
     NeuralNetworkMessageType type;
     sscanf(messageBuffer, "%*d %d",&type);
-    uint8_t nNeurons,neuronID[MAX_NEURONS];
+    uint8_t nNeurons, nComputedNeurons=0;
+    NeuronId neuronID[MAX_NEURONS], currentNeuronId;
     char *spaceToken,*neuronEntry;
     char *saveptr1, *saveptr2;
-    int pubTopic,subTopic,neuronStorageIndex;
+    int pubTopic,subTopic,neuronStorageIndex,offset=0;
+    char tmpBuffer[10];
+    size_t tmpBufferSize = sizeof(tmpBuffer);
+
     // |[Number of Neurons] [neuron ID1] [neuron ID2] [Subscription 1] [Pub 1]
+
+    //Encode the message header of the ACK message
+    offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%d",NN_ACK);
 
     neuronEntry = strtok_r(messageBuffer, "|",&saveptr1);
     //Discard the message types
     neuronEntry = strtok_r(NULL, "|",&saveptr1);
 
-    while (neuronEntry != nullptr) {
+    while(neuronEntry != nullptr){
         // Position the spaceToken pointer at the beginning of the current neuron's data segment
         spaceToken = strtok_r(neuronEntry, " ", &saveptr2);
 
@@ -324,7 +331,15 @@ void NeuronManager::handleAssignPubSubInfo(char* messageBuffer){
         //spaceToken now pointing to the list of neuron Ids
         spaceToken = strtok_r(NULL, " ", &saveptr2);
         for (int i = 0; i < nNeurons; i++) {
-            neuronID[i] = atoi(spaceToken);
+            currentNeuronId = atoi(spaceToken);
+            /*** If the neuron targeted by this assignment is not computed by this node, it won't be added to the list
+            *  of neurons to acknowledge. This implies that a message containing the node assignments was lost,
+            *  so by not acknowledging the neuron, the root will resend the assignment. ***/
+            if(neuronCore.computesNeuron(currentNeuronId) || isNeuronInList(inputNeurons,nrInputNeurons,currentNeuronId)){
+                neuronID[nComputedNeurons] = currentNeuronId;
+                nComputedNeurons ++;
+                LOG(APP,DEBUG,"NeuronId: %hhu\n",currentNeuronId);
+            }
             //LOG(APP, DEBUG, " neuronID: %hhu\n", neuronID[i]);
             //Move on the next input to index map
             spaceToken = strtok_r(NULL, " ", &saveptr2);
@@ -332,6 +347,8 @@ void NeuronManager::handleAssignPubSubInfo(char* messageBuffer){
 
         //spaceToken now pointing to the subTopic
         subTopic = atoi(spaceToken);
+        // If the topic is not equal to -1, subscribe to it
+        // A value of -1 indicates an invalid or non-existent topic, meaning the node should not subscribe.
         if(subTopic != -1) network.subscribeToTopic(static_cast<int8_t>(subTopic));
         //LOG(APP, DEBUG, "subTopic: %i\n", subTopic);
 
@@ -340,6 +357,7 @@ void NeuronManager::handleAssignPubSubInfo(char* messageBuffer){
         pubTopic = atoi(spaceToken);
 
         if(pubTopic != -1){
+            // If the topic is not equal to -1, publish it
             network.advertiseTopic(static_cast<int8_t>(pubTopic));
             for (int i = 0; i < nNeurons; i++) {
                 neuronStorageIndex = neuronCore.getNeuronStorageIndex(neuronID[i]);
@@ -350,10 +368,14 @@ void NeuronManager::handleAssignPubSubInfo(char* messageBuffer){
 
         //LOG(APP, DEBUG, "pubTopic: %i\n", pubTopic);
 
+        encodeACKMessage(tmpBuffer,tmpBufferSize,neuronID,nComputedNeurons);
+        offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%s",tmpBuffer);
         //Move on to the next layer neurons
         neuronEntry = strtok_r(NULL, "|", &saveptr1);
-
+        nComputedNeurons=0;
     }
+    // Send message with the acknowledged neurons to the root
+    network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
 }
 
 
