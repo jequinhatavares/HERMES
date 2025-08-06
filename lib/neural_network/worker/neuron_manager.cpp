@@ -532,6 +532,9 @@ void NeuronManager::processNeuronInput(NeuronId inputNeuronId,int inferenceId,fl
 
                 isOutputComputed[neuronStorageIndex] = true;
 
+                //TODO Send the output for the nodes that need him
+
+                // Encode the message with the neuron output
                 encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,currentNeuronID,neuronOutput);
                 if(network.getActivemiddlewareStrategy()==STRATEGY_NONE || network.getActivemiddlewareStrategy()==STRATEGY_TOPOLOGY){
                     //Send the computed neuron output value to every target node that need it
@@ -545,7 +548,7 @@ void NeuronManager::processNeuronInput(NeuronId inputNeuronId,int inferenceId,fl
 
                 }
 
-                    //TODO Send the output for the nodes that need him
+
             }
         }
     }

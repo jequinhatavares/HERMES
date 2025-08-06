@@ -558,7 +558,7 @@ void onNetworkEventStrategyPubSub(int networkEvent, uint8_t involvedIP[4]){
  * @param dataMessage - message containing (or not) the topic data
  * @return void
  */
-void influenceRoutingStrategyPubSub(char* dataMessage){
+void influenceRoutingStrategyPubSub(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload){
     int i,j;
     PubSubInfo *myPubSubInfo, *nodePubSubInfo;
     uint8_t *nextHopIP, *nodeIP;
@@ -567,10 +567,10 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
     int nChars = 0;
     char payload[100];
 
-    sscanf(dataMessage, "%*d %*d.%*d.%*d.%*d %*d.%*d.%*d.%*d %n",&nChars);
+    sscanf(dataMessagePayload, "%*d %*d.%*d.%*d.%*d %*d.%*d.%*d.%*d %n",&nChars);
 
     // Copy the rest of the string manually
-    strncpy(payload, dataMessage + nChars, sizeof(payload) - 1);
+    strncpy(payload, dataMessagePayload + nChars, sizeof(payload) - 1);
 
     LOG(MIDDLEWARE,DEBUG,"%s\n",payload);
 
@@ -609,18 +609,11 @@ void influenceRoutingStrategyPubSub(char* dataMessage){
             if(nodePubSubInfo != nullptr){// Safeguarding against null pointers
                 // For each entry in the table, check if any of its subscribed topics match the topic I'm publishing
                 if(containsTopic(nodePubSubInfo->subscribedTopics,topicType)){
-
                     // Encode the DATA_MESSAGE to send to the subscriber
-                    encodeDataMessage(largeSendBuffer,sizeof(largeSendBuffer),payload,myIP,nodeIP);
+                    encodeDataMessage(messageEncodeBuffer,encodeBufferSize,dataMessagePayload,myIP,nodeIP);
 
                     // Send the published topic to the subscriber node
-                    nextHopIP = (uint8_t *) findRouteToNode(nodeIP);
-                    if(nextHopIP != nullptr){
-                        sendMessage(nextHopIP,largeSendBuffer);
-                        LOG(MIDDLEWARE,ERROR,"Sending [DATA] message: %s to %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
-                    }else{
-                        LOG(MIDDLEWARE,ERROR,"ERROR: Unable to find a path to the node in the routing table\n");
-                    }
+                    sendDataMessageToNode(messageEncodeBuffer,encodeBufferSize,dataMessagePayload,nodeIP);
                 }
             }
 
