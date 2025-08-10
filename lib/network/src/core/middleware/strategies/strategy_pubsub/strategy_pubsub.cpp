@@ -16,6 +16,7 @@ PubSubContext pubsubContext ={
         .unadvertiseTopic = unadvertiseTopic,
 };
 
+
 /***
  * Middleware Publish Subscribe table
  *
@@ -131,9 +132,11 @@ void rewriteSenderIPPubSub(char* messageBuffer, char* writeBuffer, size_t writeB
  * @param bufferSize - Size of the buffer
  * @param typePubSub - Type of PubSub message to encode
  * @param topic - Topic value used for message types involving topic subscription or advertisement changes
- * @return void
+ * @return bool - Indicates whether the message was successfully encoded: true if successful, false otherwise.
+ * For example, if the function attempts to encode a PUBSUB_NODE_UPDATE message but the node has no publications or
+ * subscriptions, it will return false.
  */
-void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typePubSub, int8_t topic) {
+bool encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typePubSub, int8_t topic) {
     PubSubInfo *nodePubSubInfo;
     int offset = 0,i,j;
     uint8_t *nodeIP;
@@ -186,12 +189,14 @@ void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typ
                 for (i = 0; i < MAX_TOPICS; i++) {
                     offset += snprintf(messageBuffer + offset, bufferSize - offset, "%i ", nodePubSubInfo->subscribedTopics[i]);
                 }
+                return true;
             }
-
+            return false;
             break;
 
         case PUBSUB_TABLE_UPDATE:
             //13 5 [sender IP] |[node IP] [Published Topic List] [Subscribed Topics List] |[node IP] [Published Topic List] [Subscribed Topics List]...
+            if(pubsubTable->numberOfItems == 0) return false;
             offset = snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu |",MIDDLEWARE_MESSAGE,PUBSUB_TABLE_UPDATE,
                      myIP[0],myIP[1],myIP[2],myIP[3]);
             for (i = 0; i < pubsubTable->numberOfItems; i++) {
@@ -226,6 +231,7 @@ void encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typ
             }
             break;
     }
+    return true;
 }
 
 /**
@@ -426,7 +432,6 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             //Propagate the unadvertised topic message in the network
             rewriteSenderIPPubSub(messageBuffer,smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_UNADVERTISE);
             propagateMessage(smallSendBuffer,IP);
-
             break;
 
         case PUBSUB_NODE_UPDATE:
@@ -464,7 +469,6 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             //Propagate the unadvertised topic message in the network
             rewriteSenderIPPubSub(messageBuffer,largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_NODE_UPDATE);
             propagateMessage(largeSendBuffer,IP);
-
             break;/******/
 
         case PUBSUB_TABLE_UPDATE:
@@ -532,19 +536,18 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
  * @return void
  */
 void onNetworkEventStrategyPubSub(int networkEvent, uint8_t involvedIP[4]){
+    bool messageEncoded;
     switch (networkEvent) {
         case NETEVENT_JOINED_NETWORK:
-            encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_NODE_UPDATE,-1);
-            sendMessage(involvedIP,smallSendBuffer);
+            //If the node has a
+            messageEncoded=encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_NODE_UPDATE,-1);
+            if(messageEncoded)sendMessage(involvedIP,smallSendBuffer);
             LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/PUBSUB_NODE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
-
             break;
         case NETEVENT_CHILD_CONNECTED:
-            encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_TABLE_UPDATE,-1);
-            sendMessage(involvedIP,largeSendBuffer);
+            messageEncoded=encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_TABLE_UPDATE,-1);
+            if(messageEncoded)sendMessage(involvedIP,largeSendBuffer);
             LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/PUBSUB_TABLE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
-            break;
-        case NETEVENT_CHILD_DISCONNECTED:
             break;
         default:
             break;
@@ -651,7 +654,7 @@ void subscribeToTopic(int8_t subTopic) {
     PubSubInfo *myPubSubInfo, myInitInfo;
 
     myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
-   if(myPubSubInfo != nullptr){ // Update my entry in the table if it already exists
+    if(myPubSubInfo != nullptr){ // Update my entry in the table if it already exists
         for (i = 0; i < MAX_TOPICS ; i++) {
             //The topic is already in my list of subscribed topics
             if(myPubSubInfo->subscribedTopics[i] == subTopic){
@@ -675,7 +678,6 @@ void subscribeToTopic(int8_t subTopic) {
     // Announce that i am subscribing to that topic
     encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE,subTopic);
     propagateMessage(smallSendBuffer,myIP);
-
 }
 
 

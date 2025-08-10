@@ -701,7 +701,7 @@ void disconnectFromAP() {
 }
 
 void startWifiAP(const char* SSID, const char* Pass, uint8_t* localIP, uint8_t* gateway, uint8_t* subnet){
-    //Init Wifi Event Handlers
+    //Init Wifi Event Handlfers
     initWifiEventHandlers();
     //Init the table that are going to save the lost children information
     initAuxTables();
