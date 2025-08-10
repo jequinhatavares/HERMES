@@ -538,13 +538,17 @@ void onNetworkEventStrategyPubSub(int networkEvent, uint8_t involvedIP[4]){
         case NETEVENT_JOINED_NETWORK:
             //If the node has a
             messageEncoded=encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_NODE_UPDATE,-1);
-            if(messageEncoded)sendMessage(involvedIP,smallSendBuffer);
-            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/PUBSUB_NODE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+            if(messageEncoded){
+                sendMessage(involvedIP,smallSendBuffer);
+                LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/PUBSUB_NODE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+            }
             break;
         case NETEVENT_CHILD_CONNECTED:
             messageEncoded=encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_TABLE_UPDATE,-1);
-            if(messageEncoded)sendMessage(involvedIP,largeSendBuffer);
-            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/PUBSUB_TABLE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+            if(messageEncoded){
+                sendMessage(involvedIP,largeSendBuffer);
+                LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/PUBSUB_TABLE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+            }
             break;
         default:
             break;
@@ -629,11 +633,14 @@ void influenceRoutingStrategyPubSub(char* messageEncodeBuffer,size_t encodeBuffe
  */
 void onTimerStrategyPubSub(){
     unsigned long currentTime = getCurrentTime();
+    bool messageEncoded=false;
     //Periodically send this node's metric to all other nodes in the network
     if( (currentTime - lastMiddlewareUpdateTimePubSub) >= MIDDLEWARE_UPDATE_INTERVAL ) {
-        encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_NODE_UPDATE,0);
-        propagateMessage(largeSendBuffer, myIP);
-        LOG(MIDDLEWARE,DEBUG,"Sending periodic [MIDDLEWARE/PUBSUB_NODE_INFO] Message: %s\n",largeSendBuffer);
+        messageEncoded=encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_NODE_UPDATE,0);
+        if(messageEncoded){
+            propagateMessage(largeSendBuffer, myIP);
+            LOG(MIDDLEWARE,DEBUG,"Sending periodic [MIDDLEWARE/PUBSUB_NODE_INFO] Message: %s\n",largeSendBuffer);
+        }
         lastMiddlewareUpdateTimePubSub = currentTime;/******/
     }
 }
