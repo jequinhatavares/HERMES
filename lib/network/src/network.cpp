@@ -179,14 +179,12 @@ void Network::injectMetric(void *metric) {
  * Initializes the middleware strategy Pub/Sub by assigning the required function pointers.
  * This function must be called only after selecting the STRATEGY_PUBSUB strategy using middlewareSelectStrategy.
  *
- * @param setValueFunction - Pointer to the function responsible for updating values within the pubsub table.
- * @param encodeTopicFunction - Pointer to the function responsible for encoding the topic data into a buffer.
  * @param decodeTopicFunction - Pointer to the function responsible for decoding a buffer into a topic identifier.
  *
  * @return void
  */
-void Network::initMiddlewareStrategyPubSub(void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *)){
-    ::initMiddlewareStrategyPubSub(encodeTopicFunction,decodeTopicFunction);
+void Network::initMiddlewareStrategyPubSub(void (*decodeTopicFunction)(char*,int8_t *)){
+    ::initMiddlewareStrategyPubSub(decodeTopicFunction);
 }
 
 

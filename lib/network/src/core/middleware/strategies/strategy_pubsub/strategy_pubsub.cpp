@@ -49,7 +49,6 @@ uint8_t nodesPubSub[TABLE_MAX_SIZE][4];
 unsigned long lastMiddlewareUpdateTimePubSub = 0;
 
 //Function Pointers Initializers
-void (*encodeTopicValue)(char*,size_t,void *) = nullptr;
 void (*decodeTopicValue)(char*,int8_t *) = nullptr;
 
 PubSubInfo valuesPubSub[TABLE_MAX_SIZE];
@@ -60,16 +59,14 @@ PubSubInfo valuesPubSub[TABLE_MAX_SIZE];
  * Initializes the PubSub strategy by setting callback functions and setting up the PubSubTable
  *
  * @param setValueFunction - Callback function for setting table values
- * @param encodeTopicFunction - Callback for encoding topic data
  * @param decodeTopicFunction - Callback for decoding topic data
  * @return void
  */
-void initStrategyPubSub(void (*encodeTopicFunction)(char*,size_t,void *),void (*decodeTopicFunction)(char*,int8_t *) ){
+void initStrategyPubSub(void (*decodeTopicFunction)(char*,int8_t *)){
     //Initialize the pubsubTable
     tableInit(pubsubTable, nodesPubSub, valuesPubSub, sizeof(uint8_t [4]), sizeof(PubSubInfo));
 
     //Initialize function to encode/decode the topics value
-    encodeTopicValue = encodeTopicFunction;
     decodeTopicValue = decodeTopicFunction;
 }
 
