@@ -631,10 +631,10 @@ void onTimerStrategyPubSub(){
     unsigned long currentTime = getCurrentTime();
     //Periodically send this node's metric to all other nodes in the network
     if( (currentTime - lastMiddlewareUpdateTimePubSub) >= MIDDLEWARE_UPDATE_INTERVAL ) {
-        /***encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_NODE_UPDATE);
+        encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer), PUBSUB_NODE_UPDATE,0);
         propagateMessage(largeSendBuffer, myIP);
         LOG(MIDDLEWARE,DEBUG,"Sending periodic [MIDDLEWARE/PUBSUB_NODE_INFO] Message: %s\n",largeSendBuffer);
-        lastMiddlewareUpdateTimePubSub = currentTime;***/
+        lastMiddlewareUpdateTimePubSub = currentTime;/******/
     }
 }
 

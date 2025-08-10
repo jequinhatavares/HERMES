@@ -578,7 +578,7 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                 isOutputComputed[neuronStorageIndex] = true;
 
                 //TODO Send the output for the nodes that need him
-
+                LOG(APP,INFO,"Neuron %hhu generated output: %f\n",currentNeuronID,neuronOutput);
                 // Encode the message with the neuron output
                 encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,currentNeuronID,neuronOutput);
                 if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY){
@@ -874,6 +874,8 @@ void NeuronWorker::onNACKTimeout(){
             //Mark the output as computed
             isOutputComputed[i] = true;
             //TODO Send the output for the nodes that need him
+
+            LOG(APP,INFO,"Neuron %hhu generated output: %f\n",handledNeuronId,outputValue);
 
             // Encode the message with the neuron output
             encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,handledNeuronId,outputValue);
