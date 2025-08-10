@@ -220,7 +220,7 @@ void Network::subscribeToTopic(int8_t topic) {
  * @return void
  */
 void Network::unsubscribeToTopic(int8_t topic){
-    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)) return;{
+    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
         return;
     }
