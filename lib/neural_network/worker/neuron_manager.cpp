@@ -13,18 +13,26 @@ void NeuronWorker::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,
 
     switch (type) {
         case NN_ASSIGN_COMPUTATION:
+            LOG(APP,INFO,"Received [NN_ASSIGN_COMPUTATION] message: \"%s\" from %hhu.%hhu.%hhu.%hhu\n"
+                    ,messageBuffer,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
             handleAssignComputationsMessage(messageBuffer);
             break;
 
         case NN_ASSIGN_INPUT:
+            LOG(APP,INFO,"Received [NN_ASSIGN_INPUT] message: \"%s\" from %hhu.%hhu.%hhu.%hhu\n"
+                    ,messageBuffer,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
             handleAssignInput(messageBuffer);
             break;
 
         case NN_ASSIGN_OUTPUT:
+            LOG(APP,INFO,"Received [NN_ASSIGN_OUTPUT] message: \"%s\" from %hhu.%hhu.%hhu.%hhu\n"
+                    ,messageBuffer,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
             handleAssignOutputNeuron(messageBuffer);
             break;
 
         case NN_ASSIGN_OUTPUT_TARGETS:
+            LOG(APP,INFO,"Received [NN_ASSIGN_OUTPUT_TARGETS] message: \"%s\" from %hhu.%hhu.%hhu.%hhu\n"
+                    ,messageBuffer,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
             if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY) {
                 handleAssignOutputTargets(messageBuffer);
             }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
@@ -33,16 +41,22 @@ void NeuronWorker::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,
             break;
 
         case NN_NEURON_OUTPUT:
+            LOG(APP,INFO,"Received [NN_NEURON_OUTPUT] message: \"%s\" from %hhu.%hhu.%hhu.%hhu\n"
+                    ,messageBuffer,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
             //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
             handleNeuronOutputMessage(messageBuffer);
             break;
 
         case NN_FORWARD:
+            LOG(APP,INFO,"Received [NN_FORWARD] message: \"%s\" from %hhu.%hhu.%hhu.%hhu\n"
+                    ,messageBuffer,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
             //DATA_MESSAGE NN_FORWARD
             handleForwardMessage(messageBuffer);
             break;
 
         case NN_NACK:
+            LOG(APP,INFO,"Received [NN_NACK] message: \"%s\" from %hhu.%hhu.%hhu.%hhu\n"
+                    ,messageBuffer,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
             //DATA_MESSAGE NN_NACK [Missing Output ID 1] [Missing Output ID 2] ...
             handleNACKMessage(messageBuffer,senderIP);
             break;

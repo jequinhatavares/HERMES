@@ -1012,14 +1012,20 @@ void NeuralNetworkCoordinator::handleNeuralNetworkMessage(uint8_t *senderIP, uin
     sscanf(messageBuffer, "%d",&type);
     switch (type) {
         case NN_WORKER_REGISTRATION:
+            LOG(APP,INFO,"Received [NN_WORKER_REGISTRATION] message: \"%s\" from %hhu.%hhu.%hhu.%hhu\n"
+                ,messageBuffer,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
             handleWorkerRegistration(messageBuffer);
             break;
 
         case NN_INPUT_REGISTRATION:
+            LOG(APP,INFO,"Received [NN_INPUT_REGISTRATION] message: \"%s\" from %hhu.%hhu.%hhu.%hhu\n"
+                    ,messageBuffer,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
             handleInputRegistration(messageBuffer);
             break;
 
         case NN_ACK:
+            LOG(APP,INFO,"Received [NN_ACK] message: \"%s\" from %hhu.%hhu.%hhu.%hhu\n"
+                    ,messageBuffer,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
             handleACKMessage(messageBuffer);
             break;
 
