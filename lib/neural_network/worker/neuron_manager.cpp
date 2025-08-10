@@ -857,11 +857,15 @@ void NeuronWorker::onInputWaitTimeout(){
 void NeuronWorker::onNACKTimeout(){
     float outputValue;
     NeuronId handledNeuronId;
+    int neuronStorageIndex=-1;
+    uint8_t myIP[4];
+    network.getNodeIP(myIP);
     // Search for outputs that have not been computed yet and compute them, filling in any missing inputs with the values from the last inference.
-    for (int i = 0; i < neuronCore.neuronsCount; i++) {
+    for (int i = 0; i < neuronCore.neuronsCount; i++){
         if(!isOutputComputed[i]){
             handledNeuronId = neuronCore.getNeuronId(i);
-            if(handledNeuronId == 255)continue; //skip invalid values
+            neuronStorageIndex =neuronCore.getNeuronStorageIndex(handledNeuronId);
+            if(handledNeuronId == 255 || neuronStorageIndex == -1)continue; //skip invalid values
 
             //Compute the neuron Output value
             outputValue = neuronCore.computeNeuronOutput(handledNeuronId);
@@ -870,6 +874,21 @@ void NeuronWorker::onNACKTimeout(){
             //Mark the output as computed
             isOutputComputed[i] = true;
             //TODO Send the output for the nodes that need him
+
+            // Encode the message with the neuron output
+            encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,handledNeuronId,outputValue);
+            if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY){
+                // Send the computed neuron output value to every target node that need it
+                for (int j = 0; j < neuronTargets[neuronStorageIndex].nTargets; j++) {
+                    // If the target node is this node, there is no need to send the message to myself
+                    // since the neuron's output can be directly fed into the local input without transmission.
+                    if(isIPEqual(myIP,neuronTargets[neuronStorageIndex].targetsIPs[j])) continue;
+                    network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,neuronTargets[neuronStorageIndex].targetsIPs[j]);
+                }
+            }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
+                // With the pub/sub strategy simply call the function to influence routing and the middleware will deal with who needs the output
+                network.middlewareInfluenceRouting(appBuffer, sizeof(appBuffer),appPayload);
+            }
 
             //reset the bit field for the next NN run
             resetAll(receivedInputs[i]);
@@ -880,7 +899,7 @@ void NeuronWorker::onNACKTimeout(){
     nackTriggered = false;
 
     // If all outputs have been computed, the forward pass has ended at this node.
-     forwardPassRunning = false;
+    forwardPassRunning = false;
 }
 
 void NeuronWorker::clearAllNeuronMemory(){
