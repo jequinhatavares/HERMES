@@ -80,7 +80,6 @@ NeuralNetworkCoordinator::NeuralNetworkCoordinator() {
 
 void NeuralNetworkCoordinator::initNeuralNetwork(){
     tableInit(neuronToNodeTable,neurons,neuronMap, sizeof(NeuronId),sizeof(NeuronEntry));
-
 }
 
 void printNeuronEntry(TableEntry* Table){
