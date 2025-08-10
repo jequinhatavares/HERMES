@@ -456,14 +456,15 @@ void NeuronWorker::handleNACKMessage(char*messageBuffer,uint8_t *senderIP){
             ownsNeuronInNack = true;
         }
 
-
+        // If the neuron in the NACK is an input neuron managed by this node send the input value
         if(isNeuronInList(inputNeurons,nrInputNeurons,currentId)){
             // Search for the index where the input neuron ID is stored
             inputNeuronIndex= getInputNeuronStorageIndex(currentId);
 
             // The inputNeuronIndex indicates where the neuron's input value is stored in the inputValues vector
             encodeNeuronOutputMessage(appPayload,sizeof(appPayload),currentInferenceId,currentId,inputNeuronsValues[inputNeuronIndex]);
-            //TODO send the message for the node whose input is missing
+            //Send the message containing the neuron output value to the device that misses that
+            network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,senderIP);
         }
 
         token = strtok_r(NULL, " ",&saveptr1);
@@ -779,7 +780,6 @@ void NeuronWorker::onInputWaitTimeout(){
     char tmpBuffer[20];
     size_t tmpBufferSize = sizeof(tmpBuffer);
     NeuronId missingNeuronId, handledNeuronId;
-    int missingNeuronStorageIndex =-1;
     // The message aggregates the missing inputs from all neurons into a single message
     offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%d ",NN_NACK);
 
