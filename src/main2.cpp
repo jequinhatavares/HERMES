@@ -2,13 +2,13 @@
 #if defined(ESP32) || defined(ESP8266)
 
 #include <network.h>
-#include <neural_network_dispatcherh>
+#include <neural_network_dispatcher.h>
 #include <Arduino.h>
 
 //227:96:230:135 root
 //227:96:237:119
 #ifdef ROOT
-NeuralNetworkCoordinator coordinator;
+NeuralNetworkCoordinator worker;
 #endif
 #ifndef ROOT
 NeuralNetworkWorker worker;
@@ -31,6 +31,17 @@ void waitForEnter() {
     Serial.println("Starting program...");
 }
 
+void decodeTopicWrapper(char* dataMessage, int8_t* topicType){
+    worker.decodeNeuronTopic(dataMessage,topicType);
+}
+void handleDataMessageWrapper(uint8_t * senderIP,uint8_t *destinationIP,char* dataMessage){
+#ifdef ROOT
+    worker.handleNeuralNetworkMessage(senderIP,destinationIP,dataMessage);
+#endif
+#ifndef ROOT
+    worker.handleNeuronMessage(senderIP,destinationIP,dataMessage);
+#endif
+}
 
 void setup(){
     uint8_t MAC[6];
@@ -67,7 +78,7 @@ void setup(){
     waitForEnter();
 
 
-    network.begin();
+
 
     //Select and initialize the middleware strategy
     //middlewareSelectStrategy(STRATEGY_INJECT);
@@ -76,10 +87,6 @@ void setup(){
     //myMetric.processingCapacity = MAC[5];
     //context->injectNodeMetric(&myMetric);
 
-    network.middlewareSelectStrategy(STRATEGY_PUBSUB);
-    network.initMiddlewareStrategyPubSub(setPubSubInfo,encodeTopic,decodeTopic);
-
-
     /***middlewareSelectStrategy(STRATEGY_TOPOLOGY);
     initMiddlewareStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,chooseParentByProcessingCapacity);
     TopologyContext *context = (TopologyContext*) middlewareGetStrategyContext();
@@ -87,11 +94,19 @@ void setup(){
     if(context != nullptr)context->setParentMetric(&myMetric);***/
 
     //middlewareSelectStrategy(STRATEGY_NONE);
+    //First init the middleware strategy
+    network.middlewareSelectStrategy(STRATEGY_PUBSUB);
+    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);
+
+    //Then init the callback function for data message receiving
+    network.onDataReceived(handleDataMessageWrapper);
+    //And then the node can be initialized and integrated in the network
+    network.begin();
 
 }
 
 void loop(){
-   //network.run();
+   network.run();
 }
 #endif
 
