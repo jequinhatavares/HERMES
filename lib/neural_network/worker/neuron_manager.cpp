@@ -25,9 +25,9 @@ void NeuronWorker::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,
             break;
 
         case NN_ASSIGN_OUTPUT_TARGETS:
-            if(network.getActivemiddlewareStrategy()==STRATEGY_NONE || network.getActivemiddlewareStrategy()==STRATEGY_TOPOLOGY) {
+            if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY) {
                 handleAssignOutputTargets(messageBuffer);
-            }else if(network.getActivemiddlewareStrategy()==STRATEGY_PUBSUB){
+            }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
                 handleAssignPubSubInfo(messageBuffer);
             }
             break;
@@ -566,7 +566,7 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
 
                 // Encode the message with the neuron output
                 encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,currentNeuronID,neuronOutput);
-                if(network.getActivemiddlewareStrategy()==STRATEGY_NONE || network.getActivemiddlewareStrategy()==STRATEGY_TOPOLOGY){
+                if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY){
                     // Send the computed neuron output value to every target node that need it
                     for (int j = 0; j < neuronTargets[neuronStorageIndex].nTargets; j++) {
                         // If the target node is this node, there is no need to send the message to myself
@@ -574,7 +574,7 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                         if(isIPEqual(myIP,neuronTargets[neuronStorageIndex].targetsIPs[j])) continue;
                         network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,neuronTargets[neuronStorageIndex].targetsIPs[j]);
                     }
-                }else if(network.getActivemiddlewareStrategy()==STRATEGY_PUBSUB){
+                }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
                     // With the pub/sub strategy simply call the function to influence routing and the middleware will deal with who needs the output
                     network.middlewareInfluenceRouting(appBuffer, sizeof(appBuffer),appPayload);
                 }

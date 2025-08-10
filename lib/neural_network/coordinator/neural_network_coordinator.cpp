@@ -850,14 +850,14 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
         //Assign the output layer neurons
         distributeInputNeurons(inputsIPs,totalWorkers);
 
-        if(network.getActivemiddlewareStrategy()==STRATEGY_NONE || network.getActivemiddlewareStrategy()==STRATEGY_TOPOLOGY){
+        if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY){
             //Assign the output targets of the assigned neurons
             for (int i = 0; i < totalWorkers; i++) {
                 assignOutputTargetsToNode(appPayload, sizeof(appPayload),workersIPs[i]);
                 //network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,workersIPs[i]);
             }
 
-        }else if(network.getActivemiddlewareStrategy()==STRATEGY_PUBSUB){
+        }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
             //Assign the pub/sub info of the assigned neurons
             for (int i = 0; i < totalWorkers; i++) {
                 assignPubSubInfoToNode(appPayload, sizeof(appPayload),workersIPs[i]);
@@ -957,10 +957,10 @@ void NeuralNetworkCoordinator::onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices
             //Send the message assigning weights bias and inputs
             network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodeIP[k]);
 
-            if(network.getActivemiddlewareStrategy()==STRATEGY_NONE || network.getActivemiddlewareStrategy()==STRATEGY_TOPOLOGY) {
+            if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY) {
                 //Then send the message assigning the output targets
                 assignOutputTargetsToNode(appPayload, sizeof(appPayload),nodeIP[k]);
-            }else if(network.getActivemiddlewareStrategy()==STRATEGY_PUBSUB){
+            }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
                 assignPubSubInfoToNode(appPayload, sizeof(appPayload),nodeIP[k]);
             }
             //network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodeIP[k]);
@@ -994,10 +994,10 @@ void NeuralNetworkCoordinator::onACKTimeOutInputLayer(){
             strcpy(appPayload,"");
             strcpy(appBuffer,"");
 
-            if(network.getActivemiddlewareStrategy()==STRATEGY_NONE || network.getActivemiddlewareStrategy()==STRATEGY_TOPOLOGY) {
+            if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY) {
                 // Then send the message assigning output targets only to the specific input node
                 assignOutputTargetsToNeurons(appPayload, sizeof(appPayload),currentId,1,neuronEntry->nodeIP);
-            }else if(network.getActivemiddlewareStrategy()==STRATEGY_PUBSUB){
+            }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
                 //Then encode the message assigning pub/sub info only to the specific input node
                 assignPubSubInfoToNeuron(appPayload, sizeof(appPayload),*currentId);
             }

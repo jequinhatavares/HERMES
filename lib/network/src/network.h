@@ -42,7 +42,7 @@ class Network {
     void onNetworkJoin(void (*callback)(uint8_t* parentIP));
 
     // ================== MIDDLEWARE  =================
-    StrategyType getActivemiddlewareStrategy();
+    StrategyType getActiveMiddlewareStrategy();
     void middlewareSelectStrategy(StrategyType strategyType);   // Sets the middleware routing strategy to use
     void middlewareInfluenceRouting(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload);         // Allows application layer to influence routing decisions (uses the currently selected middleware strategy)
 
