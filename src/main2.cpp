@@ -11,7 +11,7 @@
 NeuralNetworkCoordinator worker;
 #endif
 #ifndef ROOT
-NeuralNetworkWorker worker;
+NeuronWorker worker;
 #endif
 
 //topologyTableEntry topologyMetrics[TABLE_MAX_SIZE];
