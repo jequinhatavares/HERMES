@@ -6,7 +6,7 @@
  *
  * @param messageBuffer - Buffer containing the received message
  */
-void NeuronManager::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,char* messageBuffer){
+void NeuronWorker::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,char* messageBuffer){
     NeuralNetworkMessageType type;
 
     sscanf(messageBuffer, "%d",&type);
@@ -61,7 +61,7 @@ void NeuronManager::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP
  * @param messageBuffer - Buffer containing computation assignment data
  * Format: |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
  */
-void NeuronManager::handleAssignComputationsMessage(char*messageBuffer){
+void NeuronWorker::handleAssignComputationsMessage(char*messageBuffer){
     uint8_t inputSize;
     NeuronId neuronID,*inputIndexMap;
     float bias, *weightValues;
@@ -132,7 +132,7 @@ void NeuronManager::handleAssignComputationsMessage(char*messageBuffer){
  * @param messageBuffer - Buffer containing output assignment data
  * Format: |[Number of neurons] [Output Neuron IDs...] [Number of targets] [Target IPs...]
  */
-void NeuronManager::handleAssignOutputTargets(char* messageBuffer){
+void NeuronWorker::handleAssignOutputTargets(char* messageBuffer){
     uint8_t nNeurons,nTargets,targetIP[4],nComputedNeurons=0;
     NeuronId neuronID[MAX_NEURONS], currentNeuronId;
     char tmpBuffer[10];
@@ -208,7 +208,7 @@ void NeuronManager::handleAssignOutputTargets(char* messageBuffer){
  * @param messageBuffer - Buffer containing the input neuron data
  * Format: NN_ASSIGN_INPUT [neuronID]
  */
-void NeuronManager::handleAssignInput(char* messageBuffer){
+void NeuronWorker::handleAssignInput(char* messageBuffer){
     NeuronId inputNeuronId;
     //NN_ASSIGN_INPUT [neuronID]
     sscanf(messageBuffer, "%*d %hhu",&inputNeuronId);
@@ -218,7 +218,7 @@ void NeuronManager::handleAssignInput(char* messageBuffer){
     nrInputNeurons++;
 }
 
-void NeuronManager::handleAssignOutputNeuron(char* messageBuffer){
+void NeuronWorker::handleAssignOutputNeuron(char* messageBuffer){
     uint8_t inputSize;
     NeuronId neuronID,*inputIndexMap;
     float bias, *weightValues;
@@ -300,7 +300,7 @@ void NeuronManager::handleAssignOutputNeuron(char* messageBuffer){
  * @param messageBuffer - Buffer containing pub/sub data
  * Format: |[Number of Neurons] [neuron IDs...] [Subscription] [Publication]
  */
-void NeuronManager::handleAssignPubSubInfo(char* messageBuffer){
+void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
     NeuralNetworkMessageType type;
     sscanf(messageBuffer, "%*d %d",&type);
     uint8_t nNeurons, nComputedNeurons=0;
@@ -386,7 +386,7 @@ void NeuronManager::handleAssignPubSubInfo(char* messageBuffer){
  *
  * @param messageBuffer - Buffer containing forward pass command
  */
-void NeuronManager::handleForwardMessage(char *messageBuffer){
+void NeuronWorker::handleForwardMessage(char *messageBuffer){
     int inferenceId;
     sscanf(messageBuffer, "%*d %i",&inferenceId);
 
@@ -420,7 +420,7 @@ void NeuronManager::handleForwardMessage(char *messageBuffer){
  * @param senderIP - IP address of the generator of the NACK message
  * Format: [Neuron ID with Missing Output 1] [Neuron ID with Missing Output 2]...
  */
-void NeuronManager::handleNACKMessage(char*messageBuffer,uint8_t *senderIP){
+void NeuronWorker::handleNACKMessage(char*messageBuffer,uint8_t *senderIP){
     //NN_NACK [Neuron ID with Missing Output 1] [Neuron ID with Missing Output 2] ...
     char *saveptr1, *token;
     NeuronId currentId;
@@ -479,7 +479,7 @@ void NeuronManager::handleNACKMessage(char*messageBuffer,uint8_t *senderIP){
  * @param messageBuffer - Buffer containing neuron output data
  * Format: [Inference Id] [Output Neuron ID] [Output Value]
  */
-void NeuronManager::handleNeuronOutputMessage(char*messageBuffer){
+void NeuronWorker::handleNeuronOutputMessage(char*messageBuffer){
     int inferenceId;
     float inputValue;
     NeuronId outputNeuronId;
@@ -491,7 +491,7 @@ void NeuronManager::handleNeuronOutputMessage(char*messageBuffer){
 }
 
 //TODO header
-void NeuronManager::processNeuronInput(NeuronId inputNeuronId,int inferenceId,float inputValue){
+void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,float inputValue){
     int inputStorageIndex = -1, neuronStorageIndex = -1, inputSize = -1;
     float neuronOutput;
     bool outputsComputed=true,neuronsRequireInput=false;
@@ -605,7 +605,7 @@ void NeuronManager::processNeuronInput(NeuronId inputNeuronId,int inferenceId,fl
  * @param neuronId - Array of neuron IDs
  * @param targetIP - IP address of the target node (IPv4 format)
  */
-void NeuronManager::updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]){
+void NeuronWorker::updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint8_t targetIP[4]){
     int neuronStorageIndex = -1;
 
     for (int i = 0; i < nNeurons; i++) {
@@ -650,7 +650,7 @@ void NeuronManager::updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uin
  * @param outputNeuronId - ID of the neuron producing the output
  * @param neuronOutput - Computed output value
  */
-void NeuronManager::encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int inferenceId,NeuronId outputNeuronId, float neuronOutput){
+void NeuronWorker::encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int inferenceId,NeuronId outputNeuronId, float neuronOutput){
     int offset = 0;
     //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
     //Encode the neuron id that generated this output
@@ -670,7 +670,7 @@ void NeuronManager::encodeNeuronOutputMessage(char* messageBuffer,size_t bufferS
  * @param bufferSize - Size of the output buffer
  * @param missingNeuron - ID of the neuron with missing output
  */
-void NeuronManager::encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId  missingNeuron){
+void NeuronWorker::encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId  missingNeuron){
     int offset = 0;
     //DATA_MESSAGE NN_NACK [Neuron ID with Missing Output] [Missing Output ID 1] [Missing Output ID 2] ...
 
@@ -690,7 +690,7 @@ void NeuronManager::encodeNACKMessage(char* messageBuffer, size_t bufferSize,Neu
  * @param neuronAckList - Array of acknowledged neuron IDs
  * @param ackNeuronCount - Number of neurons in the ACK list
  */
-void NeuronManager::encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount){
+void NeuronWorker::encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount){
     int offset = 0;
     //NN_ACK [Acknowledged Neuron ID 1] [Acknowledged Neuron ID 2]...
 
@@ -706,17 +706,17 @@ void NeuronManager::encodeACKMessage(char* messageBuffer, size_t bufferSize,Neur
 }
 
 //TODO Header
-void NeuronManager::encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type){
+void NeuronWorker::encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type){
     //NN_WORKER_REGISTRATION [Node IP] [Device Type]
     snprintf(messageBuffer,bufferSize,"%d %hhu.%hhu.%hhu.%hhu %d",NN_WORKER_REGISTRATION,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],static_cast<int>(type));
 }
 //TODO Header
-void NeuronManager::encodeInputRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type){
+void NeuronWorker::encodeInputRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type){
     //NN_INPUT_REGISTRATION [Node IP] [Device Type]
     snprintf(messageBuffer,bufferSize,"%d %hhu.%hhu.%hhu.%hhu %d",NN_INPUT_REGISTRATION,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],static_cast<int>(type));
 }
 
-void NeuronManager::generateInputData(NeuronId inputNeuronId){
+void NeuronWorker::generateInputData(NeuronId inputNeuronId){
     uint8_t myLocalIP[4];
     int inputNeuronStorageIndex=-1;
     float sensorData=5.0;
@@ -754,7 +754,7 @@ void NeuronManager::generateInputData(NeuronId inputNeuronId){
  * Main neuron management function that handles NeuralNetwork timeouts.
  * Should be called regularly in the main loop.
  */
-void NeuronManager::manageNeuron(){
+void NeuronWorker::manageNeuron(){
     unsigned long currentTime = getCurrentTime();
 
     // Check if the expected time for input arrival has already passed
@@ -773,7 +773,7 @@ void NeuronManager::manageNeuron(){
  * Handles situations where not all inputs arrive before the established timeout.
  * Triggers NACK messages containing the IDs of the missing input neurons.
  */
-void NeuronManager::onInputWaitTimeout(){
+void NeuronWorker::onInputWaitTimeout(){
     int neuronStorageIndex = -1,offset=0;
     uint8_t inputSize = -1;
     char tmpBuffer[20];
@@ -840,7 +840,7 @@ void NeuronManager::onInputWaitTimeout(){
  * In this case, the node proceeds with output calculations using the received inputs,
  * substituting any missing inputs with values from the previous iteration.
  */
-void NeuronManager::onNACKTimeout(){
+void NeuronWorker::onNACKTimeout(){
     float outputValue;
     NeuronId handledNeuronId;
     // Search for outputs that have not been computed yet and compute them, filling in any missing inputs with the values from the last inference.
@@ -869,7 +869,7 @@ void NeuronManager::onNACKTimeout(){
      forwardPassRunning = false;
 }
 
-void NeuronManager::clearAllNeuronMemory(){
+void NeuronWorker::clearAllNeuronMemory(){
     uint8_t blankIP[4]={0,0,0,0};
     for (int i = 0; i < MAX_NEURONS; ++i) {
         resetAll(receivedInputs[i]);
@@ -884,14 +884,14 @@ void NeuronManager::clearAllNeuronMemory(){
 }
 
 
-int NeuronManager::getInputNeuronStorageIndex(NeuronId neuronId){
+int NeuronWorker::getInputNeuronStorageIndex(NeuronId neuronId){
     for (int i = 0; i < nrInputNeurons; i++) {
         if (inputNeurons[i] == neuronId) return i;
     }
     return -1;
 }
 
-void NeuronManager::registerNodeAsInput(){
+void NeuronWorker::registerNodeAsInput(){
     uint8_t myIP[4];
     network.getNodeIP(myIP);
     //encode the input registration message
@@ -900,7 +900,7 @@ void NeuronManager::registerNodeAsInput(){
     network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
 }
 
-void NeuronManager::registerNodeAsWorker() {
+void NeuronWorker::registerNodeAsWorker() {
     uint8_t myIP[4];
     network.getNodeIP(myIP);
     //encode the input registration message
@@ -909,7 +909,7 @@ void NeuronManager::registerNodeAsWorker() {
     network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
 }
 
-void NeuronManager::decodeNeuronTopic(char* dataMessage, int8_t* topicType){
+void NeuronWorker::decodeNeuronTopic(char* dataMessage, int8_t* topicType){
     NeuronId outputNeuronId;
     int neuronStorageIndex;
     //Remove the output neuron id from the message

@@ -119,7 +119,7 @@ void test_neuron_output_calculation(){
 }
 
 void test_handle_message_assign_neuron_one_neuron(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[50];
     float weightsValues[2]={2.0,2.0}, bias=1;
@@ -142,7 +142,7 @@ void test_handle_message_assign_neuron_one_neuron(){
 
 
 void test_handle_message_assign_neuron_multiple_neurons(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[50];
@@ -179,7 +179,7 @@ void test_handle_message_assign_neuron_multiple_neurons(){
 
 
 void test_handle_assign_output_neuron(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
     //NN_ASSIGN_OUTPUT |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[100];
@@ -220,7 +220,7 @@ void test_handle_assign_output_neuron(){
 }
 
 void test_handle_message_assign_neuron_with_more_than_max_neurons(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[100];
@@ -257,7 +257,7 @@ void test_handle_message_assign_neuron_with_more_than_max_neurons(){
 
 
 void test_handle_neuron_input(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[50], messageWithInput[50];
@@ -294,7 +294,7 @@ void test_handle_neuron_input(){
 
 
 void test_handle_assign_output_targets(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[50],assignNeuronsMessage[50];
@@ -326,7 +326,7 @@ void test_handle_assign_output_targets(){
 
 
 void test_handle_assign_output_targets_to_not_handled_neuron(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
 
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
@@ -377,7 +377,7 @@ void test_handle_assign_output_targets_to_not_handled_neuron(){
 }
 
 void test_handle_assign_output_targets_multiple_layer_neurons(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
     //DATA_MESSAGE NN_ASSIGN_COMPUTATION [Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     char receivedMessage[50],assignNeuronsMessage[50],correctACKMessage[50];
@@ -425,7 +425,7 @@ void test_handle_assign_output_targets_multiple_layer_neurons(){
 }
 
 void test_handle_assign_pubsub_info(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     int pubTopic=1,subTopic=0;
@@ -446,7 +446,7 @@ void test_handle_assign_pubsub_info(){
 }
 
 void test_handle_NACK_without_computed_output(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
@@ -470,7 +470,7 @@ void test_handle_NACK_without_computed_output(){
 }
 
 void test_handle_NACK_with_computed_output(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
@@ -502,7 +502,7 @@ void test_handle_NACK_with_computed_output(){
 
 
 void test_handle_NACK_for_input_node(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
@@ -535,7 +535,7 @@ void test_handle_NACK_for_input_node(){
 }
 
 void test_handle_assign_input_neuron_and_worker_neurons_and_assign_all_outputs(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     uint8_t nodes[4][4] = {
@@ -597,7 +597,7 @@ void test_handle_assign_input_neuron_and_worker_neurons_and_assign_all_outputs()
 }
 
 void test_worker_neurons_from_multiple_layers_assigned(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
@@ -649,7 +649,7 @@ void test_worker_neurons_from_multiple_layers_assigned(){
 }
 
 void test_worker_compute_neuron_output_having_other_neurons_depending_on_that_output(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
@@ -700,7 +700,7 @@ void test_worker_compute_neuron_output_having_other_neurons_depending_on_that_ou
 }
 
 void test_worker_produce_input_and_other_neurons_depending_on_that_output(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
@@ -743,7 +743,7 @@ void test_worker_produce_input_and_other_neurons_depending_on_that_output(){
 
 
 void test_worker_input_node_producing_output_needed_by_other_worker(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
     char receivedMessage[50],assignNeuronsMessage[50];
     uint8_t nodes[4][4] = {
@@ -815,7 +815,7 @@ void test_encode_message_assign_neuron(){
 }
 
 void test_encode_message_neuron_output(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
     //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
     char correctMessage[50],buffer[200];
@@ -852,7 +852,7 @@ void test_encode_NACK_message(){
 
     snprintf(correctMessage, sizeof(correctMessage)," %d", missingInput);
 
-    NeuronManager::encodeNACKMessage(buffer, sizeof(buffer),missingInput);
+    NeuronWorker::encodeNACKMessage(buffer, sizeof(buffer),missingInput);
 
     printf("Encoded Message:%s\n",buffer);
     printf("Correct Message:%s\n",correctMessage);
@@ -866,7 +866,7 @@ void test_encode_ACK_message(){
 
     snprintf(correctMessage, sizeof(correctMessage)," %d %d %d %d", ackInputs[0],ackInputs[1],ackInputs[2],ackInputs[3]);
 
-    NeuronManager::encodeACKMessage(buffer, sizeof(buffer),ackInputs,4);
+    NeuronWorker::encodeACKMessage(buffer, sizeof(buffer),ackInputs,4);
 
     printf("Encoded Message:%s\n",buffer);
     printf("Correct Message:%s\n",correctMessage);
@@ -875,7 +875,7 @@ void test_encode_ACK_message(){
 
 
 void test_bit_fields(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     uint8_t blankIP[4]={0,0,0,0};
 
     BitField& bits = neuron.receivedInputs[0];
@@ -1081,7 +1081,7 @@ void test_distribute_neurons_with_balanced_algorithm(){
 }
 
 void test_distribute_neural_network_to_one_device(){
-    NeuronManager neuron;
+    NeuronWorker neuron;
     //NeuralNetworkCoordinator coordinator;
     uint8_t blankIP[4]={0,0,0,0};
     uint8_t nodes[4][4] = {

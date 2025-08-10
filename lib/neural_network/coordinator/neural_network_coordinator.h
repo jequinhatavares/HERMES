@@ -22,7 +22,7 @@ typedef struct NeuronEntry{
     bool isAcknowledged = false;
 }NeuronEntry;
 
-class NeuralNetworkCoordinator : public NeuronManager {
+class NeuralNetworkCoordinator : public NeuronWorker {
 public:
     NeuralNetworkCoordinator();
 

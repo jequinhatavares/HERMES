@@ -17,7 +17,7 @@ typedef struct OutputTarget{
     uint8_t nTargets = 0;
 }OutputTarget;
 
-class NeuronManager{
+class NeuronWorker{
 public:
     /*** Stores the target nodes of the input neurons. Since all input neurons belong to the same layer,
      * they share the same set of target nodes (i.e., the neurons in the next layer).
