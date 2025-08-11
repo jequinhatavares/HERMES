@@ -693,26 +693,24 @@ void handleDataMessage(char *msg){
         propagateMessage(largeSendBuffer,senderIP);
 
     }else if(!isIPEqual(destinationIP, myIP)){ // If this message is not intended for this node, forward it to the next hop leading to its destination.
-        LOG(NETWORK, DEBUG, "DATA Message as arrived for forwarding to other node:%hhu.%hhu.%hhu.%hhu.\n",destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3]);
+        //LOG(NETWORK, DEBUG, "DATA Message as arrived for forwarding to other node:%hhu.%hhu.%hhu.%hhu.\n",destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3]);
 
         //Find the route to the destination IP of the message
         nextHopPtr = findRouteToNode(destinationIP);
         if (nextHopPtr != nullptr){
             assignIP(nextHopIP, nextHopPtr);
-            LOG(NETWORK, DEBUG, "DATA Message forwarded to node:%hhu.%hhu.%hhu.%hhu.\n",nextHopPtr[0],nextHopPtr[1],nextHopPtr[2],nextHopPtr[3]);
+            //LOG(NETWORK, DEBUG, "DATA Message forwarded to node:%hhu.%hhu.%hhu.%hhu.\n",nextHopPtr[0],nextHopPtr[1],nextHopPtr[2],nextHopPtr[3]);
             sendMessage(nextHopIP,receiveBuffer);
         }else{
             LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
                                 "Unable to forward message.\n", destinationIP[0], destinationIP[1],destinationIP[2], destinationIP[3]);
         }
     }else{// If the message is addressed to this node, handle it using the user-defined callback
-
-        LOG(NETWORK, DEBUG, "DATA Message as arrived for this node\n");
-
+        //LOG(NETWORK, DEBUG, "DATA Message as arrived for this node\n");
         if(onDataMessageCallback) onDataMessageCallback(originatorIP,destinationIP,payload);
 
-        isTunneled = isMessageTunneled(msg);
-        if(isTunneled)LOG(MESSAGES,INFO,"Tunneled Message arrived\n");
+        //isTunneled = isMessageTunneled(msg);
+        //if(isTunneled)LOG(MESSAGES,INFO,"Tunneled Message arrived\n");
 
         //Send ACK Message back to the source of the message
         //assignIP(parameters.IP1,myIP);

@@ -352,7 +352,7 @@ void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
             if(neuronCore.computesNeuron(currentNeuronId) || isNeuronInList(inputNeurons,nrInputNeurons,currentNeuronId)){
                 neuronID[nComputedNeurons] = currentNeuronId;
                 nComputedNeurons ++;
-                LOG(APP,DEBUG,"NeuronId: %hhu\n",currentNeuronId);
+                //LOG(APP,DEBUG,"NeuronId: %hhu\n",currentNeuronId);
             }
             //LOG(APP, DEBUG, " neuronID: %hhu\n", neuronID[i]);
             //Move on the next input to index map
@@ -381,7 +381,6 @@ void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
         }
 
         //LOG(APP, DEBUG, "pubTopic: %i\n", pubTopic);
-
         encodeACKMessage(tmpBuffer,tmpBufferSize,neuronID,nComputedNeurons);
         offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%s",tmpBuffer);
         //Move on to the next layer neurons
