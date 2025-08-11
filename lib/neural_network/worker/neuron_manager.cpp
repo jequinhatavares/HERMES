@@ -772,13 +772,19 @@ void NeuronWorker::generateInputData(NeuronId inputNeuronId){
 void NeuronWorker::manageNeuron(){
     unsigned long currentTime = getCurrentTime();
 
-    // Check if the expected time for input arrival has already passed
-    if(forwardPassRunning && (currentTime-firstInputTimestamp) >= INPUT_WAIT_TIMEOUT && !allOutputsComputed){
+    // Skip neuron management if a forward pass is not in progress
+    if(!forwardPassRunning)return;
+
+    /*** Verify two conditions before proceeding:
+     1. The input wait timeout has elapsed
+     2. Not all outputs have been computed yet
+     Then initialize the onInputWaitTimeout procedure that sends NACKs related to the missing neurons ***/
+    if(!allOutputsComputed && (currentTime-firstInputTimestamp) >= INPUT_WAIT_TIMEOUT ){
         LOG(APP,INFO,"Missing Input Values: starting the onInputWaitTimeOut process\n");
         onInputWaitTimeout();
     }
 
-    // Check if any sent NACKs have timed out, meaning the corresponding inputs should have arrived by now but didn’t
+    // Check if any sent NACKs have timed out, meaning the corresponding inputs should have arrived by now but did’t
     if((currentTime - nackTriggerTime) >= NACK_TIMEOUT  &&  nackTriggered){
         LOG(APP,INFO,"Missing Input Values, after sending NACKs: computing the missing neuron values\n");
         onNACKTimeout();
