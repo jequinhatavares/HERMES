@@ -83,7 +83,7 @@ void NeuralNetworkCoordinator::initNeuralNetwork(){
 }
 
 void printNeuronEntry(TableEntry* Table){
-    LOG(APP,INFO,"Neuron %hhu → NodeIP[%hhu.%hhu.%hhu.%hhu] (Layer: %hhu) (Index in Layer: %hhu) (isAcknowledged: %d) \n",
+    LOG(APP,INFO,"Neuron ID %hhu → NodeIP[%hhu.%hhu.%hhu.%hhu] (Layer: %hhu) (Index in Layer: %hhu) (isAcknowledged: %d) \n",
          *(NeuronId*)Table->key,((NeuronEntry *)Table->value)->nodeIP[0],((NeuronEntry *)Table->value)->nodeIP[1]
         ,((NeuronEntry *)Table->value)->nodeIP[2],((NeuronEntry *)Table->value)->nodeIP[3],
         ((NeuronEntry *)Table->value)->layer,((NeuronEntry *)Table->value)->indexInLayer,
@@ -838,6 +838,9 @@ void NeuralNetworkCoordinator::handleInputRegistration(char* messageBuffer){
 
 void NeuralNetworkCoordinator::manageNeuralNetwork(){
     unsigned long currentTime = getCurrentTime();
+    uint8_t myIP[4];
+
+    network.getNodeIP(myIP);
 
     /*** Verify three conditions before distribution:
         1. Sufficient physical devices exist in the network
@@ -845,12 +848,13 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
         3. Neural network isn't already distributed across devices ***/
     if(totalWorkers>=MIN_WORKERS && totalInputs == TOTAL_INPUT_NEURONS && !areNeuronsAssigned){
         LOG(APP,INFO,"Neural network distribution process started\n");
+
         // Assign the input layer neurons to the input devices
         distributeInputNeurons(workersIPs,totalInputs);
         // Distribute the NN hidden layers to the available worker devices
         distributeNeuralNetworkBalanced(&neuralNetwork,workersIPs,totalWorkers,neuronsPerWorker);
-        //Assign the output layer neurons
-        distributeInputNeurons(inputsIPs,totalWorkers);
+        //Assign the output layer neurons to a node(myself)
+        distributeOutputNeurons(&neuralNetwork,myIP);
 
         if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY){
             //Assign the output targets of the assigned neurons
@@ -877,7 +881,6 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
         If all conditions are met: Resend assignments to neurons with missing ACKs ***/
     if( areNeuronsAssigned && !receivedAllNeuronAcks && (currentTime-neuronAssignmentTime) >= ACK_TIMEOUT ){
         LOG(APP,INFO,"Missing ACKs detected, starting oACK timeout process\n");
-
         onACKTimeOut(workersIPs,totalWorkers);// Handles missing acknowledgment messages from hidden layer nodes
         onACKTimeOutInputLayer();// Handles missing acknowledgment messages from input layer neurons
         neuronAssignmentTime = getCurrentTime();
