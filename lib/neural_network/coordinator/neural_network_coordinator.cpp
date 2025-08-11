@@ -787,6 +787,7 @@ void NeuralNetworkCoordinator::handleACKMessage(char* messageBuffer){
     }
 
     receivedAllNeuronAcks = isNetworkAcknowledge;
+
 }
 
 void NeuralNetworkCoordinator::handleWorkerRegistration(char* messageBuffer){
@@ -843,6 +844,7 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
         2. Enough input nodes are registered
         3. Neural network isn't already distributed across devices ***/
     if(totalWorkers>=MIN_WORKERS && totalInputs == TOTAL_INPUT_NEURONS && !areNeuronsAssigned){
+        LOG(APP,INFO,"Neural network distribution process started\n");
         // Assign the input layer neurons to the input devices
         distributeInputNeurons(workersIPs,totalInputs);
         // Distribute the NN hidden layers to the available worker devices
@@ -874,6 +876,8 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
         3. Confirm TIME_OUT period has elapsed since assignment
         If all conditions are met: Resend assignments to neurons with missing ACKs ***/
     if( areNeuronsAssigned && !receivedAllNeuronAcks && (currentTime-neuronAssignmentTime) >= ACK_TIMEOUT ){
+        LOG(APP,INFO,"Missing ACKs detected, starting oACK timeout process\n");
+
         onACKTimeOut(workersIPs,totalWorkers);// Handles missing acknowledgment messages from hidden layer nodes
         onACKTimeOutInputLayer();// Handles missing acknowledgment messages from input layer neurons
         neuronAssignmentTime = getCurrentTime();
@@ -881,6 +885,7 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
 
     // If all neurons have acknowledged and no inference cycle is currently running, start a new inference cycle
     if(!inferenceRunning && receivedAllNeuronAcks){
+        LOG(APP,INFO,"Starting an inference cycle\n");
         nnSequenceNumber +=2;
         encodeForwardMessage(appPayload, sizeof(appPayload),nnSequenceNumber);
         network.broadcastMessage(appBuffer,sizeof(appBuffer),appPayload);

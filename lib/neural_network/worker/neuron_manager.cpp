@@ -774,11 +774,13 @@ void NeuronWorker::manageNeuron(){
 
     // Check if the expected time for input arrival has already passed
     if(forwardPassRunning && (currentTime-firstInputTimestamp) >= INPUT_WAIT_TIMEOUT && !allOutputsComputed){
+        LOG(APP,INFO,"Missing Input Values: starting the onInputWaitTimeOut process\n");
         onInputWaitTimeout();
     }
 
     // Check if any sent NACKs have timed out, meaning the corresponding inputs should have arrived by now but didn’t
     if((currentTime - nackTriggerTime) >= NACK_TIMEOUT  &&  nackTriggered){
+        LOG(APP,INFO,"Missing Input Values, after sending NACKs: computing the missing neuron values\n");
         onNACKTimeout();
     }
 }
