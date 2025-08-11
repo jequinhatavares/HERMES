@@ -121,7 +121,12 @@ void setup(){
 
 void loop(){
    network.run();
+   worker.manageNeuron();
+#ifdef ROOT
+   worker.manageNeuralNetwork();
+#endif
 }
+
 #endif
 
 #ifdef raspberrypi_3b
