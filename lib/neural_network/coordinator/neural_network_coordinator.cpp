@@ -6,7 +6,7 @@
 
 
 #define NODES_PER_ESP8266 1
-#define NODES_PER_ESP32 2
+#define NODES_PER_ESP32 3
 #define NODES_PER_RPI 10
 
 
@@ -864,7 +864,7 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
                 //network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,workersIPs[i]);
             }
         }
-
+        tablePrint(neuronToNodeTable,printNeuronTableHeader, printNeuronEntry);
         neuronAssignmentTime = getCurrentTime();
     }
 
@@ -885,6 +885,7 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
         encodeForwardMessage(appPayload, sizeof(appPayload),nnSequenceNumber);
         network.broadcastMessage(appBuffer,sizeof(appBuffer),appPayload);
         inferenceStartTime=getCurrentTime();
+        inferenceRunning=true;
     }
 
     // If an inference cycle is running but exceeds the timeout period without results, start a new inference cycle
