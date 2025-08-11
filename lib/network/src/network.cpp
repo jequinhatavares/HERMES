@@ -104,8 +104,7 @@ void Network::run() {
  * getMiddlewareActiveStrategy
  * Returns the active middleware strategy
  *
- * @param strategyType - The active strategy
- * @return void
+ * @return strategyType - The active strategy
  */
 StrategyType Network::getActiveMiddlewareStrategy() {
     return middlewareActiveStrategy();
