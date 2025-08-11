@@ -6,7 +6,7 @@
 #include "../lib/neural_network/worker/neuron_manager.h"
 
 
-#define NEURAL_NET_IMPL
+//#define NEURAL_NET_IMPL
 
 #include "../lib/neural_network/coordinator/neural_network_coordinator.h"
 

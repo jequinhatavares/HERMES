@@ -1,6 +1,6 @@
-#ifdef NEURAL_NET_IMPL
-#define NEURAL_NET_IMPL // Put the #define before the include to have access to the NN parameters
-#endif
+//#ifndef NEURAL_NET_IMPL
+//#define NEURAL_NET_IMPL // Put the #define before the include to have access to the NN parameters
+//#endif
 
 #include "neural_network_coordinator.h"
 
@@ -795,7 +795,7 @@ void NeuralNetworkCoordinator::handleWorkerRegistration(char* messageBuffer){
     //NN_WORKER_REGISTRATION [Node IP] [Device Type]
     sscanf(messageBuffer, "%*d %hhu.%hhu.%hhu.%hhu %hhu",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&deviceClass);
 
-    if(totalWorkers>=MAX_NEURONS){
+    if(totalWorkers>=TOTAL_NEURONS){
         LOG(APP,INFO, "Worker node registrations have exceeded the number of available NN neurons\n");
         return;
     }

@@ -1,9 +1,8 @@
 #ifndef NEURAL_NETWORK_MANAGER_H
 #define NEURAL_NETWORK_MANAGER_H
 
-
-#include "../nn_types.h"
 #include "nn_parameters.h"
+#include "../nn_types.h"
 #include "../nn_configurations.h"
 #include "../worker/neuron_core.h"
 #include "worker/neuron_manager.h"
