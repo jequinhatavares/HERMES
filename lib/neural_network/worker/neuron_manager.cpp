@@ -932,6 +932,7 @@ void NeuronWorker::registerNodeAsInput(){
     //encode the input registration message
     encodeInputRegistration(appPayload, sizeof(appPayload),myIP,deviceType);
     // Send the message to the neural network coordinator (the root node)
+    LOG(APP,INFO,"Sending [NN_INPUT_REGISTRATION] message: \"%s\"\n",appPayload);
     network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
 }
 
@@ -940,6 +941,7 @@ void NeuronWorker::registerNodeAsWorker() {
     network.getNodeIP(myIP);
     //encode the input registration message
     encodeWorkerRegistration(appPayload, sizeof(appPayload),myIP,deviceType);
+    LOG(APP,INFO,"Sending [NN_WORKER_REGISTRATION] message: \"%s\"\n",appPayload);
     // Send the message to the neural network coordinator (the root node)
     network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
 }

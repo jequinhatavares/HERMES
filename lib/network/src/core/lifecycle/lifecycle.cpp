@@ -384,7 +384,7 @@ void handleMessages(){
             break;
 
         case DATA_MESSAGE:
-            LOG(MESSAGES,INFO,"Received [Data] message: \"%s\"\n", receiveBuffer);
+            //LOG(MESSAGES,INFO,"Received [Data] message: \"%s\"\n", receiveBuffer);
             handleDataMessage(receiveBuffer);
             break;
 

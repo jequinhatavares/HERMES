@@ -6,11 +6,11 @@ DeviceType deviceType = DeviceType::DEVICE_ESP8266;
 #endif
 
 #ifdef ESP32
-DeviceType deviceType = DeviceType::DEVICE_ESP8266;
+DeviceType deviceType = DeviceType::DEVICE_ESP32;
 #endif
 
 #ifdef raspberrypi_3b
-DeviceType deviceType = DeviceType::DEVICE_ESP8266;
+DeviceType deviceType = DeviceType::DEVICE_RPI;
 #endif
 
 // For unit test on native platform

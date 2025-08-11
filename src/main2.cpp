@@ -70,14 +70,14 @@ void setup(){
 
     //To auto initialize the root node has the node with the IP 135.230.96.1
     network.getNodeMAC(MAC);
+    LOG(APP,INFO,"MY MAC: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
+
     //To auto initialize the root node has the node with the IP 135.230.96.1
     if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96)
     {
         network.setAsRoot(true);
     }
     waitForEnter();
-
-
 
 
     //Select and initialize the middleware strategy
@@ -100,8 +100,25 @@ void setup(){
 
     //Then init the callback function for data message receiving
     network.onDataReceived(handleDataMessageWrapper);
+
     //And then the node can be initialized and integrated in the network
     network.begin();
+
+    LOG(APP,INFO,"MY MAC after begin: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
+
+    if(MAC[5] == 89 && MAC[4] == 248 && MAC[3] == 169 && MAC[2] == 45){
+        LOG(APP,INFO,"1\n");
+        worker.registerNodeAsInput();
+        worker.registerNodeAsWorker();
+    }
+    else if(MAC[5] == 12 && MAC[4] == 150 && MAC[3] == 51 && MAC[2] == 26){
+        LOG(APP,INFO,"2\n");
+        worker.registerNodeAsInput();
+        worker.registerNodeAsWorker();
+    }else if(MAC[5] == 252 && MAC[4] == 8 && MAC[3] == 107 && MAC[2] == 164){
+        LOG(APP,INFO,"3\n");
+        worker.registerNodeAsWorker();
+    }
 
 }
 
