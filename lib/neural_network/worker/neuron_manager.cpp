@@ -450,8 +450,12 @@ void NeuronWorker::handleNACKMessage(char*messageBuffer,uint8_t *senderIP){
     char *saveptr1, *token;
     NeuronId currentId;
     int neuronStorageIndex = -1,inputNeuronIndex;
-    bool ownsNeuronInNack=false;
-    token = strtok_r(messageBuffer, " ",&saveptr1);
+    char tmpNACKBuffer[100];
+
+    strncpy(tmpNACKBuffer,messageBuffer, sizeof(tmpNACKBuffer)-1);
+    tmpNACKBuffer[sizeof(tmpNACKBuffer) - 1] = '\0';
+
+    token = strtok_r(tmpNACKBuffer, " ",&saveptr1);
 
     //Skip the message header
     token = strtok_r(NULL, " ",&saveptr1);
@@ -477,8 +481,6 @@ void NeuronWorker::handleNACKMessage(char*messageBuffer,uint8_t *senderIP){
                 //TODO send the message
                 network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,senderIP);
             }
-
-            ownsNeuronInNack = true;
         }
 
         // If the neuron in the NACK is an input neuron managed by this node send the input value
@@ -677,6 +679,7 @@ void NeuronWorker::updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint
 
             //Increment the number of target nodes
             inputTargets.nTargets++;
+
         }else{// If the neuron is one of the computing neurons handled by this node
             // For each neuron in the provided list, determine where it should be stored
             neuronStorageIndex = neuronCore.getNeuronStorageIndex(neuronId[i]);
