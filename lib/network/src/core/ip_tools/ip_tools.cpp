@@ -21,6 +21,8 @@ bool isIPEqual(void* a, void* b){
 
 
 void assignIP(uint8_t destIP[4], uint8_t sourceIP[4]){
+    //Protect against nullptr
+    if (destIP == nullptr || sourceIP == nullptr) return;
     destIP[0] = sourceIP[0];destIP[1] = sourceIP[1];
     destIP[2] = sourceIP[2];destIP[3] = sourceIP[3];
 }
