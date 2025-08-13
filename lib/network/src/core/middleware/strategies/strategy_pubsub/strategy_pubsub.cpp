@@ -115,7 +115,7 @@ void rewriteSenderIPPubSub(char* messageBuffer, char* writeBuffer, size_t writeB
                  restOfMessage);
 
         // Copy it back
-        strncpy(writeBuffer, updatedMessage, writeBufferSize);/******/
+        strncpy(writeBuffer, updatedMessage, writeBufferSize-1);/******/
 
     }
 
