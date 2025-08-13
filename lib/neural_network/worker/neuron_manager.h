@@ -98,6 +98,7 @@ private:
     void onInputWaitTimeout();
     void onNACKTimeout();
 
+    void clearNeuronOutputTargets(NeuronId neuronId);
 };
 
 /***typedef struct OutputTarget{
