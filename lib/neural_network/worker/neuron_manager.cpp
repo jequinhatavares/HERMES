@@ -405,10 +405,14 @@ void NeuronWorker::handleForwardMessage(char *messageBuffer){
 
     currentInferenceId = inferenceId;
 
+    LOG(APP,DEBUG,"F1\n");
+
     for (int i = 0; i < neuronCore.neuronsCount; i++) {
         resetAll(receivedInputs[i]);
         isOutputComputed[i] = false;
     }
+    LOG(APP,DEBUG,"F2\n");
+
     allOutputsComputed = false;
 
     forwardPassRunning = true;
@@ -416,6 +420,7 @@ void NeuronWorker::handleForwardMessage(char *messageBuffer){
 
     nackTriggered = false;
 
+    LOG(APP,DEBUG,"F3\n");
     //Generate the input of all input neurons hosted in this node
     for (int i = 0; i < nrInputNeurons; ++i) {
         generateInputData(inputNeurons[i]);
@@ -737,30 +742,42 @@ void NeuronWorker::generateInputData(NeuronId inputNeuronId){
 
     //sensorData = inputGenerationCallback(inputNeuronId);
 
-    inputNeuronStorageIndex= getInputNeuronStorageIndex(inputNeuronId);
+    LOG(APP,DEBUG,"F4\n");
+    inputNeuronStorageIndex = getInputNeuronStorageIndex(inputNeuronId);
     if(inputNeuronStorageIndex==-1) {
         LOG(APP,ERROR,"ERROR: Neuron %hhu is not registered as an input\n",inputNeuronId);
         return;
     }
 
+    LOG(APP,DEBUG,"F5\n");
+
     inputNeuronsValues[inputNeuronStorageIndex] = sensorData;
+
+    LOG(APP,DEBUG,"F6\n");
 
     // If this node is responsible for computing neurons that depend on this input, provide it directly to them.
     processNeuronInput(inputNeuronId,currentInferenceId,sensorData);
 
-    // Encode the message to send to other nodes, containing my output value that serves as their input.
-    encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,inputNeuronId,sensorData);
+    LOG(APP,DEBUG,"F7\n");
 
     network.getNodeIP(myLocalIP);
 
-    //Send the generated input data to each one of the targets
-    for (int i = 0; i <inputTargets.nTargets; ++i){
-        // If this node hosts a neuron that depends on locally generated input, skip it there's no need to send a
-        // message to itself since the input is already available.
-       if(isIPEqual(myLocalIP,inputTargets.targetsIPs[i]))continue;
-       network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,inputTargets.targetsIPs[i]);
-    }
+    LOG(APP,DEBUG,"F8\n");
 
+    // Encode the message to send to other nodes, containing my output value that serves as their input.
+    encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,inputNeuronId,sensorData);
+    if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY){
+        // Send the generated input data to each one of the targets
+        for (int j = 0; j < inputTargets.nTargets; j++) {
+            // If this node hosts a neuron that depends on locally generated input, skip it there's no need to send a
+            // message to itself since the input is already available.
+            if(isIPEqual(myLocalIP,inputTargets.targetsIPs[j])) continue;
+            network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,inputTargets.targetsIPs[j]);
+        }
+    }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
+        // With the pub/sub strategy simply call the function to influence routing and the middleware will deal with who needs the output
+        network.middlewareInfluenceRouting(appBuffer, sizeof(appBuffer),appPayload);
+    }
 }
 
 /**
