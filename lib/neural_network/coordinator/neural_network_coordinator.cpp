@@ -639,7 +639,6 @@ void NeuralNetworkCoordinator::assignPubSubInfoToNode(char* messageBuffer,size_t
 
 void NeuralNetworkCoordinator::assignPubSubInfoToNeuron(char* messageBuffer,size_t bufferSize,NeuronId neuronId){
     NeuronEntry *neuronEntry;
-    uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
     int offset = 0;
     char tmpBuffer[50];
     size_t tmpBufferSize = sizeof(tmpBuffer);
@@ -651,7 +650,7 @@ void NeuralNetworkCoordinator::assignPubSubInfoToNeuron(char* messageBuffer,size
     if(neuronEntry != nullptr){
         /*** Neurons in a given layer will publish to a topic corresponding to their layer number,
                 and subscribe to the topics published by neurons in the previous layer.***/
-        encodePubSubInfo(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,neuronEntry->layer-1,neuronEntry->layer);
+        encodePubSubInfo(tmpBuffer,tmpBufferSize,&neuronId,1,neuronEntry->layer-1,neuronEntry->layer);
         offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
         network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,neuronEntry->nodeIP);
     }

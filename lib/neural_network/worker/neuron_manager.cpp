@@ -226,10 +226,14 @@ void NeuronWorker::handleAssignInput(char* messageBuffer){
     NeuronId inputNeuronId;
     //NN_ASSIGN_INPUT [neuronID]
     sscanf(messageBuffer, "%*d %hhu",&inputNeuronId);
-    inputNeurons[nrInputNeurons] = inputNeuronId;
+
+    // Only save the input neuron assignment if the neuron is not already assigned to this node.
+    if(!isNeuronInList(inputNeurons,nrInputNeurons,inputNeuronId)){
+        inputNeurons[nrInputNeurons] = inputNeuronId;
+        nrInputNeurons++;
+    }
     //todo
     //inputNeuronAssignmentCallback(input Neuron Id)
-    nrInputNeurons++;
 }
 
 void NeuronWorker::handleAssignOutputNeuron(char* messageBuffer){
