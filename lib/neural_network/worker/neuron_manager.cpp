@@ -659,6 +659,17 @@ void NeuronWorker::updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint
     for (int i = 0; i < nNeurons; i++) {
         //Verify if the current neuron is an input neuron
         if(isNeuronInList(inputNeurons,nrInputNeurons,neuronId[i])){
+            // If the number of targets exceeds the available storage space, skip the target (don't store it in memory) and log the error
+            if(inputTargets.nTargets == MAX_TARGET_OUTPUTS){
+                LOG(APP, ERROR, "Error: Number of output target nodes exceeded the configured maximum for Neuron ID: %hhu\n", neuronId[i]);
+                continue;
+            }
+
+            // Skip if the targetIP is already in the list of target devices of the input neurons
+            if(isIPinList(targetIP,inputTargets.targetsIPs,inputTargets.nTargets)){
+                continue;
+            }
+
             // Add the new targetIP to the first available slot in the list
             for (int j = 0; j < 4; j++) {
                 inputTargets.targetsIPs[inputTargets.nTargets][j] = targetIP[j];
@@ -666,24 +677,33 @@ void NeuronWorker::updateOutputTargets(uint8_t nNeurons, uint8_t *neuronId, uint
 
             //Increment the number of target nodes
             inputTargets.nTargets++;
+        }else{// If the neuron is one of the computing neurons handled by this node
+            // For each neuron in the provided list, determine where it should be stored
+            neuronStorageIndex = neuronCore.getNeuronStorageIndex(neuronId[i]);
+
+            //Skit if the neuron is not managed by this node
+            if(neuronStorageIndex == -1)continue;
+
+            // If the number of targets exceeds the available storage space, skip the target (don't store it in memory) and log the error
+            if(neuronTargets[neuronStorageIndex].nTargets == MAX_TARGET_OUTPUTS){
+                LOG(APP, ERROR, "Error: Number of output target nodes exceeded the configured maximum for Neuron ID: %hhu\n", neuronId[i]);
+                continue;
+            }
+
+            // Skip if the targetIP is already in the list of target devices
+            if(isIPinList(targetIP,neuronTargets[neuronStorageIndex].targetsIPs,neuronTargets[neuronStorageIndex].nTargets)){
+                continue;
+            }
+
+            // Add the new targetIP to the first available slot in the list
+            for (int j = 0; j < 4; j++) {
+                neuronTargets[neuronStorageIndex].targetsIPs[neuronTargets[neuronStorageIndex].nTargets][j] = targetIP[j];
+            }
+            //Increment the number of target nodes
+            neuronTargets[neuronStorageIndex].nTargets++;
         }
 
-        // For each neuron in the provided list, determine where it should be stored
-        neuronStorageIndex = neuronCore.getNeuronStorageIndex(neuronId[i]);
 
-        //Skit if the neuron is not managed by this node
-        if(neuronStorageIndex == -1)continue;
-
-        // Skip if the targetIP is already in the list of target devices
-        if(isIPinList(targetIP,neuronTargets[neuronStorageIndex].targetsIPs,neuronTargets[neuronStorageIndex].nTargets)){
-            continue;
-        }
-        // Add the new targetIP to the first available slot in the list
-        for (int j = 0; j < 4; j++) {
-            neuronTargets[neuronStorageIndex].targetsIPs[neuronTargets[neuronStorageIndex].nTargets][j] = targetIP[j];
-        }
-        //Increment the number of target nodes
-        neuronTargets[neuronStorageIndex].nTargets++;
     }
 }
 
