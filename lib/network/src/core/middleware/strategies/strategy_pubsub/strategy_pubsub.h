@@ -32,12 +32,12 @@ typedef struct PubSubInfo{
 }PubSubInfo;
 
 typedef enum PubSubMessageType{
-    PUBSUB_SUBSCRIBE,
-    PUBSUB_UNSUBSCRIBE,
-    PUBSUB_ADVERTISE,
-    PUBSUB_UNADVERTISE,
-    PUBSUB_NODE_UPDATE,
-    PUBSUB_TABLE_UPDATE,
+    PUBSUB_SUBSCRIBE,       //0
+    PUBSUB_UNSUBSCRIBE,     //1
+    PUBSUB_ADVERTISE,       //2
+    PUBSUB_UNADVERTISE,     //3
+    PUBSUB_NODE_UPDATE,     //4
+    PUBSUB_TABLE_UPDATE,    //5
 } PubSubMessageType;
 
 // PubSub strategy API

@@ -126,8 +126,8 @@ void NeuronWorker::handleAssignComputationsMessage(char*messageBuffer){
         bias=atof(spaceToken);
         //LOG(APP,DEBUG," bias token:%s\n",spaceToken);
 
-        //Save the parsed neuron parameters
-        neuronCore.configureNeuron(neuronID,inputSize,weightValues,bias, inputIndexMap);
+        // Save the parsed neuron parameters if the neuron is not already in this node's list of computed neurons
+        if(!neuronCore.computesNeuron(neuronID))neuronCore.configureNeuron(neuronID,inputSize,weightValues,bias, inputIndexMap);
 
         delete[] inputIndexMap;
         delete[] weightValues;
