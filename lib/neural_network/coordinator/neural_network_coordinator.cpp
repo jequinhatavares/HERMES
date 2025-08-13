@@ -255,9 +255,12 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalanced(const NeuralNetwo
             currentNeuronId ++;
             neuronPerNodeCount++;
 
-            // When the number of neurons assigned to the current device reaches the expected amount, move on to the next device in the list.
-            if(neuronPerNodeCount == neuronsPerDevice[assignedDevices]){
-
+            /***
+             * When the number of neurons assigned to the current device reaches the expected amount, send the assignment
+             * message and move on to the next device in the list. If the current device has fewer than the expected number
+             * of neurons and no more neurons remain to be assigned, send the message to the node with the neurons already assigned.
+             ***/
+            if(neuronPerNodeCount == neuronsPerDevice[assignedDevices] || (i==net->numLayers-2 && j==net->layers[i].numOutputs-1)){
                 //Send the message to the node assigning him the neurons
                 //LOG(APP, INFO, "Encoded Message: NN_ASSIGN_COMPUTATION [Neuron ID] [Input Size] [Input Save Order] [weights values] [bias]\n");
                 //LOG(APP, INFO, "Encoded Message: %s size:%i\n",largeSendBuffer, strlen(largeSendBuffer));
@@ -583,7 +586,9 @@ void NeuralNetworkCoordinator::assignPubSubInfoToNode(char* messageBuffer,size_t
     int offset = 0;
     char tmpBuffer[50];
     size_t tmpBufferSize = sizeof(tmpBuffer);
+    bool neuronsAssignedToNode=false;
 
+    //Encode the message header
     encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_OUTPUT_TARGETS);
     offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
 
@@ -598,9 +603,9 @@ void NeuralNetworkCoordinator::assignPubSubInfoToNode(char* messageBuffer,size_t
             neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
 
             if(neuronEntry != nullptr){
-                //Search in the neuronToNodeTable for the neurons at a specific layer computed by a specif node
-                //The i has to be normalized because the layers encoded in the table begin at the input layer
-                if(isIPEqual(neuronEntry->nodeIP,targetNodeIP) && neuronEntry->layer  == i){
+                //Search in the neuronToNodeTable for the neurons at a specific layer computed by the specified target node.
+                //Only include unacknowledged neurons (because only those need pub/sub info assignment)
+                if(isIPEqual(neuronEntry->nodeIP,targetNodeIP) && neuronEntry->layer == i && !neuronEntry->isAcknowledged){
                     //LOG(APP,INFO,"Neuron ID: %hhu \n",*neuronId);
                     outputNeurons[nNeurons] = *neuronId;
                     nNeurons ++;
@@ -611,16 +616,23 @@ void NeuralNetworkCoordinator::assignPubSubInfoToNode(char* messageBuffer,size_t
         // If the node computes any neurons in this layer, include its information in the message along with the IPs to which it should forward the computation
         if(nNeurons != 0){
             //LOG(APP,DEBUG,"number of neurons: %hhu number of targetNodeIP: %hhu\n",nNeurons,nNodes);
-            /*** Neurons in a given layer will publish to a topic corresponding to their layer number,
-                and subscribe to the topics published by neurons in the previous layer.***/
+            /*** Neurons in a given layer will publish a topic corresponding to their layer number,
+                and subscribe to the topic published by neurons in the previous layer.***/
             encodePubSubInfo(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,(int8_t)(i-1),i);
+            //Increment the encoded message with the new pub/sub info
             offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
-            //Todo send Message for the node
-            network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,targetNodeIP);
+            neuronsAssignedToNode=true;
         }
 
         nNeurons = 0;
     }
+
+    // Check if the target node has any assigned neurons. This safeguards against cases where the function is given a
+    // targetIP with no neuron assignments, in such cases, there's no need to send a message.
+    if(neuronsAssignedToNode){
+        network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,targetNodeIP);
+    }
+
 
 }
 
