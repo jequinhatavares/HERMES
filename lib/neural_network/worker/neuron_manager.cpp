@@ -800,6 +800,7 @@ void NeuronWorker::manageNeuron(){
         onInputWaitTimeout();
     }
 
+    currentTime = getCurrentTime();
     // Check if any sent NACKs have timed out, meaning the corresponding inputs should have arrived by now but did’t
     if((currentTime - nackTriggerTime) >= NACK_TIMEOUT  &&  nackTriggered){
         LOG(APP,INFO,"Missing Input Values, after sending NACKs: computing the missing neuron values\n");

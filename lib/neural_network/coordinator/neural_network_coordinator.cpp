@@ -513,7 +513,7 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
         currentOutputNeuron += net->layers[i].numInputs;
     }
 
-    LOG(APP,DEBUG,"CurrentOutputNeuronId: %hhu\n",currentOutputNeuron);
+    //LOG(APP,DEBUG,"CurrentOutputNeuronId: %hhu\n",currentOutputNeuron);
 
     /***Initialize the input index mapping before processing the output layer. The inputIndexMapping specifies the order
      in which the node should store input values. It corresponds to an ordered list of neuron IDs from the previous
@@ -886,13 +886,14 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
         neuronAssignmentTime = getCurrentTime();
     }
 
+    currentTime = getCurrentTime();
     /*** Node Assignment Verification:
         1. Check if nodes have existing assignments
         2. Verify not all ACKs for these assignments have arrived
         3. Confirm TIME_OUT period has elapsed since assignment
         If all conditions are met: Resend assignments to neurons with missing ACKs ***/
     if( areNeuronsAssigned && !receivedAllNeuronAcks && (currentTime-neuronAssignmentTime) >= ACK_TIMEOUT ){
-        LOG(APP,INFO,"Missing ACKs detected, starting oACK timeout process\n");
+        LOG(APP,INFO,"Missing ACKs detected, starting onACK timeout process (currentTime-neuronAssignmentTime)%lu:\n",(currentTime-neuronAssignmentTime));
         onACKTimeOut(workersIPs,totalWorkers);// Handles missing acknowledgment messages from hidden layer nodes
         onACKTimeOutInputLayer();// Handles missing acknowledgment messages from input layer neurons
         neuronAssignmentTime = getCurrentTime();
@@ -908,6 +909,7 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
         inferenceRunning=true;
     }
 
+    currentTime = getCurrentTime();
     // If an inference cycle is running but exceeds the timeout period without results, start a new inference cycle
     if(inferenceRunning && (currentTime-inferenceStartTime) >= INFERENCE_TIMEOUT ){
         //TODO something where
