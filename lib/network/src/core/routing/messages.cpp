@@ -128,7 +128,7 @@ void encodeParentInfoResponse(char* messageBuffer, size_t bufferSize,uint8_t *AP
 void encodeChildRegistrationRequest(char* messageBuffer, size_t bufferSize,uint8_t *APIP,uint8_t *STAIP,int sequenceNumber) {
     //CHILD_REGISTRATION_REQUEST [my AP IP] [my STA IP] [my sequence number]
     snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %i",CHILD_REGISTRATION_REQUEST,APIP[0],APIP[1],APIP[2],APIP[3],
-             STAIP[0],STAIP[1],STAIP[2],STAIP[3], sequenceNumber);
+             STAIP[0],STAIP[1],STAIP[2],STAIP[3],sequenceNumber);
 }
 
 void encodeFullRoutingTableUpdate(char* messageBuffer, size_t bufferSize){
@@ -687,6 +687,8 @@ void handleDataMessage(char *msg){
     if(isBroadcast){ //if the message is a broadcast message
         //Process the message with the user provided callback
         if(onDataMessageCallback) onDataMessageCallback(originatorIP,destinationIP,payload);
+
+        LOG(NETWORK, DEBUG, "Is Broadcast Message.\n");
 
         //Propagate the message to the rest of the message
         encodeDataMessage(largeSendBuffer, sizeof(largeSendBuffer),payload,originatorIP,broadcastIP);

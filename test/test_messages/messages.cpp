@@ -38,8 +38,8 @@ void test_data_messages_encoding(){
 }
 
 void test_data_messages_encoding_with_string(){
-    char payload[20] = "Hello Test", messageBuffer[50];
-    char correctMessage[100]= "9 1.1.1.1 2.2.2.2 Hello Test";
+    char payload[20] = "Hello Test 2", messageBuffer[50];
+    char correctMessage[100]= "9 1.1.1.1 2.2.2.2 Hello Test 2";
     uint8_t senderIP[4]={1,1,1,1},destinationIP[4]={2,2,2,2};
 
     encodeDataMessage(messageBuffer,sizeof(messageBuffer),payload,senderIP,destinationIP);
@@ -142,6 +142,7 @@ int main(int argc, char** argv){
     RUN_TEST(test_pdr_correct);
     //RUN_TEST(test_pir_incorrect);
     RUN_TEST(test_data_messages_encoding);
+    RUN_TEST(test_data_messages_encoding_with_string);
     RUN_TEST(test_PDR_messages_invalid_encoding);
     RUN_TEST(test_PIR_messages_invalid_encoding);
     RUN_TEST(test_FRTU_messages_invalid_encoding);

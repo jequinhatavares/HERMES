@@ -790,6 +790,8 @@ void NeuronWorker::encodeACKMessage(char* messageBuffer, size_t bufferSize,Neuro
 
 }
 
+
+
 //TODO Header
 void NeuronWorker::encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type){
     //NN_WORKER_REGISTRATION [Node IP] [Device Type]
@@ -860,8 +862,9 @@ void NeuronWorker::manageNeuron(){
     /*** Verify two conditions before proceeding:
      1. The input wait timeout has elapsed
      2. Not all outputs have been computed yet
+     3. The NACK mechanism hasn't been triggered yet
      Then initialize the onInputWaitTimeout procedure that sends NACKs related to the missing neurons ***/
-    if(!allOutputsComputed && (currentTime-firstInputTimestamp) >= INPUT_WAIT_TIMEOUT ){
+    if(!allOutputsComputed && !nackTriggered && (currentTime-firstInputTimestamp) >= INPUT_WAIT_TIMEOUT ){
         LOG(APP,INFO,"Missing Input Values: starting the onInputWaitTimeOut process\n");
         onInputWaitTimeout();
     }
@@ -881,10 +884,10 @@ void NeuronWorker::manageNeuron(){
  */
 void NeuronWorker::onInputWaitTimeout(){
     int neuronStorageIndex = -1,offset=0;
-    uint8_t inputSize = -1;
+    uint8_t inputSize = -1, nMissingNeurons=0;
     char tmpBuffer[20];
     size_t tmpBufferSize = sizeof(tmpBuffer);
-    NeuronId missingNeuronId, handledNeuronId;
+    NeuronId missingNeuronId, handledNeuronId, missingNeuronsList[10];
     // The message aggregates the missing inputs from all neurons into a single message
     offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%d ",NN_NACK);
 
@@ -924,6 +927,17 @@ void NeuronWorker::onInputWaitTimeout(){
                         continue;
                     }
 
+                    // Check if the missing neuron is already in the NACK list; if it is, there is no need to add it again.
+                    if(isNeuronInList(missingNeuronsList,nMissingNeurons,missingNeuronId)){
+                        continue;
+                    }else{
+                        if(nMissingNeurons<=10){
+                            missingNeuronsList[nMissingNeurons] = missingNeuronId;
+                            nMissingNeurons++;
+                        }else{
+                            LOG(APP,ERROR, "Error: Cannot add missing neuron ID %hhu, NACK list capacity (10) exceeded\n", missingNeuronId);
+                        }
+                    }
                     encodeNACKMessage(tmpBuffer, tmpBufferSize,missingNeuronId);
                     offset += snprintf(appPayload+offset,sizeof(appPayload)-offset,"%s",tmpBuffer);
                 }
@@ -950,6 +964,7 @@ void NeuronWorker::onNACKTimeout(){
     NeuronId handledNeuronId;
     int neuronStorageIndex=-1;
     uint8_t myIP[4];
+
     network.getNodeIP(myIP);
     // Search for outputs that have not been computed yet and compute them, filling in any missing inputs with the values from the last inference.
     for (int i = 0; i < neuronCore.neuronsCount; i++){
