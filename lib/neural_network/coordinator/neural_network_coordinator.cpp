@@ -642,6 +642,7 @@ void NeuralNetworkCoordinator::assignPubSubInfoToNeuron(char* messageBuffer,size
     int offset = 0;
     char tmpBuffer[50];
     size_t tmpBufferSize = sizeof(tmpBuffer);
+    int8_t layerIndex;
 
     encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_OUTPUT_TARGETS);
     offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
@@ -650,12 +651,15 @@ void NeuralNetworkCoordinator::assignPubSubInfoToNeuron(char* messageBuffer,size
     if(neuronEntry != nullptr){
         /*** Neurons in a given layer will publish to a topic corresponding to their layer number,
                 and subscribe to the topics published by neurons in the previous layer.***/
-        encodePubSubInfo(tmpBuffer,tmpBufferSize,&neuronId,1,neuronEntry->layer-1,neuronEntry->layer);
+        if(neuronEntry->layer>127){
+            LOG(APP, ERROR, "Error: Neuron layer value (%hhu) exceeds the maximum allowed for int8_t\n", neuronEntry->layer);
+            return;
+        }
+        layerIndex = static_cast<int8_t>(neuronEntry->layer);
+        encodePubSubInfo(tmpBuffer,tmpBufferSize,&neuronId,1,static_cast<int8_t>(layerIndex - 1),layerIndex);
         offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
         network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,neuronEntry->nodeIP);
     }
-
-
 }
 
 void NeuralNetworkCoordinator::encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type){
