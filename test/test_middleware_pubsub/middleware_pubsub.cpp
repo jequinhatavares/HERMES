@@ -283,6 +283,50 @@ void test_extensive_add_and_remove_pubsub_topics() {
     tableClean(pubsubTable);
 }
 
+void test_subscribe_and_publish_multiple_topics() {
+    char messageBuffer[50];
+    uint8_t nodeIP[4] = {1, 1, 1, 1};
+    PubSubInfo *info;
+
+    initStrategyPubSub(decodeTopic);
+
+    // Lists of topics to subscribe and publish
+    int8_t subscribeList[] = {0, 1, 2};
+    int8_t publishList[]   = {3, 4};
+
+    // Call the function to add all subscriptions and publications
+    updateNodeTopics(subscribeList, 3, publishList, 2);
+
+    //tablePrint(pubsubTable, printPubSubTableHeader, printPubSubStruct);
+
+    // Read the table entry for this node
+    info = (PubSubInfo*) tableRead(pubsubTable, nodeIP);
+    TEST_ASSERT(info != nullptr);
+
+    // Verify subscriptions
+    TEST_ASSERT(containsTopic(info->subscribedTopics, 0));
+    TEST_ASSERT(containsTopic(info->subscribedTopics, 1));
+    TEST_ASSERT(containsTopic(info->subscribedTopics, 2));
+
+    // Verify publications
+    TEST_ASSERT(containsTopic(info->publishedTopics, 3));
+    TEST_ASSERT(containsTopic(info->publishedTopics, 4));
+
+    // Attempt to add duplicate topics
+    updateNodeTopics(subscribeList, 3, publishList, 2);
+
+    // Verify duplicates did not appear (still only the same topics)
+    info = (PubSubInfo*) tableRead(pubsubTable, myIP);
+    int subCount = 0, pubCount = 0;
+    for (int i = 0; i < MAX_TOPICS; i++) {
+        if(info->subscribedTopics[i] != -1) subCount++;
+        if(info->publishedTopics[i] != -1) pubCount++;
+    }
+    TEST_ASSERT(subCount == 3);
+    TEST_ASSERT(pubCount == 2);
+
+}
+
 void test_handle_middleware_subscribe_message(){
     char receivedMiddlewareMessage[50];
     int8_t topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
@@ -531,6 +575,7 @@ int main(int argc, char** argv){
     RUN_TEST(test_decode_topic);
     RUN_TEST(test_handle_multiple_subscribe_messages);
     RUN_TEST(test_extensive_add_and_remove_pubsub_topics);/******//******//******/
+    RUN_TEST(test_subscribe_and_publish_multiple_topics);
 
     UNITY_END();
 }
