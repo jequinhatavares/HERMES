@@ -324,8 +324,6 @@ void NeuronWorker::handleAssignOutputNeuron(char* messageBuffer){
  * Format: |[Number of Neurons] [neuron IDs...] [Subscription] [Publication]
  */
 void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
-    NeuralNetworkMessageType type;
-    sscanf(messageBuffer, "%*d %d",&type);
     uint8_t nNeurons, nComputedNeurons=0;
     NeuronId neuronID[MAX_NEURONS], currentNeuronId;
     char *spaceToken,*neuronEntry;
@@ -333,6 +331,8 @@ void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
     int pubTopic,subTopic,neuronStorageIndex,offset=0;
     char tmpBuffer[10];
     size_t tmpBufferSize = sizeof(tmpBuffer);
+    int8_t subTopics[MAX_NEURONS],pubTopics[MAX_NEURONS+1];
+    int nSubTopics=0,nPubTopics=0;
 
     // |[Number of Neurons] [neuron ID1] [neuron ID2] [Subscription 1] [Pub 1]
 
@@ -373,19 +373,29 @@ void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
         // If the topic is not equal to -1, subscribe to it
         // A value of -1 indicates an invalid or non-existent topic, meaning the node should not subscribe.
         LOG(APP, DEBUG, "Subscribing to topic: %i\n", subTopic);
-        if(subTopic != -1) network.subscribeToTopic(static_cast<int8_t>(subTopic));
+        if(subTopic != -1){
+            if(nSubTopics<MAX_NEURONS){//todo and is not already in the list
+                subTopics[nSubTopics]=static_cast<int8_t>(subTopic);
+                nSubTopics++;
+            }
+        }
+        //network.subscribeToTopic(static_cast<int8_t>(subTopic));
 
         //spaceToken now pointing to the pubTopic
         spaceToken = strtok_r(NULL, " ", &saveptr2);
         pubTopic = atoi(spaceToken);
 
         if(pubTopic != -1){
-            // If the topic is not equal to -1, publish it
             LOG(APP, DEBUG, "Publishing topic: %i\n", pubTopic);
-            network.advertiseTopic(static_cast<int8_t>(pubTopic));
+            // If the topic is not equal to -1, publish it
+            if(nSubTopics<MAX_NEURONS){
+                pubTopics[nPubTopics]=static_cast<int8_t>(pubTopic);
+                nPubTopics++;
+            }
+            //network.advertiseTopic(static_cast<int8_t>(pubTopic));
             for (int i = 0; i < nNeurons; i++) {
                 neuronStorageIndex = neuronCore.getNeuronStorageIndex(neuronID[i]);
-                //If the neuron if one of neurons handled by this node then save the topic that the neuron publishes
+                // Record the topic published by this neuron in the neuron-to-topic map
                 if(neuronStorageIndex != -1) neuronToTopicMap[neuronStorageIndex]= static_cast<int8_t>(pubTopic);
             }
         }
