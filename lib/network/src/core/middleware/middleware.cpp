@@ -259,3 +259,17 @@ bool isMiddlewareStrategyActive(StrategyType strategyType){
 StrategyType middlewareActiveStrategy(){
     return activeStrategyType;
 }
+
+
+//TODO header
+/**
+ * middlewarePrintInfo
+ *
+ * @param StrategyType- The active Strategy type
+ */
+void middlewarePrintInfo(StrategyType strategyType){
+    if(strategyType!= activeStrategyType)return;
+    if(strategyType==STRATEGY_PUBSUB){
+        tablePrint(pubsubTable,printPubSubTableHeader,printPubSubStruct);
+    }
+}

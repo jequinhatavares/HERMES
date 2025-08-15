@@ -372,8 +372,8 @@ void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
         subTopic = atoi(spaceToken);
         // If the topic is not equal to -1, subscribe to it
         // A value of -1 indicates an invalid or non-existent topic, meaning the node should not subscribe.
+        LOG(APP, DEBUG, "Subscribing to topic: %i\n", subTopic);
         if(subTopic != -1) network.subscribeToTopic(static_cast<int8_t>(subTopic));
-        //LOG(APP, DEBUG, "subTopic: %i\n", subTopic);
 
         //spaceToken now pointing to the pubTopic
         spaceToken = strtok_r(NULL, " ", &saveptr2);
@@ -381,6 +381,7 @@ void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
 
         if(pubTopic != -1){
             // If the topic is not equal to -1, publish it
+            LOG(APP, DEBUG, "Publishing topic: %i\n", pubTopic);
             network.advertiseTopic(static_cast<int8_t>(pubTopic));
             for (int i = 0; i < nNeurons; i++) {
                 neuronStorageIndex = neuronCore.getNeuronStorageIndex(neuronID[i]);
@@ -401,6 +402,7 @@ void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
 
     // Send message with the acknowledged neurons to the root
     network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
+
 }
 
 

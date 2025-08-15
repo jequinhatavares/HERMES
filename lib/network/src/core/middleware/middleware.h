@@ -24,6 +24,7 @@ void middlewareOnNetworkEvent(int networkEvent, uint8_t involvedIP[4]);
 void* middlewareGetStrategyContext();
 bool isMiddlewareStrategyActive(StrategyType strategyType);
 StrategyType middlewareActiveStrategy();
+void middlewarePrintInfo(StrategyType strategyType);
 
 
 

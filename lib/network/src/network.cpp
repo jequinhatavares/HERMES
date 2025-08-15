@@ -133,6 +133,11 @@ void Network::middlewareInfluenceRouting(char* messageEncodeBuffer,size_t encode
     ::middlewareInfluenceRouting(messageEncodeBuffer,encodeBufferSize,dataMessagePayload);
 }
 
+void Network::middlewarePrintInfo() {
+    ::middlewarePrintInfo(::middlewareActiveStrategy());
+}
+
+
 
 /**
  * initMiddlewareStrategyInject
@@ -467,6 +472,7 @@ void *Network::getParentMetric(uint8_t *nodeIP) {
 
     return nullptr;
 }
+
 
 
 
