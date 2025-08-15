@@ -58,6 +58,8 @@ class Network {
     void unsubscribeToTopic(int8_t topic); // Remove topic subscription
     void advertiseTopic(int8_t topic); // Advertise that this node publishes a certain topic
     void unadvertiseTopic(int8_t topic); // Stops advertising a topic
+    void subscribeAndPublishTopics(int8_t *subscribeList, int subCount, int8_t *publishList, int pubCount); //Subscribe and publish to a list of topics
+
 
 
     // ================ STRATEGY: TOPOLOGY ===================

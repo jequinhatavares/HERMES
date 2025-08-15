@@ -273,6 +273,16 @@ void Network::unadvertiseTopic(int8_t topic){
     if(context != nullptr)context->unadvertiseTopic(topic);
 }
 
+//TODO HEADER
+void Network::subscribeAndPublishTopics(int8_t *subscribeList, int subCount, int8_t *publishList, int pubCount) {
+    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        return;
+    }
+
+    PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
+    if(context != nullptr)context->subscribeAndPublishTopics(subscribeList,subCount,publishList,pubCount);
+}
 /**
  * initMiddlewareStrategyTopology
  * Initializes the middleware strategy Topology by assigning the required function pointers.
