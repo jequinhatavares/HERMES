@@ -528,9 +528,9 @@ int main(int argc, char** argv){
     RUN_TEST(test_handle_middleware_table_update_message);
     RUN_TEST(test_message_rewriteIP);
     RUN_TEST(test_message_rewriteIP_info_update_message);
-    RUN_TEST(test_decode_topic);/******/
-    RUN_TEST(test_handle_multiple_subscribe_messages);/******/
-    RUN_TEST(test_extensive_add_and_remove_pubsub_topics);/******/
+    RUN_TEST(test_decode_topic);
+    RUN_TEST(test_handle_multiple_subscribe_messages);
+    RUN_TEST(test_extensive_add_and_remove_pubsub_topics);/******//******//******/
 
     UNITY_END();
 }

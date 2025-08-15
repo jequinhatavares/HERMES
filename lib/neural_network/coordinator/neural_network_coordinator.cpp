@@ -533,6 +533,7 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
 
     for (uint8_t j = 0; j < net->layers[outputLayer].numOutputs; j++){ // For each neuron in output layer
 
+        // If the node corresponds to this device, add it to the neuron-to-node table automatically acknowledged.
         if (isIPEqual(outputDevice,myIP)){
             // Add the neuron-to-node mapping to the table
             network.getNodeIP(myIP);
@@ -548,6 +549,10 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
                             &net->layers[outputLayer].weights[j * net->layers[outputLayer].numInputs],
                             net->layers[outputLayer].biases[j], inputIndexMap);
 
+            // Directly initialize the middleware Pub/Sub table with this device’s information,
+            // since the device does not receive messages from itself to update its table.
+            network.subscribeToTopic((int8_t)outputLayer);
+            network.advertiseTopic((int8_t)(outputLayer+1));
 
         }else{
             // If this node doesn't compute the output layer, we must encode a message
