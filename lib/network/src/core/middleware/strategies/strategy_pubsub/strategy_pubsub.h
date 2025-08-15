@@ -1,7 +1,6 @@
 #ifndef STRATEGY_PUBSUB_H
 #define STRATEGY_PUBSUB_H
 
-
 #include "../../../routing/routing.h"
 #include "../../../routing/messages.h"
 #include "../../../logger/logger.h"

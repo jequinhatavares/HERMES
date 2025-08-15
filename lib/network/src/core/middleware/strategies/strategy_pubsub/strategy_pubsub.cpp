@@ -659,14 +659,16 @@ void subscribeToTopic(int8_t subTopic) {
 
     myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
     if(myPubSubInfo != nullptr){ // Update my entry in the table if it already exists
+        //The topic is already in my list of subscribed topics return without adding it to the list
+        if(containsTopic(myPubSubInfo->subscribedTopics,subTopic))return;
+
         for (i = 0; i < MAX_TOPICS ; i++) {
-            //The topic is already in my list of subscribed topics
-            if(myPubSubInfo->subscribedTopics[i] == subTopic){
-                return;
-            }
             //Fill the first available position with the subscribed topic
             if(myPubSubInfo->subscribedTopics[i] == -1){
                 myPubSubInfo->subscribedTopics[i] = subTopic;
+                // Announce that i am subscribing to that topic to the rest of the network
+                encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE,subTopic);
+                propagateMessage(smallSendBuffer,myIP);
                 return;
             }
         }
@@ -677,11 +679,11 @@ void subscribeToTopic(int8_t subTopic) {
             else{myInitInfo.subscribedTopics[i] = -1;}
         }
         tableAdd(pubsubTable,myIP,&myInitInfo);
+        // Announce that i am subscribing to that topic to the rest of the network
+        encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE,subTopic);
+        propagateMessage(smallSendBuffer,myIP);
     }
 
-    // Announce that i am subscribing to that topic
-    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE,subTopic);
-    propagateMessage(smallSendBuffer,myIP);
 }
 
 
@@ -699,6 +701,7 @@ void unsubscribeToTopic(int8_t subTopic){
 
     myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
     if(myPubSubInfo != nullptr){ // Update my entry in the table if it already exists
+
         for (i = 0; i < MAX_TOPICS ; i++) {
             //If the topic is found in the subscribed topics list, unsubscribe
             if (myPubSubInfo->subscribedTopics[i] == subTopic) {
@@ -738,14 +741,16 @@ void advertiseTopic(int8_t pubTopic){
 
     myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
     if(myPubSubInfo != nullptr){ // Update my entry in the table if it already exists
+        //The topic is already in my list of topics published topics return without adding it to the list
+        if(containsTopic(myPubSubInfo->subscribedTopics,pubTopic))return;
+
         for (i = 0; i < MAX_TOPICS ; i++) {
-            //The topic is already in my list of subscribed topics
-            if(myPubSubInfo->publishedTopics[i] == pubTopic){
-                return;
-            }
             //Fill the first available position with the subscribed topic
             if(myPubSubInfo->publishedTopics[i] == -1){
                 myPubSubInfo->publishedTopics[i] = pubTopic;
+                // Advertise to other nodes that I am publishing this topic
+                encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_ADVERTISE,pubTopic);
+                propagateMessage(smallSendBuffer,myIP);
                 return;
             }
         }
@@ -756,11 +761,12 @@ void advertiseTopic(int8_t pubTopic){
             else{myInitInfo.publishedTopics[i] = -1;}
         }
         tableAdd(pubsubTable,myIP,&myInitInfo);
+        // Advertise to other nodes that I am publishing this topic
+        encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_ADVERTISE,pubTopic);
+        propagateMessage(smallSendBuffer,myIP);
     }
 
-    // Advertise to other nodes that I am publishing this topic
-    encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_ADVERTISE,pubTopic);
-    propagateMessage(smallSendBuffer,myIP);
+
 }
 
 /**

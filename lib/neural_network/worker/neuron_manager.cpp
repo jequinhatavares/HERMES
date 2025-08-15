@@ -400,6 +400,8 @@ void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
 
     delay(1000);
 
+    network.middlewarePrintInfo();
+
     // Send message with the acknowledged neurons to the root
     network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
 
