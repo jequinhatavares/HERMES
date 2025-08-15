@@ -1,5 +1,6 @@
 #include "neuron_manager.h"
 
+//#include <Arduino.h>
 /**
  * handleNeuronMessage
  * Processes all incoming neural network neuron related messages
@@ -135,6 +136,7 @@ void NeuronWorker::handleAssignComputationsMessage(char*messageBuffer){
         //Move on to the next neuron
         neuronEntry = strtok_r(NULL, "|",&saveptr1);
     }
+    neuronCore.printNeuronInfo();
 }
 
 
@@ -394,6 +396,9 @@ void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
         neuronEntry = strtok_r(NULL, "|", &saveptr1);
         nComputedNeurons=0;
     }
+
+    delay(1000);
+
     // Send message with the acknowledged neurons to the root
     network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
 }
