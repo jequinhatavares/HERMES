@@ -11,7 +11,7 @@
 
 void test_init_middleware(){
     uint8_t IP[4]={1,1,1,1};
-    initStrategyPubSub(encodeTopic,decodeTopic);
+    initStrategyPubSub(decodeTopic);
 
     tablePrint(pubsubTable,printPubSubTableHeader, printPubSubStruct);
 
@@ -21,7 +21,7 @@ void test_init_middleware(){
 void test_add_remove_subscription(){
     int8_t topic = HUMIDITY, topic2 = CAMERA;
     PubSubInfo *myPubSubInfo;
-    initStrategyPubSub(encodeTopic,decodeTopic);
+    initStrategyPubSub(decodeTopic);
     // Subscribe to topic
     subscribeToTopic(topic);
 
@@ -57,7 +57,7 @@ void test_publishing_topic(){
     int8_t topic1 = HUMIDITY, topic2 = CAMERA;
     PubSubInfo *myPubSubInfo;
 
-    initStrategyPubSub(encodeTopic,decodeTopic);
+    initStrategyPubSub(decodeTopic);
 
     // Subscribe to topic
     advertiseTopic(topic1);
@@ -96,7 +96,7 @@ void test_encode_middleware_subscribe_message(){
     int8_t subtopic = HUMIDITY;
     PubSubInfo *myPubSubInfo;
 
-    initStrategyPubSub(encodeTopic,decodeTopic);
+    initStrategyPubSub(decodeTopic);
 
     encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_SUBSCRIBE,subtopic);
 
@@ -114,7 +114,7 @@ void test_encode_middleware_advertise_message(){
 
     snprintf(correctEncodedMsg, sizeof(correctEncodedMsg),"%d %d 1.1.1.1 1.1.1.1 2",MIDDLEWARE_MESSAGE,PUBSUB_ADVERTISE);
 
-    initStrategyPubSub(encodeTopic,decodeTopic);
+    initStrategyPubSub(decodeTopic);
 
     encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_ADVERTISE,pubtopic);
 
@@ -131,7 +131,7 @@ void test_encode_middleware_info_update_message(){
 
     snprintf(correctEncodedMsg, sizeof(correctEncodedMsg),"%d %d 1.1.1.1 1.1.1.1 | 2 -1 -1 1 0 -1 ",MIDDLEWARE_MESSAGE,PUBSUB_NODE_UPDATE);
 
-    initStrategyPubSub(encodeTopic,decodeTopic);
+    initStrategyPubSub(decodeTopic);
 
     subscribeToTopic(stopic);
     subscribeToTopic(stopic2);
@@ -155,7 +155,7 @@ void test_encode_middleware_table_update_message(){
     int8_t stopic = HUMIDITY, stopic2 = TEMPERATURE, ptopic = CAMERA;
     PubSubInfo *myPubSubInfo;
 
-    initStrategyPubSub(encodeTopic,decodeTopic);
+    initStrategyPubSub(decodeTopic);
 
     snprintf(correctEncodedMsg, sizeof(correctEncodedMsg),"%d %d 1.1.1.1 |1.1.1.1 2 -1 -1 1 0 -1|2.2.2.2 2 -1 -1 -1 2 -1 -1",MIDDLEWARE_MESSAGE,PUBSUB_TABLE_UPDATE);
 
@@ -177,13 +177,119 @@ void test_encode_middleware_table_update_message(){
     tableClean(pubsubTable);
 }
 
+void test_handle_multiple_subscribe_messages(){
+    char receivedMiddlewareMessage[50];
+    int8_t topic0=0,topic1=1,topic2=2;
+    PubSubInfo *nodePubSubInfo;
+    uint8_t nodeIP[4] ={3,3,3,3};
+
+    initStrategyPubSub(decodeTopic);
+
+    snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage),"%d %d 3.3.3.3 3.3.3.3 0",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE);
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+   snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage),"%d %d 3.3.3.3 3.3.3.3 1",MIDDLEWARE_MESSAGE,PUBSUB_ADVERTISE);
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+    snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage),"%d %d 3.3.3.3 3.3.3.3 1",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE);
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+    snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage),"%d %d 3.3.3.3 3.3.3.3 2",MIDDLEWARE_MESSAGE,PUBSUB_ADVERTISE);
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));/******/
+
+    tablePrint(pubsubTable,printPubSubTableHeader,printPubSubStruct);
+
+    nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
+    TEST_ASSERT(nodePubSubInfo != nullptr);
+    TEST_ASSERT(containsTopic(nodePubSubInfo->subscribedTopics,0));
+
+    nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
+    TEST_ASSERT(nodePubSubInfo != nullptr);
+    TEST_ASSERT(containsTopic(nodePubSubInfo->subscribedTopics,1));
+
+    nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
+    TEST_ASSERT(nodePubSubInfo != nullptr);
+    TEST_ASSERT(containsTopic(nodePubSubInfo->publishedTopics,2));
+
+    nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
+    TEST_ASSERT(nodePubSubInfo != nullptr);
+    TEST_ASSERT(containsTopic(nodePubSubInfo->publishedTopics,1));
+
+
+    tableClean(pubsubTable);
+}
+
+void test_extensive_add_and_remove_pubsub_topics() {
+    char receivedMiddlewareMessage[50];
+    uint8_t nodeIP[4] = {5, 5, 5, 5};
+    PubSubInfo *info;
+
+    initStrategyPubSub(decodeTopic);
+
+    // Subscribe to topics 0, 1, 2
+    snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage), "%d %d 3.3.3.3 5.5.5.5 0", MIDDLEWARE_MESSAGE, PUBSUB_SUBSCRIBE);
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+    snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage), "%d %d 3.3.3.3 5.5.5.5 1", MIDDLEWARE_MESSAGE, PUBSUB_SUBSCRIBE);
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+    snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage), "%d %d 3.3.3.3 5.5.5.5 2", MIDDLEWARE_MESSAGE, PUBSUB_SUBSCRIBE);
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+    // Advertise topics 3, 4
+    snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage), "%d %d 3.3.3.3 5.5.5.5 3", MIDDLEWARE_MESSAGE, PUBSUB_ADVERTISE);
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+    snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage), "%d %d 3.3.3.3 5.5.5.5 4", MIDDLEWARE_MESSAGE, PUBSUB_ADVERTISE);
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+    // Try adding duplicates (should not change)
+    snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage), "%d %d 3.3.3.3 5.5.5.5 1", MIDDLEWARE_MESSAGE, PUBSUB_SUBSCRIBE);
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+    snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage), "%d %d 3.3.3.3 5.5.5.5 3", MIDDLEWARE_MESSAGE, PUBSUB_ADVERTISE);
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+    tablePrint(pubsubTable,printPubSubTableHeader,printPubSubStruct);
+
+    // Check after adds
+    info = (PubSubInfo*) tableRead(pubsubTable, nodeIP);
+    TEST_ASSERT(info != nullptr);
+    TEST_ASSERT(containsTopic(info->subscribedTopics, 0));
+    TEST_ASSERT(containsTopic(info->subscribedTopics, 1));
+    TEST_ASSERT(containsTopic(info->subscribedTopics, 2));
+    TEST_ASSERT(containsTopic(info->publishedTopics, 3));
+    TEST_ASSERT(containsTopic(info->publishedTopics, 4));
+
+    // Remove subscription topic 1
+    snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage), "%d %d 3.3.3.3 5.5.5.5 1", MIDDLEWARE_MESSAGE, PUBSUB_UNSUBSCRIBE);
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+    // Remove advertisement topic 4
+    snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage), "%d %d 3.3.3.3 5.5.5.5 4", MIDDLEWARE_MESSAGE, PUBSUB_UNADVERTISE);
+    handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
+
+    tablePrint(pubsubTable,printPubSubTableHeader,printPubSubStruct);
+
+    // Check after removals
+    info = (PubSubInfo*) tableRead(pubsubTable, nodeIP);
+    TEST_ASSERT(info != nullptr);
+    TEST_ASSERT(containsTopic(info->subscribedTopics, 0));
+    TEST_ASSERT(!containsTopic(info->subscribedTopics, 1)); // removed
+    TEST_ASSERT(containsTopic(info->subscribedTopics, 2));
+
+    TEST_ASSERT(containsTopic(info->publishedTopics, 3));
+    TEST_ASSERT(!containsTopic(info->publishedTopics, 4)); // removed/******/
+
+    tableClean(pubsubTable);
+}
+
 void test_handle_middleware_subscribe_message(){
     char receivedMiddlewareMessage[50];
     int8_t topic = HUMIDITY, topic2 = TEMPERATURE, topic3 = CAMERA;
     PubSubInfo *nodePubSubInfo;
     uint8_t nodeIP[4] ={2,2,2,2};
 
-    initStrategyPubSub(encodeTopic,decodeTopic);
+    initStrategyPubSub(decodeTopic);
 
     subscribeToTopic(topic);
     subscribeToTopic(topic2);
@@ -196,7 +302,6 @@ void test_handle_middleware_subscribe_message(){
     TEST_ASSERT(nodePubSubInfo != nullptr);
     TEST_ASSERT(containsTopic(nodePubSubInfo->subscribedTopics,topic3));
 
-
     tableClean(pubsubTable);
 
 }
@@ -207,7 +312,7 @@ void test_handle_middleware_unsubscribe_message(){
     PubSubInfo *nodePubSubInfo;
     uint8_t nodeIP[4] ={2,2,2,2};
 
-    initStrategyPubSub(encodeTopic,decodeTopic);
+    initStrategyPubSub(decodeTopic);
 
     subscribeToTopic(topic);
     subscribeToTopic(topic2);
@@ -230,7 +335,7 @@ void test_handle_middleware_advertise_message(){
     PubSubInfo *nodePubSubInfo;
     uint8_t nodeIP[4] ={2,2,2,2};
 
-    initStrategyPubSub(encodeTopic,decodeTopic);
+    initStrategyPubSub(decodeTopic);
 
     subscribeToTopic(topic);
     subscribeToTopic(topic2);
@@ -254,7 +359,7 @@ void test_handle_middleware_unadvertise_message(){
     PubSubInfo *nodePubSubInfo;
     uint8_t nodeIP[4] ={2,2,2,2};
 
-    initStrategyPubSub(encodeTopic,decodeTopic);
+    initStrategyPubSub(decodeTopic);
 
     subscribeToTopic(topic);
     subscribeToTopic(topic2);
@@ -284,7 +389,7 @@ void test_handle_middleware_info_update_message(){
     PubSubInfo *nodePubSubInfo;
     uint8_t nodeIP[4] ={2,2,2,2};
 
-    initStrategyPubSub(encodeTopic,decodeTopic);
+    initStrategyPubSub(decodeTopic);
 
     subscribeToTopic(topic);
     subscribeToTopic(topic2);
@@ -313,7 +418,7 @@ void test_handle_middleware_table_update_message(){
     PubSubInfo *nodePubSubInfo;
     uint8_t nodeIP[4] ={2,2,2,2};
 
-    initStrategyPubSub(encodeTopic,decodeTopic);
+    initStrategyPubSub(decodeTopic);
 
     subscribeToTopic(topic);
     subscribeToTopic(topic2);
@@ -345,7 +450,7 @@ void test_message_rewriteIP(){
     int8_t topic = HUMIDITY;
     PubSubInfo *myPubSubInfo;
 
-    initStrategyPubSub(encodeTopic,decodeTopic);
+    initStrategyPubSub(decodeTopic);
 
     snprintf(correctEncodedMsg, sizeof(correctEncodedMsg),"%d %d 1.1.1.1 2.2.2.2 2",MIDDLEWARE_MESSAGE,PUBSUB_ADVERTISE);
     snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage),"%d %d 3.3.3.3 2.2.2.2 2",MIDDLEWARE_MESSAGE,PUBSUB_ADVERTISE);
@@ -365,7 +470,7 @@ void test_message_rewriteIP_info_update_message(){
     int8_t topic = HUMIDITY;
     PubSubInfo *myPubSubInfo;
 
-    initStrategyPubSub(encodeTopic,decodeTopic);
+    initStrategyPubSub(decodeTopic);
 
     snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage),"%d %d 3.3.3.3 2.2.2.2 | 2 0 -1 -1 -1 -1",MIDDLEWARE_MESSAGE,PUBSUB_NODE_UPDATE);
 
@@ -396,6 +501,7 @@ void setUp(void){
     enableModule(NETWORK);
     enableModule(MONITORING_SERVER);
     enableModule(CLI);
+    enableModule(MIDDLEWARE);
 
     lastModule = NETWORK;
     currentLogLevel = DEBUG;
@@ -408,20 +514,23 @@ void tearDown(void){}
 
 int main(int argc, char** argv){
     UNITY_BEGIN();
-   /******/RUN_TEST(test_init_middleware);
+    RUN_TEST(test_init_middleware);
     RUN_TEST(test_add_remove_subscription);
     RUN_TEST(test_publishing_topic);
     RUN_TEST(test_encode_middleware_subscribe_message);
     RUN_TEST(test_encode_middleware_advertise_message);
-     RUN_TEST(test_encode_middleware_info_update_message);
-     RUN_TEST(test_encode_middleware_table_update_message);
-     RUN_TEST(test_handle_middleware_subscribe_message);
-     RUN_TEST(test_handle_middleware_unsubscribe_message);
-     RUN_TEST(test_handle_middleware_advertise_message);
-     RUN_TEST(test_handle_middleware_unadvertise_message);
-     RUN_TEST(test_handle_middleware_table_update_message);
-     RUN_TEST(test_message_rewriteIP);
-     RUN_TEST(test_message_rewriteIP_info_update_message);
-     RUN_TEST(test_decode_topic);/******/
+    RUN_TEST(test_encode_middleware_info_update_message);
+    RUN_TEST(test_encode_middleware_table_update_message);
+    RUN_TEST(test_handle_middleware_subscribe_message);
+    RUN_TEST(test_handle_middleware_unsubscribe_message);
+    RUN_TEST(test_handle_middleware_advertise_message);
+    RUN_TEST(test_handle_middleware_unadvertise_message);
+    RUN_TEST(test_handle_middleware_table_update_message);
+    RUN_TEST(test_message_rewriteIP);
+    RUN_TEST(test_message_rewriteIP_info_update_message);
+    RUN_TEST(test_decode_topic);/******/
+    RUN_TEST(test_handle_multiple_subscribe_messages);/******/
+    RUN_TEST(test_extensive_add_and_remove_pubsub_topics);/******/
+
     UNITY_END();
 }
