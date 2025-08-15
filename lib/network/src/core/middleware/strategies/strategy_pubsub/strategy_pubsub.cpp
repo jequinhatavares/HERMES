@@ -270,21 +270,14 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
                 pbCurrentRecord = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
                 if(pbCurrentRecord != nullptr){
                     for (i = 0; i < MAX_TOPICS; i++) {
-                        // Save all topics published by the node as-is.
-                        pbNewInfo.publishedTopics[i] = pbCurrentRecord->publishedTopics[i];
-                        // Skip update if the node is already marked as subscribed to this topic.
-                        if(pbCurrentRecord->subscribedTopics[i] == topic){
-                            isTableUpdated = true;
+                        //If the topic is already in the subscribedTopics list don't add it
+                        if(pbCurrentRecord->subscribedTopics[i] == topic)break;
+                        //Save the new subscribed topic in the first available slot (indicated by -1)
+                        else if(pbCurrentRecord->subscribedTopics[i] == -1){
+                            pbCurrentRecord->subscribedTopics[i] = topic;
                             break;
                         }
-                        //Save the new subscribed topic in the first available slot (indicated by -1)
-                        if(pbCurrentRecord->subscribedTopics[i] == -1){
-                            pbNewInfo.subscribedTopics[i] = topic;
-                        }else{// Preserve all other subscriptions as they are
-                            pbNewInfo.subscribedTopics[i] = pbCurrentRecord->subscribedTopics[i];
-                        }
                     }
-                    if(!isTableUpdated)tableUpdate(pubsubTable,nodeIP,&pbNewInfo);
                 }else{
                     //If the node does not exist in the table, add it with all published and subscribed topics initialized to -1,
                     // except for the announced subscribed topic
@@ -296,13 +289,6 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
                     tableAdd(pubsubTable,nodeIP,&pbNewInfo);
                 }
             }
-
-            //Forward the message to the next hop toward the destination IP
-            //routingTableValue = (RoutingTableEntry*) findRouteToNode(IP);
-            //if(routingTableValue != nullptr){
-                //sendMessage(routingTableValue->nextHopIP, messageBuffer);
-            //}
-
 
             //Propagate the subscription message in the network
             rewriteSenderIPPubSub(messageBuffer,smallSendBuffer, sizeof(smallSendBuffer),PUBSUB_SUBSCRIBE);
@@ -317,22 +303,18 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             if(!isIPEqual(myIP,IP)) {
                 pbCurrentRecord = (PubSubInfo *) tableRead(pubsubTable, nodeIP);
                 if (pbCurrentRecord != nullptr) {
+                    pbNewInfo = *pbCurrentRecord; // copy the whole record first
+                    // remove 'topic' from subscribedTopics by shifting left
                     for (i = 0; i < MAX_TOPICS; i++) {
-                        // Save all topics published by the node as-is.
-                        pbNewInfo.publishedTopics[i] = pbCurrentRecord->publishedTopics[i];
-
-                        //If the topic is found in the subscribed topics list, unsubscribe
-                        if (pbCurrentRecord->subscribedTopics[i] == topic) {// Remove the subscription by shifting all subsequent entries one position forward to overwrite the target
+                        if (pbCurrentRecord->subscribedTopics[i] == topic) {
                             for (k = i; k < MAX_TOPICS - 1; k++) {
-                                pbNewInfo.subscribedTopics[k] = pbCurrentRecord->subscribedTopics[k + 1];
+                                pbCurrentRecord->subscribedTopics[k] =
+                                        pbCurrentRecord->subscribedTopics[k + 1];
                             }
-                            pbNewInfo.subscribedTopics[MAX_TOPICS - 1] = -1;
-
+                            pbCurrentRecord->subscribedTopics[MAX_TOPICS - 1] = -1;
                             break;
                         }
-
                     }
-                    tableUpdate(pubsubTable, nodeIP, &pbNewInfo);
                 } else {
                     //If the node does not exist in the table, add it with all published and subscribed topics initialized to -1
                     for (i = 0; i < MAX_TOPICS; i++) {
@@ -360,21 +342,14 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             pbCurrentRecord = (PubSubInfo *) tableRead(pubsubTable, nodeIP);
             if(pbCurrentRecord != nullptr){
                 for (i = 0; i < MAX_TOPICS; i++) {
-                    // Save all subscribed by the node as-is.
-                    pbNewInfo.subscribedTopics[i] = pbCurrentRecord->subscribedTopics[i];
                     // Skip update if the node is already marked as publisher to this topic.
-                    if(pbCurrentRecord->publishedTopics[i] == topic){
-                        isTableUpdated = true;
+                    if(pbCurrentRecord->publishedTopics[i] == topic)break;
+                    //Save the new published topic in the first available slot (indicated by -1)
+                    else if(pbCurrentRecord->publishedTopics[i] == -1){
+                        pbCurrentRecord->publishedTopics[i] = topic;
                         break;
                     }
-                    //Save the new published topic in the first available slot (indicated by -1)
-                    if(pbCurrentRecord->publishedTopics[i] == -1){
-                        pbNewInfo.publishedTopics[i] = topic;
-                    }else{// Preserve all other subscriptions as they are
-                        pbNewInfo.publishedTopics[i] = pbCurrentRecord->publishedTopics[i];
-                    }
                 }
-                if(!isTableUpdated)tableUpdate(pubsubTable,nodeIP,&pbNewInfo);
             }else{
                 //If the node does not exist in the table, add it with all published and subscribed topics initialized to -1,
                 // except for the announced subscribed topic
@@ -399,24 +374,16 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
 
             pbCurrentRecord = (PubSubInfo*) tableRead(pubsubTable,nodeIP);
             if(pbCurrentRecord != nullptr){
+                // Remove 'topic' from publishedTopics by shifting left
                 for (i = 0; i < MAX_TOPICS; i++) {
-                    // Save all topics published by the node as-is.
-                    pbNewInfo.subscribedTopics[i] = pbCurrentRecord->subscribedTopics[i];
-
-                    //If the topic is found in the subscribed topics list, unsubscribe
-                    if(pbCurrentRecord->publishedTopics[i] == topic){
-                        // Remove the subscription by shifting all subsequent entries one position forward to overwrite the target
-                        for (k = i; k < MAX_TOPICS-1; k++) {
-                            pbNewInfo.publishedTopics[k] = pbCurrentRecord->publishedTopics[k+1];
+                    if (pbCurrentRecord->publishedTopics[i] == topic) {
+                        for (k = i; k < MAX_TOPICS - 1; k++) {
+                            pbCurrentRecord->publishedTopics[k] =pbCurrentRecord->publishedTopics[k + 1];
                         }
-                        //TODO put the last position to -1
-                        pbNewInfo.publishedTopics[MAX_TOPICS-1] = -1;
-
+                        pbCurrentRecord->publishedTopics[MAX_TOPICS - 1] = -1;
                         break;
                     }
-
                 }
-                tableUpdate(pubsubTable,nodeIP,&pbNewInfo);
             }else{
                 //If the node does not exist in the table, add it with all published and subscribed topics initialized to -1
                 for (i = 0; i < MAX_TOPICS; i++){
