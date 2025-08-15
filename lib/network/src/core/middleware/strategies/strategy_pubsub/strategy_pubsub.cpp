@@ -14,6 +14,7 @@ PubSubContext pubsubContext ={
         .unsubscribeToTopic = unsubscribeToTopic ,
         .advertiseTopic = advertiseTopic,
         .unadvertiseTopic = unadvertiseTopic,
+        .subscribeAndPublishTopics = updateNodeTopics,
 };
 
 
@@ -611,7 +612,64 @@ void onTimerStrategyPubSub(){
         lastMiddlewareUpdateTimePubSub = currentTime;/******/
     }
 }
+/**
+ * updateNodeTopics
+ * Registers multiple subscriptions and publications on the local node and propagates
+ * the changes to the rest of the network.
+ *
+ * @param subTopics - Array of topic IDs to subscribe to
+ * @param numSubTopics - Number of topics in subTopics
+ * @param pubTopics - Array of topic IDs to publish
+ * @param numPubTopics - Number of topics in pubTopics
+ * @return void
+ */
+void updateNodeTopics(int8_t *subTopics, int numSubTopics, int8_t *pubTopics, int numPubTopics) {
+    int i, j;
+    PubSubInfo *myPubSubInfo;
+    PubSubInfo myInitInfo;
 
+    myPubSubInfo = (PubSubInfo*) tableRead(pubsubTable, myIP);
+
+    if (myPubSubInfo != nullptr) { // Update the existing entry
+        // Update the subscriptions
+        for (i = 0; i < numSubTopics; i++) {
+            // Skip this topic if it is already a subscription of this node
+            if (!containsTopic(myPubSubInfo->subscribedTopics, subTopics[i])) {
+                for (j = 0; j < MAX_TOPICS; j++) {
+                    // Locate the first empty slot, store the topic there, and then continue with the next topic
+                    if (myPubSubInfo->subscribedTopics[j] == -1) {
+                        myPubSubInfo->subscribedTopics[j] = subTopics[i];
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Handle publications
+        for (i = 0; i < numPubTopics; i++) {
+            // Skip this topic if it is already published by the node
+            if (!containsTopic(myPubSubInfo->publishedTopics, pubTopics[i])) {
+                for (j = 0; j < MAX_TOPICS; j++) {
+                    // Locate the first empty slot, store the topic there, and then continue with the next topic
+                    if (myPubSubInfo->publishedTopics[j] == -1) {
+                        myPubSubInfo->publishedTopics[j] = pubTopics[i];
+                        break;
+                    }
+                }
+            }
+        }
+    }else{ // Create new entry
+        for (i = 0; i < MAX_TOPICS; i++) {
+            myInitInfo.publishedTopics[i] = (i < numPubTopics) ? pubTopics[i] : -1;
+            myInitInfo.subscribedTopics[i] = (i < numSubTopics) ? subTopics[i] : -1;
+        }
+        tableAdd(pubsubTable, myIP, &myInitInfo);
+    }
+
+    encodeMessageStrategyPubSub(largeSendBuffer, sizeof(largeSendBuffer),PUBSUB_NODE_UPDATE,0);
+    propagateMessage(largeSendBuffer,myIP);
+
+}
 /**
  * subscribeToTopic
  * Registers a subscription to the specified topic on the local node and propagates

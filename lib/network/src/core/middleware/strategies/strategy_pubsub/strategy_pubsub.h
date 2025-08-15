@@ -45,6 +45,7 @@ typedef struct PubSubContext{
     void (*unsubscribeToTopic)(int8_t topic);
     void (*advertiseTopic)(int8_t topic);
     void (*unadvertiseTopic)(int8_t topic);
+    void (*subscribeAndPublishTopics)(int8_t *subscribeList, int subCount, int8_t *publishList, int pubCount);
 } PubSubContext;
 
 
@@ -69,6 +70,7 @@ void subscribeToTopic(int8_t topic);
 void unsubscribeToTopic(int8_t topic);
 void advertiseTopic(int8_t topic);
 void unadvertiseTopic(int8_t topic);
+void updateNodeTopics(int8_t *subTopics, int numSubTopics, int8_t *pubTopics, int numPubTopics);
 
 
 #endif //STRATEGY_PUBSUB_H
