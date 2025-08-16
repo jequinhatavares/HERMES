@@ -548,12 +548,6 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
             neuronCore.configureNeuron(currentOutputNeuron,net->layers[outputLayer].numInputs,
                             &net->layers[outputLayer].weights[j * net->layers[outputLayer].numInputs],
                             net->layers[outputLayer].biases[j], inputIndexMap);
-
-            // Directly initialize the middleware Pub/Sub table with this device’s information,
-            // since the device does not receive messages from itself to update its table.
-            int8_t subTopic[1]={(int8_t)outputLayer},pubTopic[1]={(int8_t)(outputLayer+1)};
-            network.subscribeAndPublishTopics(subTopic,1,pubTopic,1);
-
         }else{
             // If this node doesn't compute the output layer, we must encode a message
             //assigning the output neurons and their parameters to the correct node.
@@ -577,8 +571,14 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
 
     }
 
+    // If another node is responsible for the output layer, notify it by assigning the output neurons
     if(!isIPEqual(outputDevice,myIP)){
         network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,outputDevice);
+    }else{
+        // Directly initialize the middleware Pub/Sub table with this device’s information,
+        // since the device does not receive messages from itself to update its table.
+        int8_t subTopic[1]={(int8_t)outputLayer},pubTopic[1]={(int8_t)(outputLayer+1)};
+        network.subscribeAndPublishTopics(subTopic,1,pubTopic,1);
     }
 
     delete [] inputIndexMap;
