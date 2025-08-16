@@ -908,7 +908,7 @@ void NeuronWorker::onInputWaitTimeout(){
     size_t tmpBufferSize = sizeof(tmpBuffer);
     NeuronId missingNeuronId, handledNeuronId, missingNeuronsList[10];
     // The message aggregates the missing inputs from all neurons into a single message
-    offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%d ",NN_NACK);
+    offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%d",NN_NACK);
 
     // Iterate through all neurons to determine which have incomplete input sets and identify the missing inputs
     // Since the IDs of neurons missing inputs are irrelevant to the nodes providing those inputs, the neuron IDs are not included in the message.
