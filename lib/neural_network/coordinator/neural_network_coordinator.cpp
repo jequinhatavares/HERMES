@@ -919,12 +919,12 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
 
     // If all neurons have acknowledged and no inference cycle is currently running, start a new inference cycle
     if(!inferenceRunning && receivedAllNeuronAcks){
-        /***LOG(APP,INFO,"Starting an inference cycle\n");
+        LOG(APP,INFO,"Starting an inference cycle\n");
         nnSequenceNumber +=2;
         encodeForwardMessage(appPayload, sizeof(appPayload),nnSequenceNumber);
         network.broadcastMessage(appBuffer,sizeof(appBuffer),appPayload);
         inferenceStartTime=getCurrentTime();
-        inferenceRunning=true;***/
+        inferenceRunning=true;/******/
     }
 
     currentTime = getCurrentTime();
