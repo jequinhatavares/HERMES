@@ -173,7 +173,7 @@ bool encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typ
             nodePubSubInfo = (PubSubInfo*) tableRead(pubsubTable,myIP);
 
             if (nodePubSubInfo != nullptr) {
-                offset = snprintf(messageBuffer, bufferSize, "%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu | ",
+                offset = snprintf(messageBuffer, bufferSize, "%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu|",
                                       MIDDLEWARE_MESSAGE, PUBSUB_NODE_UPDATE,
                                       myIP[0], myIP[1], myIP[2], myIP[3],
                                       myIP[0], myIP[1], myIP[2], myIP[3]);
@@ -185,7 +185,8 @@ bool encodeMessageStrategyPubSub(char* messageBuffer, size_t bufferSize, int typ
 
                 // Append subscribed topics
                 for (i = 0; i < MAX_TOPICS; i++) {
-                    offset += snprintf(messageBuffer + offset, bufferSize - offset, "%i ", nodePubSubInfo->subscribedTopics[i]);
+                    if(i<MAX_TOPICS-1)offset += snprintf(messageBuffer + offset, bufferSize - offset, "%i ", nodePubSubInfo->subscribedTopics[i]);
+                    else offset += snprintf(messageBuffer + offset, bufferSize - offset, "%i", nodePubSubInfo->subscribedTopics[i]);
                 }
                 return true;
             }

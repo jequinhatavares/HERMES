@@ -869,12 +869,22 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
     if(totalWorkers>=MIN_WORKERS && totalInputs == TOTAL_INPUT_NEURONS && !areNeuronsAssigned){
         LOG(APP,INFO,"Neural network distribution process started\n");
 
+        LOG(APP,INFO,"Distributing input neurons\n");
+
         // Assign the input layer neurons to the input devices
         distributeInputNeurons(inputsIPs,totalInputs);
+
+        LOG(APP,INFO,"Distributing hidden layer neurons\n");
+
         // Distribute the NN hidden layers to the available worker devices
         distributeNeuralNetworkBalanced(&neuralNetwork,workersIPs,totalWorkers,neuronsPerWorker);
+
+        LOG(APP,INFO,"Distributing output neurons\n");
+
         //Assign the output layer neurons to a node(myself)
         distributeOutputNeurons(&neuralNetwork,myIP);
+
+        LOG(APP,INFO,"Assigning Output targets\n");
 
         if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY){
             //Assign the output targets of the assigned neurons
