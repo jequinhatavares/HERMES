@@ -174,6 +174,7 @@ inline void resetAll(BitField& bits){
     bits = 0;
 }
 
+bool isTopicInList(int8_t *topicList, int listSize, int8_t searchTopic);
 #endif //NEURON_MANAGER_H
 
 

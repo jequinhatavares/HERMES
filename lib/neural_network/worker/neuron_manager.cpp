@@ -370,11 +370,11 @@ void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
 
         //spaceToken now pointing to the subTopic
         subTopic = atoi(spaceToken);
-        // If the topic is not equal to -1, subscribe to it
-        // A value of -1 indicates an invalid or non-existent topic, meaning the node should not subscribe.
         LOG(APP, DEBUG, "Subscribing to topic: %i\n", subTopic);
-        if(subTopic != -1){
-            if(nSubTopics<MAX_NEURONS){//todo and is not already in the list
+        /*** Subscribe to the topic if it is valid (not equal to -1). A value of -1 indicates an invalid or non-existent
+         *   topic, so the node should not subscribe.If the topic is already in the subscription list, avoid adding it again.***/
+        if(subTopic != -1 && !isTopicInList(subTopics,nSubTopics,subTopic)){
+            if(nSubTopics<MAX_NEURONS ){//todo and is not already in the list
                 subTopics[nSubTopics]=static_cast<int8_t>(subTopic);
                 nSubTopics++;
             }
@@ -388,11 +388,13 @@ void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
         if(pubTopic != -1){
             LOG(APP, DEBUG, "Publishing topic: %i\n", pubTopic);
             // If the topic is not equal to -1, publish it
-            if(nSubTopics<MAX_NEURONS){
+            if(nSubTopics<MAX_NEURONS && !isTopicInList(pubTopics,nPubTopics,pubTopic)){
                 pubTopics[nPubTopics]=static_cast<int8_t>(pubTopic);
                 nPubTopics++;
             }
             //network.advertiseTopic(static_cast<int8_t>(pubTopic));
+
+            // For neurons that publish this topic, store the mapping between the published topic and the corresponding neuron.
             for (int i = 0; i < nNeurons; i++) {
                 neuronStorageIndex = neuronCore.getNeuronStorageIndex(neuronID[i]);
                 // Record the topic published by this neuron in the neuron-to-topic map
@@ -407,10 +409,12 @@ void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
         neuronEntry = strtok_r(NULL, "|", &saveptr1);
         nComputedNeurons=0;
     }
+    // Call the middleware function to update the pub/sub information's
+    network.subscribeAndPublishTopics(subTopics,nSubTopics,pubTopics,nPubTopics);
+    network.middlewarePrintInfo();
 
     delay(1000);
 
-    network.middlewarePrintInfo();
 
     // Send message with the acknowledged neurons to the root
     network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
@@ -1088,4 +1092,11 @@ void NeuronWorker::decodeNeuronTopic(char* dataMessage, int8_t* topicType){
     }
     *topicType = -1;
 
+}
+
+bool isTopicInList(int8_t *topicList, int listSize, int8_t searchTopic){
+    for (int i = 0; i < listSize; ++i) {
+        if(topicList[i] == searchTopic) return true;
+    }
+    return false;
 }
