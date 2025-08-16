@@ -551,8 +551,8 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
 
             // Directly initialize the middleware Pub/Sub table with this device’s information,
             // since the device does not receive messages from itself to update its table.
-            network.subscribeToTopic((int8_t)outputLayer);
-            network.advertiseTopic((int8_t)(outputLayer+1));
+            int8_t subTopic[1]={(int8_t)outputLayer},pubTopic[1]={(int8_t)(outputLayer+1)};
+            network.subscribeAndPublishTopics(subTopic,1,pubTopic,1);
 
         }else{
             // If this node doesn't compute the output layer, we must encode a message
