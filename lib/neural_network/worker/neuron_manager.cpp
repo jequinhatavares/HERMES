@@ -828,7 +828,7 @@ void NeuronWorker::encodeInputRegistration(char* messageBuffer, size_t bufferSiz
 void NeuronWorker::generateInputData(NeuronId inputNeuronId){
     uint8_t myLocalIP[4];
     int inputNeuronStorageIndex=-1;
-    float sensorData=5.0;
+    float sensorData = 1.0;
 
     //sensorData = inputGenerationCallback(inputNeuronId);
 
@@ -1077,8 +1077,10 @@ void NeuronWorker::registerNodeAsWorker() {
 void NeuronWorker::decodeNeuronTopic(char* dataMessage, int8_t* topicType){
     NeuronId outputNeuronId;
     int neuronStorageIndex;
+    //NN_NEURON_OUTPUT [Inference Id] [Output Neuron ID] [Output Value]
     //Remove the output neuron id from the message
     sscanf(dataMessage, "%*d %*i %hhu",&outputNeuronId);
+
 
     neuronStorageIndex=neuronCore.getNeuronStorageIndex(outputNeuronId);
     //If the neuron whose output in being produced is an input neuron then the topic type is equal to zero
@@ -1088,6 +1090,7 @@ void NeuronWorker::decodeNeuronTopic(char* dataMessage, int8_t* topicType){
         return;
     }else if(neuronStorageIndex != -1){
         *topicType = neuronToTopicMap[neuronStorageIndex];
+        return;
     }
     *topicType = -1;
 
