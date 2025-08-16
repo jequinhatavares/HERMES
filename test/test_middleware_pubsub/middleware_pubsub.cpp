@@ -129,7 +129,7 @@ void test_encode_middleware_info_update_message(){
     int8_t stopic = HUMIDITY, stopic2 = TEMPERATURE, ptopic = CAMERA;
     PubSubInfo *myPubSubInfo;
 
-    snprintf(correctEncodedMsg, sizeof(correctEncodedMsg),"%d %d 1.1.1.1 1.1.1.1 | 2 -1 -1 1 0 -1 ",MIDDLEWARE_MESSAGE,PUBSUB_NODE_UPDATE);
+    snprintf(correctEncodedMsg, sizeof(correctEncodedMsg),"%d %d 1.1.1.1 1.1.1.1|2 -1 -1 1 0 -1",MIDDLEWARE_MESSAGE,PUBSUB_NODE_UPDATE);
 
     initStrategyPubSub(decodeTopic);
 
@@ -468,7 +468,7 @@ void test_handle_middleware_table_update_message(){
     subscribeToTopic(topic2);
     advertiseTopic(topic3);
 
-    snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage),"%d %d 1.1.1.1 |1.1.1.1 2 -1 -1 1 0 -1 |2.2.2.2 -1 -1 -1 2 -1 -1",MIDDLEWARE_MESSAGE,PUBSUB_TABLE_UPDATE);
+    snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage),"%d %d 1.1.1.1|1.1.1.1 2 -1 -1 1 0 -1 |2.2.2.2 -1 -1 -1 2 -1 -1",MIDDLEWARE_MESSAGE,PUBSUB_TABLE_UPDATE);
 
     handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
 
