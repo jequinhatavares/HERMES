@@ -940,7 +940,7 @@ void sendDataMessageToNode(char* messageBuffer,size_t bufferSize,const char* mes
         uint8_t *nextHopIP = findRouteToNode(destinationIP);
         if(nextHopIP != nullptr){
             sendMessage(nextHopIP,messageBuffer);
-            LOG(MESSAGES,DEBUG,"Sending the message: %s to: %hhu.%hhu.%hhu.%hhu\n",messageBuffer,nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3]);
+            LOG(MESSAGES,DEBUG,"Sending the message: %s to: %hhu.%hhu.%hhu.%hhu\n",messageBuffer,destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3]);
         }
     }
 
