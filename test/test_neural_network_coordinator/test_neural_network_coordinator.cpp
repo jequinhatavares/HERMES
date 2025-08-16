@@ -1508,8 +1508,6 @@ void test_assign_outputs() {
 
 }
 
-
-
 void test_assign_pubsub_info() {
     NeuralNetworkCoordinator coordinator;
     uint8_t blankIP[4]={0,0,0,0};

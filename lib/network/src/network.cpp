@@ -83,14 +83,13 @@ void Network::run() {
         if(packetSize >= 255){
             LOG(MESSAGES, ERROR,"Receiving buffer is too small packet has size:%i\n", packetSize);
         }
-
     }
 
     // Handle all timers: routing periodic updates, child disconnection timeouts, middleware timer callbacks and any application-level periodic tasks
     handleTimers();
 
     while(stateMachineEngine->size != 0){
-        //printSnake((CircularBuffer *)stateMachineEngine);
+        printSnake((CircularBuffer *)stateMachineEngine);
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
     }
 
