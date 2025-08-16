@@ -13,8 +13,8 @@
 #endif
 
 
+void beginTransport();
 void sendMessage(uint8_t address[4], const char * msg);
 int receiveMessage(char* buffer, size_t bufferSize);
-void beginTransport();
 
 #endif //UDP_INTERFACE_H

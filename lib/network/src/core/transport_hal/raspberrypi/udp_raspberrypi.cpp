@@ -24,6 +24,7 @@ void beginTransport(){
     // Bind to local address
     memset(&localAddr, 0, sizeof(localAddr));
     localAddr.sin_family = AF_INET;
+    //bind the socket to all available network interfaces on the device
     localAddr.sin_addr.s_addr = INADDR_ANY;
     localAddr.sin_port = htons(UDP_PORT);
 

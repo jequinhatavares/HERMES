@@ -19,7 +19,6 @@ extern int remoteIP[4];
 
 #include "../udp_interface.h"
 
-
 //void beginTransport();
 //int receiveMessage(char *buffer);
 //void sendMessage(const char *message, int IP[4]);
