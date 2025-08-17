@@ -385,6 +385,7 @@ void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
         spaceToken = strtok_r(NULL, " ", &saveptr2);
         pubTopic = atoi(spaceToken);
 
+        // Publish the topic if it is valid (not equal to -1).
         if(pubTopic != -1){
             LOG(APP, DEBUG, "Publishing topic: %i\n", pubTopic);
             // If the topic is not equal to -1, publish it
