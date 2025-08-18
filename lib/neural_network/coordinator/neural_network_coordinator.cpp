@@ -506,7 +506,7 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
     NeuronEntry neuronEntry;
     char tmpBuffer[150];
     size_t tmpBufferSize= sizeof(tmpBuffer);
-    int messageOffset=0;
+    int messageOffset=0,neuronStorageIndex=-1;
 
     // Calculate the first output neuron ID by iterating through the layers and their respective number of inputs
     for (int i = 0; i < net->numLayers; ++i) {
@@ -548,6 +548,11 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
             neuronCore.configureNeuron(currentOutputNeuron,net->layers[outputLayer].numInputs,
                             &net->layers[outputLayer].weights[j * net->layers[outputLayer].numInputs],
                             net->layers[outputLayer].biases[j], inputIndexMap);
+
+            //Get where the current neuron was saved in neuron core
+            neuronStorageIndex = neuronCore.getNeuronStorageIndex(currentOutputNeuron);
+            // Record the topic published by this neuron in the neuron-to-topic map
+            if(neuronStorageIndex != -1) neuronToTopicMap[neuronStorageIndex]= static_cast<int8_t>(outputLayer+1);
         }else{
             // If this node doesn't compute the output layer, we must encode a message
             //assigning the output neurons and their parameters to the correct node.
@@ -579,6 +584,7 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
         // since the device does not receive messages from itself to update its table.
         int8_t subTopic[1]={(int8_t)outputLayer},pubTopic[1]={(int8_t)(outputLayer+1)};
         network.subscribeAndPublishTopics(subTopic,1,pubTopic,1);
+
     }
 
     delete [] inputIndexMap;

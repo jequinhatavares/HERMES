@@ -77,9 +77,6 @@ private:
     // Identifier of the current inference cycle, assigned by the root node
     int currentInferenceId = 0;
 
-    // saves the topics that each node publishes
-    int8_t neuronToTopicMap[MAX_NEURONS];
-
     void handleAssignComputationsMessage(char*messageBuffer);
     void handleAssignOutputTargets(char* messageBuffer);
     void handleAssignInput(char* messageBuffer);
@@ -99,6 +96,11 @@ private:
     void onNACKTimeout();
 
     void clearNeuronOutputTargets(NeuronId neuronId);
+
+protected:
+// saves the topics that each node publishes
+int8_t neuronToTopicMap[MAX_NEURONS];
+
 };
 
 /***typedef struct OutputTarget{
