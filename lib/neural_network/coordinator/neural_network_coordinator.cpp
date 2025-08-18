@@ -74,14 +74,30 @@ void setNeuronEntry(void* av, void* bv){
     a->isAcknowledged = b->isAcknowledged;
 }
 
+
+/***
+ * NeuralNetworkCoordinator (Constructor)
+ * Initializes the neural network coordinator by setting up the neuron-to-node mapping table
+ ***/
 NeuralNetworkCoordinator::NeuralNetworkCoordinator() {
     initNeuralNetwork();
 }
 
+
+/**
+ * initNeuralNetwork
+ * Initializes the neuron-to-node mapping table for tracking neuron assignments.
+ */
 void NeuralNetworkCoordinator::initNeuralNetwork(){
     tableInit(neuronToNodeTable,neurons,neuronMap, sizeof(NeuronId),sizeof(NeuronEntry));
 }
 
+/**
+ * printNeuronEntry
+ * Function to Log a neuron entry in the neuron-to-node table.
+ *
+ * @param Table - Pointer to the table entry containing neuron information
+ */
 void printNeuronEntry(TableEntry* Table){
     LOG(APP,INFO,"Neuron ID %hhu → NodeIP[%hhu.%hhu.%hhu.%hhu] (Layer: %hhu) (Index in Layer: %hhu) (isAcknowledged: %d) \n",
          *(NeuronId*)Table->key,((NeuronEntry *)Table->value)->nodeIP[0],((NeuronEntry *)Table->value)->nodeIP[1]
@@ -90,11 +106,27 @@ void printNeuronEntry(TableEntry* Table){
         ((NeuronEntry *)Table->value)->isAcknowledged);
 }
 
+
+/**
+ * printNeuronTableHeader
+ * Logs the header for the neuron-to-node table display.
+ */
 void printNeuronTableHeader(){
     LOG(APP,INFO,"((((((((((((((((((((((( Neuron To Node Table )))))))))))))))))))))))))))\n");
-
 }
 
+
+/**
+ * distributeNeuralNetwork
+ * Distributes neurons across worker nodes by dividing the total number of neurons by the number of computing devices,
+ * ensuring a uniform allocation. Neurons are then assigned sequentially, layer by layer, across the network.
+ * This function constructs and sends the assignment messages containing the neurons and their parameters.
+ * The output layer is always assigned to the coordinator node.
+ *
+ * @param net - Pointer to the neural network structure
+ * @param nodes - 2D array of worker nodes IP addresses
+ * @param nrNodes - Number of available worker nodes
+ */
 void NeuralNetworkCoordinator::distributeNeuralNetwork(const NeuralNetwork *net, uint8_t nodes[][4],uint8_t nrNodes){
     uint8_t neuronPerNodeCount = 0,*inputIndexMap;
     uint8_t numHiddenNeurons =0, neuronsPerNode;
@@ -206,7 +238,18 @@ void NeuralNetworkCoordinator::distributeNeuralNetwork(const NeuralNetwork *net,
 }
 
 
-
+/**
+ * distributeNeuralNetworkBalanced
+ * Distributes neurons across worker devices using device-specific capacity allocation.
+ * Assigns neurons based on per-device neuron capacity (neuronsPerDevice array).
+ * Processes layers sequentially, constructing aggregated assignment messages per device.
+ * Output layer is not processed (handled separately by distributeOutputNeurons).
+ *
+ * @param net - Pointer to neural network structure
+ * @param devices - 2D array of devices IP addresses
+ * @param nrDevices - Number of available devices
+ * @param neuronsPerDevice - Array specifying max neurons per device
+ */
 void NeuralNetworkCoordinator::distributeNeuralNetworkBalanced(const NeuralNetwork *net, uint8_t devices[][4],uint8_t nrDevices, uint8_t neuronsPerDevice[]){
     uint8_t neuronPerNodeCount = 0,*inputIndexMap;
     int assignedDevices = 0, messageOffset = 0;
@@ -292,6 +335,16 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalanced(const NeuralNetwo
 }
 
 
+/**
+ * assignOutputTargetsToNetwork
+ * Assigns output targets layer by layer across all nodes. Output targets are the devices that require the output
+ * of neurons computed by other nodes. For each layer, identifies the devices responsible for computing the next-layer
+ * neurons (those are the output targets). Constructs messages by grouping neurons in the same layer with their corresponding outputs and sends
+ * these output target assignment messages to all worker nodes.
+ *
+ * @param nodes - 2D array of worker nodes IP addresses
+ * @param nrNodes - Number of nodes in the network
+ */
 void NeuralNetworkCoordinator::assignOutputTargetsToNetwork(uint8_t nodes[][4],uint8_t nrNodes){
     uint8_t *neuronId;
     NeuronEntry *neuronEntry;
@@ -354,6 +407,17 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNetwork(uint8_t nodes[][4],u
 
 }
 
+
+/**
+ * assignOutputTargetsToNode
+ * Assigns output targets for a specific device and its neurons.
+ * For each layer containing the node's neurons, identifies the recipient nodes in the next layer.
+ * Constructs a layer-wise message aggregating output target assignments for the node.
+ *
+ * @param messageBuffer - Buffer to store encoded message
+ * @param bufferSize - Size of message buffer
+ * @param targetNodeIP - IP address of target node
+ */
 void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]){
     NeuronId *neuronId;
     NeuronEntry *neuronEntry;
@@ -426,6 +490,19 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
 
 }
 
+
+/**
+ * assignOutputTargetsToNeurons
+ * Assigns output targets to the neurons computed by the target node.
+ * For each neuron, identifies the recipient nodes in the next layer.
+ * Constructs a message containing neuron-specific output targets and sends it.
+ *
+ * @param messageBuffer - Buffer to store encoded message
+ * @param bufferSize - Size of message buffer
+ * @param neuronIDs - Array of neuron IDs
+ * @param nNeurons - Number of neurons in array
+ * @param targetNodeIP - IP address of target node
+ */
 void NeuralNetworkCoordinator::assignOutputTargetsToNeurons(char* messageBuffer,size_t bufferSize,NeuronId *neuronIDs,uint8_t nNeurons,uint8_t targetNodeIP[4]){
     NeuronId *neuronId,*neuronId2;
     NeuronEntry *neuronEntry,*neuronEntry2;
@@ -475,6 +552,15 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNeurons(char* messageBuffer,
 
 }
 
+
+/**
+ * distributeInputNeurons
+ * Assigns input layer neurons to registered input producing devices.Sends individual assignment messages to each
+ * input node. Adds neuron-node mappings to tracking table with unacknowledged status.
+ *
+ * @param inputNodes - 2D array of input node IP addresses
+ * @param nrNodes - Number of available input nodes
+ */
 void NeuralNetworkCoordinator::distributeInputNeurons(uint8_t inputNodes[][4],uint8_t nrNodes){
     NeuronEntry neuronEntry;
     uint8_t numInputNeurons = neuralNetwork.layers[0].numInputs;
@@ -498,6 +584,17 @@ void NeuralNetworkCoordinator::distributeInputNeurons(uint8_t inputNodes[][4],ui
     }
 }
 
+
+/**
+ * distributeOutputNeurons
+ * Assigns output layer neurons to a specific device.
+ * Handles special case when coordinator node is the output device.
+ * For remote devices: encodes and sends neuron assignment message.
+ * For coordinator: directly configures neuron core and pub/sub information.
+ *
+ * @param net - Pointer to neural network structure
+ * @param outputDevice - IP address of output device
+ */
 void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,uint8_t outputDevice[4]){
     uint8_t outputLayer= net->numLayers - 1,*inputIndexMap;
     uint8_t myIP[4];
@@ -582,9 +679,8 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
     }else{
         // Directly initialize the middleware Pub/Sub table with this device’s information,
         // since the device does not receive messages from itself to update its table.
-        int8_t subTopic[1]={(int8_t)outputLayer},pubTopic[1]={(int8_t)(outputLayer+1)};
+        int8_t subTopic[1]={static_cast<int8_t>(outputLayer)},pubTopic[1]={static_cast<int8_t>(outputLayer+1)};
         network.subscribeAndPublishTopics(subTopic,1,pubTopic,1);
-
     }
 
     delete [] inputIndexMap;
@@ -816,6 +912,13 @@ void NeuralNetworkCoordinator::handleACKMessage(char* messageBuffer){
 
 }
 
+/**
+ * handleWorkerRegistration
+ * Decodes and handles NN_WORKER_REGISTRATION messages and assigns neuron computations based on the device type.
+ *
+ * @param messageBuffer - Buffer containing registration message.
+ * Message Format: NN_WORKER_REGISTRATION [Node IP] [Device Type]
+ */
 void NeuralNetworkCoordinator::handleWorkerRegistration(char* messageBuffer){
     uint8_t nodeIP[4],deviceClass;
 
@@ -844,6 +947,14 @@ void NeuralNetworkCoordinator::handleWorkerRegistration(char* messageBuffer){
     totalWorkers++;
 }
 
+
+/**
+ * handleInputRegistration
+ * Decodes an input registration message and registers devices that provide values for the neural network’s input layer
+ *
+ * @param messageBuffer - Buffer containing registration message
+ * Message Format: NN_INPUT_REGISTRATION [Node IP] [Device Type]
+ */
 void NeuralNetworkCoordinator::handleInputRegistration(char* messageBuffer){
     uint8_t nodeIP[4],deviceClass;
 
@@ -862,6 +973,14 @@ void NeuralNetworkCoordinator::handleInputRegistration(char* messageBuffer){
 }
 
 
+/**
+ * manageNeuralNetwork
+ * Orchestrates neural network operation:
+ * 1- When sufficient worker and input nodes are registered, distributes neuron computations among them and assigns output targets.
+ * 2- Tracks acknowledgments from all nodes to confirm assignment. And if not received within a timeout resends the assignments
+ * 3- Once all ACKs are received, initiates an inference cycle.
+ * @return void
+ */
 void NeuralNetworkCoordinator::manageNeuralNetwork(){
     unsigned long currentTime = getCurrentTime();
     uint8_t myIP[4];
@@ -941,6 +1060,15 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
 
 }
 
+/**
+ * onACKTimeOut
+ * Manages hidden layer neuron assignment timeouts.
+ * If a node fails to acknowledge its assignment, the system resends the assignment to that node.
+ *
+ * @param nodeIP - 2D array of worker nodes IP addresses
+ * @param nDevices - Number of worker devices to process
+ * @return void
+ */
 void NeuralNetworkCoordinator::onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices){
     NeuronId *currentId;
     NeuronEntry *neuronEntry;
@@ -1020,6 +1148,13 @@ void NeuralNetworkCoordinator::onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices
     }
 }
 
+
+/**
+ * onACKTimeOutInputLayer
+ * Handles input layer neuron assignment timeouts by resending unacknowledged assignments.
+ *
+ * @return void
+ */
 void NeuralNetworkCoordinator::onACKTimeOutInputLayer(){
     NeuronId *currentId;
     NeuronEntry *neuronEntry;
@@ -1053,6 +1188,16 @@ void NeuralNetworkCoordinator::onACKTimeOutInputLayer(){
     }
 }
 
+
+/**
+ * handleNeuralNetworkMessage
+ * Main dispatcher for neural network protocol messages.
+ *
+ * @param senderIP - Source IP address
+ * @param destinationIP - Destination IP address
+ * @param messageBuffer - Received message payload buffer
+ * @return void
+ */
 void NeuralNetworkCoordinator::handleNeuralNetworkMessage(uint8_t *senderIP, uint8_t *destinationIP, char *messageBuffer) {
     NeuralNetworkMessageType type;
 

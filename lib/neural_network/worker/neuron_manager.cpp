@@ -1090,6 +1090,7 @@ void NeuronWorker::decodeNeuronTopic(char* dataMessage, int8_t* topicType){
         *topicType = 0;
         return;
     }else if(neuronStorageIndex != -1){
+        // Topics published by the computing neurons are stored in the neuronToTopicMap
         *topicType = neuronToTopicMap[neuronStorageIndex];
         return;
     }
