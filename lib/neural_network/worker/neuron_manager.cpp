@@ -306,6 +306,14 @@ void NeuronWorker::handleAssignOutputNeuron(char* messageBuffer){
         //Save the parsed neuron parameters
         neuronCore.configureNeuron(neuronID,inputSize,weightValues,bias, inputIndexMap);
 
+        // If the device has reached the maximum number of supported neurons, no additional output neurons can be stored
+        if(nrOutputNeurons>=MAX_NEURONS){
+            LOG(APP,ERROR,"The number of assigned output neurons exceeds the allowed maximum. Neuron ID: %hhu was not accepted",neuronID);
+        }else{
+            outputNeurons[nrOutputNeurons] = neuronID;
+            nrOutputNeurons++;
+        }
+
         //Add the parsed neuronID to the NACK message
         encodeACKMessage(tmpBuffer,tmpBufferSize,&neuronID,1);
         offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%s",tmpBuffer);
@@ -656,6 +664,10 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                 }
                 LOG(APP,DEBUG,"F6.13\n");
 
+                //If the Neuron whose output have been computed is an output neurons do something
+                if(isNeuronInList(outputNeurons,nrOutputNeurons,currentNeuronID)){
+                    if(onOutputLayerComputation)onOutputLayerComputation(currentNeuronID,neuronOutput);
+                }
 
             }
         }

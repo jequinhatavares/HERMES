@@ -48,6 +48,8 @@ bool NeuronCore::configureNeuron(NeuronId neuronID, uint8_t receivedInputSize, f
 
     //Increment the number of computed neurons
     neuronsCount++;
+
+    return true;
 }
 
 

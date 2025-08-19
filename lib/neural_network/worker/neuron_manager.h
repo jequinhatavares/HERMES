@@ -81,6 +81,8 @@ private:
     NeuronId outputNeurons[MAX_NEURONS];
     uint8_t nrOutputNeurons=0;
 
+    void (*onOutputLayerComputation)(NeuronId outputNeuronId, float outputValue) = nullptr;
+
     void handleAssignComputationsMessage(char*messageBuffer);
     void handleAssignOutputTargets(char* messageBuffer);
     void handleAssignInput(char* messageBuffer);
