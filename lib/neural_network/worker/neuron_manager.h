@@ -77,6 +77,10 @@ private:
     // Identifier of the current inference cycle, assigned by the root node
     int currentInferenceId = 0;
 
+    //List of neurons that this node handles that are output neurons
+    NeuronId outputNeurons[MAX_NEURONS];
+    uint8_t nrOutputNeurons=0;
+
     void handleAssignComputationsMessage(char*messageBuffer);
     void handleAssignOutputTargets(char* messageBuffer);
     void handleAssignInput(char* messageBuffer);

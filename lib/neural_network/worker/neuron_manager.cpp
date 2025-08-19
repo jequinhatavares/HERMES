@@ -235,6 +235,11 @@ void NeuronWorker::handleAssignInput(char* messageBuffer){
         nrInputNeurons++;
     }***/
 
+    //
+    if(nrInputNeurons>=MAX_INPUT_NEURONS){
+        LOG(APP,ERROR,"The number of assigned input neurons exceeds the allowed maximum. Neuron ID: %hhu was not accepted",inputNeuronId);
+        return;
+    }
     inputNeurons[nrInputNeurons] = inputNeuronId;
     nrInputNeurons++;
     //todo
