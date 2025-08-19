@@ -334,6 +334,7 @@ void handleMessages(){
     uint8_t childSTAIP[4];
 
     sscanf(receiveBuffer, "%d", &MessageType);
+
     if(!isMessageValid(MessageType, receiveBuffer)){
         LOG(MESSAGES,ERROR,"Error: received message is invalid or malformed \"%s\"\n", receiveBuffer);
     }

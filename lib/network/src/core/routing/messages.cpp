@@ -150,7 +150,6 @@ void encodeFullRoutingTableUpdate(char* messageBuffer, size_t bufferSize){
 void encodePartialRoutingUpdate(char* messageBuffer, size_t bufferSize,uint8_t nodeIPs[][4],int nrNodes){
     int offset=0;
     RoutingTableEntry *nodeRoutingEntry;
-
     //PARTIAL_ROUTING_TABLE_UPDATE [senderIP] |[node1 IP] [hopDistance] [sequenceNumber]| [node2 IP] [hopDistance] [sequenceNumber] ...
     offset += snprintf(messageBuffer+offset,bufferSize-offset,"%i %hhu.%hhu.%hhu.%hhu|",PARTIAL_ROUTING_TABLE_UPDATE,myIP[0],myIP[1],myIP[2],myIP[3]);
 
@@ -173,7 +172,7 @@ void encodeTopologyRestoredNotice(char* messageBuffer, size_t bufferSize){
 }
 
 void encodeParentResetNotification(char* messageBuffer, size_t bufferSize){
-    //TOPOLOGY_RESTORED_NOTICE
+    //PARENT_RESET_NOTIFICATION [senderIP]
     snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu",PARENT_RESET_NOTIFICATION,myIP[0],myIP[1],myIP[2],myIP[3]);
 }
 
