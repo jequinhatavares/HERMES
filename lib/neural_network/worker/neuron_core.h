@@ -17,7 +17,7 @@ public:
     NeuronCore();
     ~NeuronCore();
 
-    void configureNeuron(NeuronId neuronId, uint8_t receivedInputSize, float* receivedWeights, float receivedBias, NeuronId* receivedOrder);
+    bool configureNeuron(NeuronId neuronId, uint8_t receivedInputSize, float* receivedWeights, float receivedBias, NeuronId* receivedOrder);
 
     NeuronId getNeuronId(int index);
     int getNeuronStorageIndex(NeuronId neuronId);

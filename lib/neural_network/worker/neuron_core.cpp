@@ -19,12 +19,12 @@ NeuronCore::~NeuronCore() {
  * @param receivedBias       Bias value to be used during the neuron's output computation.
  * @param receivedOrder      Pointer to the array specifying the input save order (mapping where each received input
  * should be stored in the input vector).
- * @return void
+ * @return bool - true if the neuron has been successfully saved, false otherwise
  */
-void NeuronCore::configureNeuron(NeuronId neuronID, uint8_t receivedInputSize, float* receivedWeights, float receivedBias, NeuronId* receivedOrder) {
+bool NeuronCore::configureNeuron(NeuronId neuronID, uint8_t receivedInputSize, float* receivedWeights, float receivedBias, NeuronId* receivedOrder) {
     if (neuronsCount >= MAX_NEURONS) {
         LOG(APP,ERROR, "ERROR: Exceeded max neurons per node.\n");
-        return;
+        return false;
     }
 
     //Add the neuronId to the list of neurons computed by this node
