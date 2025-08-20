@@ -106,6 +106,7 @@ void setup(){
 
     //LOG(APP,INFO,"MY MAC after begin: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
 
+    // Register each device in the network along with its assigned role
     if(MAC[5] == 89 && MAC[4] == 248 && MAC[3] == 169 && MAC[2] == 45){
         worker.registerNodeAsInput();
         worker.registerNodeAsWorker();
@@ -132,7 +133,7 @@ void loop(){
 #ifdef raspberrypi_3b
 #include <stdio.h>
 #include <unistd.h>
-
+/***
 #include <../lib/wifi_hal/raspberrypi/wifi_raspberrypi.h>
 //#include <../lib/transport_hal/raspberrypi/udp_raspberrypi.h>
 #include "transport_hal.h"
@@ -146,9 +147,28 @@ void loop(){
 #include "logger.h"
 #include "../lib/middleware/strategies/strategy_inject/strategy_inject.h"
 #include "../lib/middleware/strategies/strategy_pubsub/strategy_pubsub.h"
-#include "middleware.h"
+#include "middleware.h" ***/
+
+
+#include <network.h>
+#include <neural_network_dispatcher.h>
 
 //pio remote --agent raspberrypi run --force-remote -e raspberrypi_3b
+
+NeuronWorker worker;
+
+void decodeTopicWrapper(char* dataMessage, int8_t* topicType){
+    worker.decodeNeuronTopic(dataMessage,topicType);
+}
+void handleDataMessageWrapper(uint8_t * senderIP,uint8_t *destinationIP,char* dataMessage){
+#ifdef ROOT
+    worker.handleNeuralNetworkMessage(senderIP,destinationIP,dataMessage);
+#endif
+#ifndef ROOT
+    worker.handleNeuronMessage(senderIP,destinationIP,dataMessage);
+#endif
+}
+
 
 void setup();
 
@@ -162,21 +182,20 @@ void setup(){
     enableModule(MIDDLEWARE);
     enableModule(APP);
 
-
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
 
-    initTime();
+    network.middlewareSelectStrategy(STRATEGY_PUBSUB);
+    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);
 
-    Advance(SM, eSuccess);//Init
+    //Then init the callback function for data message receiving
+    network.onDataReceived(handleDataMessageWrapper);
 
-     middlewareSelectStrategy(STRATEGY_TOPOLOGY);
-     initMiddlewareStrategyTopology();
+    //And then the node can be initialized and integrated in the network
+    network.begin();
 
-    if(!iamRoot){
-        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Search APs
-        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Choose Parent
-    }
+    // Register the RPi device as a worker device
+    worker.registerNodeAsWorker();
 
 }
 
@@ -187,26 +206,8 @@ int main() {
     setup();
 
     while (1) {
-        int packetSize;
-
-        waitForWifiEvent();
-
-        //Wait for incoming requests
-        packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer));
-        if (packetSize > 0){
-            insertLast(stateMachineEngine, eMessage);
-            if(packetSize >= 255){
-                LOG(MESSAGES, ERROR,"Receiving buffer is too small packet has size:%i\n", packetSize);
-            }
-
-        }
-
-        handleTimers();
-
-        if(stateMachineEngine->size != 0){
-            Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
-        }
-
+        network.run();
+        worker.manageNeuron();
         //cliInteraction();
     }
 

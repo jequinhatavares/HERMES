@@ -89,7 +89,7 @@ void Network::run() {
     handleTimers();
 
     while(stateMachineEngine->size != 0){
-        printSnake((CircularBuffer *)stateMachineEngine);
+        //printSnake((CircularBuffer *)stateMachineEngine);
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
     }
 
