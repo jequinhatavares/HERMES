@@ -49,7 +49,6 @@ void test_data_messages_encoding_with_string(){
 
 
 void test_PDR_messages_invalid_encoding(){
-
     char incorrectMessage[100]= "1 1.1.1.1";
     TEST_ASSERT(isMessageValid(PARENT_DISCOVERY_REQUEST,incorrectMessage) == false);
 
@@ -64,7 +63,6 @@ void test_PDR_messages_invalid_encoding(){
 
     char correctMessage[100]= "0 1.1.1.1";
     TEST_ASSERT(isMessageValid(PARENT_DISCOVERY_REQUEST,correctMessage) == true);
-
 }
 
 void test_PIR_messages_invalid_encoding(){

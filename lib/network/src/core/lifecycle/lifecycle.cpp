@@ -233,7 +233,6 @@ State search(Event event){
         filterReachableNetworks();
     }while(reachableNetworks.len == 0 );
 
-
     insertFirst(stateMachineEngine, eFoundParents);
     return sJoinNetwork;
 
@@ -272,7 +271,6 @@ State joinNetwork(Event event){
         insertLast(stateMachineEngine, eParentSelectionFailed);
         return sSearch;
     }
-
 
 
     reachableNetworks.len = 0 ;
