@@ -184,8 +184,8 @@ void encodeDebugMessage(char* messageBuffer, size_t bufferSize,char* payload){
 
 void encodeACKMessage(char* messageBuffer, size_t bufferSize,const char* payload,uint8_t *sourceIP,uint8_t *destinationIP){
     //ACK_MESSAGE [source node IP] [destination node IP] [ACK payload]
-    snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",ACK_MESSAGE,sourceIP[0],sourceIP[1],
-             sourceIP[2],sourceIP[3],destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],payload);
+    //snprintf(messageBuffer,bufferSize,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",ACK_MESSAGE,sourceIP[0],sourceIP[1],
+      //       sourceIP[2],sourceIP[3],destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],payload);
 }
 
 
@@ -309,12 +309,12 @@ bool isMessageValid(int expectedMessageType,char* msg){
                            &IP2[0], &IP2[1], &IP2[2], &IP2[3]) == 9);
             break;
         }
-        case ACK_MESSAGE: {
+        /***case ACK_MESSAGE: {
             uint8_t IP1[4], IP2[4];
             return (sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
                            &IP2[0], &IP2[1], &IP2[2], &IP2[3]) == 9);
             break;
-        }
+        }***/
         case MIDDLEWARE_MESSAGE:
             return true;
 

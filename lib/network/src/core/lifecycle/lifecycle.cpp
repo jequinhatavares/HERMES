@@ -328,7 +328,7 @@ State active(Event event){
  * @return void
  */
 void handleMessages(){
-    LOG(STATE_MACHINE,INFO,"Handle Messages State\n");
+    //LOG(STATE_MACHINE,INFO,"Handle Messages \n");
     int MessageType;
     uint8_t childSTAIP[4];
 
@@ -386,11 +386,6 @@ void handleMessages(){
         case DATA_MESSAGE:
             //LOG(MESSAGES,INFO,"Received [Data] message: \"%s\"\n", receiveBuffer);
             handleDataMessage(receiveBuffer);
-            break;
-
-        case ACK_MESSAGE:
-            LOG(MESSAGES,INFO,"Received [ACK] message: \"%s\"\n", receiveBuffer);
-            handleAckMessage(receiveBuffer);
             break;
 
         case MIDDLEWARE_MESSAGE:
