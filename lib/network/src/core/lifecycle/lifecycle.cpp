@@ -38,7 +38,6 @@ StateMachine SM_ = {
                 [sJoinNetwork] = joinNetwork,
                 [sActive] = active,
                 [sParentRecovery] = parentRecovery,
-                //[sChildRecovery] = childRecovery,
                 [sParentRestart] = parentRestart,
                 [sRecoveryWait] = recoveryAwait,
                 [sExecuteTask] = executeTask,

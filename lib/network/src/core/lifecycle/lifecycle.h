@@ -71,7 +71,6 @@ State search(Event event);
 State joinNetwork(Event event);
 State active(Event event);
 State parentRecovery(Event event);
-State childRecovery(Event event);
 State parentRestart(Event event);
 State recoveryAwait(Event event);
 State executeTask(Event event);
