@@ -496,7 +496,7 @@ State parentRecovery(Event event){
 
         consecutiveSearchCount ++;
 
-    }while(reachableNetworks.len == 0 && consecutiveSearchCount<3);
+    }while(reachableNetworks.len == 0 && consecutiveSearchCount<MAX_PARENT_SEARCH_ATTEMPTS);
 
 
     // If the maximum number of scans is reached, transition to the Parent Restart state
