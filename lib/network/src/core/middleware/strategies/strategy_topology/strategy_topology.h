@@ -41,7 +41,6 @@ typedef struct TopologyContext{
 
 
 void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *),void (*printMetricFunction)(TableEntry*),uint8_t* (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t));
-void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int typeTopology);
 void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize);
 void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]);
 void influenceRoutingStrategyTopology(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload);
@@ -53,6 +52,7 @@ void registerTopologyMetric(uint8_t *nodeIP, char* metricBuffer);
 void encodeNodeMetricReport(char* messageBuffer, size_t bufferSize, void* metric);
 void encodeParentAssignmentCommand(char* messageBuffer, size_t bufferSize, uint8_t * destinationIP, uint8_t * chosenParentIP, uint8_t * targetNodeIP);
 void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize, ParentInfo* possibleParents, int nrOfPossibleParents, uint8_t *temporaryParent, uint8_t *mySTAIP);
+void encodeNodeUpdateMessage(char* messageBuffer, size_t bufferSize);
 
 ParentInfo requestParentFromRoot(ParentInfo* possibleParents, int nrOfPossibleParents);
 void chooseParentStrategyTopology(char* message);
