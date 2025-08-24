@@ -91,17 +91,20 @@ void test_publishing_topic(){
 
 
 void test_encode_middleware_subscribe_message(){
-    char correctEncodedMsg[50] = "11 0 1.1.1.1 1.1.1.1 1";
+    char correctEncodedMsg[50];
 
     int8_t subtopic = HUMIDITY;
     PubSubInfo *myPubSubInfo;
+
+    snprintf(correctEncodedMsg, sizeof(correctEncodedMsg),"%d %d 1.1.1.1 1.1.1.1 1",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE);
 
     initStrategyPubSub(decodeTopic);
 
     encodeMessageStrategyPubSub(smallSendBuffer, sizeof(smallSendBuffer) ,PUBSUB_SUBSCRIBE,subtopic);
 
+    printf("Encoded Message:%s\n",smallSendBuffer);
+    printf("Correct Message:%s\n",correctEncodedMsg);
     TEST_ASSERT(strcmp(smallSendBuffer,correctEncodedMsg) == 0);
-
     tableClean(pubsubTable);
 }
 
@@ -188,7 +191,7 @@ void test_handle_multiple_subscribe_messages(){
     snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage),"%d %d 3.3.3.3 3.3.3.3 0",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE);
     handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
 
-   snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage),"%d %d 3.3.3.3 3.3.3.3 1",MIDDLEWARE_MESSAGE,PUBSUB_ADVERTISE);
+    snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage),"%d %d 3.3.3.3 3.3.3.3 1",MIDDLEWARE_MESSAGE,PUBSUB_ADVERTISE);
     handleMessageStrategyPubSub(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage));
 
     snprintf(receivedMiddlewareMessage, sizeof(receivedMiddlewareMessage),"%d %d 3.3.3.3 3.3.3.3 1",MIDDLEWARE_MESSAGE,PUBSUB_SUBSCRIBE);
