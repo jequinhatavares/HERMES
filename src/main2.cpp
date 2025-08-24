@@ -14,9 +14,58 @@ NeuralNetworkCoordinator worker;
 NeuronWorker worker;
 #endif
 
-//topologyTableEntry topologyMetrics[TABLE_MAX_SIZE];
 
 //MetricTableEntry metrics[TABLE_MAX_SIZE];
+
+struct topologyTableEntry{
+    int processingCapacity;
+};
+
+topologyTableEntry topologyMetrics[TABLE_MAX_SIZE];
+
+
+uint8_t* chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t potentialParents[][4], uint8_t nPotentialParents){
+    int maxProcessingCapacity = 0;
+    int bestParentIndex = -1;
+    topologyTableEntry *topologyMetricValue;
+
+    for (int i = 0; i < nPotentialParents; i++) {
+        topologyMetricValue = (topologyTableEntry*) network.getParentMetric(potentialParents[i]);
+        if(topologyMetricValue != nullptr){
+            LOG(MIDDLEWARE,DEBUG,"Potential Parent: %hhu.%hhu.%hhu.%hhu metric:%d\n",potentialParents[i][0],potentialParents[i][1],potentialParents[i][2],potentialParents[i][3],topologyMetricValue->processingCapacity);
+            if(topologyMetricValue->processingCapacity >= maxProcessingCapacity){
+                bestParentIndex = i;
+                maxProcessingCapacity = topologyMetricValue->processingCapacity;
+                LOG(MIDDLEWARE,DEBUG,"Parent Selected\n");
+            }
+        }
+    }
+    if(bestParentIndex != -1){
+        LOG(MIDDLEWARE,DEBUG,"Chosen Parent: %hhu.%hhu.%hhu.%hhu metric:%d\n",potentialParents[bestParentIndex][0],potentialParents[bestParentIndex][1],potentialParents[bestParentIndex][2],potentialParents[bestParentIndex][3]);
+        return potentialParents[bestParentIndex];
+    }
+    else{ return nullptr;}/******/
+    return nullptr;
+}
+
+void encodeTopologyMetricEntry(char* buffer, size_t bufferSize, void *metricEntry){
+    topologyTableEntry *metric = (topologyTableEntry*) metricEntry;
+    snprintf(buffer,bufferSize,"%i", metric->processingCapacity);
+}
+
+void decodeTopologyMetricEntry(char* buffer, void *metricEntry){
+    topologyTableEntry *metric = (topologyTableEntry*)metricEntry;
+    sscanf(buffer,"%i", &metric->processingCapacity);
+}
+
+
+void setTopologyMetricValue(void* av, void*bv){
+    if(bv == nullptr)return; //
+    topologyTableEntry *a = (topologyTableEntry *) av;
+    topologyTableEntry *b = (topologyTableEntry *) bv;
+
+    a->processingCapacity = b->processingCapacity;
+}
 
 void waitForEnter() {
     // Wait for Enter
@@ -94,9 +143,17 @@ void setup(){
     if(context != nullptr)context->setParentMetric(&myMetric);***/
 
     //middlewareSelectStrategy(STRATEGY_NONE);
+
+    /***Middleware Strategy: PubSub ***/
     //First init the middleware strategy
-    network.middlewareSelectStrategy(STRATEGY_PUBSUB);
-    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);
+    /***network.middlewareSelectStrategy(STRATEGY_PUBSUB);
+    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);***/
+
+    /*** Middleware Strategy: Topology ***/
+    network.middlewareSelectStrategy(STRATEGY_TOPOLOGY);
+    network.initMiddlewareStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,
+                                           encodeTopologyMetricEntry, decodeTopologyMetricEntry,
+                                           chooseParentByProcessingCapacity);
 
     //Then init the callback function for data message receiving
     network.onDataReceived(handleDataMessageWrapper);
