@@ -448,13 +448,13 @@ void NeuronWorker::handleForwardMessage(char *messageBuffer){
 
     currentInferenceId = inferenceId;
 
-    LOG(APP,DEBUG,"F1\n");
+    //LOG(APP,DEBUG,"F1\n");
 
     for (int i = 0; i < neuronCore.neuronsCount; i++) {
         resetAll(receivedInputs[i]);
         isOutputComputed[i] = false;
     }
-    LOG(APP,DEBUG,"F2\n");
+    //LOG(APP,DEBUG,"F2\n");
 
     allOutputsComputed = false;
 
@@ -463,7 +463,7 @@ void NeuronWorker::handleForwardMessage(char *messageBuffer){
 
     nackTriggered = false;
 
-    LOG(APP,DEBUG,"F3\n");
+    //LOG(APP,DEBUG,"F3\n");
     //Generate the input of all input neurons hosted in this node
     for (int i = 0; i < nrInputNeurons; i++) {
         generateInputData(inputNeurons[i]);
@@ -581,68 +581,54 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
 
     for (int i = 0; i < neuronCore.neuronsCount; i++) {
 
-        LOG(APP,DEBUG,"F6.1\n");
 
         currentNeuronID = neuronCore.getNeuronId(i);
 
         // Check if the current neuron requires the input produced by outputNeuronId
         if(neuronCore.isInputRequired(currentNeuronID,inputNeuronId)){
-            LOG(APP,DEBUG,"F6.2\n");
             // Find the index where the neuron is stored
             neuronStorageIndex = neuronCore.getNeuronStorageIndex(currentNeuronID);
             // Find the storage index of this specific input value for the given neuron
             inputStorageIndex = neuronCore.getInputStorageIndex(currentNeuronID,inputNeuronId);
             //Find the input size of the neuron
             inputSize = neuronCore.getInputSize(currentNeuronID);
-            LOG(APP,DEBUG,"F6.3\n");
 
             if(inputSize == -1 || inputStorageIndex == -1 || neuronStorageIndex == -1){
                 LOG(APP,ERROR,"ERROR: Invalid index detected: inputSize=%d, inputStorageIndex=%d, neuronStorageIndex=%d",
                     inputSize, inputStorageIndex, neuronStorageIndex);
                 return;
             }
-            LOG(APP,DEBUG,"F6.4\n");
 
 
             //Save the input value in the input vector
             neuronCore.setInput(currentNeuronID,inputValue,inputNeuronId);
-            LOG(APP,DEBUG,"F6.5\n");
 
             // Set the bit corresponding to the received input to 1
             setBit(receivedInputs[neuronStorageIndex],inputStorageIndex);
 
             // Check if all inputs required by that specific neuron have been received
             if(allBits(receivedInputs[neuronStorageIndex], inputSize)){
-                LOG(APP,DEBUG,"F6.6\n");
 
                 // If all inputs required by the neuron have been received, proceed with output computation
                 neuronOutput = neuronCore.computeNeuronOutput(currentNeuronID);
                 outputValues[neuronStorageIndex] = neuronOutput;
-                LOG(APP,DEBUG,"F6.7\n");
 
                 //Iterates through all neurons managed by this node to identify which require the computed output as their input
                 for (int j = 0; j < neuronCore.neuronsCount; j++) {
                     handledNeuronId = neuronCore.getNeuronId(j);
-                    LOG(APP,DEBUG,"F6.8\n");
-
                     if(handledNeuronId != 255 && neuronCore.isInputRequired(handledNeuronId,currentNeuronID)){
                         neuronsRequireInput=true;
                         break;
                     }
-                    LOG(APP,DEBUG,"F6.9\n");
 
                 }
-                LOG(APP,DEBUG,"F6.10\n");
 
                 // If any node requires the computed output, feed it to them by recursively calling this function
                 if(neuronsRequireInput)processNeuronInput(currentNeuronID,inferenceId,neuronOutput);
 
-                LOG(APP,DEBUG,"F6.11\n");
 
                 //reset the bit field for the next NN run
                 resetAll(receivedInputs[neuronStorageIndex]);//TODO PASS THIS FOR WHE THE FOWARD MESSAGE IS RECEIVED
-
-                LOG(APP,DEBUG,"F6.12\n");
 
                 isOutputComputed[neuronStorageIndex] = true;
 
@@ -850,27 +836,27 @@ void NeuronWorker::generateInputData(NeuronId inputNeuronId){
 
     //sensorData = inputGenerationCallback(inputNeuronId);
 
-    LOG(APP,DEBUG,"F4\n");
+    //LOG(APP,DEBUG,"F4\n");
     inputNeuronStorageIndex = getInputNeuronStorageIndex(inputNeuronId);
     if(inputNeuronStorageIndex==-1) {
         LOG(APP,ERROR,"ERROR: Neuron %hhu is not registered as an input\n",inputNeuronId);
         return;
     }
 
-    LOG(APP,DEBUG,"F5\n");
+    //LOG(APP,DEBUG,"F5\n");
 
     inputNeuronsValues[inputNeuronStorageIndex] = sensorData;
 
-    LOG(APP,DEBUG,"F6\n");
+    //LOG(APP,DEBUG,"F6\n");
 
     // If this node is responsible for computing neurons that depend on this input, provide it directly to them.
     processNeuronInput(inputNeuronId,currentInferenceId,sensorData);
 
-    LOG(APP,DEBUG,"F7\n");
+    //LOG(APP,DEBUG,"F7\n");
 
     network.getNodeIP(myLocalIP);
 
-    LOG(APP,DEBUG,"F8\n");
+    //LOG(APP,DEBUG,"F8\n");
 
     // Encode the message to send to other nodes, containing my output value that serves as their input.
     encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,inputNeuronId,sensorData);

@@ -526,7 +526,7 @@ void test_handle_NACK_for_input_node(){
     snprintf(receivedMessage, sizeof(receivedMessage),"%d %hhu",NN_NACK,inputNeuron);
     neuron.handleNeuronMessage(blankIP,blankIP,receivedMessage);
 
-    snprintf(correctMessage, sizeof(correctMessage),"%d %i %hhu %g",NN_NEURON_OUTPUT,0,inputNeuron,5.0);
+    snprintf(correctMessage, sizeof(correctMessage),"%d %i %hhu %g",NN_NEURON_OUTPUT,0,inputNeuron,1.0);
 
      printf("Encoded Message:%s\n",appPayload);
      printf("Correct Message:%s\n",correctMessage);
@@ -774,7 +774,7 @@ void test_worker_input_node_producing_output_needed_by_other_worker(){
 
     //printNeuronInfo();
 
-    TEST_ASSERT(neuron.inputNeuronsValues[0]==5.0);
+    TEST_ASSERT(neuron.inputNeuronsValues[0]==1.0);
 
     //TEST_ASSERT(isOutputComputed[neuronStorageIndex2]);
 
@@ -1577,8 +1577,8 @@ void tearDown(void){
 }
 
 int main(int argc, char** argv){
-    UNITY_BEGIN();
-    RUN_TEST(test_memory_allocation);/******/
+    UNITY_BEGIN();/******/
+    RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
 
     RUN_TEST(test_handle_message_assign_neuron_one_neuron);
@@ -1596,7 +1596,7 @@ int main(int argc, char** argv){
 
     RUN_TEST(test_handle_assign_input_neuron_and_worker_neurons_and_assign_all_outputs);
     RUN_TEST(test_worker_neurons_from_multiple_layers_assigned);
-     RUN_TEST(test_worker_compute_neuron_output_having_other_neurons_depending_on_that_output);
+    RUN_TEST(test_worker_compute_neuron_output_having_other_neurons_depending_on_that_output);
      RUN_TEST(test_worker_input_node_producing_output_needed_by_other_worker);
 
      //RUN_TEST(test_distribute_neural_network_to_one_device);
