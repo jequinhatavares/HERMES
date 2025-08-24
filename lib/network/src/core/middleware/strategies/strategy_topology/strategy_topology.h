@@ -39,7 +39,7 @@ typedef struct TopologyContext{
 
 
 
-void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *), uint8_t* (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t));
+void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *),void (*printMetricFunction)(TableEntry*),uint8_t* (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t));
 void encodeMessageStrategyTopology(char* messageBuffer, size_t bufferSize, int typeTopology);
 void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize);
 void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]);
@@ -58,17 +58,18 @@ void chooseParentStrategyTopology(char* message);
 
 void topologySetNodeMetric(void* metric);
 
+void printTopologyTable();
 void printTopologyTableHeader();
 
 void* getNodeTopologyMetric(uint8_t * nodeIP);
 
 /******************************-----------Application Defined Functions----------------********************************/
 
-uint8_t * chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t (*potentialParents)[4], uint8_t nPotentialParents);
+/***uint8_t * chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t (*potentialParents)[4], uint8_t nPotentialParents);
 void encodeTopologyMetricEntry(char* buffer, size_t bufferSize, void *metricEntry);
 void decodeTopologyMetricEntry(char* buffer, void *metricEntry);
 void setTopologyMetricValue(void* av, void*bv);
-void printTopologyMetricStruct(TableEntry* Table);
+void printTopologyMetricStruct(TableEntry* Table);***/
 
 
 #endif //STRATEGY_TOPOLOGY_H

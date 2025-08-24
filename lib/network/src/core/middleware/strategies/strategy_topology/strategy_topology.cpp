@@ -49,6 +49,8 @@ uint8_t nodesTopology[TABLE_MAX_SIZE][4];
 //Init Function Pointers
 void (*encodeTopologyMetricValue)(char*,size_t,void *) = nullptr;
 void (*decodeTopologyMetricValue)(char*,void *) = nullptr;
+void (*printTopologyMetricValue)(TableEntry*) = nullptr;
+
 
 uint8_t * (*chooseParentFunction)(uint8_t *, uint8_t (*)[4] , uint8_t) = nullptr;
 
@@ -58,7 +60,7 @@ TopologyContext topologyContext ={
         .getParentMetric = getNodeTopologyMetric,
 };
 
-void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t)){
+void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *),void (*printMetricFunction)(TableEntry*), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t)){
     //Only the root initializes the table data; that is, only the root maintains a table containing the node metrics used to select parent nodes
     //if(!iamRoot) return;
     topologyMetricsTable->setValue = setValueFunction;
@@ -67,6 +69,7 @@ void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStruc
 
     encodeTopologyMetricValue = encodeTopologyMetricFunction;
     decodeTopologyMetricValue = decodeTopologyMetricFunction;
+    printTopologyMetricValue = printMetricFunction;
     chooseParentFunction = selectParentFunction;
 }
 
@@ -421,16 +424,12 @@ void* getNodeTopologyMetric(uint8_t * nodeIP){
     return tableRead(topologyMetricsTable,nodeIP);
 }
 
+void printTopologyTable(){
+    if(printTopologyMetricValue)tablePrint(topologyMetricsTable,printTopologyTableHeader,printTopologyMetricValue);
+}
+
 /******************************-----------Application Defined Functions----------------********************************/
 
-
-
-
-void printTopologyMetricStruct(TableEntry* Table){
-    LOG(MIDDLEWARE,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → (Topology Metric: %d) \n",
-        ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
-        ((topologyTableEntry *)Table->value)->processingCapacity);
-}
 
 void printTopologyTableHeader(){
     LOG(MIDDLEWARE,INFO,"**********************| Middleware Strategy Topology Table |**********************\n");

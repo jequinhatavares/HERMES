@@ -66,7 +66,8 @@ class Network {
     // Configures the Topology strategy
     void initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize
                                         ,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *)
-                                        ,void (*decodeTopologyMetricFunction)(char*,void *), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t));
+                                        ,void (*decodeTopologyMetricFunction)(char*,void *),void (*printMetricFunction)(TableEntry*)
+                                        ,uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t));
     void setParentMetric(void*metric); // Sets this node metric and sends it to the root for it to be able to discriminate between parent candidates
     void* getParentMetric(uint8_t *nodeIP); //Gets the metric associated to a node as parent this method is only available at the root node
 

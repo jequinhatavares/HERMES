@@ -67,6 +67,12 @@ void setTopologyMetricValue(void* av, void*bv){
     a->processingCapacity = b->processingCapacity;
 }
 
+void printTopologyMetricStruct(TableEntry* Table){
+    LOG(MIDDLEWARE,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → (Topology Metric: %d) \n",
+        ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
+        ((topologyTableEntry *)Table->value)->processingCapacity);
+}
+
 void waitForEnter() {
     // Wait for Enter
     while (Serial.available() <= 0) {
@@ -153,6 +159,7 @@ void setup(){
     network.middlewareSelectStrategy(STRATEGY_TOPOLOGY);
     network.initMiddlewareStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,
                                            encodeTopologyMetricEntry, decodeTopologyMetricEntry,
+                                           printTopologyMetricStruct,
                                            chooseParentByProcessingCapacity);
 
     //Then init the callback function for data message receiving

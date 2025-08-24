@@ -113,13 +113,13 @@ void initMiddlewareStrategyPubSub(void (*decodeTopicFunction)(char*,int8_t *)){
  *
  * @return void
  */
-void initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t)){
+void initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *),void (*printMetricFunction)(TableEntry*), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t)){
     if(activeStrategy == nullptr){
         LOG(MIDDLEWARE,ERROR,"ERROR: Initialization attempted without a selected strategy\n");
         return;
     }
     initMiddlewareCallbacks();
-    initStrategyTopology(topologyMetricValues, topologyMetricStructSize,*setValueFunction,encodeTopologyMetricFunction,decodeTopologyMetricFunction,selectParentFunction);
+    initStrategyTopology(topologyMetricValues, topologyMetricStructSize,*setValueFunction,encodeTopologyMetricFunction,decodeTopologyMetricFunction,printMetricFunction,selectParentFunction);
     middlewareChooseParentCallback = requestParentFromRoot;
     initMiddlewareCallbacks();
     isStrategyInitialized = true;/******/
