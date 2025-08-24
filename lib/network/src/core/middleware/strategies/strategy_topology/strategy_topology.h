@@ -28,6 +28,7 @@ typedef enum TopologyMessageType{
     TOP_PARENT_LIST_ADVERTISEMENT,//1
     TOP_PARENT_ASSIGNMENT_COMMAND, //2
     TOP_METRICS_REPORT, //3
+    TOP_NODE_UPDATE, //4
 } TopologyMessageType;
 
 

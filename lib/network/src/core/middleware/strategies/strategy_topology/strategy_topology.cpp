@@ -110,6 +110,7 @@ void encodeParentAssignmentCommand(char* messageBuffer, size_t bufferSize, uint8
              ,destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3],targetNodeIP[0],targetNodeIP[1],targetNodeIP[2],targetNodeIP[3]
              ,chosenParentIP[0],chosenParentIP[1],chosenParentIP[2],chosenParentIP[3]);
 }
+
 void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize, ParentInfo* possibleParents, int nrOfPossibleParents, uint8_t *temporaryParent, uint8_t *mySTAIP){
     int offset;
 
@@ -127,6 +128,29 @@ void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize
         offset += snprintf(messageBuffer + offset, bufferSize - offset," %hhu.%hhu.%hhu.%hhu",
                            possibleParents[i].parentIP[0],possibleParents[i].parentIP[1],possibleParents[i].parentIP[2],possibleParents[i].parentIP[3]);
     }
+}
+
+void encodeNodeUpdateMessage(char* messageBuffer, size_t bufferSize){
+    void* metricValue = tableRead(topologyMetricsTable,myIP);
+    char metricBuffer[20];
+
+    //Encode the metric value
+    if(metricValue)encodeTopologyMetricValue(metricBuffer, sizeof(metricBuffer),metricValue);
+
+    // If the node has no associated metric, the message includes only the connected parent and omits the metric value
+    if(metricValue == nullptr){
+        //MIDDLEWARE_MESSAGE_TYPE TOP_NODE_UPDATE [nodeIP] [Node Parent IP]
+        snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",MIDDLEWARE_MESSAGE,TOP_NODE_UPDATE
+                ,myIP[0],myIP[1],myIP[2],myIP[3]
+                ,parent[0],parent[1],parent[2],parent[3]);
+    }else{
+        //MIDDLEWARE_MESSAGE_TYPE TOP_NODE_UPDATE [nodeIP] [Node Parent IP] [node metric]
+        snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,TOP_NODE_UPDATE
+                ,myIP[0],myIP[1],myIP[2],myIP[3]
+                ,parent[0],parent[1],parent[2],parent[3]
+                ,metricBuffer);
+    }
+
 }
 
 void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
@@ -165,8 +189,7 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
             // This message type is intended to be sent only by the new node to its directly connected temporary parent
             LOG(MIDDLEWARE, ERROR, "❌ ERROR: This node should be the destination of the TOP_PARENT_LIST_ADVERTISEMENT_REQUEST message\n");
         }
-    }
-    else if(type == TOP_PARENT_LIST_ADVERTISEMENT){
+    }else if(type == TOP_PARENT_LIST_ADVERTISEMENT){
         LOG(MESSAGES,INFO,"Received [PARENT_LIST_ADVERTISEMENT] message: \"%s\"\n", messageBuffer);
         sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %n",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3],&nChars);
         // Check if i am the final destination of the message
@@ -200,7 +223,7 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
                 sendMessage(nextHopIP,messageBuffer);
             }
         }
-    }else if(type ==TOP_METRICS_REPORT){
+    }else if(type == TOP_METRICS_REPORT){
         //MESSAGE_TYPE TOP_METRICS_REPORT [destination:rootIP] [nodeIP] [metric]
         if(!iamRoot){// If the node is not the root, the metrics message is not intended for it
             nextHopIP = findRouteToNode(rootIP);
@@ -217,6 +240,8 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
             //Decode and register the metric in the table
             registerTopologyMetric(targetNodeIP,messageBuffer+nChars);
         }
+    }else if(type == TOP_NODE_UPDATE){
+
     }
 }
 void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]){
@@ -246,10 +271,11 @@ void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]){
     }
 }
 void influenceRoutingStrategyTopology(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload){}
+
 void onTimerStrategyTopology(){
     unsigned long currentTime = getCurrentTime();
     //Periodically send this node's metric to all other nodes in the network
-    if( (currentTime - lastMiddlewareUpdateTimeTopology) >= MIDDLEWARE_UPDATE_INTERVAL ) {
+    if( (currentTime - lastMiddlewareUpdateTimeTopology) >= MIDDLEWARE_UPDATE_INTERVAL ){
     }
 }
 void* getContextStrategyTopology(){
