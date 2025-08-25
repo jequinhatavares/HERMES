@@ -42,7 +42,8 @@ uint8_t* chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t potent
     }
 
     if(bestParentIndex != -1){
-        LOG(MIDDLEWARE,DEBUG,"Chosen Parent: %hhu.%hhu.%hhu.%hhu metric:%d\n",potentialParents[bestParentIndex][0],potentialParents[bestParentIndex][1],potentialParents[bestParentIndex][2],potentialParents[bestParentIndex][3]);
+        LOG(MIDDLEWARE,DEBUG,"Chosen Parent: %hhu.%hhu.%hhu.%hhu metric:%d\n",potentialParents[bestParentIndex][0]
+            ,potentialParents[bestParentIndex][1],potentialParents[bestParentIndex][2],potentialParents[bestParentIndex][3],maxProcessingCapacity);
         return potentialParents[bestParentIndex];
     }// If no parent has been selected, return nullptr
     else{ return nullptr;}/******/
@@ -164,6 +165,12 @@ void setup(){
                                            printTopologyMetricStruct,
                                            chooseParentByProcessingCapacity);
 
+    //Then init the callback function for data message receiving
+    network.onDataReceived(handleDataMessageWrapper);
+
+    //And then the node can be initialized and integrated in the network
+    network.begin();
+
     // Assign a topology metric based on device type: NodeMCU = 1, ESP32 = 2, Raspberry Pi = 3
     if(MAC[5] == 89 && MAC[4] == 248 && MAC[3] == 169 && MAC[2] == 45){
         myMetric.processingCapacity=2;
@@ -179,11 +186,6 @@ void setup(){
         network.setParentMetric(&myMetric);
     }
 
-    //Then init the callback function for data message receiving
-    network.onDataReceived(handleDataMessageWrapper);
-
-    //And then the node can be initialized and integrated in the network
-    network.begin();
 
     //LOG(APP,INFO,"MY MAC after begin: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
 
