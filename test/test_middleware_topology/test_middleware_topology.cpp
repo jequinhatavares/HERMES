@@ -7,9 +7,66 @@
 
 //pio test -e native -f "test_middleware_topology" -v
 
+/*************************  User Side Definition  **************************/
+
+struct topologyTableEntry{
+    int processingCapacity;
+};
+
 topologyTableEntry topologyMetrics[TABLE_MAX_SIZE];
 
-/*** ****************************** Tests ****************************** ***/
+
+uint8_t* chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t potentialParents[][4], uint8_t nPotentialParents){
+    int maxProcessingCapacity = 0;
+    int bestParentIndex = -1;
+    topologyTableEntry *topologyMetricValue;
+
+    for (int i = 0; i < nPotentialParents; i++) {
+        topologyMetricValue = (topologyTableEntry*) getNodeTopologyMetric(potentialParents[i]);
+        if(topologyMetricValue != nullptr){
+            LOG(MIDDLEWARE,DEBUG,"Potential Parent: %hhu.%hhu.%hhu.%hhu metric:%d\n",potentialParents[i][0],potentialParents[i][1],potentialParents[i][2],potentialParents[i][3],topologyMetricValue->processingCapacity);
+            if(topologyMetricValue->processingCapacity >= maxProcessingCapacity){
+                bestParentIndex = i;
+                maxProcessingCapacity = topologyMetricValue->processingCapacity;
+                LOG(MIDDLEWARE,DEBUG,"Parent Selected\n");
+            }
+        }
+    }
+    if(bestParentIndex != -1){
+        LOG(MIDDLEWARE,DEBUG,"Chosen Parent: %hhu.%hhu.%hhu.%hhu metric:%d\n",potentialParents[bestParentIndex][0],potentialParents[bestParentIndex][1],potentialParents[bestParentIndex][2],potentialParents[bestParentIndex][3]);
+        return potentialParents[bestParentIndex];
+    }
+    else{ return nullptr;}/******/
+    return nullptr;
+}
+
+void encodeTopologyMetricEntry(char* buffer, size_t bufferSize, void *metricEntry){
+    topologyTableEntry *metric = (topologyTableEntry*) metricEntry;
+    snprintf(buffer,bufferSize,"%i", metric->processingCapacity);
+}
+
+void decodeTopologyMetricEntry(char* buffer, void *metricEntry){
+    topologyTableEntry *metric = (topologyTableEntry*)metricEntry;
+    sscanf(buffer,"%i", &metric->processingCapacity);
+}
+
+
+void setTopologyMetricValue(void* av, void*bv){
+    if(bv == nullptr)return; //
+    topologyTableEntry *a = (topologyTableEntry *) av;
+    topologyTableEntry *b = (topologyTableEntry *) bv;
+
+    a->processingCapacity = b->processingCapacity;
+}
+
+void printTopologyMetricStruct(TableEntry* Table){
+    LOG(MIDDLEWARE,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → (Topology Metric: %d) \n",
+        ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
+        ((topologyTableEntry *)Table->value)->processingCapacity);
+}
+
+
+/********************************* Tests *********************************/
 
 void test_encode_parent_list_advertisement_request(){
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [tmp parent IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
@@ -56,7 +113,7 @@ void test_init_strategy_topology(){
 
     iamRoot = true;
 
-    initStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,chooseParentByProcessingCapacity);
+    initStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,printTopologyMetricStruct,chooseParentByProcessingCapacity);
 
 }
 
@@ -71,7 +128,7 @@ void test_root_handle_message_metrics_report(){
 
     iamRoot = true;
 
-    initStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,chooseParentByProcessingCapacity);
+    initStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,printTopologyMetricStruct,chooseParentByProcessingCapacity);
 
     snprintf(MR1, sizeof(MR1),"%d %d 1.1.1.1 2.2.2.2 2",MIDDLEWARE_MESSAGE,TOP_METRICS_REPORT);
     snprintf(MR2, sizeof(MR2),"%d %d 1.1.1.1 3.3.3.3 3",MIDDLEWARE_MESSAGE,TOP_METRICS_REPORT);
@@ -107,7 +164,7 @@ void test_root_handle_parent_advertisement_request(){
     char correctEncodedMsg[100] = "10 2 5.5.5.5 5.5.5.5 3.3.3.3";
 
     iamRoot = true;
-    initStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,chooseParentByProcessingCapacity);
+    initStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,printTopologyMetricStruct,chooseParentByProcessingCapacity);
 
     snprintf(MR1, sizeof(MR1),"%d %d 1.1.1.1 2.2.2.2 2",MIDDLEWARE_MESSAGE,TOP_METRICS_REPORT);
     snprintf(MR2, sizeof(MR2),"%d %d 1.1.1.1 3.3.3.3 3",MIDDLEWARE_MESSAGE,TOP_METRICS_REPORT);
@@ -145,7 +202,7 @@ void test_root_handle_parent_list_advertisement(){
 
     iamRoot = true;
 
-    initStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,chooseParentByProcessingCapacity);
+    initStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,printTopologyMetricStruct,chooseParentByProcessingCapacity);
 
     snprintf(MR1, sizeof(MR1),"%d %d 1.1.1.1 2.2.2.2 2",MIDDLEWARE_MESSAGE,TOP_METRICS_REPORT);
     snprintf(MR2, sizeof(MR2),"%d %d 1.1.1.1 3.3.3.3 3",MIDDLEWARE_MESSAGE,TOP_METRICS_REPORT);
@@ -178,7 +235,7 @@ void test_root_handle_parent_advertisement_without_any_metric(){
     //Clean the buffer for accurate test
     strcpy(smallSendBuffer,"");
     iamRoot = true;
-    initStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,chooseParentByProcessingCapacity);
+    initStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,printTopologyMetricStruct,chooseParentByProcessingCapacity);
 
     snprintf(PLA, sizeof(PLA),"%d %d 1.1.1.1 2.2.2.2 5.5.5.5 2.2.2.2 4.4.4.4",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT);
 
@@ -234,9 +291,10 @@ void tearDown(void){}
 
 int main(int argc, char** argv){
     UNITY_BEGIN();
-    RUN_TEST(test_encode_parent_list_advertisement_request);
-    RUN_TEST(test_handle_parent_advertisement_request);
     RUN_TEST(test_init_strategy_topology);
+    RUN_TEST(test_encode_parent_list_advertisement_request);
+
+    RUN_TEST(test_handle_parent_advertisement_request);
     RUN_TEST(test_root_handle_message_metrics_report);
     RUN_TEST(test_root_handle_parent_advertisement_request);
     RUN_TEST(test_root_handle_parent_list_advertisement);/******/
