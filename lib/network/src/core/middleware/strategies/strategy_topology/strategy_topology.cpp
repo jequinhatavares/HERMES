@@ -119,12 +119,12 @@ void encodeNodeUpdateMessage(char* messageBuffer, size_t bufferSize){
 
     // If the node has no associated metric, the message includes only the connected parent and omits the metric value
     if(metricValue == nullptr){
-        //MIDDLEWARE_MESSAGE_TYPE TOP_NODE_UPDATE [nodeIP] [Node Parent IP]
+        //MIDDLEWARE_MESSAGE TOP_NODE_UPDATE [nodeIP] [Node Parent IP]
         snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",MIDDLEWARE_MESSAGE,TOP_NODE_UPDATE
                 ,myIP[0],myIP[1],myIP[2],myIP[3]
                 ,parent[0],parent[1],parent[2],parent[3]);
     }else{
-        //MIDDLEWARE_MESSAGE_TYPE TOP_NODE_UPDATE [nodeIP] [Node Parent IP] [node metric]
+        //MIDDLEWARE_MESSAGE TOP_NODE_UPDATE [nodeIP] [Node Parent IP] [node metric]
         snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,TOP_NODE_UPDATE
                 ,myIP[0],myIP[1],myIP[2],myIP[3]
                 ,parent[0],parent[1],parent[2],parent[3]
@@ -135,7 +135,7 @@ void encodeNodeUpdateMessage(char* messageBuffer, size_t bufferSize){
 
 void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
     TopologyMessageType type;
-    uint8_t destinationNodeIP[4],*nextHopIP,targetNodeIP[4];
+    uint8_t destinationNodeIP[4],*nextHopIP,targetNodeIP[4],parentIP[4];
     int nChars = 0;
 
     //Extract Inject Message Types
@@ -221,9 +221,25 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
             registerTopologyMetric(targetNodeIP,messageBuffer+nChars);
         }
     }else if(type == TOP_NODE_UPDATE){
+        if(!iamRoot){ // If the node is not the root, the update message is not intended for it
+            nextHopIP = findRouteToNode(rootIP);
+            if(nextHopIP != nullptr){
+                sendMessage(nextHopIP,messageBuffer);
+            }else{
+                LOG(MIDDLEWARE,ERROR,"❌ERROR: No path to root node was found in the routing table.\n");
+            }
+        }else{
+            //MIDDLEWARE_MESSAGE TOP_NODE_UPDATE [nodeIP] [Node Parent IP] [metric value, if any]
+            sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n"
+                    ,&targetNodeIP[0],&targetNodeIP[1],&targetNodeIP[2],&targetNodeIP[3],
+                   &parentIP[0],&parentIP[1],&parentIP[2],&parentIP[3], &nChars);
 
+            //Decode and register the metric in the table if any metric is available
+            if (nChars < bufferSize && messageBuffer[nChars] != '\0') registerTopologyMetric(targetNodeIP,messageBuffer+nChars);
+        }
     }
 }
+
 void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]){
     void* metricValue;
     uint8_t *nextHopIP;
