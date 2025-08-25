@@ -67,11 +67,16 @@ private:
     uint8_t inputsIPs[TOTAL_INPUT_NEURONS][4];
     uint8_t totalInputs=0;
 
+    uint8_t outputIPs[1][4];
+    uint8_t nrOutputDevices=0;
+
+
     void initNeuralNetwork();
 
     void handleACKMessage(char* messageBuffer);
     void handleWorkerRegistration(char*messageBuffer);
     void handleInputRegistration(char* messageBuffer);
+    void handleOutputRegistration(char* messageBuffer);
 
     void assignPubSubInfoToNeuron(char *messageBuffer, size_t bufferSize, NeuronId neuronId);
 };

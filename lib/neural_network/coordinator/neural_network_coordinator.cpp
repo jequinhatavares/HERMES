@@ -976,7 +976,29 @@ void NeuralNetworkCoordinator::handleInputRegistration(char* messageBuffer){
     //Register the node as a input node
     assignIP(inputsIPs[totalInputs],nodeIP);
     totalInputs++;
+}
 
+/**
+ * handleOutputRegistration
+ * Decodes an output registration message and registers devices that provide values for the neural network’s output layer
+ *
+ * @param messageBuffer - Buffer containing registration message
+ * Message Format: NN_OUTPUT_REGISTRATION [Node IP]
+ */
+void NeuralNetworkCoordinator::handleOutputRegistration(char* messageBuffer){
+    uint8_t nodeIP[4];
+
+    //NN_INPUT_REGISTRATION [Node IP] [Device Type]
+    sscanf(messageBuffer, "%*d %hhu.%hhu.%hhu.%hhu",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3]);
+
+    if(nrOutputDevices>=1){
+        LOG(APP,INFO, "Output node registrations have exceeded the number of available NN output devices\n");
+        return;
+    }
+
+    //Register the device as a output device
+    assignIP(outputIPs[nrOutputDevices],nodeIP);
+    nrOutputDevices++;
 }
 
 
