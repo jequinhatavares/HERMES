@@ -418,15 +418,17 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNetwork(uint8_t nodes[][4],u
  * @param bufferSize - Size of message buffer
  * @param targetNodeIP - IP address of target node
  */
-void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]){
+void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,size_t bufferSize,uint8_t workerNodeIP[4]){
     NeuronId *neuronId;
     NeuronEntry *neuronEntry;
     uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
-    uint8_t inputNodesIPs[TABLE_MAX_SIZE][4], nNodes = 0;
+    uint8_t targetDevicesIPs[TABLE_MAX_SIZE][4], nTargetDevices = 0,myIP[4];
     int offset = 0;
     char tmpBuffer[50];
     size_t tmpBufferSize = sizeof(tmpBuffer);
     bool neuronsAssignedToNode=false;
+
+    network.getNodeIP(myIP);
 
     encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_OUTPUT_TARGETS);
     offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
@@ -435,6 +437,7 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
      * neurons computed in the same layer, since these neurons need to send their outputs to the same neurons or nodes
      * in the next layer. ***/
     for (uint8_t i = 0; i < neuralNetwork.numLayers+1; i++){
+
         /*** The neurons in the next layer require the outputs of the current layer as input. Therefore, we need to
          * identify which nodes are responsible for computing the next layer's neurons. These are the nodes to which
          * the current layer's neurons must send their outputs. ***/
@@ -443,15 +446,15 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
             neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
             if(neuronEntry != nullptr){
                 // Check if the current node is responsible for computing a neuron in the next layer and is not already in the list
-                if(!isIPinList(neuronEntry->nodeIP,inputNodesIPs,nNodes) && (neuronEntry->layer == i+1)){
-                    assignIP(inputNodesIPs[nNodes],neuronEntry->nodeIP);
+                if(!isIPinList(neuronEntry->nodeIP,targetDevicesIPs,nTargetDevices) && (neuronEntry->layer == i+1)){
+                    assignIP(targetDevicesIPs[nTargetDevices],neuronEntry->nodeIP);
                     //LOG(APP,INFO,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
-                    nNodes++;
+                    nTargetDevices++;
                 }
             }
         }
 
-        //LOG(APP,INFO,"Current IP: %hhu.%hhu.%hhu.%hhu computes:\n",targetNodeIP[0],targetNodeIP[1],targetNodeIP[2],targetNodeIP[3]);
+        //LOG(APP,INFO,"Current IP: %hhu.%hhu.%hhu.%hhu computes:\n"owrkerNodeIP[0]owrkerNodeIP[1]owrkerNodeIP[2]owrkerNodeIP[3]);
 
         /*** Identify the neurons computed by the target node and build a message
            * with the IP addresses of the neurons that depend on its output.  ***/
@@ -461,7 +464,7 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
 
             if(neuronEntry != nullptr){
                 //Search in the neuronToNodeTable for the neurons at a specific layer computed by the target node that have not been acknowledged
-                if(isIPEqual(neuronEntry->nodeIP,targetNodeIP) && neuronEntry->layer == i && !neuronEntry->isAcknowledged){
+                if(isIPEqual(neuronEntry->nodeIP,workerNodeIP) && neuronEntry->layer == i && !neuronEntry->isAcknowledged){
                     //LOG(APP,INFO,"Neuron ID: %hhu \n",*neuronId);
                     outputNeurons[nNeurons] = *neuronId;
                     nNeurons ++;
@@ -471,22 +474,21 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
 
         // If the node computes any neurons in this layer, include its information in the message along with the IPs to which it should forward the computation
         if(nNeurons != 0){
-            //LOG(APP,DEBUG,"number of neurons: %hhu number of targetNodeIP: %hhu\n",nNeurons,nNodes);
-            encodeAssignOutputMessage(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,inputNodesIPs,nNodes);
+            //LOG(APP,DEBUG,"number of neurons: %hhu number of workerNodeIP: %hhu\n",nNeurons,nTargetDevices);
+            encodeAssignOutputMessage(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,targetDevicesIPs,nTargetDevices);
             offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
             neuronsAssignedToNode = true;
         }
 
         nNeurons = 0;
-        nNodes = 0;
+        nTargetDevices = 0;
     }
 
     // Check if the target node has any assigned neurons. This safeguards against cases where the function is given a
     // targetIP with no neuron assignments, in such cases, there's no need to send a message.
     if(neuronsAssignedToNode){
-        network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,targetNodeIP);
+        network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,workerNodeIP);
     }
-
 
 }
 
@@ -646,10 +648,14 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
                             &net->layers[outputLayer].weights[j * net->layers[outputLayer].numInputs],
                             net->layers[outputLayer].biases[j], inputIndexMap);
 
-            //Get where the current neuron was saved in neuron core
-            neuronStorageIndex = neuronCore.getNeuronStorageIndex(currentOutputNeuron);
-            // Record the topic published by this neuron in the neuron-to-topic map
-            if(neuronStorageIndex != -1) neuronToTopicMap[neuronStorageIndex]= static_cast<int8_t>(outputLayer+1);
+            //If the active strategy is the STRATEGY_PUBSUB save the topic that the output neuron publishes in the neuronToTopicMap
+            if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
+                //Get where the current neuron was saved in neuron core
+                neuronStorageIndex = neuronCore.getNeuronStorageIndex(currentOutputNeuron);
+                // Record the topic published by this neuron in the neuron-to-topic map
+                if(neuronStorageIndex != -1) neuronToTopicMap[neuronStorageIndex]= static_cast<int8_t>(outputLayer+1);
+            }
+
         }else{
             // If this node doesn't compute the output layer, we must encode a message
             //assigning the output neurons and their parameters to the correct node.
