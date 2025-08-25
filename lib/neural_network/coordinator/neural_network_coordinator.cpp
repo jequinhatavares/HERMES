@@ -656,6 +656,9 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
                 if(neuronStorageIndex != -1) neuronToTopicMap[neuronStorageIndex]= static_cast<int8_t>(outputLayer+1);
             }
 
+            //Save the neuron in the list of Output Neurons handled by this device
+            saveOutputNeuron(currentOutputNeuron);
+
         }else{
             // If this node doesn't compute the output layer, we must encode a message
             //assigning the output neurons and their parameters to the correct node.
@@ -685,7 +688,7 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
     }else{
         // Directly initialize the middleware Pub/Sub table with this device’s information,
         // since the device does not receive messages from itself to update its table.
-        if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
+        if(network.getActiveMiddlewareStrategy() == STRATEGY_PUBSUB){
             //Then encode the message assigning pub/sub info only to the specific input node
             int8_t subTopic[1]={static_cast<int8_t>(outputLayer)},pubTopic[1]={static_cast<int8_t>(outputLayer+1)};
             network.subscribeAndPublishTopics(subTopic,1,pubTopic,1);

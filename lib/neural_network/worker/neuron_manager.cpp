@@ -184,7 +184,7 @@ void NeuronWorker::handleAssignOutputTargets(char* messageBuffer){
             if(neuronCore.computesNeuron(currentNeuronId) || isNeuronInList(inputNeurons,nrInputNeurons,currentNeuronId)){
                 neuronID[nComputedNeurons] = currentNeuronId;
                 nComputedNeurons ++;
-                LOG(APP,DEBUG,"NeuronId: %hhu\n",currentNeuronId);
+                //LOG(APP,DEBUG,"NeuronId: %hhu\n",currentNeuronId);
             }
             //LOG(APP,DEBUG," neuronID: %hhu\n",neuronID[i]);
             //Move on the next input to index map
@@ -1120,7 +1120,7 @@ void NeuronWorker::decodeNeuronTopic(char* dataMessage, int8_t* topicType){
 void NeuronWorker::saveOutputNeuron(NeuronId outputNeuronId) {
     // If the device has reached the maximum number of supported neurons, no additional output neurons can be stored
     if(nrOutputNeurons>=MAX_NEURONS){
-        LOG(APP,ERROR,"The number of assigned output neurons exceeds the allowed maximum. Neuron ID: %hhu was not accepted",neuronID);
+        LOG(APP,ERROR,"The number of assigned output neurons exceeds the allowed maximum. Neuron ID: %hhu was not accepted",outputNeuronId);
     }else{
         outputNeurons[nrOutputNeurons] = outputNeuronId;
         nrOutputNeurons++;
