@@ -106,8 +106,15 @@ private:
     void clearNeuronOutputTargets(NeuronId neuronId);
 
 protected:
-// saves the topics that each node publishes
-int8_t neuronToTopicMap[MAX_NEURONS];
+    // saves the topics that each node publishes
+    int8_t neuronToTopicMap[MAX_NEURONS];
+
+    //Functions to be used by the coordinator class to initialize the neuronworker
+    // parameters without accessing its variables directly (to be impemented)
+    void saveOutputNeuron(NeuronId outputNeuronId);
+    void saveInputNeuron(NeuronId inputNeuronId);
+    void saveWorkerTargets(NeuronId neuronId,uint8_t targetNodeIP[][4],uint8_t nTargets);
+    void saveWorkerPubSubInfo(NeuronId neuronId,int8_t pubTopic);
 
 };
 

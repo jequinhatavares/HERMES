@@ -1117,6 +1117,35 @@ void NeuronWorker::decodeNeuronTopic(char* dataMessage, int8_t* topicType){
 
 }
 
+void NeuronWorker::saveOutputNeuron(NeuronId outputNeuronId) {
+    // If the device has reached the maximum number of supported neurons, no additional output neurons can be stored
+    if(nrOutputNeurons>=MAX_NEURONS){
+        LOG(APP,ERROR,"The number of assigned output neurons exceeds the allowed maximum. Neuron ID: %hhu was not accepted",neuronID);
+    }else{
+        outputNeurons[nrOutputNeurons] = outputNeuronId;
+        nrOutputNeurons++;
+    }
+}
+
+void NeuronWorker::saveInputNeuron(NeuronId inputNeuronId) {
+    // If the device has reached the maximum number of supported neurons, no additional input neurons can be stored
+    if(nrInputNeurons>=MAX_INPUT_NEURONS){
+        LOG(APP,ERROR,"The number of assigned input neurons exceeds the allowed maximum. Neuron ID: %hhu was not accepted",inputNeuronId);
+        return;
+    }
+    inputNeurons[nrInputNeurons] = inputNeuronId;
+    nrInputNeurons++;
+}
+
+void NeuronWorker::saveWorkerTargets(NeuronId neuronId, uint8_t (*targetNodeIP)[4], uint8_t nTargets) {
+
+}
+
+void NeuronWorker::saveWorkerPubSubInfo(NeuronId neuronId, int8_t pubTopic) {
+
+}
+
+
 bool isTopicInList(int8_t *topicList, int listSize, int8_t searchTopic){
     for (int i = 0; i < listSize; ++i) {
         if(topicList[i] == searchTopic) return true;
