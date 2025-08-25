@@ -309,17 +309,33 @@ void test_handle_node_update_message(){
     entry = (topologyTableEntry*) tableRead(topologyMetricsTable,node2);
     TEST_ASSERT(entry == nullptr);
 
-
     // Now encode one back from our own state (simulate node sending update) first without metric just the parent IP
     assignIP(parent, parentIP);
 
     encodeNodeUpdateMessage(correctEncodedMsg, sizeof(correctEncodedMsg));
 
-    // Verify it matches the expected structure (with metric)
+    // Verify it matches the expected structure (without metric)
     char expectedMsg[100];
     snprintf(expectedMsg, sizeof(expectedMsg),
              "%d %d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",MIDDLEWARE_MESSAGE, TOP_NODE_UPDATE,
              myIP[0],myIP[1],myIP[2],myIP[3],parentIP[0],parentIP[1],parentIP[2],parentIP[3]);
+
+    TEST_ASSERT(strcmp(correctEncodedMsg, expectedMsg) == 0);
+
+    // Now encode one back from our own state (simulate node sending update) first with metric
+    assignIP(parent, parentIP);
+
+    snprintf(NU3, sizeof(NU3), "%d %d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %d",
+             MIDDLEWARE_MESSAGE, TOP_NODE_UPDATE,myIP[0],myIP[1],myIP[2],myIP[3],
+             parentIP[0],parentIP[1],parentIP[2],parentIP[3],10);
+    handleMessageStrategyTopology(NU3, sizeof(NU3));
+
+    encodeNodeUpdateMessage(correctEncodedMsg, sizeof(correctEncodedMsg));
+
+    // Verify it matches the expected structure (with metric)
+    snprintf(expectedMsg, sizeof(expectedMsg),
+             "%d %d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %d",MIDDLEWARE_MESSAGE, TOP_NODE_UPDATE,
+             myIP[0],myIP[1],myIP[2],myIP[3],parentIP[0],parentIP[1],parentIP[2],parentIP[3],10);
 
     TEST_ASSERT(strcmp(correctEncodedMsg, expectedMsg) == 0);
 
@@ -352,7 +368,7 @@ void tearDown(void){}
 
 int main(int argc, char** argv){
     UNITY_BEGIN();/******/
-    /***RUN_TEST(test_init_strategy_topology);
+    RUN_TEST(test_init_strategy_topology);
     RUN_TEST(test_encode_parent_list_advertisement_request);
 
     RUN_TEST(test_handle_parent_advertisement_request);
@@ -360,7 +376,7 @@ int main(int argc, char** argv){
     RUN_TEST(test_root_handle_parent_advertisement_request);
     RUN_TEST(test_root_handle_parent_list_advertisement);
     RUN_TEST(test_root_handle_parent_advertisement_without_any_metric);
-    RUN_TEST(test_other_node_handle_parent_list_advertisement);***/
+    RUN_TEST(test_other_node_handle_parent_list_advertisement);/******/
     RUN_TEST(test_handle_node_update_message);
     UNITY_END();
 }
