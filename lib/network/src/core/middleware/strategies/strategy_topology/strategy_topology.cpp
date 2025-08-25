@@ -303,6 +303,8 @@ ParentInfo requestParentFromRoot(ParentInfo* possibleParents, int nrOfPossiblePa
 
     LOG(MESSAGES,INFO,"Strategy Topology\n");
 
+    // If the list of possible parents contains only one entry, there is no need to contact the root to make a selection
+    if(nrOfPossibleParents == 1)return possibleParents[0];
 
     // Select the first element of the possibleParents List to be the temporary parent
     if(nrOfPossibleParents != 0){
