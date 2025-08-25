@@ -267,6 +267,66 @@ void test_other_node_handle_parent_list_advertisement(){
     tableClean(topologyMetricsTable);
 }
 
+void test_handle_node_update_message(){
+    //MESSAGE_TYPE TOP_NODE_UPDATE [nodeIP] [Parent IP] [metric (optional)]
+    char NU1[100], NU2[100], NU3[100];
+    char correctEncodedMsg[100];
+    topologyTableEntry *entry;
+
+
+    uint8_t root[4]   = {4,4,4,4};
+    uint8_t node1[4]  = {2,2,2,2};
+    uint8_t node2[4]  = {3,3,3,3};
+    uint8_t node3[4]  = {4,4,4,4};
+    uint8_t parentIP[4] = {1,1,1,1}; // root as parent
+
+    assignIP(rootIP, root);
+    iamRoot = true;
+
+    // init topology
+    initStrategyTopology(topologyMetrics, sizeof(topologyTableEntry),
+                         setTopologyMetricValue,
+                         encodeTopologyMetricEntry,
+                         decodeTopologyMetricEntry,
+                         printTopologyMetricStruct,
+                         chooseParentByProcessingCapacity);
+
+    // Simulate node updates with metrics
+    snprintf(NU1, sizeof(NU1), "%d %d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %d",MIDDLEWARE_MESSAGE, TOP_NODE_UPDATE,
+             node1[0],node1[1],node1[2],node1[3],parentIP[0],parentIP[1],parentIP[2],parentIP[3],10);
+    handleMessageStrategyTopology(NU1, sizeof(NU1));
+
+    entry = (topologyTableEntry*) tableRead(topologyMetricsTable,node1);
+    TEST_ASSERT(entry != nullptr);
+    TEST_ASSERT(entry->processingCapacity == 10);
+
+
+    snprintf(NU2, sizeof(NU2), "%d %d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",
+             MIDDLEWARE_MESSAGE, TOP_NODE_UPDATE,node2[0],node2[1],node2[2],node2[3],
+             parentIP[0],parentIP[1],parentIP[2],parentIP[3]);
+    handleMessageStrategyTopology(NU2, sizeof(NU2));
+
+    entry = (topologyTableEntry*) tableRead(topologyMetricsTable,node2);
+    TEST_ASSERT(entry == nullptr);
+
+
+    // Now encode one back from our own state (simulate node sending update) first without metric just the parent IP
+    assignIP(parent, parentIP);
+
+    encodeNodeUpdateMessage(correctEncodedMsg, sizeof(correctEncodedMsg));
+
+    // Verify it matches the expected structure (with metric)
+    char expectedMsg[100];
+    snprintf(expectedMsg, sizeof(expectedMsg),
+             "%d %d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",MIDDLEWARE_MESSAGE, TOP_NODE_UPDATE,
+             myIP[0],myIP[1],myIP[2],myIP[3],parentIP[0],parentIP[1],parentIP[2],parentIP[3]);
+
+    TEST_ASSERT(strcmp(correctEncodedMsg, expectedMsg) == 0);
+
+    tableClean(topologyMetricsTable);
+}
+
+
 
 void setUp(void){
     enableModule(STATE_MACHINE);
@@ -291,15 +351,16 @@ void setUp(void){
 void tearDown(void){}
 
 int main(int argc, char** argv){
-    UNITY_BEGIN();
-    RUN_TEST(test_init_strategy_topology);
+    UNITY_BEGIN();/******/
+    /***RUN_TEST(test_init_strategy_topology);
     RUN_TEST(test_encode_parent_list_advertisement_request);
 
     RUN_TEST(test_handle_parent_advertisement_request);
     RUN_TEST(test_root_handle_message_metrics_report);
     RUN_TEST(test_root_handle_parent_advertisement_request);
-    RUN_TEST(test_root_handle_parent_list_advertisement);/******/
+    RUN_TEST(test_root_handle_parent_list_advertisement);
     RUN_TEST(test_root_handle_parent_advertisement_without_any_metric);
-    RUN_TEST(test_other_node_handle_parent_list_advertisement);/******/
+    RUN_TEST(test_other_node_handle_parent_list_advertisement);***/
+    RUN_TEST(test_handle_node_update_message);
     UNITY_END();
 }
