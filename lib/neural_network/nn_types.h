@@ -14,6 +14,7 @@ typedef enum NeuralNetworkMessageType{
     NN_ACK,                     //7 Message from a node to the coordinator acknowledging receipt of neuron assignment
     NN_WORKER_REGISTRATION,     //8 Message sent from a node to the root node to register as a potential neural network worker,including device type information (ESP8266, ESP32, or Raspberry Pi).
     NN_INPUT_REGISTRATION,      //9 Message sent from a node to the root node to register as a input of the NN
+    NN_OUTPUT_REGISTRATION,     //10 Message sent from a node to the root node to register as an output of the NN
 }NeuralNetworkMessageType;
 
 

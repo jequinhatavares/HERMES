@@ -259,7 +259,7 @@ void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]){
                     }
                 }
             }else{
-                LOG(MIDDLEWARE,DEBUG,"did not sent any middleware metric\n");
+                LOG(MIDDLEWARE,DEBUG,"Did not sent any middleware metric because no metric data is initialized\n");
             }
             break;
 

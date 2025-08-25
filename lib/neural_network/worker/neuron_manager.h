@@ -51,12 +51,14 @@ public:
 
     void registerNodeAsInput();
     void registerNodeAsWorker();
+    void registerNodeAsOutput();
 
     static void encodeNeuronOutputMessage(char* messageBuffer,size_t bufferSize,int inferenceId,NeuronId outputNeuronId, float neuronOutput);
     static void encodeNACKMessage(char* messageBuffer, size_t bufferSize,NeuronId missingNeuron);
     static void encodeACKMessage(char* messageBuffer, size_t bufferSize,NeuronId *neuronAckList, int ackNeuronCount);
     static void encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type);
     static void encodeInputRegistration(char *messageBuffer, size_t bufferSize, uint8_t *nodeIP, DeviceType type);
+    static void encodeOutputRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4]);
     void decodeNeuronTopic(char* dataMessage, int8_t* topicType);
 
     void clearAllNeuronMemory();

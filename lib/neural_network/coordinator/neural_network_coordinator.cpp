@@ -6,7 +6,7 @@
 
 
 #define NODES_PER_ESP8266 1
-#define NODES_PER_ESP32 2
+#define NODES_PER_ESP32 3
 #define NODES_PER_RPI 2
 
 
@@ -679,8 +679,15 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
     }else{
         // Directly initialize the middleware Pub/Sub table with this device’s information,
         // since the device does not receive messages from itself to update its table.
-        int8_t subTopic[1]={static_cast<int8_t>(outputLayer)},pubTopic[1]={static_cast<int8_t>(outputLayer+1)};
-        network.subscribeAndPublishTopics(subTopic,1,pubTopic,1);
+        if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY) {
+            // Then send the message assigning output targets only to the specific input node
+
+        }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
+            //Then encode the message assigning pub/sub info only to the specific input node
+            int8_t subTopic[1]={static_cast<int8_t>(outputLayer)},pubTopic[1]={static_cast<int8_t>(outputLayer+1)};
+            network.subscribeAndPublishTopics(subTopic,1,pubTopic,1);
+        }
+
     }
 
     delete [] inputIndexMap;

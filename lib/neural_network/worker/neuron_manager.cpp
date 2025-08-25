@@ -829,6 +829,12 @@ void NeuronWorker::encodeInputRegistration(char* messageBuffer, size_t bufferSiz
     snprintf(messageBuffer,bufferSize,"%d %hhu.%hhu.%hhu.%hhu %d",NN_INPUT_REGISTRATION,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],static_cast<int>(type));
 }
 
+//TODO Header
+void NeuronWorker::encodeOutputRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4]){
+    //NN_OUTPUT_REGISTRATION [Node IP]
+    snprintf(messageBuffer,bufferSize,"%d %hhu.%hhu.%hhu.%hhu",NN_OUTPUT_REGISTRATION,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
+}
+
 void NeuronWorker::generateInputData(NeuronId inputNeuronId){
     uint8_t myLocalIP[4];
     int inputNeuronStorageIndex=-1;
@@ -1074,6 +1080,16 @@ void NeuronWorker::registerNodeAsWorker() {
     //encode the input registration message
     encodeWorkerRegistration(appPayload, sizeof(appPayload),myIP,deviceType);
     LOG(APP,INFO,"Sending [NN_WORKER_REGISTRATION] message: \"%s\"\n",appPayload);
+    // Send the message to the neural network coordinator (the root node)
+    network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
+}
+
+void NeuronWorker::registerNodeAsOutput() {
+    uint8_t myIP[4];
+    network.getNodeIP(myIP);
+    //encode the input registration message
+    encodeOutputRegistration(appPayload, sizeof(appPayload),myIP);
+    LOG(APP,INFO,"Sending [NN_OUTPUT_REGISTRATION] message: \"%s\"\n",appPayload);
     // Send the message to the neural network coordinator (the root node)
     network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
 }
