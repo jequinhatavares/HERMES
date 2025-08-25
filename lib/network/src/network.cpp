@@ -167,7 +167,7 @@ void Network::initMiddlewareStrategyInject(void *metricStruct, size_t metricStru
  */
 void Network::injectMetric(void *metric) {
     if (!::isMiddlewareStrategyActive(STRATEGY_INJECT)){
-        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method (injectMetric) that is not permitted by the active middleware strategy. \n");
         return;
     }
 
@@ -202,7 +202,7 @@ void Network::initMiddlewareStrategyPubSub(void (*decodeTopicFunction)(char*,int
  */
 void Network::subscribeToTopic(int8_t topic) {
     if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
-        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method (subscribeToTopic) that is not permitted by the active middleware strategy. \n");
         return;
     }
 
@@ -223,7 +223,7 @@ void Network::subscribeToTopic(int8_t topic) {
  */
 void Network::unsubscribeToTopic(int8_t topic){
     if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
-        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method (unsubscribeToTopic) that is not permitted by the active middleware strategy. \n");
         return;
     }
 
@@ -243,7 +243,7 @@ void Network::unsubscribeToTopic(int8_t topic){
  */
 void Network::advertiseTopic(int8_t topic){
     if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
-        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method (advertiseTopic) that is not permitted by the active middleware strategy. \n");
         return;
     }
 
@@ -264,7 +264,7 @@ void Network::advertiseTopic(int8_t topic){
  */
 void Network::unadvertiseTopic(int8_t topic){
     if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
-        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method (unadvertiseTopic) that is not permitted by the active middleware strategy. \n");
         return;
     }
 
@@ -275,7 +275,7 @@ void Network::unadvertiseTopic(int8_t topic){
 //TODO HEADER
 void Network::subscribeAndPublishTopics(int8_t *subscribeList, int subCount, int8_t *publishList, int pubCount) {
     if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
-        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method (subscribeAndPublishTopics) that is not permitted by the active middleware strategy. \n");
         return;
     }
 
@@ -313,7 +313,7 @@ void Network::initMiddlewareStrategyTopology(void *topologyMetricValues, size_t 
  */
 void Network::setParentMetric(void *metric) {
     if (!::isMiddlewareStrategyActive( STRATEGY_TOPOLOGY)){
-        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method (setParentMetric) that is not permitted by the active middleware strategy. \n");
         return;
     }
 

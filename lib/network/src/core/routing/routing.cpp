@@ -212,7 +212,7 @@ uint8_t* findRouteToNode(uint8_t nodeIP[4]){
  *
  * @param nodeIP - The IP address of the destination node.
  * @param newNode - A struct containing the next-hop IP address and the hop distance to the node.
- * @return (void)
+ * @return bool - true if a significant update was made false otherwise
  **/
 bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, uint8_t senderIP[4]){
     RoutingTableEntry updatedEntry;
