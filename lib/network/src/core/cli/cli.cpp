@@ -127,10 +127,9 @@ void cliInteraction(){
                     }else if(isMiddlewareStrategyActive(STRATEGY_PUBSUB)){
                         tablePrint(pubsubTable,printPubSubTableHeader,printPubSubStruct);
                     }else if(isMiddlewareStrategyActive(STRATEGY_TOPOLOGY) && iamRoot){
-                        tablePrint(pubsubTable,printTopologyTableHeader,printTopologyMetricStruct);
+                        printTopologyTable();
                     }
                     break;
-
 
                 case 5:
                     LOG(CLI,INFO,"Root Node IP: %i.%i.%i.%i\n", rootIP[0], rootIP[1],rootIP[2],rootIP[3]);

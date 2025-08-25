@@ -70,7 +70,7 @@ void printTopologyMetricStruct(TableEntry* Table){
 
 void test_encode_parent_list_advertisement_request(){
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [tmp parent IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
-    char correctEncodedMsg[100] = "10 0 3.3.3.3 3.3.3.1 1.1.1.1 2.2.2.2 2.2.2.2 2.2.2.2";
+    char correctEncodedMsg[100] ;
     ParentInfo possibleParents[3];
     uint8_t nParents=0, IP[4] = {2,2,2,2},parentIP[4] = {3,3,3,3},mySTAIP[4] = {3,3,3,1};
 
@@ -93,17 +93,17 @@ void test_encode_parent_list_advertisement_request(){
 
 void test_handle_parent_advertisement_request(){
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [tmp parent IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
-    char PAR[100] = "10 0 1.1.1.1 1.1.1.0 2.2.2.2 5.5.5.5 5.5.5.5 5.5.5.5";
+    char PAR[100] = "11 0 1.1.1.1 1.1.1.0 2.2.2.2 5.5.5.5 5.5.5.5 5.5.5.5";
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP =root] [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
-    char correctEncodedMsg[100] = "10 1 4.4.4.4 1.1.1.1 2.2.2.2 5.5.5.5 5.5.5.5 5.5.5.5";
+    char correctEncodedMsg[100] = "11 1 4.4.4.4 1.1.1.1 2.2.2.2 5.5.5.5 5.5.5.5 5.5.5.5";
 
     snprintf(PAR, sizeof(PAR),"%d %d 1.1.1.1 1.1.1.0 2.2.2.2 5.5.5.5 5.5.5.5 5.5.5.5",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT_REQUEST);
     snprintf(correctEncodedMsg, sizeof(correctEncodedMsg),"%d %d 4.4.4.4 1.1.1.1 2.2.2.2 5.5.5.5 5.5.5.5 5.5.5.5",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT);
 
     handleMessageStrategyTopology(PAR, sizeof(PAR));
 
-    //printf("Encoded message: %s\n", correctEncodedMsg);
-    //printf("Encoded message: %s\n", largeSendBuffer);
+    printf("Correct message: %s\n", correctEncodedMsg);
+    printf("Encoded message: %s\n", largeSendBuffer);
 
     TEST_ASSERT(strcmp(largeSendBuffer,correctEncodedMsg) == 0);
 }
@@ -284,6 +284,7 @@ void setUp(void){
 
     uint8_t root[4]={4,4,4,4};
     assignIP(rootIP,root);
+    iamRoot=false;
 
 }
 
