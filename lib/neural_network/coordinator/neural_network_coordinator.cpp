@@ -679,10 +679,7 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
     }else{
         // Directly initialize the middleware Pub/Sub table with this device’s information,
         // since the device does not receive messages from itself to update its table.
-        if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY) {
-            // Then send the message assigning output targets only to the specific input node
-
-        }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
+        if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
             //Then encode the message assigning pub/sub info only to the specific input node
             int8_t subTopic[1]={static_cast<int8_t>(outputLayer)},pubTopic[1]={static_cast<int8_t>(outputLayer+1)};
             network.subscribeAndPublishTopics(subTopic,1,pubTopic,1);
@@ -1035,8 +1032,10 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
 
         LOG(APP,INFO,"Distributing output neurons\n");
 
-        //Assign the output layer neurons to a node(myself)
-        distributeOutputNeurons(&neuralNetwork,myIP);
+        // If an output device is registered, assign output neurons to that device.
+        // Otherwise, the coordinator (myself) handles the output calculations.
+        if(nrOutputDevices == 1) distributeOutputNeurons(&neuralNetwork,outputIPs[0]);
+        else distributeOutputNeurons(&neuralNetwork,myIP);
 
         LOG(APP,INFO,"Assigning Output targets\n");
 
