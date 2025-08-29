@@ -18,8 +18,8 @@ struct MetricTableEntry{
 };
 
 typedef enum InjectMessageType{
-    INJECT_NODE_INFO,
-    INJECT_TABLE_INFO,
+    INJECT_NODE_INFO,   //Contains the metric info about a single node
+    INJECT_TABLE_INFO,  //Contains all metrics of all nodes
 } InjectMessageType;
 
 // Inject strategy context definition

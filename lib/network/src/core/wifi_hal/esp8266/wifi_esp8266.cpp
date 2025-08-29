@@ -117,7 +117,7 @@ void onStationModeConnectedHandler(const WiFiEventStationModeConnected& info) {
  * @param info Information about the disconnection
  * @return void
  */
-void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& info) {
+void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& info){
     Serial.printf("\n[WIFI_EVENTS] Disconnected from AP. Reason: %u\n", info.reason);
     //LOG(NETWORK,DEBUG,"DisconnectionTime: %lu\n", getCurrentTime());
 
@@ -125,7 +125,11 @@ void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& in
 
     // On first disconnection, initialize the timer to the current time.
     // This prevents missing future disconnections after a long inactive period.
-    if (parentDisconnectionCount == 0) lastParentDisconnectionTime = currentTime;
+    if (parentDisconnectionCount == 0){
+        lastParentDisconnectionTime = currentTime;
+        parentDisconnectionCount++;
+        return;
+    }
 
     // Check if the interval since the last disconnection is short enough
     // to avoid incrementing the counter for isolated or sporadic events.

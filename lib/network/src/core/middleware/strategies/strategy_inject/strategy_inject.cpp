@@ -330,14 +330,17 @@ void influenceRoutingStrategyInject(char* messageEncodeBuffer,size_t encodeBuffe
  * @return void
  */
 void onTimerStrategyInject(){
+    void *metricValue;
     unsigned long currentTime = getCurrentTime();
-
     //Periodically send this node's metric to all other nodes in the network
     if( (currentTime - lastMiddlewareUpdateTimeInject) >= MIDDLEWARE_UPDATE_INTERVAL ){
-        snprintf(smallSendBuffer, sizeof(smallSendBuffer), "%i ",MIDDLEWARE_MESSAGE);
-        encodeMessageStrategyInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
-        LOG(MIDDLEWARE,DEBUG,"Sending periodic [MIDDLEWARE/INJECT_NODE_INFO] Message: %s\n",smallSendBuffer);
-        propagateMessage(smallSendBuffer,myIP);
+        metricValue = tableRead(metricsTable,myIP);
+        if(metricValue != nullptr){ // If a metric was initialized by the application, send my metric value to the parent node
+            snprintf(smallSendBuffer, sizeof(smallSendBuffer), "%i ",MIDDLEWARE_MESSAGE);
+            encodeMessageStrategyInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
+            LOG(MIDDLEWARE,DEBUG,"Sending periodic [MIDDLEWARE/INJECT_NODE_INFO] Message: %s\n",smallSendBuffer);
+            propagateMessage(smallSendBuffer,myIP);
+        }
         lastMiddlewareUpdateTimeInject = currentTime;
     }
 }
