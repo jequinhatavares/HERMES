@@ -393,8 +393,6 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalancedV2(const NeuralNet
                     messageOffset);
                 // Encode the message header for the next neuron assignments
                 resetPayloadWithHeader(messageOffset);
-                // Encode the assignments that didn't fit ito the last message
-                messageOffset += snprintf(appPayload + messageOffset,sizeof(appPayload) - messageOffset,"%s", tmpBuffer);
             }
 
             //Add to the current message the current node assignments
@@ -545,7 +543,7 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
 
     auto resetPayloadWithHeader = [&](int &msgOffset) {
         msgOffset=0;
-        msgOffset = encodeMessageHeader(appPayload, sizeof(appPayload), NN_ASSIGN_OUTPUT_TARGETS);
+        msgOffset = encodeMessageHeader(messageBuffer, sizeof(messageBuffer), NN_ASSIGN_OUTPUT_TARGETS);
     };
 
     //Start the new message
@@ -608,15 +606,13 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
              *  If it doesn't fit, send the current encoded message to the node and
              *  start a new message with a fresh header. ***/
             int neededChars = snprintf(nullptr,0,"%s", tmpBuffer);
-            if (neededChars < 0 || messageOffset + neededChars >= (int)(sizeof(appPayload))) {
+            if (neededChars < 0 || messageOffset + neededChars >= (int)(bufferSize)) {
                 // If doesnt fit send the current encoded message as is
-                network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,workerNodeIP);
-                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu Size:%d\n",appPayload
+                network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,workerNodeIP);
+                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu Size:%d\n",messageBuffer
                     ,workerNodeIP[0],workerNodeIP[1],workerNodeIP[2],workerNodeIP[3],messageOffset);
                 // Encode the message header for the next neuron assignments
                 resetPayloadWithHeader(messageOffset);
-                // Encode the assignments that didn't fit into the last message
-                messageOffset += snprintf(appPayload + messageOffset,sizeof(appPayload) - messageOffset,"%s", tmpBuffer);
             }
 
             //Add to the current message the current node assignments
@@ -832,8 +828,6 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
                         ,outputDevice[0],outputDevice[1],outputDevice[2],outputDevice[3],messageOffset);
                 // Encode the message header for the next neuron assignments
                 resetPayloadWithHeader(messageOffset);
-                // Encode the assignments that didn't fit into the last message
-                messageOffset += snprintf(appPayload + messageOffset,sizeof(appPayload) - messageOffset,"%s", tmpBuffer);
             }
 
             //Add to the current message the current node assignments
@@ -871,18 +865,34 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
     delete [] inputIndexMap;
 }
 
+
+/**
+ * assignPubSubInfoToNode
+ * Assigns publish/subscribe information to a specific node for all its unacknowledged neurons.
+ * Messages are constructed layer by layer, aggregating neurons from the same layer.
+ * Handles message fragmentation when payload exceeds buffer capacity.
+ *
+ * @param messageBuffer - Buffer to store the encoded message
+ * @param bufferSize - Size of the message buffer
+ * @param targetNodeIP - IP address of the target node
+ * @return void
+ */
 void NeuralNetworkCoordinator::assignPubSubInfoToNode(char* messageBuffer,size_t bufferSize,uint8_t targetNodeIP[4]){
     uint8_t *neuronId;
     NeuronEntry *neuronEntry;
     uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
-    int offset = 0;
+    int messageOffset = 0;
     char tmpBuffer[50];
     size_t tmpBufferSize = sizeof(tmpBuffer);
     bool neuronsAssignedToNode=false;
 
+    auto resetPayloadWithHeader = [&](int &msgOffset) {
+        msgOffset=0;
+        msgOffset = encodeMessageHeader(appPayload, sizeof(appPayload), NN_ASSIGN_OUTPUT_TARGETS);
+    };
+
     //Encode the message header
-    encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_OUTPUT_TARGETS);
-    offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
+    resetPayloadWithHeader(messageOffset);
 
     /***  The messages in this function are constructed layer by layer. Messages are made based on aggregation of the
      * neurons computed in the same layer, since these neurons need to send their outputs to the same neurons or nodes
@@ -907,12 +917,25 @@ void NeuralNetworkCoordinator::assignPubSubInfoToNode(char* messageBuffer,size_t
 
         // If the node computes any neurons in this layer, include its information in the message along with the IPs to which it should forward the computation
         if(nNeurons != 0){
-            //LOG(APP,DEBUG,"number of neurons: %hhu number of targetNodeIP: %hhu\n",nNeurons,nNodes);
             /*** Neurons in a given layer will publish a topic corresponding to their layer number,
                 and subscribe to the topic published by neurons in the previous layer.***/
             encodePubSubInfo(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,(int8_t)(i-1),i);
+
+            /*** Before adding the assignment to the message buffer, check if it fits.
+             *  If it doesn't fit, send the current encoded message to the node and
+             *  start a new message with a fresh header. ***/
+            int neededChars = snprintf(nullptr,0,"%s", tmpBuffer);
+            if (neededChars < 0 || messageOffset + neededChars >= (int)(sizeof(appPayload)) ) {
+                // If doesnt fit send the current encoded message as is
+                network.sendMessageToNode(appBuffer, sizeof(appBuffer), messageBuffer, targetNodeIP);
+                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu Size:%d\n", messageBuffer, targetNodeIP[0],
+                    targetNodeIP[1], targetNodeIP[2], targetNodeIP[3], messageOffset);
+                // Encode the message header for the next neuron assignments
+                resetPayloadWithHeader(messageOffset);
+            }
+
             //Increment the encoded message with the new pub/sub info
-            offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
+            messageOffset += snprintf(messageBuffer + messageOffset, bufferSize-messageOffset,"%s",tmpBuffer);
             neuronsAssignedToNode=true;
         }
 
@@ -925,10 +948,17 @@ void NeuralNetworkCoordinator::assignPubSubInfoToNode(char* messageBuffer,size_t
         network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,targetNodeIP);
     }
 
-
 }
 
-
+/**
+ * assignPubSubInfoToNeuron
+ * Assigns publish/subscribe information for a specific neuron to its computing node.
+ *
+ * @param messageBuffer - Buffer to store the encoded message
+ * @param bufferSize - Size of the message buffer
+ * @param neuronId - ID of the target neuron
+ * @return void
+ */
 void NeuralNetworkCoordinator::assignPubSubInfoToNeuron(char* messageBuffer,size_t bufferSize,NeuronId neuronId){
     NeuronEntry *neuronEntry;
     int offset = 0;
@@ -954,6 +984,16 @@ void NeuralNetworkCoordinator::assignPubSubInfoToNeuron(char* messageBuffer,size
     }
 }
 
+
+/**
+ * encodeMessageHeader
+ * Encodes a message header for neural network protocol messages.
+ *
+ * @param messageBuffer - Buffer to store the encoded header
+ * @param bufferSize - Size of the message buffer
+ * @param type - Type of neural network message
+ * @return int - Number of characters written to the buffer
+ */
 int NeuralNetworkCoordinator::encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type){
     if(type == NN_ASSIGN_COMPUTATION){
         return snprintf(messageBuffer,bufferSize,"%i ",NN_ASSIGN_COMPUTATION);
@@ -965,6 +1005,20 @@ int NeuralNetworkCoordinator::encodeMessageHeader(char* messageBuffer, size_t bu
     return 0;
 }
 
+
+/**
+ * encodeAssignNeuronMessage
+ * Encodes a NN_ASSIGN_COMPUTATION message with weights, bias, and input information.
+ *
+ * @param messageBuffer - Buffer to store the encoded message
+ * @param bufferSize - Size of the message buffer
+ * @param neuronId - ID of the neuron being assigned
+ * @param inputSize - Number of inputs to the neuron
+ * @param inputSaveOrder - Array specifying input ordering
+ * @param weightsValues - Array of weight values
+ * @param bias - Bias value for the neuron
+ * @return int - Number of characters written to the buffer
+ */
 int NeuralNetworkCoordinator::encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize, uint8_t neuronId, uint8_t inputSize, uint8_t * inputSaveOrder, const float* weightsValues, float bias){
     /*** Estimated size of a message assigning a neuron, assuming:
      - Neuron ID and input size each take 2 characters
@@ -1003,6 +1057,19 @@ int NeuralNetworkCoordinator::encodeAssignNeuronMessage(char* messageBuffer, siz
 
 }
 
+
+/***
+ * encodeAssignOutputMessage
+ * Encodes an NN_ASSIGN_OUTPUT_TARGETS message specifying where neuron outputs should be sent.
+ *
+ * @param messageBuffer - Buffer to store the encoded message
+ * @param bufferSize - Size of the message buffer
+ * @param outputNeuronIds - Array of neuron IDs whose outputs need routing
+ * @param nNeurons - Number of output neurons
+ * @param IPs - 2D array of target IP addresses
+ * @param nNodes - Number of target nodes
+ * @return void
+ ***/
 void NeuralNetworkCoordinator::encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes){
     int offset = 0;
     //|[N Neurons] [neuron ID1] [neuron ID2] ...[N Nodes] [IP Address 1] [IP Address 2] ...
@@ -1026,6 +1093,19 @@ void NeuralNetworkCoordinator::encodeAssignOutputMessage(char* messageBuffer, si
     }
 }
 
+
+/**
+ * encodePubSubInfo
+ * Encodes an NN_ASSIGN_OUTPUT_TARGETS message with publish/subscribe information for a set of neurons.
+ *
+ * @param messageBuffer - Buffer to store the encoded message
+ * @param bufferSize - Size of the message buffer
+ * @param neuronIDs - Array of neuron IDs
+ * @param nNeurons - Number of neurons
+ * @param subTopic - Topic to subscribe to (previous layer)
+ * @param pubTopic - Topic to publish to (current layer)
+ * @return void
+ */
 void NeuralNetworkCoordinator::encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronIDs, uint8_t nNeurons, int8_t subTopic, int8_t pubTopic){
     int offset = 0;
     // |[Number of Neurons] [neuron ID1] [neuron ID2] [Subscription 1] [Pub 1]
@@ -1049,17 +1129,44 @@ void NeuralNetworkCoordinator::encodePubSubInfo(char* messageBuffer, size_t buff
     offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d",pubTopic);
 }
 
+
+/**
+ * encodeForwardMessage
+ * Encodes a NN_FORWARD message to initiate inference.
+ *
+ * @param messageBuffer - Buffer to store the encoded message
+ * @param bufferSize - Size of the message buffer
+ * @param inferenceId - Unique identifier for the inference cycle
+ * @return void
+ */
 void NeuralNetworkCoordinator::encodeForwardMessage(char*messageBuffer, size_t bufferSize, int inferenceId){
     snprintf(messageBuffer, bufferSize, "%d %i",NN_FORWARD,inferenceId);
 }
 
 
+/**
+ * encodeInputAssignMessage
+ * Encodes an NN_ASSIGN_INPUT message.
+ *
+ * @param messageBuffer - Buffer to store the encoded message
+ * @param bufferSize - Size of the message buffer
+ * @param neuronId - ID of the input neuron
+ * @return void
+ */
 void NeuralNetworkCoordinator::encodeInputAssignMessage(char*messageBuffer,size_t bufferSize,uint8_t neuronId){
     //NN_ASSIGN_INPUT [neuronID]
     snprintf(messageBuffer, bufferSize, "%d %hhu",NN_ASSIGN_INPUT,neuronId);
 }
 
 
+/**
+ * handleACKMessage
+ * Processes acknowledgment messages from neural network nodes.
+ * Updates acknowledgment status of neurons and checks if all neurons have acknowledged.
+ *
+ * @param messageBuffer - Received acknowledgment message
+ * @return void
+ */
 void NeuralNetworkCoordinator::handleACKMessage(char* messageBuffer){
     // NN_ACK [Acknowledge Neuron Id 1] [Acknowledge Neuron Id 2] [Acknowledge Neuron Id 3] ...
     char *saveptr1, *token;
@@ -1348,8 +1455,6 @@ void NeuralNetworkCoordinator::onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices
                             ,nodeIP[k][0],nodeIP[k][1],nodeIP[k][2],nodeIP[k][3],messageOffset);
                     // Encode the message header for the next neuron assignments
                     resetPayloadWithHeader(messageOffset);
-                    // Encode the assignments that didn't fit into the last message
-                    messageOffset += snprintf(appPayload + messageOffset,sizeof(appPayload) - messageOffset,"%s", tmpBuffer);
                 }
 
                 //Add to the current message the current node assignments
