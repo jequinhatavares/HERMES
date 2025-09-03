@@ -354,15 +354,14 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalancedV2(const NeuralNet
     uint8_t neuronPerNodeCount = 0, *inputIndexMap;
     int assignedDevices = 0, messageOffset = 0;
     uint8_t currentNeuronId = net->layers[0].numInputs; // first hidden neuron ID
-    char tmpBuffer[150],tmpBufferHeader[3];
+    char tmpBuffer[150];
     size_t tmpBufferSize = sizeof(tmpBuffer);
     NeuronEntry neuronEntry;
     bool singleDeviceMode = nrDevices == 1;
 
     auto resetPayloadWithHeader = [&](int &msgOffset) {
         msgOffset=0;
-        encodeMessageHeader(tmpBufferHeader, 3, NN_ASSIGN_COMPUTATION);
-        msgOffset += snprintf(appPayload, sizeof(appPayload), "%s", tmpBufferHeader);
+        msgOffset = encodeMessageHeader(appPayload, sizeof(appPayload), NN_ASSIGN_COMPUTATION);
     };
 
     // Start first message with the message header
@@ -544,8 +543,7 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
 
     auto resetPayloadWithHeader = [&](int &msgOffset) {
         msgOffset=0;
-        encodeMessageHeader(tmpBufferHeader, 3, NN_ASSIGN_OUTPUT_TARGETS);
-        msgOffset += snprintf(appPayload, sizeof(appPayload), "%s", tmpBufferHeader);
+        msgOffset = encodeMessageHeader(appPayload, sizeof(appPayload), NN_ASSIGN_OUTPUT_TARGETS);
     };
 
     //Start the new message
@@ -757,8 +755,7 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
 
     auto resetPayloadWithHeader = [&](int &msgOffset) {
         msgOffset=0;
-        encodeMessageHeader(tmpBufferHeader, 3, NN_ASSIGN_OUTPUT_TARGETS);
-        msgOffset += snprintf(appPayload, sizeof(appPayload), "%s", tmpBufferHeader);
+        msgOffset = encodeMessageHeader(appPayload, sizeof(appPayload), NN_ASSIGN_COMPUTATION);
     };
 
     //If the output device its not this node encode the message header
@@ -951,14 +948,15 @@ void NeuralNetworkCoordinator::assignPubSubInfoToNeuron(char* messageBuffer,size
     }
 }
 
-void NeuralNetworkCoordinator::encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type){
+int NeuralNetworkCoordinator::encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type){
     if(type == NN_ASSIGN_COMPUTATION){
-        snprintf(messageBuffer,bufferSize,"%i ",NN_ASSIGN_COMPUTATION);
+        return snprintf(messageBuffer,bufferSize,"%i ",NN_ASSIGN_COMPUTATION);
     }else if(type == NN_ASSIGN_OUTPUT){
-        snprintf(messageBuffer,bufferSize,"%i ",NN_ASSIGN_OUTPUT);
+        return snprintf(messageBuffer,bufferSize,"%i ",NN_ASSIGN_OUTPUT);
     }else if(type == NN_ASSIGN_OUTPUT_TARGETS){
-        snprintf(messageBuffer,bufferSize,"%i ",NN_ASSIGN_OUTPUT_TARGETS);
+        return snprintf(messageBuffer,bufferSize,"%i ",NN_ASSIGN_OUTPUT_TARGETS);
     }
+    return 0;
 }
 
 int NeuralNetworkCoordinator::encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize, uint8_t neuronId, uint8_t inputSize, uint8_t * inputSaveOrder, const float* weightsValues, float bias){
