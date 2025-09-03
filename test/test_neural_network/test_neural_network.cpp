@@ -1166,6 +1166,90 @@ void test_distribute_neurons_with_balanced_algorithmV2(){
 
 }
 
+
+void test_distribute_neurons_per_one_device_with_balanced_algorithmV2(){
+    NeuralNetworkCoordinator coordinator;
+
+    uint8_t nodes[4][4] = {
+            {2,2,2,2},
+    };
+    uint8_t neuronsPerNode[1] = {2};
+
+    uint8_t neuron2=2,neuron3=3,neuron4=4,neuron5=5,neuron6=6,neuron7=7,neuron8=8,neuron9=9,neuron10=10,neuron11=11;
+
+    //initNeuralNetwork();
+    coordinator.distributeNeuralNetworkBalancedV2(&neuralNetwork, nodes,1,neuronsPerNode);
+    coordinator.distributeOutputNeurons(&neuralNetwork,myAPIP);
+
+    //printNeuronInfo();
+
+    tablePrint(neuronToNodeTable,printNeuronTableHeader,printNeuronEntry);
+
+    NeuronEntry* neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron2);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[0]));
+    TEST_ASSERT(neuronEntry->layer == 1);
+    TEST_ASSERT(neuronEntry->indexInLayer == 0);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron3);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[0]));
+    TEST_ASSERT(neuronEntry->layer == 1);
+    TEST_ASSERT(neuronEntry->indexInLayer == 1);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron4);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[0]));
+    TEST_ASSERT(neuronEntry->layer == 1);
+    TEST_ASSERT(neuronEntry->indexInLayer == 2);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron5);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[0]));
+    TEST_ASSERT(neuronEntry->layer == 1);
+    TEST_ASSERT(neuronEntry->indexInLayer == 3);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron6);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[0]));
+    TEST_ASSERT(neuronEntry->layer == 2);
+    TEST_ASSERT(neuronEntry->indexInLayer == 0);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron7);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[0]));
+    TEST_ASSERT(neuronEntry->layer == 2);
+    TEST_ASSERT(neuronEntry->indexInLayer == 1);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron8);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[0]));
+    TEST_ASSERT(neuronEntry->layer == 2);
+    TEST_ASSERT(neuronEntry->indexInLayer == 2);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron9);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,nodes[0]));
+    TEST_ASSERT(neuronEntry->layer == 2);
+    TEST_ASSERT(neuronEntry->indexInLayer == 3);/******/
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron10);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,myAPIP));
+    TEST_ASSERT(neuronEntry->layer == 3);
+    TEST_ASSERT(neuronEntry->indexInLayer == 0);
+
+    neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable,&neuron11);
+    TEST_ASSERT(neuronEntry != nullptr);
+    TEST_ASSERT(isIPEqual(neuronEntry->nodeIP,myAPIP));
+    TEST_ASSERT(neuronEntry->layer == 3);
+    TEST_ASSERT(neuronEntry->indexInLayer == 1);/******/
+
+    tableClean(neuronToNodeTable);
+    //freeAllNeuronMemory();
+
+}
+
 void test_distribute_neural_network_to_one_device(){
     NeuronWorker neuron;
     //NeuralNetworkCoordinator coordinator;
@@ -1663,7 +1747,7 @@ void tearDown(void){
 }
 
 int main(int argc, char** argv){
-    UNITY_BEGIN();/***
+    UNITY_BEGIN();/******/
     RUN_TEST(test_memory_allocation);
     RUN_TEST(test_neuron_output_calculation);
 
@@ -1695,16 +1779,17 @@ int main(int argc, char** argv){
 
      RUN_TEST(test_bit_fields);
      RUN_TEST(test_distribute_neurons);
-     RUN_TEST(test_distribute_neurons_with_balanced_algorithm);***/
+     RUN_TEST(test_distribute_neurons_with_balanced_algorithm);
      RUN_TEST(test_distribute_neurons_with_balanced_algorithmV2);
-    /***RUN_TEST(test_assign_input_neurons);
+     RUN_TEST(test_distribute_neurons_per_one_device_with_balanced_algorithmV2);
+    RUN_TEST(test_assign_input_neurons);
     RUN_TEST(test_coordinator_handle_ACK_from_all_neurons);
     RUN_TEST(test_coordinator_handle_ACK_missing_worker_neurons_on_ack_timeout);
-   RUN_TEST(test_coordinator_handle_ACK_missing_for_some_worker_neuron_of_same_node_on_ack_timeout);
-   RUN_TEST(test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout);
-   RUN_TEST(test_coordinator_assign_computations_on_ack_timeout);
-   RUN_TEST(test_assign_outputs);
-   RUN_TEST(test_assign_pubsub_info); ***/
+    RUN_TEST(test_coordinator_handle_ACK_missing_for_some_worker_neuron_of_same_node_on_ack_timeout);
+    RUN_TEST(test_coordinator_handle_ACK_missing_input_neurons_on_ack_timeout);
+    RUN_TEST(test_coordinator_assign_computations_on_ack_timeout);
+    RUN_TEST(test_assign_outputs);
+    RUN_TEST(test_assign_pubsub_info); /******/
 
     UNITY_END();
 }

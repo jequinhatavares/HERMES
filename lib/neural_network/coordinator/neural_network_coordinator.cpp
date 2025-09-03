@@ -368,7 +368,7 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalancedV2(const NeuralNet
             encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,currentNeuronId,net->layers[i].numInputs,
                                       inputIndexMap,&net->layers[i].weights[j * net->layers[i].numInputs],net->layers[i].biases[j]);
 
-            // Before adding a neuron, check if it fits in the current message
+            // Before adding the neuron assignment, check if it fits in the current message
             int neededChars = snprintf(nullptr,0,"%s", tmpBuffer);
             if (neededChars < 0 || messageOffset + neededChars >= (int)(sizeof(appPayload))) {
                 //Send the assignments to the node
@@ -465,7 +465,7 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNetwork(uint8_t nodes[][4],u
                 // Check if the current node is responsible for computing a neuron in the next layer and is not already in the list
                 if(!isIPinList(neuronEntry->nodeIP,inputNodesIPs,nNodes) && (neuronEntry->layer == i+1)){
                     assignIP(inputNodesIPs[nNodes],neuronEntry->nodeIP);
-                    LOG(APP,INFO,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu \n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
+                    //LOG(APP,INFO,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu \n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
                     nNodes++;
                 }
             }
@@ -519,20 +519,45 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
     NeuronEntry *neuronEntry;
     uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
     uint8_t targetDevicesIPs[TABLE_MAX_SIZE][4], nTargetDevices = 0,myIP[4];
-    int offset = 0;
-    char tmpBuffer[50];
+    int messageOffset = 0;
+    char tmpBuffer[50],tmpBufferHeader[3];
     size_t tmpBufferSize = sizeof(tmpBuffer);
     bool neuronsAssignedToNode=false;
 
     network.getNodeIP(myIP);
 
-    encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_OUTPUT_TARGETS);
-    offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
+    auto resetPayloadWithHeader = [&](int &msgOffset) {
+        msgOffset=0;
+        encodeMessageHeader(tmpBufferHeader, 3, NN_ASSIGN_OUTPUT_TARGETS);
+        msgOffset += snprintf(appPayload, sizeof(appPayload), "%s", tmpBufferHeader);
+    };
+
+    //Start the new message
+    resetPayloadWithHeader(messageOffset);
 
     /***  The messages in this function are constructed layer by layer. Messages are made based on aggregation of the
      * neurons computed in the same layer, since these neurons need to send their outputs to the same neurons or nodes
      * in the next layer. ***/
     for (uint8_t i = 0; i < neuralNetwork.numLayers+1; i++){
+
+        /*** Identify the neurons computed by the target node at this layer and build
+           *  a message with the IP addresses of the neurons that depend on its output.  ***/
+        for (int k = 0; k < neuronToNodeTable->numberOfItems; ++k) {
+            neuronId = (uint8_t*)tableKey(neuronToNodeTable,k);
+            neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
+
+            if(neuronEntry != nullptr){
+                //Search in the neuronToNodeTable for the neurons at a specific layer computed by the target node that have not been acknowledged
+                if(isIPEqual(neuronEntry->nodeIP,workerNodeIP) && neuronEntry->layer == i && !neuronEntry->isAcknowledged){
+                    //LOG(APP,INFO,"Neuron ID: %hhu \n",*neuronId);
+                    outputNeurons[nNeurons] = *neuronId;
+                    nNeurons ++;
+                }
+            }
+        }
+
+        //If the target node does not compute any neurons in the current layer skip to the next layer
+        if(nNeurons==0){continue;}
 
         /*** The neurons in the next layer require the outputs of the current layer as input. Therefore, we need to
          * identify which nodes are responsible for computing the next layer's neurons. These are the nodes to which
@@ -556,29 +581,28 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
             }
         }
 
-        //LOG(APP,INFO,"Current IP: %hhu.%hhu.%hhu.%hhu computes:\n"owrkerNodeIP[0]owrkerNodeIP[1]owrkerNodeIP[2]owrkerNodeIP[3]);
 
-        /*** Identify the neurons computed by the target node at this layer and build
-           *  a message with the IP addresses of the neurons that depend on its output.  ***/
-        for (int k = 0; k < neuronToNodeTable->numberOfItems; ++k) {
-            neuronId = (uint8_t*)tableKey(neuronToNodeTable,k);
-            neuronEntry = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId);
-
-            if(neuronEntry != nullptr){
-                //Search in the neuronToNodeTable for the neurons at a specific layer computed by the target node that have not been acknowledged
-                if(isIPEqual(neuronEntry->nodeIP,workerNodeIP) && neuronEntry->layer == i && !neuronEntry->isAcknowledged){
-                    //LOG(APP,INFO,"Neuron ID: %hhu \n",*neuronId);
-                    outputNeurons[nNeurons] = *neuronId;
-                    nNeurons ++;
-                }
-            }
-        }
-
-        // If the node computes any neurons in this layer, include its information in the message along with the IPs to which it should forward the computation
-        if(nNeurons != 0){
+        // If the node computes any neurons in this layer and has target devices.
+        // Encode the message that includes its information along with the IPs to which it should forward the computation
+        if(nTargetDevices != 0){
             //LOG(APP,DEBUG,"number of neurons: %hhu number of workerNodeIP: %hhu\n",nNeurons,nTargetDevices);
             encodeAssignOutputMessage(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,targetDevicesIPs,nTargetDevices);
-            offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
+
+            // Before adding the neuron assignment, check if it fits in the current message
+            int neededChars = snprintf(nullptr,0,"%s", tmpBuffer);
+            if (neededChars < 0 || messageOffset + neededChars >= (int)(sizeof(appPayload))) {
+                // If doesnt fit send the current encoded message as is
+                network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,workerNodeIP);
+                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu Size:%d\n",appPayload
+                    ,workerNodeIP[0],workerNodeIP[1],workerNodeIP[2],workerNodeIP[3],messageOffset);
+                // Encode the message header for the next neuron assignments
+                resetPayloadWithHeader(messageOffset);
+                // Encode the assignments that didn't fit into the last message
+                messageOffset += snprintf(appPayload + messageOffset,sizeof(appPayload) - messageOffset,"%s", tmpBuffer);
+            }
+
+            //Add to the current message the current node assignments
+            messageOffset += snprintf(messageBuffer + messageOffset, bufferSize-messageOffset,"%s",tmpBuffer);
             neuronsAssignedToNode = true;
         }
 
@@ -590,6 +614,8 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
     // targetIP with no neuron assignments, in such cases, there's no need to send a message.
     if(neuronsAssignedToNode){
         network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,workerNodeIP);
+        LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu Size:%d\n",appPayload,workerNodeIP[0],workerNodeIP[1],workerNodeIP[2],workerNodeIP[3],messageOffset);
+
     }
 }
 
