@@ -335,6 +335,21 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalanced(const NeuralNetwo
     areNeuronsAssigned = true;
 }
 
+/**
+ * distributeNeuralNetworkBalanced
+ * Distributes neurons across worker devices using device-specific capacity allocation.
+ * Assigns neurons based on per-device neuron capacity (neuronsPerDevice array).
+ * Processes layers sequentially, constructing aggregated assignment messages per device.
+ * Output layer is not processed (handled separately by distributeOutputNeurons).
+ *
+ * This function ensures that assignments too large for a single payload are
+ * divided and sent across multiple messages.
+ *
+ * @param net - Pointer to neural network structure
+ * @param devices - 2D array of devices IP addresses
+ * @param nrDevices - Number of available devices
+ * @param neuronsPerDevice - Array specifying max neurons per device
+ **/
 void NeuralNetworkCoordinator::distributeNeuralNetworkBalancedV2(const NeuralNetwork *net,uint8_t devices[][4],uint8_t nrDevices,uint8_t neuronsPerDevice[]){
     uint8_t neuronPerNodeCount = 0, *inputIndexMap;
     int assignedDevices = 0, messageOffset = 0;
@@ -492,8 +507,6 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNetwork(uint8_t nodes[][4],u
             LOG(APP,DEBUG,"number of neurons: %hhu number of nodes: %hhu\n",nNeurons,nNodes);
             encodeAssignOutputMessage(appPayload,sizeof(appPayload),outputNeurons,nNeurons,inputNodesIPs,nNodes);
 
-            //LOG(APP,INFO,"Encoded message: %s\n",appPayload);
-            //Todo send Message for the node
             network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodes[j]);
             nNeurons = 0;
         }
@@ -509,6 +522,9 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNetwork(uint8_t nodes[][4],u
  * Assigns output targets for a specific device and its neurons.
  * For each layer containing the node's neurons, identifies the recipient nodes in the next layer.
  * Constructs a layer-wise message aggregating output target assignments for the node.
+ *
+ * This function ensures that assignments too large for a single payload are
+ * divided and sent across multiple messages.
  *
  * @param messageBuffer - Buffer to store encoded message
  * @param bufferSize - Size of message buffer
@@ -723,6 +739,9 @@ void NeuralNetworkCoordinator::distributeInputNeurons(uint8_t inputNodes[][4],ui
  * For remote devices: encodes and sends neuron assignment message.
  * For coordinator: directly configures neuron core and pub/sub information.
  *
+ * This function ensures that assignments too large for a single payload are
+ * divided and sent across multiple messages.
+ *
  * @param net - Pointer to neural network structure
  * @param outputDevice - IP address of output device
  */
@@ -732,15 +751,25 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
     network.getNodeIP(myIP);
     NeuronId currentOutputNeuron=0;
     NeuronEntry neuronEntry;
-    char tmpBuffer[150];
+    char tmpBuffer[150],tmpBufferHeader[3];
     size_t tmpBufferSize= sizeof(tmpBuffer);
     int messageOffset=0,neuronStorageIndex=-1;
+
+    auto resetPayloadWithHeader = [&](int &msgOffset) {
+        msgOffset=0;
+        encodeMessageHeader(tmpBufferHeader, 3, NN_ASSIGN_OUTPUT_TARGETS);
+        msgOffset += snprintf(appPayload, sizeof(appPayload), "%s", tmpBufferHeader);
+    };
+
+    //If the output device its not this node encode the message header
+    if(!isIPEqual(outputDevice,myIP)){
+        resetPayloadWithHeader(messageOffset);
+    }
 
     // Calculate the first output neuron ID by iterating through the layers and their respective number of inputs
     for (int i = 0; i < net->numLayers; ++i) {
         currentOutputNeuron += net->layers[i].numInputs;
     }
-
     //LOG(APP,DEBUG,"CurrentOutputNeuronId: %hhu\n",currentOutputNeuron);
 
     /***Initialize the input index mapping before processing the output layer. The inputIndexMapping specifies the order
@@ -754,10 +783,6 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
         inputIndexMap[j] = currentOutputNeuron+(j-net->layers[outputLayer].numInputs);
     }
 
-    if(!isIPEqual(outputDevice,myIP)){
-        encodeMessageHeader(tmpBuffer, tmpBufferSize,NN_ASSIGN_OUTPUT);
-        messageOffset += snprintf(appPayload, sizeof(appPayload),"%s",tmpBuffer);
-    }
 
     for (uint8_t j = 0; j < net->layers[outputLayer].numOutputs; j++){ // For each neuron in output layer
 
@@ -787,7 +812,6 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
 
             //Save the neuron in the list of Output Neurons handled by this device
             saveOutputNeuron(currentOutputNeuron);
-
         }else{
             // If this node doesn't compute the output layer, we must encode a message
             //assigning the output neurons and their parameters to the correct node.
@@ -795,7 +819,23 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
                                       currentOutputNeuron,net->layers[outputLayer].numInputs,inputIndexMap,
                                       &net->layers[outputLayer].weights[j * net->layers[outputLayer].numInputs],net->layers[outputLayer].biases[j]);
 
+
+            // Before adding the neuron assignment, check if it fits in the current message
+            int neededChars = snprintf(nullptr,0,"%s", tmpBuffer);
+            if (neededChars < 0 || messageOffset + neededChars >= (int)(sizeof(appPayload))) {
+                // If doesnt fit send the current encoded message as is
+                network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,outputDevice);
+                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu Size:%d\n",appPayload
+                        ,outputDevice[0],outputDevice[1],outputDevice[2],outputDevice[3],messageOffset);
+                // Encode the message header for the next neuron assignments
+                resetPayloadWithHeader(messageOffset);
+                // Encode the assignments that didn't fit into the last message
+                messageOffset += snprintf(appPayload + messageOffset,sizeof(appPayload) - messageOffset,"%s", tmpBuffer);
+            }
+
+            //Add to the current message the current node assignments
             messageOffset += snprintf(appPayload + messageOffset, sizeof(appPayload) - messageOffset,"%s",tmpBuffer);
+
 
             // Add the neuron-to-node mapping to the table
             assignIP(neuronEntry.nodeIP,outputDevice);
