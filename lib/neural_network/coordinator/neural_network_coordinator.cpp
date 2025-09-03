@@ -530,9 +530,12 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
                     1- Verify that the current device is responsible for computing a neuron in the next layer
                     2- Ensure the neuron is not already present in the list
                     3- Confirm the current device is not the same as the worker device (a device cannot have itself as a target)***/
-                if((neuronEntry->layer == i+1) && !isIPinList(neuronEntry->nodeIP,targetDevicesIPs,nTargetDevices) && isIPEqual(neuronEntry->nodeIP,workerNodeIP)){
+                LOG(APP,DEBUG,"IP of the node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
+                LOG(APP,DEBUG,"(neuronEntry->layer == i+1): %d !isIPinList(neuronEntry->nodeIP,targetDevicesIPs,nTargetDevices): %d !isIPEqual(neuronEntry->nodeIP,workerNodeIP): %d\n",(neuronEntry->layer == i+1),!isIPinList(neuronEntry->nodeIP,targetDevicesIPs,nTargetDevices),!isIPEqual(neuronEntry->nodeIP,workerNodeIP));
+                LOG(APP,DEBUG,"Neuron->layer: %d i+1:%d \n",neuronEntry->layer, i+1);
+                if((neuronEntry->layer == i+1) && (!isIPinList(neuronEntry->nodeIP,targetDevicesIPs,nTargetDevices)) && (!isIPEqual(neuronEntry->nodeIP,workerNodeIP)) ){
                     assignIP(targetDevicesIPs[nTargetDevices],neuronEntry->nodeIP);
-                    //LOG(APP,INFO,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
+                    LOG(APP,DEBUG,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
                     nTargetDevices++;
                 }
             }
@@ -619,10 +622,12 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNeurons(char* messageBuffer,
             neuronId2 = (uint8_t*)tableKey(neuronToNodeTable,l);
             neuronEntry2 = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId2);
             if(neuronEntry2 != nullptr){
+                LOG(APP,INFO,"IP of the node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry2->nodeIP[0],neuronEntry2->nodeIP[1],neuronEntry2->nodeIP[2],neuronEntry2->nodeIP[3]);
+                LOG(APP,INFO,"!isIPinList(neuronEntry2->nodeIP,inputNodesIPs,nNodes): %d (neuronEntry2->layer == neuronEntry->layer+1): %d\n", !isIPinList(neuronEntry2->nodeIP,inputNodesIPs,nNodes),(neuronEntry2->layer == neuronEntry->layer+1));
                 // Check if the current node is responsible for computing a neuron in the next layer and is not already in the list
                 if(!isIPinList(neuronEntry2->nodeIP,inputNodesIPs,nNodes) && (neuronEntry2->layer == neuronEntry->layer+1)){
                     assignIP(inputNodesIPs[nNodes],neuronEntry2->nodeIP);
-                    //LOG(APP,INFO,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
+                    LOG(APP,INFO,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry2->nodeIP[0],neuronEntry2->nodeIP[1],neuronEntry2->nodeIP[2],neuronEntry2->nodeIP[3]);
                     nNodes++;
                 }
             }
