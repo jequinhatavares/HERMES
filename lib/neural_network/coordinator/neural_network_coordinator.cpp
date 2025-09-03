@@ -339,18 +339,18 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalancedV2(const NeuralNet
     uint8_t neuronPerNodeCount = 0, *inputIndexMap;
     int assignedDevices = 0, messageOffset = 0;
     uint8_t currentNeuronId = net->layers[0].numInputs; // first hidden neuron ID
-    char tmpBuffer[150];
+    char tmpBuffer[150],tmpBufferHeader[3];
     size_t tmpBufferSize = sizeof(tmpBuffer);
     NeuronEntry neuronEntry;
-    bool singleDeviceMode = nrDevices==0;
+    bool singleDeviceMode = nrDevices == 1;
 
     auto resetPayloadWithHeader = [&](int &msgOffset) {
-        strcpy(appPayload, "");
-        encodeMessageHeader(tmpBuffer, tmpBufferSize, NN_ASSIGN_COMPUTATION);
-        msgOffset = snprintf(appPayload, sizeof(appPayload), "%s", tmpBuffer);
+        msgOffset=0;
+        encodeMessageHeader(tmpBufferHeader, 3, NN_ASSIGN_COMPUTATION);
+        msgOffset += snprintf(appPayload, sizeof(appPayload), "%s", tmpBufferHeader);
     };
 
-    // Start first message
+    // Start first message with the message header
     resetPayloadWithHeader(messageOffset);
 
     for (uint8_t i = 0; i < net->numLayers - 1; i++){
@@ -365,32 +365,33 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalancedV2(const NeuralNet
         }
 
         for (uint8_t j = 0; j < net->layers[i].numOutputs; j++) {
-
             encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,currentNeuronId,net->layers[i].numInputs,
                                       inputIndexMap,&net->layers[i].weights[j * net->layers[i].numInputs],net->layers[i].biases[j]);
 
-            // Add neuron encoding to payload
-            int added = snprintf(appPayload + messageOffset,sizeof(appPayload) - messageOffset,"%s", tmpBuffer);
-
-            // If buffer is too full, flush before adding more neurons
-            if (added < 0 || messageOffset + added >= (int)(sizeof(appPayload) - 50)) {
+            // Before adding a neuron, check if it fits in the current message
+            int neededChars = snprintf(nullptr,0,"%s", tmpBuffer);
+            if (neededChars < 0 || messageOffset + neededChars >= (int)(sizeof(appPayload) - 50)) {
+                //Send the assignments to the node
                 network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,devices[singleDeviceMode ? 0 : assignedDevices]);
-                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu\n",appPayload,devices[singleDeviceMode ? 0 : assignedDevices][0],devices[singleDeviceMode ? 0 : assignedDevices][1],devices[singleDeviceMode ? 0 : assignedDevices][2],devices[singleDeviceMode ? 0 : assignedDevices][3]);
+                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu Size:%d\n",appPayload,devices[singleDeviceMode ? 0 : assignedDevices][0],devices[singleDeviceMode ? 0 : assignedDevices][1],devices[singleDeviceMode ? 0 : assignedDevices][2],devices[singleDeviceMode ? 0 : assignedDevices][3],
+                    sizeof(appPayload));
                 // Encode the message header for the next neuron assignments
                 resetPayloadWithHeader(messageOffset);
-                // re-encode this neuron after flushing
+                // Encode the assignments that didn't fit ito the last message
                 messageOffset += snprintf(appPayload + messageOffset,sizeof(appPayload) - messageOffset,"%s", tmpBuffer);
-            } else {
-                messageOffset += added;
             }
 
-            // Add to mapping table
+            //Add to the current message the current node assignments
+            messageOffset += snprintf(appPayload + messageOffset, sizeof(appPayload) - messageOffset, "%s", tmpBuffer);
+
+            // Add to mapping table the new assignments
             assignIP(neuronEntry.nodeIP, devices[singleDeviceMode ? 0 : assignedDevices]);
             neuronEntry.layer = i + 1;
             neuronEntry.indexInLayer = j;
             neuronEntry.isAcknowledged = false;
             tableAdd(neuronToNodeTable, &currentNeuronId, &neuronEntry);
 
+            //Move on the next neuronId
             currentNeuronId++;
             neuronPerNodeCount++;
 
@@ -402,7 +403,8 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalancedV2(const NeuralNet
             * of neurons and no more neurons remain to be assigned, send the message to the node with the neurons already assigned.
             ***/
             if (!singleDeviceMode && (neuronPerNodeCount == neuronsPerDevice[assignedDevices] || lastNeuron)) {
-                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu\n",appPayload,devices[assignedDevices][0],devices[assignedDevices][1],devices[assignedDevices][2],devices[assignedDevices][3]);
+                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu Size:%d\n",appPayload,
+                    devices[assignedDevices][0],devices[assignedDevices][1],devices[assignedDevices][2],devices[assignedDevices][3],messageOffset);
                 network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload, devices[assignedDevices]);
                 neuronPerNodeCount = 0;
                 //Skip to the next device
@@ -420,7 +422,7 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalancedV2(const NeuralNet
             // Single-device flush only happens on last neuron
             if (singleDeviceMode && lastNeuron) {
                 network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload, devices[0]);
-                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu\n",appPayload,devices[0][0],devices[0][1],devices[0][2],devices[0][3]);
+                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu Size:%d\n",appPayload,devices[0][0],devices[0][1],devices[0][2],devices[0][3],sizeof(appPayload));
             }
         }
         delete[] inputIndexMap;
@@ -463,7 +465,7 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNetwork(uint8_t nodes[][4],u
                 // Check if the current node is responsible for computing a neuron in the next layer and is not already in the list
                 if(!isIPinList(neuronEntry->nodeIP,inputNodesIPs,nNodes) && (neuronEntry->layer == i+1)){
                     assignIP(inputNodesIPs[nNodes],neuronEntry->nodeIP);
-                    LOG(APP,INFO,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
+                    LOG(APP,INFO,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu \n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
                     nNodes++;
                 }
             }
@@ -589,7 +591,6 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
     if(neuronsAssignedToNode){
         network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,workerNodeIP);
     }
-
 }
 
 
