@@ -334,7 +334,88 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalanced(const NeuralNetwo
     areNeuronsAssigned = true;
 }
 
+void NeuralNetworkCoordinator::distributeNeuralNetworkBalancedV2(const NeuralNetwork *net,uint8_t devices[][4],uint8_t nrDevices,uint8_t neuronsPerDevice[]){
+    uint8_t neuronPerNodeCount = 0, *inputIndexMap;
+    int assignedDevices = 0, messageOffset = 0;
+    uint8_t currentNeuronId = net->layers[0].numInputs; // first hidden neuron ID
+    char tmpBuffer[150];
+    size_t tmpBufferSize = sizeof(tmpBuffer);
+    NeuronEntry neuronEntry;
+    bool singleDeviceMode = nrDevices==0;
 
+    auto resetPayloadWithHeader = [&](int &msgOffset) {
+        strcpy(appPayload, "");
+        encodeMessageHeader(tmpBuffer, tmpBufferSize, NN_ASSIGN_COMPUTATION);
+        msgOffset = snprintf(appPayload, sizeof(appPayload), "%s", tmpBuffer);
+    };
+
+    // Start first message
+    resetPayloadWithHeader(messageOffset);
+
+    for (uint8_t i = 0; i < net->numLayers - 1; i++) {
+        inputIndexMap = new uint8_t[net->layers[i].numInputs];
+        for (uint8_t j = 0; j < net->layers[i].numInputs; j++) {
+            inputIndexMap[j] = currentNeuronId + (j - net->layers[i].numInputs);
+        }
+
+        for (uint8_t j = 0; j < net->layers[i].numOutputs; j++) {
+
+            encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,currentNeuronId,net->layers[i].numInputs,
+                                      inputIndexMap,&net->layers[i].weights[j * net->layers[i].numInputs],net->layers[i].biases[j]);
+
+            // Add neuron encoding to payload
+            int added = snprintf(appPayload + messageOffset,sizeof(appPayload) - messageOffset,"%s", tmpBuffer);
+
+            // If buffer is too full, flush before adding more neurons
+            if (added < 0 || messageOffset + added >= (int)(sizeof(appPayload) - 200)) {
+                network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,
+                                          devices[singleDeviceMode ? 0 : assignedDevices]);
+                resetPayloadWithHeader(messageOffset);
+                // re-encode this neuron after flushing
+                messageOffset += snprintf(appPayload + messageOffset,sizeof(appPayload) - messageOffset,"%s", tmpBuffer);
+            } else {
+                messageOffset += added;
+            }
+
+            // Add to mapping table
+            assignIP(neuronEntry.nodeIP, devices[singleDeviceMode ? 0 : assignedDevices]);
+            neuronEntry.layer = i + 1;
+            neuronEntry.indexInLayer = j;
+            neuronEntry.isAcknowledged = false;
+            tableAdd(neuronToNodeTable, &currentNeuronId, &neuronEntry);
+
+            currentNeuronId++;
+            neuronPerNodeCount++;
+
+            bool lastNeuron = (i == net->numLayers - 2 && j == net->layers[i].numOutputs - 1);
+
+            // Normal distributed flush: when device quota is met or last neuron
+            if (!singleDeviceMode && (neuronPerNodeCount == neuronsPerDevice[assignedDevices] || lastNeuron)) {
+                network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload, devices[assignedDevices]);
+                neuronPerNodeCount = 0;
+                //Skip to the next device
+                if (!lastNeuron) {
+                    assignedDevices++;
+                    if (assignedDevices >= nrDevices) {
+                        LOG(APP, ERROR, "Too many devices assigned.\n");
+                        delete[] inputIndexMap;
+                        return;
+                    }
+                    resetPayloadWithHeader(messageOffset);
+                }
+            }
+
+            // Single-device flush only happens on last neuron
+            if (singleDeviceMode && lastNeuron) {
+                network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload, devices[0]);
+            }
+        }
+        delete[] inputIndexMap;
+    }
+
+    neuronAssignmentTime = getCurrentTime();
+    areNeuronsAssigned = true;
+}
 /**
  * assignOutputTargetsToNetwork
  * Assigns output targets layer by layer across all nodes. Output targets are the devices that require the output

@@ -16,7 +16,6 @@
 #define MAX_NEURONS 5
 #endif
 
-
 #if defined(raspberrypi_3b)
 #define MAX_NEURONS 100
 #endif

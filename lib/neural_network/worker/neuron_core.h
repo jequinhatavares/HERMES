@@ -46,16 +46,9 @@ private:
     NeuronId* saveOrders[MAX_NEURONS];  // Each neuron has its own save order allocated at weights[NeuronStorageIndex]
     float biases[MAX_NEURONS];          // Each neuron has its own bias allocated at weights[NeuronStorageIndex]
     uint8_t inputSizes[MAX_NEURONS];    // Each neuron has its own input size allocated at weights[NeuronStorageIndex]
-
 };
 
-
 bool isNeuronInList(NeuronId *neuronsList, uint8_t nNeurons, NeuronId targetNeuronId);
-
-
-
-
-
 
 
 

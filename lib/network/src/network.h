@@ -46,6 +46,7 @@ class Network {
     void middlewareSelectStrategy(StrategyType strategyType);   // Sets the middleware routing strategy to use
     void middlewareInfluenceRouting(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload);         // Allows application layer to influence routing decisions (uses the currently selected middleware strategy)
     void middlewarePrintInfo();
+
     // ================ STRATEGY: INJECT =====================
     // Configures the Inject strategy
     void initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*)

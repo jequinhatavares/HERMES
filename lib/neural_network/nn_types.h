@@ -20,7 +20,7 @@ typedef enum NeuralNetworkMessageType{
 
 /*** NeuronId is defined as a uint8_t, allowing up to 256 neurons with IDs ranging from 0 to 255.
     To support a larger neural network (more than 256 neurons), simply change the type of this variable
-    to uint16_t, uint32_t, or uint64_t as needed — the rest of the code will continue to function correctly.***/
+    to uint16_t, uint32_t, or uint64_t as needed, the rest of the code will continue to function correctly.***/
 typedef uint8_t NeuronId;
 
 

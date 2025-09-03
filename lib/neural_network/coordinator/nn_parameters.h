@@ -30,7 +30,7 @@ typedef struct NeuralNetwork{
     uint8_t numHiddenLayers;    // Hidden layers count
     uint8_t numLayers;          // Total layers (hidden + output)
     uint8_t numNeurons;         // Total Number of neurons in the NN
-    Layer* layers;        // Layer array
+    Layer* layers;              // Layer array
 } NeuralNetwork;
 
 // Declare neural network reference

@@ -319,7 +319,7 @@ ParentInfo requestParentFromRoot(ParentInfo* possibleParents, int nrOfPossiblePa
     // Send the message to the temporary parent so it can be forwarded toward the root
     sendMessage(temporaryParent,largeSendBuffer);
 
-    LOG(MIDDLEWARE,INFO,"Sending %s to Temporary Parent: %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer, temporaryParent[0],temporaryParent[1],temporaryParent[2],temporaryParent[3]);
+    LOG(MIDDLEWARE,INFO,"Sending TOP_METRICS_REPORT%s to Temporary Parent: %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer, temporaryParent[0],temporaryParent[1],temporaryParent[2],temporaryParent[3]);
 
     // Wait for the message from the root assigning me a parent
     unsigned long startTime = getCurrentTime();
