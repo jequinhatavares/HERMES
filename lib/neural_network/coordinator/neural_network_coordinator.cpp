@@ -273,8 +273,8 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalanced(const NeuralNetwo
         inputIndexMap = new uint8_t [net->layers[i].numInputs];
         for (uint8_t j = 0; j < net->layers[i].numInputs ; j++){
             // For the first hidden layer, the input index mapping corresponds to the neuron IDs of the input layer (ranging from 0 to nrInputs - 1).
-            //if(i == 0)inputIndexMap[j] = j;
             // For subsequent hidden layers range from (currentNeuronId - (neuronsInPreviousLayer)) to (currentNeuronId)
+            //if(i == 0)inputIndexMap[j] = j;
             inputIndexMap[j] = currentNeuronId+(j-net->layers[i].numInputs);
         }
 
@@ -310,11 +310,12 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalanced(const NeuralNetwo
                 network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,devices[assignedDevices]);
 
                 // Move to the next node, except when all neurons have been assigned i.e., the last neuron of the final layer
-                if((j != net->layers[i].numOutputs - 1) || (i != net->numLayers-2)) assignedDevices ++;
+                if( (j != net->layers[i].numOutputs - 1) || (i != net->numLayers-2) ) assignedDevices ++;
                 neuronPerNodeCount = 0;
 
                 if(assignedDevices>=nrDevices){
                     LOG(APP, ERROR, "ERROR: The number of assigned devices exceeded the total available devices for neuron assignment.\n");
+                    delete [] inputIndexMap;
                     return;
                 }
 
@@ -352,9 +353,14 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalancedV2(const NeuralNet
     // Start first message
     resetPayloadWithHeader(messageOffset);
 
-    for (uint8_t i = 0; i < net->numLayers - 1; i++) {
+    for (uint8_t i = 0; i < net->numLayers - 1; i++){
+        /***Initialize the input index mapping before processing each layer. The inputIndexMapping specifies the order
+        in which the node should store input values. It corresponds to an ordered list of neuron IDs from the previous
+        layer, since those neurons serve as inputs to the current layer.***/
         inputIndexMap = new uint8_t[net->layers[i].numInputs];
         for (uint8_t j = 0; j < net->layers[i].numInputs; j++) {
+            // For the first hidden layer, the input index mapping corresponds to the neuron IDs of the input layer (ranging from 0 to nrInputs - 1).
+            // For subsequent hidden layers range from (currentNeuronId - (neuronsInPreviousLayer)) to (currentNeuronId)
             inputIndexMap[j] = currentNeuronId + (j - net->layers[i].numInputs);
         }
 
@@ -367,9 +373,10 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalancedV2(const NeuralNet
             int added = snprintf(appPayload + messageOffset,sizeof(appPayload) - messageOffset,"%s", tmpBuffer);
 
             // If buffer is too full, flush before adding more neurons
-            if (added < 0 || messageOffset + added >= (int)(sizeof(appPayload) - 200)) {
-                network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,
-                                          devices[singleDeviceMode ? 0 : assignedDevices]);
+            if (added < 0 || messageOffset + added >= (int)(sizeof(appPayload) - 50)) {
+                network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,devices[singleDeviceMode ? 0 : assignedDevices]);
+                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu\n",appPayload,devices[singleDeviceMode ? 0 : assignedDevices][0],devices[singleDeviceMode ? 0 : assignedDevices][1],devices[singleDeviceMode ? 0 : assignedDevices][2],devices[singleDeviceMode ? 0 : assignedDevices][3]);
+                // Encode the message header for the next neuron assignments
                 resetPayloadWithHeader(messageOffset);
                 // re-encode this neuron after flushing
                 messageOffset += snprintf(appPayload + messageOffset,sizeof(appPayload) - messageOffset,"%s", tmpBuffer);
@@ -389,8 +396,13 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalancedV2(const NeuralNet
 
             bool lastNeuron = (i == net->numLayers - 2 && j == net->layers[i].numOutputs - 1);
 
-            // Normal distributed flush: when device quota is met or last neuron
+            /***
+            * When the number of neurons assigned to the current device reaches the expected amount, send the assignment
+            * message and move on to the next device in the list. If the current device has fewer than the expected number
+            * of neurons and no more neurons remain to be assigned, send the message to the node with the neurons already assigned.
+            ***/
             if (!singleDeviceMode && (neuronPerNodeCount == neuronsPerDevice[assignedDevices] || lastNeuron)) {
+                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu\n",appPayload,devices[assignedDevices][0],devices[assignedDevices][1],devices[assignedDevices][2],devices[assignedDevices][3]);
                 network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload, devices[assignedDevices]);
                 neuronPerNodeCount = 0;
                 //Skip to the next device
@@ -408,6 +420,7 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalancedV2(const NeuralNet
             // Single-device flush only happens on last neuron
             if (singleDeviceMode && lastNeuron) {
                 network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload, devices[0]);
+                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu\n",appPayload,devices[0][0],devices[0][1],devices[0][2],devices[0][3]);
             }
         }
         delete[] inputIndexMap;
@@ -530,12 +543,12 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
                     1- Verify that the current device is responsible for computing a neuron in the next layer
                     2- Ensure the neuron is not already present in the list
                     3- Confirm the current device is not the same as the worker device (a device cannot have itself as a target)***/
-                LOG(APP,DEBUG,"IP of the node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
-                LOG(APP,DEBUG,"(neuronEntry->layer == i+1): %d !isIPinList(neuronEntry->nodeIP,targetDevicesIPs,nTargetDevices): %d !isIPEqual(neuronEntry->nodeIP,workerNodeIP): %d\n",(neuronEntry->layer == i+1),!isIPinList(neuronEntry->nodeIP,targetDevicesIPs,nTargetDevices),!isIPEqual(neuronEntry->nodeIP,workerNodeIP));
-                LOG(APP,DEBUG,"Neuron->layer: %d i+1:%d \n",neuronEntry->layer, i+1);
+                //LOG(APP,DEBUG,"IP of the node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
+                //LOG(APP,DEBUG,"(neuronEntry->layer == i+1): %d !isIPinList(neuronEntry->nodeIP,targetDevicesIPs,nTargetDevices): %d !isIPEqual(neuronEntry->nodeIP,workerNodeIP): %d\n",(neuronEntry->layer == i+1),!isIPinList(neuronEntry->nodeIP,targetDevicesIPs,nTargetDevices),!isIPEqual(neuronEntry->nodeIP,workerNodeIP));
+                //LOG(APP,DEBUG,"Neuron->layer: %d i+1:%d \n",neuronEntry->layer, i+1);
                 if((neuronEntry->layer == i+1) && (!isIPinList(neuronEntry->nodeIP,targetDevicesIPs,nTargetDevices)) && (!isIPEqual(neuronEntry->nodeIP,workerNodeIP)) ){
                     assignIP(targetDevicesIPs[nTargetDevices],neuronEntry->nodeIP);
-                    LOG(APP,DEBUG,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
+                    //LOG(APP,DEBUG,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry->nodeIP[0],neuronEntry->nodeIP[1],neuronEntry->nodeIP[2],neuronEntry->nodeIP[3]);
                     nTargetDevices++;
                 }
             }
@@ -622,12 +635,12 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNeurons(char* messageBuffer,
             neuronId2 = (uint8_t*)tableKey(neuronToNodeTable,l);
             neuronEntry2 = (NeuronEntry*) tableRead(neuronToNodeTable, neuronId2);
             if(neuronEntry2 != nullptr){
-                LOG(APP,INFO,"IP of the node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry2->nodeIP[0],neuronEntry2->nodeIP[1],neuronEntry2->nodeIP[2],neuronEntry2->nodeIP[3]);
-                LOG(APP,INFO,"!isIPinList(neuronEntry2->nodeIP,inputNodesIPs,nNodes): %d (neuronEntry2->layer == neuronEntry->layer+1): %d\n", !isIPinList(neuronEntry2->nodeIP,inputNodesIPs,nNodes),(neuronEntry2->layer == neuronEntry->layer+1));
+                //LOG(APP,INFO,"IP of the node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry2->nodeIP[0],neuronEntry2->nodeIP[1],neuronEntry2->nodeIP[2],neuronEntry2->nodeIP[3]);
+                //LOG(APP,INFO,"!isIPinList(neuronEntry2->nodeIP,inputNodesIPs,nNodes): %d (neuronEntry2->layer == neuronEntry->layer+1): %d\n", !isIPinList(neuronEntry2->nodeIP,inputNodesIPs,nNodes),(neuronEntry2->layer == neuronEntry->layer+1));
                 // Check if the current node is responsible for computing a neuron in the next layer and is not already in the list
                 if(!isIPinList(neuronEntry2->nodeIP,inputNodesIPs,nNodes) && (neuronEntry2->layer == neuronEntry->layer+1)){
                     assignIP(inputNodesIPs[nNodes],neuronEntry2->nodeIP);
-                    LOG(APP,INFO,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry2->nodeIP[0],neuronEntry2->nodeIP[1],neuronEntry2->nodeIP[2],neuronEntry2->nodeIP[3]);
+                    //LOG(APP,INFO,"IP of the next layer node: %hhu.%hhu.%hhu.%hhu\n",neuronEntry2->nodeIP[0],neuronEntry2->nodeIP[1],neuronEntry2->nodeIP[2],neuronEntry2->nodeIP[3]);
                     nNodes++;
                 }
             }
@@ -922,22 +935,21 @@ int NeuralNetworkCoordinator::encodeAssignNeuronMessage(char* messageBuffer, siz
 void NeuralNetworkCoordinator::encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes){
     int offset = 0;
     //|[N Neurons] [neuron ID1] [neuron ID2] ...[N Nodes] [IP Address 1] [IP Address 2] ...
-
     offset = snprintf(messageBuffer, bufferSize, "|");
 
     //Encode the number of neurons
-    offset += snprintf(messageBuffer+offset, bufferSize-offset, "%hhu ",nNeurons);
+    offset += snprintf(messageBuffer+offset, bufferSize-offset,"%hhu ",nNeurons);
 
     // Encode the IDs of neurons whose outputs should be sent to specific IP addresses
     for (uint8_t i = 0; i < nNeurons; i++) {
-        offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",outputNeuronIds[i]);
+        offset += snprintf(messageBuffer + offset, bufferSize - offset,"%hhu ",outputNeuronIds[i]);
     }
 
     //Encode the number of node IPs
-    offset += snprintf(messageBuffer + offset, bufferSize-offset, "%hhu ",nNodes);
+    offset += snprintf(messageBuffer + offset, bufferSize-offset,"%hhu ",nNodes);
 
     // Encode the target IP addresses for the outputs of the specified neuron IDs
-    for (uint8_t i = 0; i < nNodes; i++) {
+    for (uint8_t i = 0; i < nNodes; i++){
         if(i != nNodes -1)offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu.%hhu.%hhu.%hhu ",IPs[i][0],IPs[i][1],IPs[i][2],IPs[i][3]);
         else offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu.%hhu.%hhu.%hhu",IPs[i][0],IPs[i][1],IPs[i][2],IPs[i][3]);
     }
@@ -963,7 +975,6 @@ void NeuralNetworkCoordinator::encodePubSubInfo(char* messageBuffer, size_t buff
 
     // Encode the total number of published topics
     //offset += snprintf(messageBuffer + offset, bufferSize - offset, "%hhu ",nPubTopics);
-
     offset += snprintf(messageBuffer + offset, bufferSize - offset, "%d",pubTopic);
 }
 
