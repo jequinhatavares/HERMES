@@ -370,11 +370,11 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalancedV2(const NeuralNet
 
             // Before adding a neuron, check if it fits in the current message
             int neededChars = snprintf(nullptr,0,"%s", tmpBuffer);
-            if (neededChars < 0 || messageOffset + neededChars >= (int)(sizeof(appPayload) - 50)) {
+            if (neededChars < 0 || messageOffset + neededChars >= (int)(sizeof(appPayload))) {
                 //Send the assignments to the node
                 network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,devices[singleDeviceMode ? 0 : assignedDevices]);
                 LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu Size:%d\n",appPayload,devices[singleDeviceMode ? 0 : assignedDevices][0],devices[singleDeviceMode ? 0 : assignedDevices][1],devices[singleDeviceMode ? 0 : assignedDevices][2],devices[singleDeviceMode ? 0 : assignedDevices][3],
-                    sizeof(appPayload));
+                    messageOffset);
                 // Encode the message header for the next neuron assignments
                 resetPayloadWithHeader(messageOffset);
                 // Encode the assignments that didn't fit ito the last message
@@ -422,7 +422,7 @@ void NeuralNetworkCoordinator::distributeNeuralNetworkBalancedV2(const NeuralNet
             // Single-device flush only happens on last neuron
             if (singleDeviceMode && lastNeuron) {
                 network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload, devices[0]);
-                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu Size:%d\n",appPayload,devices[0][0],devices[0][1],devices[0][2],devices[0][3],sizeof(appPayload));
+                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu Size:%d\n",appPayload,devices[0][0],devices[0][1],devices[0][2],devices[0][3],messageOffset);
             }
         }
         delete[] inputIndexMap;
