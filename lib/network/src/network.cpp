@@ -171,7 +171,7 @@ void Network::injectMetric(void *metric) {
         return;
     }
 
-    InjectContext* context = (InjectContext*) ::middlewareGetStrategyContext();
+    InjectContext* context = (InjectContext*)::middlewareGetStrategyContext();
     if(context != nullptr)context->injectNodeMetric(metric);
 }
 
@@ -429,6 +429,11 @@ void Network::onNetworkJoin(void (*callback)(uint8_t *)) {
     onNodeJoinNetworkAppCallback = callback;
 }
 
+void Network::onChildConnect(void (*callback)(uint8_t *)) {
+
+}
+
+
 
 void Network::getNodeMAC(uint8_t *MAC) {
     if(MAC == nullptr)return;
@@ -474,6 +479,7 @@ int Network::getHopDistanceToRoot() {
 int Network::getNumberOfChildren() {
     return numberOfChildren;
 }
+
 
 
 

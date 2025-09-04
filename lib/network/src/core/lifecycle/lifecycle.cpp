@@ -27,7 +27,10 @@ ParentInfo (*middlewareChooseParentCallback)(ParentInfo *,int) = chooseParent;
 //Callback that executes APP periodic Tasks
 void (*onAppPeriodicTaskCallback)() = nullptr;
 //Callback that executes APP specific code when the node joins the network
-void (*onNodeJoinNetworkAppCallback)(uint8_t *)= nullptr;
+void (*onNodeJoinNetworkAppCallback)(uint8_t *) = nullptr;
+//Callback that executes APP specific code when the child connects
+void (*onChildConnectAppCallback)(uint8_t *) = nullptr;
+
 
 // State machine structure holding the current state and a transition table mapping states to handler functions.
 StateMachine SM_ = {
@@ -328,7 +331,7 @@ State active(Event event){
 void handleMessages(){
     //LOG(STATE_MACHINE,INFO,"Handle Messages \n");
     int MessageType;
-    uint8_t childSTAIP[4];
+    uint8_t childSTAIP[4],childAPIP[4];
 
     sscanf(receiveBuffer, "%d", &MessageType);
 
@@ -344,8 +347,10 @@ void handleMessages(){
         case CHILD_REGISTRATION_REQUEST:
             LOG(MESSAGES,INFO,"Received [Child Registration Request] message: \"%s\"\n", receiveBuffer);
             handleChildRegistrationRequest(receiveBuffer);
-            sscanf(receiveBuffer,"%*d %*hhu.%*hhu.%*hhu.%*hhu %hhu.%hhu.%hhu.%hhu",&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
+            sscanf(receiveBuffer,"%*d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",&childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3]
+                   ,&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
             if(middlewareOnNetworkEventCallback != nullptr)middlewareOnNetworkEventCallback(1,childSTAIP);
+            if(onChildConnectAppCallback != nullptr)onChildConnectAppCallback(childAPIP);
             break;
 
         case FULL_ROUTING_TABLE_UPDATE:

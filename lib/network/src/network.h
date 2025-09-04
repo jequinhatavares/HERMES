@@ -37,6 +37,7 @@ class Network {
     void onDataReceived(void (*callback)(uint8_t*, uint8_t*, char*));   // Set the function that handles incoming data messages
     void onPeriodicAppTask(void (*callback)());                         // Registers a periodic application task callback
     void onNetworkJoin(void (*callback)(uint8_t* parentIP));            // Set the function that deals with the node joining the network
+    void onChildConnect(void (*callback)(uint8_t* childIP));            // Set the function that deals with the a new child connection
 
     // ==================== GETTERS ========================
     int getHopDistanceToNode(uint8_t*nodeIP);

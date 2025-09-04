@@ -63,6 +63,7 @@ extern ParentInfo (*middlewareChooseParentCallback)(ParentInfo *,int);
 
 extern void (*onAppPeriodicTaskCallback)();
 extern void (*onNodeJoinNetworkAppCallback)(uint8_t *);
+extern void (*onChildConnectAppCallback)(uint8_t *);
 
 
 
