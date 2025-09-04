@@ -394,20 +394,6 @@ void Network::broadcastMessage(char* messageBuffer,size_t bufferSize,const char 
 }
 
 
-/**
- * sendACKMessage
- * Sends an ACK message to a specified node.
- *
- * @param messageBuffer - Application-provided buffer for the message for message encoding
- * @param bufferSize - Size of the message buffer.
- * @param messagePayload - Application-specific payload.
- * @param destinationIP - Destination node's IP address.
- * @return void
- */
-void Network::sendACKMessage(char* messageBuffer,size_t bufferSize,const char *ackPayload, uint8_t *destinationIP) {
-    sendACKMessageToNode(messageBuffer,bufferSize,ackPayload,destinationIP);
-}
-
 
 /**
  * onDataReceived
@@ -420,17 +406,6 @@ void Network::onDataReceived(void (*callback)(uint8_t *, uint8_t *, char *)) {
     onDataMessageCallback = callback;
 }
 
-
-/**
- * onACKReceived
- * Registers a callback to handle incoming acknowledgment messages.
- *
- * @param callback - Function pointer to handle ACKs, with the format (senderIP, receiverIP, ackPayload).
- * @return void
- */
-void Network::onACKReceived(void (*callback)(uint8_t *, uint8_t *, char *)) {
-    onACKMessageCallback = callback;
-}
 
 
 /**

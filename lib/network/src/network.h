@@ -26,7 +26,6 @@
 class Network {
 
     public:
-
     bool iamRoot=false;
 
     // ==================== NETWORK CORE =====================
@@ -36,10 +35,14 @@ class Network {
 
     // ==================== CALLBACKS ========================
     void onDataReceived(void (*callback)(uint8_t*, uint8_t*, char*));   // Set the function that handles incoming data messages
-    void onACKReceived(void (*callback)(uint8_t*, uint8_t*, char*));    // Set the function that handles incoming ACK messages
     void onPeriodicAppTask(void (*callback)());                         // Registers a periodic application task callback
+    void onNetworkJoin(void (*callback)(uint8_t* parentIP));            // Set the function that deals with the node joining the network
 
-    void onNetworkJoin(void (*callback)(uint8_t* parentIP));
+    // ==================== GETTERS ========================
+    int getHopDistanceToNode(uint8_t*nodeIP);
+    int getHopDistanceToRoot();
+    int getNumberOfChildren();
+
 
     // ================== MIDDLEWARE  =================
     StrategyType getActiveMiddlewareStrategy();
@@ -62,7 +65,6 @@ class Network {
     void subscribeAndPublishTopics(int8_t *subscribeList, int subCount, int8_t *publishList, int pubCount); //Subscribe and publish to a list of topics
 
 
-
     // ================ STRATEGY: TOPOLOGY ===================
     // Configures the Topology strategy
     void initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize
@@ -78,7 +80,6 @@ class Network {
     void sendMessageToChildren(char* messageBuffer,size_t bufferSize,const char* messagePayload);// Sends a message to the children nodes
     void sendMessageToNode(char* messageBuffer,size_t bufferSize,const char* messagePayload, uint8_t* nodeIP);// Sends a message to a specific node in the network
     void broadcastMessage(char* messageBuffer,size_t bufferSize,const char* messagePayload); // Broadcasts a message to all nodes in the network
-    void sendACKMessage(char* messageBuffer,size_t bufferSize,const char* ackPayload, uint8_t* destinationIP); // Sends an ACK message to a node
 
     // ================== NETWORK INFORMATION ==================
     void getNodeMAC(uint8_t *MAC);  // Retrieves the MAC address of this node and stores it in the provided MAC[6] array
