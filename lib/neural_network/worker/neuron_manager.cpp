@@ -646,11 +646,10 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                     }
                 }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
                     // With the pub/sub strategy simply call the function to influence routing and the middleware will deal with who needs the output
-                    network.middlewareInfluenceRouting(appBuffer, sizeof(appBuffer),appPayload);
+                    network.influenceRoutingStrategyPubSub(appBuffer, sizeof(appBuffer),appPayload);
                 }else if(network.getActiveMiddlewareStrategy()==STRATEGY_INJECT){
                     network.getRootIP(rootIP);
-                    network.encodeDataMessage(appBuffer, sizeof(appBuffer),appPayload,rootIP);
-                    network.middlewareInfluenceRouting(appBuffer, sizeof(appBuffer),appPayload);
+                    network.influenceRoutingStrategyInject(appBuffer, sizeof(appBuffer),appPayload,rootIP);
                 }
 
                 //If the Neuron whose output have been computed is an output neurons do something
@@ -879,7 +878,7 @@ void NeuronWorker::generateInputData(NeuronId inputNeuronId){
         }
     }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
         // With the pub/sub strategy simply call the function to influence routing and the middleware will deal with who needs the output
-        network.middlewareInfluenceRouting(appBuffer, sizeof(appBuffer),appPayload);
+        network.influenceRoutingStrategyPubSub(appBuffer, sizeof(appBuffer),appPayload);
     }
 }
 
@@ -1030,7 +1029,7 @@ void NeuronWorker::onNACKTimeout(){
                 }
             }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
                 // With the pub/sub strategy simply call the function to influence routing and the middleware will deal with who needs the output
-                network.middlewareInfluenceRouting(appBuffer, sizeof(appBuffer),appPayload);
+                network.influenceRoutingStrategyPubSub(appBuffer, sizeof(appBuffer),appPayload);
             }
 
             //reset the bit field for the next NN run
