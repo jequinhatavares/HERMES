@@ -25,6 +25,7 @@ typedef enum InjectMessageType{
 // Inject strategy context definition
 typedef struct InjectContext{
     void (*injectNodeMetric)(void* metric);
+    void (*influenceRouting)(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload,uint8_t* finalDestination);
 } InjectContext;
 
 extern Strategy strategyInject;
@@ -37,7 +38,7 @@ void encodeMessageInject(char* messageBuffer, size_t bufferSize, int type);
 void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int type);
 void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize);
 void onNetworkEventStrategyInject(int networkEvent, uint8_t involvedIP[4]);
-void influenceRoutingStrategyInject(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload);
+void influenceRoutingStrategyInject(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload,uint8_t* finalDestination);
 void onTimerStrategyInject();
 void* getContextStrategyInject();
 

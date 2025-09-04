@@ -560,7 +560,7 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
     float neuronOutput;
     bool outputsComputed=true,neuronsRequireInput=false;
     NeuronId currentNeuronID = 0,handledNeuronId;
-    uint8_t myIP[4];
+    uint8_t myIP[4], rootIP[4];
 
     //Get the node IP
     network.getNodeIP(myIP);
@@ -648,7 +648,8 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                     // With the pub/sub strategy simply call the function to influence routing and the middleware will deal with who needs the output
                     network.middlewareInfluenceRouting(appBuffer, sizeof(appBuffer),appPayload);
                 }else if(network.getActiveMiddlewareStrategy()==STRATEGY_INJECT){
-
+                    network.getRootIP(rootIP);
+                    network.encodeDataMessage(appBuffer, sizeof(appBuffer),appPayload,rootIP);
                     network.middlewareInfluenceRouting(appBuffer, sizeof(appBuffer),appPayload);
                 }
 

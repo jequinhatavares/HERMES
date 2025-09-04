@@ -128,9 +128,6 @@ void Network::middlewareSelectStrategy(StrategyType strategyType){
  * @param dataMessage - Pointer to the message data for which the middleware can influence the next routing direction
  * @return void
  */
-void Network::middlewareInfluenceRouting(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload) {
-    ::middlewareInfluenceRouting(messageEncodeBuffer,encodeBufferSize,dataMessagePayload);
-}
 
 void Network::middlewarePrintInfo() {
     ::middlewarePrintInfo(::middlewareActiveStrategy());
@@ -153,6 +150,24 @@ void Network::middlewarePrintInfo() {
  */
 void Network::initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)){
     ::initMiddlewareStrategyInject(metricStruct, metricStructSize,setValueFunction,encodeMetricFunction,decodeMetricFunction);
+}
+
+//todo correct header
+/**
+ * influenceRoutingStrategyInject
+ * Invokes the active middleware strategy to influence routing decisions
+ *
+ * @param dataMessage - Pointer to the message data for which the middleware can influence the next routing direction
+ * @return void
+ */
+void Network::influenceRoutingStrategyInject(char *messageEncodeBuffer, size_t encodeBufferSize, char *dataMessagePayload,uint8_t *destinationIP) {
+    if (!::isMiddlewareStrategyActive(STRATEGY_INJECT)){
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method (injectMetric) that is not permitted by the active middleware strategy. \n");
+        return;
+    }
+
+    InjectContext* context = (InjectContext*)::middlewareGetStrategyContext();
+    if(context != nullptr)context->influenceRouting(messageEncodeBuffer,encodeBufferSize,dataMessagePayload,destinationIP);
 }
 
 
@@ -189,6 +204,15 @@ void Network::initMiddlewareStrategyPubSub(void (*decodeTopicFunction)(char*,int
     ::initMiddlewareStrategyPubSub(decodeTopicFunction);
 }
 
+void Network::influenceRoutingStrategyPubSub(char *messageEncodeBuffer, size_t encodeBufferSize, char *dataMessagePayload) {
+    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method (subscribeToTopic) that is not permitted by the active middleware strategy. \n");
+        return;
+    }
+
+    PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
+    if(context != nullptr)context->influenceRouting(messageEncodeBuffer,encodeBufferSize,dataMessagePayload);
+}
 
 /**
  * subscribeToTopic
@@ -479,6 +503,9 @@ int Network::getHopDistanceToRoot() {
 int Network::getNumberOfChildren() {
     return numberOfChildren;
 }
+
+
+
 
 
 

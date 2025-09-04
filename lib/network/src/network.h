@@ -28,6 +28,7 @@ class Network {
     public:
     bool iamRoot=false;
 
+
     // ==================== NETWORK CORE =====================
     void setAsRoot(bool isRoot);        // Set this node as root (call before begin())
     void begin();                       // Initialize network components (call in setup()) and integrate the node into the network
@@ -39,15 +40,18 @@ class Network {
     void onNetworkJoin(void (*callback)(uint8_t* parentIP));            // Set the function that deals with the node joining the network
     void onChildConnect(void (*callback)(uint8_t* childIP));            // Set the function that deals with the a new child connection
 
-    // ==================== GETTERS ========================
+    // ================== NETWORK INFORMATION ==================
     int getHopDistanceToNode(uint8_t*nodeIP);
     int getHopDistanceToRoot();
     int getNumberOfChildren();
+    void getNodeMAC(uint8_t *MAC);  // Retrieves the MAC address of this node and stores it in the provided MAC[6] array
+    void getNodeIP(uint8_t *IP);    // Retrieves the IP address of this node and stores it in the provided IP[6] array
+    void getParentIP(uint8_t *IP);  // Retrieves the IP address of the parent and stores it in the provided IP[6] array
+    void getRootIP(uint8_t *IP);    // Retrieves the IP address of the root and stores it in the provided IP[6] array
 
     // ================== MIDDLEWARE  =================
     StrategyType getActiveMiddlewareStrategy();
     void middlewareSelectStrategy(StrategyType strategyType);   // Sets the middleware routing strategy to use
-    void middlewareInfluenceRouting(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload);         // Allows application layer to influence routing decisions (uses the currently selected middleware strategy)
     void middlewarePrintInfo();
 
     // ================ STRATEGY: INJECT =====================
@@ -55,9 +59,12 @@ class Network {
     void initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*)
                                       ,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
     void injectMetric(void*metric); // Inject new node metric into network
+    void influenceRoutingStrategyInject(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload, uint8_t *destinationIP);
 
     // ================ STRATEGY: PUB/SUB ====================
     void initMiddlewareStrategyPubSub(void (*decodeTopicFunction)(char*,int8_t *)); // Configures the PubSub strategy
+    void influenceRoutingStrategyPubSub(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload);
+
     void subscribeToTopic(int8_t topic); // Subscribe to a topic
     void unsubscribeToTopic(int8_t topic); // Remove topic subscription
     void advertiseTopic(int8_t topic); // Advertise that this node publishes a certain topic
@@ -82,11 +89,7 @@ class Network {
     void broadcastMessage(char* messageBuffer,size_t bufferSize,const char* messagePayload); // Broadcasts a message to all nodes in the network
     void encodeDataMessage(char* encodeBuffer,size_t bufferSize,const char* messagePayload, uint8_t *destinationIP); //Encodes a data message
 
-    // ================== NETWORK INFORMATION ==================
-    void getNodeMAC(uint8_t *MAC);  // Retrieves the MAC address of this node and stores it in the provided MAC[6] array
-    void getNodeIP(uint8_t *IP);    // Retrieves the IP address of this node and stores it in the provided IP[6] array
-    void getParentIP(uint8_t *IP);  // Retrieves the IP address of the parent and stores it in the provided IP[6] array
-    void getRootIP(uint8_t *IP);    // Retrieves the IP address of the root and stores it in the provided IP[6] array
+
 };
 
 

@@ -2,7 +2,7 @@
 
 Strategy strategyInject = {
     .handleMessage = handleMessageStrategyInject,
-    .influenceRouting = influenceRoutingStrategyInject,
+    //.influenceRouting = influenceRoutingStrategyInject,
     .onTimer = onTimerStrategyInject,
     .onNetworkEvent = onNetworkEventStrategyInject,
     .getContext = getContextStrategyInject,
@@ -11,6 +11,7 @@ Strategy strategyInject = {
 
 InjectContext injectContext ={
         .injectNodeMetric = injectNodeMetric,
+        .influenceRouting = influenceRoutingStrategyInject,
 };
 
 
@@ -272,7 +273,7 @@ void onNetworkEventStrategyInject(int networkEvent, uint8_t involvedIP[4]){
  * @param dataMessage - The original data message.
  * @return void
  */
-void influenceRoutingStrategyInject(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload){
+void influenceRoutingStrategyInject(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload,uint8_t* finalDestination){
     void* bestMetric = nullptr, *currentMetric;
     uint8_t *IP, bestMetricIP[4], *nextHopIP, originalDestination[4];
     bool findBestMetric=false;

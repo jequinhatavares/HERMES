@@ -2,7 +2,7 @@
 
 Strategy strategyPubSub = {
         .handleMessage = handleMessageStrategyPubSub,
-        .influenceRouting = influenceRoutingStrategyPubSub,
+        //.influenceRouting = influenceRoutingStrategyPubSub,
         .onTimer = onTimerStrategyPubSub,
         .onNetworkEvent = onNetworkEventStrategyPubSub,
         .getContext = getContextStrategyPubSub,
@@ -10,6 +10,7 @@ Strategy strategyPubSub = {
 };
 
 PubSubContext pubsubContext ={
+        .influenceRouting = influenceRoutingStrategyPubSub,
         .subscribeToTopic = subscribeToTopic,
         .unsubscribeToTopic = unsubscribeToTopic ,
         .advertiseTopic = advertiseTopic,

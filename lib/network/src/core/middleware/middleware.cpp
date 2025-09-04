@@ -52,7 +52,6 @@ void middlewareSelectStrategy(StrategyType strategyType){
 void initMiddlewareCallbacks(){
     middlewareOnTimerCallback = middlewareOnTimer;
     middlewareHandleMessageCallback = middlewareHandleMessage;
-    middlewareInfluenceRoutingCallback = middlewareInfluenceRouting;
     middlewareOnNetworkEventCallback = middlewareOnNetworkEvent;
 }
 
@@ -125,27 +124,6 @@ void initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyM
     isStrategyInitialized = true;/******/
 }
 
-/**
- * middlewareInfluenceRouting
- * Invokes the active middleware strategy to influence routing decisions
- *
- * @param dataMessage - Pointer to the message data for which the middleware can influence the next routing direction
- * @return void
- */
-void middlewareInfluenceRouting(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload){
-    if(activeStrategyType == STRATEGY_NONE) return;
-    if(activeStrategy == nullptr){
-        LOG(MIDDLEWARE,ERROR,"ERROR: Trying to influence routing without selecting a middleware strategy\n");
-        return;
-    }
-    if(!isStrategyInitialized){
-        LOG(MIDDLEWARE,ERROR,"ERROR: Trying to influence routing without initializing the middleware strategy\n");
-        return;
-    }
-    if(activeStrategyType == STRATEGY_NONE) return;
-
-    activeStrategy->influenceRouting(messageEncodeBuffer,encodeBufferSize,dataMessagePayload);
-}
 
 /**
  * middlewareHandleMessage
@@ -233,7 +211,7 @@ void* middlewareGetStrategyContext(){
         LOG(MIDDLEWARE,ERROR,"ERROR: Cannot get strategy context without a strategy initialized.\n");
         return nullptr;
     }
-    if(activeStrategyType == STRATEGY_NONE) return nullptr;
+
 
     return activeStrategy->getContext();
 }

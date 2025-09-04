@@ -5,7 +5,7 @@
 
 Strategy strategyTopology = {
         .handleMessage = handleMessageStrategyTopology,
-        .influenceRouting = influenceRoutingStrategyTopology,
+        //.influenceRouting = influenceRoutingStrategyTopology,
         .onTimer = onTimerStrategyTopology,
         .onNetworkEvent = onNetworkEventStrategyTopology,
         .getContext = getContextStrategyTopology,
@@ -267,7 +267,7 @@ void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]){
             break;
     }
 }
-void influenceRoutingStrategyTopology(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload){}
+
 
 void onTimerStrategyTopology(){
     unsigned long currentTime = getCurrentTime();

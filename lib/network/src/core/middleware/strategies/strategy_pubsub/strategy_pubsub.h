@@ -41,6 +41,7 @@ typedef enum PubSubMessageType{
 
 // PubSub strategy API
 typedef struct PubSubContext{
+    void (*influenceRouting)(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload);
     void (*subscribeToTopic)(int8_t topic);
     void (*unsubscribeToTopic)(int8_t topic);
     void (*advertiseTopic)(int8_t topic);

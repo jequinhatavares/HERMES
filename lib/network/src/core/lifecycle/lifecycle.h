@@ -57,7 +57,6 @@ extern uint8_t dns[4];
 
 extern void (*middlewareOnTimerCallback)();
 extern void (*middlewareHandleMessageCallback)(char*,size_t);
-extern void (*middlewareInfluenceRoutingCallback)(char*,size_t,char*);
 extern void (*middlewareOnNetworkEventCallback)(int,uint8_t *);
 extern ParentInfo (*middlewareChooseParentCallback)(ParentInfo *,int);
 
