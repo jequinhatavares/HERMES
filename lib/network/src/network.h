@@ -43,7 +43,6 @@ class Network {
     int getHopDistanceToRoot();
     int getNumberOfChildren();
 
-
     // ================== MIDDLEWARE  =================
     StrategyType getActiveMiddlewareStrategy();
     void middlewareSelectStrategy(StrategyType strategyType);   // Sets the middleware routing strategy to use
@@ -80,6 +79,7 @@ class Network {
     void sendMessageToChildren(char* messageBuffer,size_t bufferSize,const char* messagePayload);// Sends a message to the children nodes
     void sendMessageToNode(char* messageBuffer,size_t bufferSize,const char* messagePayload, uint8_t* nodeIP);// Sends a message to a specific node in the network
     void broadcastMessage(char* messageBuffer,size_t bufferSize,const char* messagePayload); // Broadcasts a message to all nodes in the network
+    void encodeDataMessage(char* encodeBuffer,size_t bufferSize,const char* messagePayload, uint8_t *destinationIP); //Encodes a data message
 
     // ================== NETWORK INFORMATION ==================
     void getNodeMAC(uint8_t *MAC);  // Retrieves the MAC address of this node and stores it in the provided MAC[6] array

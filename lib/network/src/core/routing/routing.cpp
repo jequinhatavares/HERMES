@@ -484,3 +484,10 @@ void getIPFromMAC(uint8_t * MAC, uint8_t * IPAddr){
     IPAddr[3] = 1;
 }
 
+int getDistanceToNode(uint8_t *nodeIP){
+    RoutingTableEntry *routingEntry = (RoutingTableEntry*) tableRead(routingTable,nodeIP);
+    if(routingEntry != nullptr){
+        return routingEntry->hopDistance;
+    }
+    return -1;
+}

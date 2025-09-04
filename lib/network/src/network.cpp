@@ -395,6 +395,12 @@ void Network::broadcastMessage(char* messageBuffer,size_t bufferSize,const char 
 
 
 
+void Network::encodeDataMessage(char *encodeBuffer, size_t bufferSize, const char *messagePayload, uint8_t* destinationIP) {
+    ::encodeDataMessage(encodeBuffer,bufferSize,messagePayload,myIP,destinationIP);
+}
+
+
+
 /**
  * onDataReceived
  * Registers a callback to be invoked when a data message is received.
@@ -455,6 +461,18 @@ void *Network::getParentMetric(uint8_t *nodeIP) {
     if(context != nullptr) return context->getParentMetric(nodeIP);
 
     return nullptr;
+}
+
+int Network::getHopDistanceToNode(uint8_t *nodeIP) {
+    return getDistanceToNode(nodeIP);
+}
+
+int Network::getHopDistanceToRoot() {
+    return rootHopDistance;
+}
+
+int Network::getNumberOfChildren() {
+    return numberOfChildren;
 }
 
 

@@ -34,7 +34,7 @@ void NeuronWorker::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,
         case NN_ASSIGN_OUTPUT_TARGETS:
             LOG(APP,INFO,"Received [NN_ASSIGN_OUTPUT_TARGETS] message: \"%s\" from %hhu.%hhu.%hhu.%hhu\n"
                     ,messageBuffer,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
-            if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY) {
+            if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY || network.getActiveMiddlewareStrategy()==STRATEGY_INJECT) {
                 handleAssignOutputTargets(messageBuffer);
             }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
                 handleAssignPubSubInfo(messageBuffer);
@@ -647,8 +647,10 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                 }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
                     // With the pub/sub strategy simply call the function to influence routing and the middleware will deal with who needs the output
                     network.middlewareInfluenceRouting(appBuffer, sizeof(appBuffer),appPayload);
+                }else if(network.getActiveMiddlewareStrategy()==STRATEGY_INJECT){
+
+                    network.middlewareInfluenceRouting(appBuffer, sizeof(appBuffer),appPayload);
                 }
-                LOG(APP,DEBUG,"F6.13\n");
 
                 //If the Neuron whose output have been computed is an output neurons do something
                 if(isNeuronInList(outputNeurons,nrOutputNeurons,currentNeuronID)){
