@@ -217,7 +217,7 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
 
         //Print the updated table
         LOG(MESSAGES,INFO,"Updated Middleware Table\n");
-        tablePrint(metricsTable,printMetricsTableHeader,printMetricStruct);
+        printInjectTable();
 
         //Encode this node IP as the sender IP and propagate the message
         rewriteSenderIPInject(messageBuffer,smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
@@ -386,14 +386,14 @@ void registerInjectMetric(uint8_t *nodeIP, char* metricBuffer){
     }
 }
 
-void printTopologyTable(){
+void printInjectTable(){
     if(printMetricValue)tablePrint(metricsTable,printMetricsTableHeader,printMetricValue);
 }
 
 
 /******************************-----------Application Defined Functions----------------********************************/
 
-void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry){
+/*** void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry){
     MetricTableEntry *metric = (MetricTableEntry*) metricEntry;
     snprintf(buffer,bufferSize,"%i", metric->processingCapacity);
 }
@@ -416,7 +416,7 @@ void printMetricStruct(TableEntry* Table){
     LOG(MIDDLEWARE,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → (Metric: %d) \n",
         ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
         ((MetricTableEntry *)Table->value)->processingCapacity);
-}
+}***/
 
 void printMetricsTableHeader(){
     LOG(MIDDLEWARE,INFO,"**********************| Middleware Strategy Inject Table |**********************\n");

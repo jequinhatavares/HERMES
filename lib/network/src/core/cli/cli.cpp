@@ -123,7 +123,7 @@ void cliInteraction(){
                     if(isMiddlewareStrategyActive(STRATEGY_NONE)){
 
                     }else if(isMiddlewareStrategyActive(STRATEGY_INJECT)){
-                        tablePrint(metricsTable,printMetricsTableHeader,printMetricStruct);
+                        printInjectTable();
                     }else if(isMiddlewareStrategyActive(STRATEGY_PUBSUB)){
                         tablePrint(pubsubTable,printPubSubTableHeader,printPubSubStruct);
                     }else if(isMiddlewareStrategyActive(STRATEGY_TOPOLOGY) && iamRoot){

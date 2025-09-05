@@ -49,11 +49,12 @@ void rewriteSenderIPInject(char* messageBuffer, char* writeBuffer, size_t writeB
 
 void registerInjectMetric(uint8_t *nodeIP, char* metricBuffer);
 
-void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry);
-void decodeMetricEntry(char* buffer, void *metricEntry);
-void setMetricValue(void* av, void*bv);
-void printMetricStruct(TableEntry* Table);
+void printInjectTable();
+//void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry);
+//void decodeMetricEntry(char* buffer, void *metricEntry);
+//void setMetricValue(void* av, void*bv);
 void printMetricsTableHeader();
+
 
 void setIP(void* av, void* bv);
 
