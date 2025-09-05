@@ -198,12 +198,12 @@ State init(Event event){
     if (!iamRoot){
         insertFirst(stateMachineEngine, eInitSuccess);
         return sSearch;
-    }else{
+    }else{//If the node is the root of the network
         rootHopDistance = 0;
         connectedToMainTree = true;
         assignIP(parent, invalidIP);
         assignIP(rootIP,myIP);
-        reportNewNodeToMonitoringServer (myIP,invalidIP);
+        reportNewNodeToMonitoringServer(myIP,invalidIP);
 
         return sActive;
     };

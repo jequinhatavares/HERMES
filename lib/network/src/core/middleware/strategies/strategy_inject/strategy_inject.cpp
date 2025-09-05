@@ -85,6 +85,14 @@ void initStrategyInject(void *metricValues, size_t metricStructSize,void (*setVa
  * @return void
  */
 void injectNodeMetric(void* metric){
+    uint8_t *nextHopIP;
+
+    // Only send the metric message to the root if the node is already part of the network
+    if(connectedToMainTree){
+        encodeMessageStrategyInject(smallSendBuffer,sizeof(smallSendBuffer),INJECT_NODE_INFO);
+        propagateMessage(smallSendBuffer,myIP);
+    }
+
     void*tableEntry = tableRead(metricsTable,myIP);
     if(tableEntry == nullptr){ //The node is not yet in the table
         tableAdd(metricsTable, myIP, metric);

@@ -412,7 +412,7 @@ void topologySetNodeMetric(void* metric){
 
     if(!iamRoot){ // If this node is not the root, send its metric data to the root for storage in the topologyMetricsTable.
         // Only send the metric message to the root if the node is already part of the network
-        if(hasParent){
+        if(connectedToMainTree){
             encodeNodeMetricReport(smallSendBuffer,sizeof(smallSendBuffer),metric);
             nextHopIP = findRouteToNode(rootIP);
             if(nextHopIP != nullptr){

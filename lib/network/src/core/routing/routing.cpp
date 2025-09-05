@@ -12,7 +12,7 @@ int mySequenceNumber = 2;
 unsigned long lastRoutingUpdateTime;
 
 // Flag indicating whether this node is currently connected to the main network tree
-bool connectedToMainTree=false;
+bool connectedToMainTree = false;
 
 
 void (*onRootUnreachableCallback)() = nullptr;
