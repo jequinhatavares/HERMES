@@ -68,18 +68,18 @@ int compareMetrics(void *metricAv,void*metricBv){
 }
 
 
-void encodeTopologyMetricEntry(char* buffer, size_t bufferSize, void *metricEntry){
+void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry){
     metricStruct *metric = (metricStruct*) metricEntry;
     snprintf(buffer,bufferSize,"%i", metric->processingCapacity);
 }
 
-void decodeTopologyMetricEntry(char* buffer, void *metricEntry){
+void decodeMetricEntry(char* buffer, void *metricEntry){
     metricStruct *metric = (metricStruct*)metricEntry;
     sscanf(buffer,"%i", &metric->processingCapacity);
 }
 
 
-void setTopologyMetricValue(void* av, void*bv){
+void setMetricValue(void* av, void*bv){
     if(bv == nullptr)return; //
     metricStruct *a = (metricStruct *) av;
     metricStruct *b = (metricStruct *) bv;
@@ -87,7 +87,7 @@ void setTopologyMetricValue(void* av, void*bv){
     a->processingCapacity = b->processingCapacity;
 }
 
-void printTopologyMetricStruct(TableEntry* Table){
+void printMetricStruct(TableEntry* Table){
     LOG(MIDDLEWARE,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → (Topology Metric: %d) \n",
         ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
         ((metricStruct *)Table->value)->processingCapacity);
@@ -164,7 +164,7 @@ void setup(){
     //context->injectNodeMetric(&myMetric);
 
     /***middlewareSelectStrategy(STRATEGY_TOPOLOGY);
-    initMiddlewareStrategyTopology(topologyMetrics, sizeof(metricStruct),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,chooseParentByProcessingCapacity);
+    initMiddlewareStrategyTopology(topologyMetrics, sizeof(metricStruct),setMetricValue,encodeMetricEntry,decodeMetricEntry,chooseParentByProcessingCapacity);
     TopologyContext *context = (TopologyContext*) middlewareGetStrategyContext();
     myMetric.processingCapacity = MAC[5];
     if(context != nullptr)context->setParentMetric(&myMetric);***/
@@ -178,16 +178,16 @@ void setup(){
 
     /************* Middleware Strategy: Topology **********
     network.middlewareSelectStrategy(STRATEGY_TOPOLOGY);
-    network.initMiddlewareStrategyTopology(topologyMetrics, sizeof(metricStruct),setTopologyMetricValue,
-                                           encodeTopologyMetricEntry, decodeTopologyMetricEntry,
-                                           printTopologyMetricStruct,
+    network.initMiddlewareStrategyTopology(topologyMetrics, sizeof(metricStruct),setMetricValue,
+                                           encodeMetricEntry, decodeMetricEntry,
+                                           printMetricStruct,
                                            chooseParentByProcessingCapacity);***/
 
     /************* Middleware Strategy: Inject *************/
    network.middlewareSelectStrategy(STRATEGY_INJECT);
-   network.initMiddlewareStrategyInject(metrics, sizeof(metricStruct),setTopologyMetricValue,
-                                          encodeTopologyMetricEntry, decodeTopologyMetricEntry,
-                                          printTopologyMetricStruct);
+   network.initMiddlewareStrategyInject(metrics, sizeof(metricStruct),setMetricValue,
+                                          encodeMetricEntry, decodeMetricEntry,
+                                          compareMetrics,printMetricStruct);
 
     //Then init the callback function for data message receiving
     network.onDataReceived(handleDataMessageWrapper);
@@ -214,6 +214,7 @@ void setup(){
 
     //LOG(APP,INFO,"MY MAC after begin: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
 
+    /************* Middleware Strategy: Pub/Sub or Topology **********
     // Register each device in the network along with its assigned role
     if(MAC[5] == 89 && MAC[4] == 248 && MAC[3] == 169 && MAC[2] == 45){
         worker.registerNodeAsInput();
@@ -224,7 +225,17 @@ void setup(){
         worker.registerNodeAsWorker();
     }else if(MAC[5] == 252 && MAC[4] == 8 && MAC[3] == 107 && MAC[2] == 164){
         worker.registerNodeAsWorker();
+    }***/
+
+    /************* Middleware Strategy: Inject *************/
+    // Register each device in the network along with its assigned role
+    if(MAC[5] == 89 && MAC[4] == 248 && MAC[3] == 169 && MAC[2] == 45){
+        worker.registerNodeAsInput();
     }
+    else if(MAC[5] == 12 && MAC[4] == 150 && MAC[3] == 51 && MAC[2] == 26){
+        worker.registerNodeAsInput();
+    }
+
 
 }
 
