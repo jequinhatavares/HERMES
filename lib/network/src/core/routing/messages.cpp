@@ -821,8 +821,8 @@ void propagateMessage(char* message, uint8_t * sourceIP){
 }
 
 void encodeTunneledMessage(char* encodedMessage,size_t encodedMessageSize,uint8_t sourceIP[4], uint8_t destinationIP[4], char* encapsulatedMessage){
-    char payload[MAX_PAYLOAD_SIZE];
-    strncpy(payload,encapsulatedMessage,sizeof(payload)-1);
+    //char payload[MAX_PAYLOAD_SIZE];
+    //strncpy(payload,encapsulatedMessage,sizeof(payload)-1);
     encodeDataMessage(encodedMessage, encodedMessageSize,payload,sourceIP,destinationIP);
 }
 

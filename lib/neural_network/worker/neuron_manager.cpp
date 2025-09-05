@@ -44,7 +44,7 @@ void NeuronWorker::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,
         case NN_NEURON_OUTPUT:
             LOG(APP,INFO,"Received [NN_NEURON_OUTPUT] message: \"%s\" from %hhu.%hhu.%hhu.%hhu\n"
                     ,messageBuffer,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
-            //DATA_MESSAGE NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
+            // NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
             handleNeuronOutputMessage(messageBuffer);
             break;
 

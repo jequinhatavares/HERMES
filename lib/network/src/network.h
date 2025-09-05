@@ -89,7 +89,6 @@ class Network {
     void broadcastMessage(char* messageBuffer,size_t bufferSize,const char* messagePayload); // Broadcasts a message to all nodes in the network
     void encodeDataMessage(char* encodeBuffer,size_t bufferSize,const char* messagePayload, uint8_t *destinationIP); //Encodes a data message
 
-
 };
 
 
