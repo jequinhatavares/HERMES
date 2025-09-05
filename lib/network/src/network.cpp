@@ -145,11 +145,15 @@ void Network::middlewarePrintInfo() {
  * @param setValueFunction - Pointer to the function responsible for updating values within the metric table.
  * @param encodeMetricFunction - Pointer to the function responsible for encoding the metric structure value into a buffer.
  * @param decodeMetricFunction - Pointer to the function responsible for decoding the buffer into a metric structure value.
+ * @param compareMetricsFunction - Pointer to the function responsible for comparing two metrics
+ * @param printMetricStruct - Pointer to the function responsible for printing the initialized metric struct
  *
  * @return void
  */
-void Network::initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *),void (*printMetricStruct)(TableEntry*)){
-    ::initMiddlewareStrategyInject(metricStruct, metricStructSize,setValueFunction,encodeMetricFunction,decodeMetricFunction,printMetricStruct);
+void Network::initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*)
+                                           ,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)
+                                           ,int(*compareMetricsFunction)(void*,void*),void (*printMetricStruct)(TableEntry*)){
+    ::initMiddlewareStrategyInject(metricStruct, metricStructSize,setValueFunction,encodeMetricFunction,decodeMetricFunction,compareMetricsFunction,printMetricStruct);
 }
 
 //todo correct header

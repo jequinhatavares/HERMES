@@ -66,13 +66,14 @@ int (*compareMetrics)(void*,void*) = nullptr;
  *
  * @return void
  */
-void initStrategyInject(void *metricValues, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *),void (*printMetricStruct)(TableEntry*)) {
+void initStrategyInject(void *metricValues, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *),int(*compareMetricsFunction)(void*,void*),void (*printMetricStruct)(TableEntry*)) {
     metricsTable->setValue = setValueFunction;
-    tableInit(metricsTable, nodes, metricValues, sizeof(uint8_t [4]), metricStructSize);
+    tableInit(metricsTable, nodes, metricValues, sizeof(uint8_t[4]), metricStructSize);
 
     encodeMetricValue = encodeMetricFunction;
     decodeMetricValue = decodeMetricFunction;
     printMetricValue=printMetricStruct;
+    compareMetrics = compareMetricsFunction;
 
 }
 

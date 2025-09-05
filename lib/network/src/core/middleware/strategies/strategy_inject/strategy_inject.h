@@ -32,7 +32,7 @@ extern Strategy strategyInject;
 
 extern unsigned long lastMiddlewareUpdateTimeInject;
 
-void initStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *),void (*printMetricStruct)(TableEntry*));
+void initStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *),int(*compareMetricsFunction)(void*,void*),void (*printMetricStruct)(TableEntry*));
 
 void encodeMessageInject(char* messageBuffer, size_t bufferSize, int type);
 void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int type);
