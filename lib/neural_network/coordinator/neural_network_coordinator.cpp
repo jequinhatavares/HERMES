@@ -535,7 +535,7 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
     uint8_t outputNeurons[TOTAL_NEURONS], nNeurons = 0;
     uint8_t targetDevicesIPs[TABLE_MAX_SIZE][4], nTargetDevices = 0,myIP[4];
     int messageOffset = 0;
-    char tmpBuffer[50],tmpBufferHeader[3];
+    char tmpBuffer[50];
     size_t tmpBufferSize = sizeof(tmpBuffer);
     bool neuronsAssignedToNode=false;
 
@@ -596,29 +596,28 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
         }
 
 
-        // If the node computes any neurons in this layer and has target devices.
+        //LOG(APP,DEBUG,"number of neurons: %hhu number of workerNodeIP: %hhu\n",nNeurons,nTargetDevices);
+        // If the node computes any neurons in this layer.
         // Encode the message that includes its information along with the IPs to which it should forward the computation
-        if(nTargetDevices != 0){
-            //LOG(APP,DEBUG,"number of neurons: %hhu number of workerNodeIP: %hhu\n",nNeurons,nTargetDevices);
-            encodeAssignOutputMessage(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,targetDevicesIPs,nTargetDevices);
+        encodeAssignOutputMessage(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,targetDevicesIPs,nTargetDevices);
 
-            /*** Before adding the assignment to the message buffer, check if it fits.
-             *  If it doesn't fit, send the current encoded message to the node and
-             *  start a new message with a fresh header. ***/
-            int neededChars = snprintf(nullptr,0,"%s", tmpBuffer);
-            if (neededChars < 0 || messageOffset + neededChars >= (int)(bufferSize)) {
-                // If doesnt fit send the current encoded message as is
-                network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,workerNodeIP);
-                LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu Size:%d\n",messageBuffer
-                    ,workerNodeIP[0],workerNodeIP[1],workerNodeIP[2],workerNodeIP[3],messageOffset);
-                // Encode the message header for the next neuron assignments
-                resetPayloadWithHeader(messageOffset);
-            }
-
-            //Add to the current message the current node assignments
-            messageOffset += snprintf(messageBuffer + messageOffset, bufferSize-messageOffset,"%s",tmpBuffer);
-            neuronsAssignedToNode = true;
+        /*** Before adding the assignment to the message buffer, check if it fits.
+         *  If it doesn't fit, send the current encoded message to the node and
+         *  start a new message with a fresh header. ***/
+        int neededChars = snprintf(nullptr,0,"%s", tmpBuffer);
+        if (neededChars < 0 || messageOffset + neededChars >= (int)(bufferSize)) {
+            // If doesnt fit send the current encoded message as is
+            network.sendMessageToNode(appBuffer, sizeof(appBuffer),messageBuffer,workerNodeIP);
+            LOG(APP, DEBUG, "Message sent: %s to %hhu.%hhu.%hhu.%hhu Size:%d\n",messageBuffer
+                ,workerNodeIP[0],workerNodeIP[1],workerNodeIP[2],workerNodeIP[3],messageOffset);
+            // Encode the message header for the next neuron assignments
+            resetPayloadWithHeader(messageOffset);
         }
+
+        //Add to the current message the current node assignments
+        messageOffset += snprintf(messageBuffer + messageOffset, bufferSize-messageOffset,"%s",tmpBuffer);
+        neuronsAssignedToNode = true;
+
 
         nNeurons = 0;
         nTargetDevices = 0;
@@ -749,7 +748,7 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
     network.getNodeIP(myIP);
     NeuronId currentOutputNeuron=0;
     NeuronEntry neuronEntry;
-    char tmpBuffer[150],tmpBufferHeader[3];
+    char tmpBuffer[150];
     size_t tmpBufferSize= sizeof(tmpBuffer);
     int messageOffset=0,neuronStorageIndex=-1;
 
