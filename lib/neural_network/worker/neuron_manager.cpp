@@ -9,8 +9,17 @@
  */
 void NeuronWorker::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,char* messageBuffer){
     NeuralNetworkMessageType type;
+    uint8_t originatorIP[4],finalDestination[4];
+    char tmpPayload[30];
 
-    sscanf(messageBuffer, "%d",&type);
+    // NN_NEURON_OUTPUT messages when using the Strategy Inject are encapsulated within data messages.
+    // Therefore, the payload must be parsed first in order to access them.
+    if(network.getActiveMiddlewareStrategy() ==STRATEGY_INJECT && network.isDataMessageEncapsulated(messageBuffer)){
+        network.parseDataMessage(messageBuffer,originatorIP,senderIP,tmpPayload, sizeof(tmpPayload));
+        sscanf(messageBuffer, "%d",&type);
+    }else{
+        sscanf(messageBuffer, "%d",&type);
+    }
 
     switch (type) {
         case NN_ASSIGN_COMPUTATION:
@@ -42,10 +51,17 @@ void NeuronWorker::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,
             break;
 
         case NN_NEURON_OUTPUT:
-            LOG(APP,INFO,"Received [NN_NEURON_OUTPUT] message: \"%s\" from %hhu.%hhu.%hhu.%hhu\n"
-                    ,messageBuffer,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
-            // NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
-            handleNeuronOutputMessage(messageBuffer);
+            if(network.getActiveMiddlewareStrategy()==STRATEGY_INJECT){
+                LOG(APP,INFO,"Received [NN_NEURON_OUTPUT] message: \"%s\" from %hhu.%hhu.%hhu.%hhu\n"
+                        ,tmpPayload,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
+                handleNeuronOutputMessage(tmpPayload);
+            }else{
+                LOG(APP,INFO,"Received [NN_NEURON_OUTPUT] message: \"%s\" from %hhu.%hhu.%hhu.%hhu\n"
+                        ,messageBuffer,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
+                // NN_NEURON_OUTPUT [Output Neuron ID] [Output Value]
+                handleNeuronOutputMessage(messageBuffer);
+            }
+
             break;
 
         case NN_FORWARD:
@@ -1176,4 +1192,8 @@ bool isTopicInList(int8_t *topicList, int listSize, int8_t searchTopic){
         if(topicList[i] == searchTopic) return true;
     }
     return false;
+}
+
+void onNetworkOutput(NeuronId outputNeuron, float outputValue){
+    LOG(APP,INFO,"/////// Inference Cycle Output - NeuronId:%hhu Output Value:%f //////////\n",outputNeuron,outputValue);
 }
