@@ -84,8 +84,6 @@ void NeuronWorker::handleAssignComputationsMessage(char*messageBuffer){
     char *saveptr1, *saveptr2;
     int messageOffset=0;
 
-    //Encode the message header of the ACK message
-    messageOffset += snprintf(appPayload+messageOffset, sizeof(appPayload)-messageOffset,"%d",NN_ACK);
 
     //NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     neuronEntry = strtok_r(messageBuffer, "|",&saveptr1);
@@ -133,10 +131,6 @@ void NeuronWorker::handleAssignComputationsMessage(char*messageBuffer){
 
         // Save the parsed neuron parameters if the neuron is not already in this node's list of computed neurons
         if(!neuronCore.computesNeuron(neuronID))neuronCore.configureNeuron(neuronID,inputSize,weightValues,bias, inputIndexMap);
-
-        //Encode the ACK message cointing the
-        encodeACKMessage(tmpBuffer,tmpBufferSize,neuronID,nComputedNeurons);
-        offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%s",tmpBuffer);
 
         delete[] inputIndexMap;
         delete[] weightValues;
@@ -634,7 +628,6 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                 // If any node requires the computed output, feed it to them by recursively calling this function
                 if(neuronsRequireInput)processNeuronInput(currentNeuronID,inferenceId,neuronOutput);
 
-
                 //reset the bit field for the next NN run
                 resetAll(receivedInputs[neuronStorageIndex]);//TODO PASS THIS FOR WHE THE FOWARD MESSAGE IS RECEIVED
 
@@ -657,7 +650,11 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                     network.influenceRoutingStrategyPubSub(appBuffer, sizeof(appBuffer),appPayload);
                 }else if(network.getActiveMiddlewareStrategy()==STRATEGY_INJECT){
                     network.getRootIP(rootIP);
-                    network.influenceRoutingStrategyInject(appBuffer, sizeof(appBuffer),appPayload,rootIP);
+                    // The output undergoes influence routing only if it requires further computation,
+                    // redirecting it through a node with greater processing capacity
+                    if(neuronTargets[neuronStorageIndex].nTargets > 0){
+                        network.influenceRoutingStrategyInject(appBuffer, sizeof(appBuffer),appPayload,rootIP);
+                    }
                 }
 
                 //If the Neuron whose output have been computed is an output neurons do something
@@ -887,6 +884,15 @@ void NeuronWorker::generateInputData(NeuronId inputNeuronId){
     }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
         // With the pub/sub strategy simply call the function to influence routing and the middleware will deal with who needs the output
         network.influenceRoutingStrategyPubSub(appBuffer, sizeof(appBuffer),appPayload);
+    }else if(network.getActiveMiddlewareStrategy()==STRATEGY_INJECT){
+        uint8_t rootIP[4];
+        network.getRootIP(rootIP);
+        // The output undergoes influence routing only if it requires further computation,
+        // redirecting it through a node with greater processing capacity
+        if(inputTargets.nTargets > 0){
+            // Apply influence routing to pass the values through a higher-capacity device, with the root node as the final recipient.
+            network.influenceRoutingStrategyInject(appBuffer, sizeof(appBuffer),appPayload,rootIP);
+        }
     }
 }
 
@@ -1038,6 +1044,15 @@ void NeuronWorker::onNACKTimeout(){
             }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
                 // With the pub/sub strategy simply call the function to influence routing and the middleware will deal with who needs the output
                 network.influenceRoutingStrategyPubSub(appBuffer, sizeof(appBuffer),appPayload);
+            } else if(network.getActiveMiddlewareStrategy()==STRATEGY_INJECT){
+                uint8_t rootIP[4];
+                network.getRootIP(rootIP);
+                // The output undergoes influence routing only if it requires further computation,
+                // redirecting it through a node with greater processing capacity
+                if(neuronTargets[neuronStorageIndex].nTargets > 0){
+                    // Apply influence routing to pass the values through a higher-capacity device, with the root node as the final recipient.
+                    network.influenceRoutingStrategyInject(appBuffer, sizeof(appBuffer),appPayload,rootIP);
+                }
             }
 
             //reset the bit field for the next NN run
