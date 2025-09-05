@@ -7,7 +7,7 @@
 
 #define NODES_PER_ESP8266 1
 #define NODES_PER_ESP32 3
-#define NODES_PER_RPI 2
+#define NODES_PER_RPI 12
 
 
 /***uint8_t numESP8266Workers=0;
