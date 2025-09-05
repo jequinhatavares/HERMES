@@ -1,4 +1,5 @@
 //#define raspberrypi_3b
+
 #if defined(ESP32) || defined(ESP8266)
 
 #include <network.h>
@@ -192,6 +193,7 @@ void setup(){
     //Then init the callback function for data message receiving
     network.onDataReceived(handleDataMessageWrapper);
 
+
     //And then the node can be initialized and integrated in the network
     network.begin();
 
@@ -280,18 +282,42 @@ void decodeTopicWrapper(char* dataMessage, int8_t* topicType){
     worker.decodeNeuronTopic(dataMessage,topicType);
 }
 void handleDataMessageWrapper(uint8_t * senderIP,uint8_t *destinationIP,char* dataMessage){
-#ifdef ROOT
-    worker.handleNeuralNetworkMessage(senderIP,destinationIP,dataMessage);
-#endif
-#ifndef ROOT
     worker.handleNeuronMessage(senderIP,destinationIP,dataMessage);
-#endif
 }
+
+
+
+void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry){
+    metricStruct *metric = (metricStruct*) metricEntry;
+    snprintf(buffer,bufferSize,"%i", metric->processingCapacity);
+}
+
+void decodeMetricEntry(char* buffer, void *metricEntry){
+    metricStruct *metric = (metricStruct*)metricEntry;
+    sscanf(buffer,"%i", &metric->processingCapacity);
+}
+
+
+void setMetricValue(void* av, void*bv){
+    if(bv == nullptr)return; //
+    metricStruct *a = (metricStruct *) av;
+    metricStruct *b = (metricStruct *) bv;
+
+    a->processingCapacity = b->processingCapacity;
+}
+
+void printMetricStruct(TableEntry* Table){
+    LOG(MIDDLEWARE,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → (Topology Metric: %d) \n",
+        ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
+        ((metricStruct *)Table->value)->processingCapacity);
+}
+
 
 
 void setup();
 
 void setup(){
+    metricStruct myMetric;
 
     enableModule(STATE_MACHINE);
     enableModule(MESSAGES);
@@ -304,11 +330,27 @@ void setup(){
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
 
+    /************* Middleware Strategy: Pub/Sub **********
     network.middlewareSelectStrategy(STRATEGY_PUBSUB);
-    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);
+    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);***/
+
+    /************* Middleware Strategy: Inject *************/
+   network.middlewareSelectStrategy(STRATEGY_INJECT);
+   network.initMiddlewareStrategyInject(metrics, sizeof(metricStruct),setMetricValue,
+                                          encodeMetricEntry, decodeMetricEntry,
+                                          compareMetrics,printMetricStruct);
 
     //Then init the callback function for data message receiving
     network.onDataReceived(handleDataMessageWrapper);
+
+    /************* Middleware Strategy: Inject Inits *************/
+    myMetric.processingCapacity=3;
+    network.injectMetric(&myMetric);
+
+    /************* Middleware Strategy: Topology Inits *********
+    myMetric.processingCapacity=3;
+    network.setParentMetric(&myMetric);****/
+
 
     //And then the node can be initialized and integrated in the network
     network.begin();
