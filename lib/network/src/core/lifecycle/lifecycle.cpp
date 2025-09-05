@@ -555,7 +555,7 @@ State parentRecovery(Event event){
  */
 State parentRestart(Event event){
     LOG(STATE_MACHINE,INFO,"Force Restart State\n");
-    uint8_t *childAPIP, *childSTAIP, *nodeIP;
+    uint8_t *childAPIP, *childSTAIP;
     uint8_t invalidIP[4] = {0,0,0,0};
     RoutingTableEntry me;
 
@@ -840,7 +840,6 @@ void filterReachableNetworks(){
  */
 void lostChildProcedure(){
     LOG(NETWORK, INFO, "[LostChildProcedure] Entered\n");
-    int i;
     uint8_t lostChildIP[4];
     uint8_t *MAC;
 
@@ -900,7 +899,7 @@ int parentHandshakeProcedure(ParentInfo *possibleParents){
     uint8_t connectedParentIP[4];
     uint8_t mySTAIP[4];
     int nrOfPossibleParents = 0;
-    bool receivedPIR = false,connectedToParent=false;
+    bool receivedPIR = false;
 
     /***
      * The parent handshake consists of connecting to each potential parent found in the list of scanned APs

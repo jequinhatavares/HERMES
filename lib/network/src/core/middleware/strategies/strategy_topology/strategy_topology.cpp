@@ -360,7 +360,6 @@ ParentInfo requestParentFromRoot(ParentInfo* possibleParents, int nrOfPossiblePa
 
 void chooseParentStrategyTopology(char* messageBuffer){
     uint8_t sourceIP[4], targetNodeIP[4],possibleParents[TABLE_MAX_SIZE][4],IP[4],*chosenParentIP = nullptr,*nextHopIP;
-    uint8_t blankParent[4]={0,0,0,0};
     int middlewareMessageType,nChars=0,parentsCount=0;
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP =root] [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...

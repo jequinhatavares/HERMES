@@ -243,7 +243,7 @@ bool isMessageValid(int expectedMessageType,char* msg){
         }
         case FULL_ROUTING_TABLE_UPDATE: {
             uint8_t IP1[4], IP2[4];
-            int hopDistance,sequenceNumber,disconnectionFlag;
+            int hopDistance,sequenceNumber;
             char msgCopy[255];
             strcpy(msgCopy, msg);
 
@@ -262,7 +262,7 @@ bool isMessageValid(int expectedMessageType,char* msg){
         }
         case PARTIAL_ROUTING_TABLE_UPDATE: {
             uint8_t IP1[4];
-            int hopDistance,sequenceNumber,disconnectionFlag;
+            int hopDistance,sequenceNumber;
             char msgCopy[255];
             strcpy(msgCopy, msg);
 
@@ -304,7 +304,6 @@ bool isMessageValid(int expectedMessageType,char* msg){
         }
         case DATA_MESSAGE: {
             uint8_t IP1[4], IP2[4];
-            char payload[200];
             return (sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu", &type, &IP1[0], &IP1[1], &IP1[2], &IP1[3],
                            &IP2[0], &IP2[1], &IP2[2], &IP2[3]) == 9);
             break;
@@ -436,8 +435,8 @@ void handleChildRegistrationRequest(char * msg){
 void handleFullRoutingTableUpdate(char * msg){
     int type, nrOfChanges = 0,childIndex=-1;
     uint8_t *childSTAIP;
-    uint8_t nodeIP[4], sourceIP[4],changedNodes[TABLE_MAX_SIZE][4],disconnectionFlag=0;
-    int hopDistance,sequenceNumber,parsedValues;
+    uint8_t nodeIP[4], sourceIP[4],changedNodes[TABLE_MAX_SIZE][4];
+    int hopDistance,sequenceNumber;
     bool isRoutingTableChanged = false, isRoutingEntryChanged = false ;
 
     char* token = strtok(msg, "|");
@@ -528,8 +527,8 @@ void handleFullRoutingTableUpdate(char * msg){
 void handlePartialRoutingUpdate(char *msg){
     int type, nrOfChanges = 0, childIndex;
     uint8_t *childSTAIP;
-    uint8_t nodeIP[4], senderIP[4],changedNodes[TABLE_MAX_SIZE][4],disconnectionFlag;
-    int sequenceNumber,parsedValues;
+    uint8_t nodeIP[4], senderIP[4],changedNodes[TABLE_MAX_SIZE][4];
+    int sequenceNumber;
     int hopDistance;
     bool isRoutingTableChanged = false, isRoutingEntryChanged = false;
 

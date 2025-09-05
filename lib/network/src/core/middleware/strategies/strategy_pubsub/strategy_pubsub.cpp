@@ -248,8 +248,6 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
     int topic,i,k,count=0, charsRead = 0;
     PubSubMessageType type;
     PubSubInfo pbNewInfo,*pbCurrentRecord;
-    bool isTableUpdated = false;
-    RoutingTableEntry *routingTableValue;
     char* token, *spaceToken,*entry;
     char* nodeIPPart, *topicsPart;
     char *saveptr1, *saveptr2;
@@ -533,9 +531,9 @@ void onNetworkEventStrategyPubSub(int networkEvent, uint8_t involvedIP[4]){
  * @return void
  */
 void influenceRoutingStrategyPubSub(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload){
-    int i,j;
+    int i;
     PubSubInfo *myPubSubInfo, *nodePubSubInfo;
-    uint8_t *nextHopIP, *nodeIP;
+    uint8_t *nodeIP;
     int8_t topicType;
     bool publisher = false;
     int nChars = 0;
@@ -895,7 +893,6 @@ void* getContextStrategyPubSub(){
 
 /******************          User Defined functions            **********************/
 void decodeTopic(char* dataMessage, int8_t * topicType){
-    TopicTypes type;
     char topicString[20];
     sscanf(dataMessage,"%s", topicString);
     if(strcmp(topicString,"TEMPERATURE") == 0){

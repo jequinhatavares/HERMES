@@ -336,7 +336,6 @@ ParentInfo chooseParent(ParentInfo* possibleParents, int n){
 #ifdef LIMIT_PARENT_VISIBILITY
 ParentInfo chooseParent(ParentInfo* possibleParents, int n){
     ParentInfo preferredParent;
-    bool found = false;
     int maxHop = 0, minChildren = 10000, minHop = 10000;
 
     // First try to connect to the root
@@ -344,7 +343,6 @@ ParentInfo chooseParent(ParentInfo* possibleParents, int n){
         //if the node is the root and have less then 2 children choose it has parent
         if (possibleParents[i].rootHopDistance == 0 && possibleParents[i].nrOfChildren < 2) {
             preferredParent = possibleParents[i];
-            found = true;
             return preferredParent;
         }
         //Define the max Tree depth
@@ -358,7 +356,6 @@ ParentInfo chooseParent(ParentInfo* possibleParents, int n){
         for (int i = 0; i < n; i++) {
             if (possibleParents[i].rootHopDistance == hop && possibleParents[i].nrOfChildren < 2) {
                 preferredParent = possibleParents[i];
-                found = true;
                 return preferredParent;
             }
         }
@@ -371,7 +368,6 @@ ParentInfo chooseParent(ParentInfo* possibleParents, int n){
             preferredParent = possibleParents[i];
             minChildren = possibleParents[i].nrOfChildren;
             minHop = possibleParents[i].rootHopDistance;
-            found = true;
         }
     }
 

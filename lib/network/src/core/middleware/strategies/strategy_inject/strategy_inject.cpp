@@ -131,9 +131,8 @@ void rewriteSenderIPInject(char* messageBuffer, char* writeBuffer,size_t writeBu
 void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int type){
     int offset = 0;
     uint8_t *entryIP;
-    char tmpBuffer[20], tmpBuffer2[50];
+    char tmpBuffer[20];
     void *metricValue;
-    InjectMessageType injectType;
 
     if(type == INJECT_NODE_INFO){
         //Max Size: 20 + metric encoding size

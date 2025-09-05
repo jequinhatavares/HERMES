@@ -82,6 +82,10 @@ void NeuronWorker::handleAssignComputationsMessage(char*messageBuffer){
     float bias, *weightValues;
     char *spaceToken,*neuronEntry;
     char *saveptr1, *saveptr2;
+    int messageOffset=0;
+
+    //Encode the message header of the ACK message
+    messageOffset += snprintf(appPayload+messageOffset, sizeof(appPayload)-messageOffset,"%d",NN_ACK);
 
     //NN_ASSIGN_COMPUTATION |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
     neuronEntry = strtok_r(messageBuffer, "|",&saveptr1);
@@ -129,6 +133,10 @@ void NeuronWorker::handleAssignComputationsMessage(char*messageBuffer){
 
         // Save the parsed neuron parameters if the neuron is not already in this node's list of computed neurons
         if(!neuronCore.computesNeuron(neuronID))neuronCore.configureNeuron(neuronID,inputSize,weightValues,bias, inputIndexMap);
+
+        //Encode the ACK message cointing the
+        encodeACKMessage(tmpBuffer,tmpBufferSize,neuronID,nComputedNeurons);
+        offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%s",tmpBuffer);
 
         delete[] inputIndexMap;
         delete[] weightValues;
