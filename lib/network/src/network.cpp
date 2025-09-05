@@ -190,6 +190,22 @@ void Network::injectMetric(void *metric) {
     if(context != nullptr)context->injectNodeMetric(metric);
 }
 
+void Network::parseDataMessage(char *dataMessage,uint8_t *senderIP,uint8_t *destinationIP,char *payload,size_t payloadSize) {
+    int nChars=0;
+    //DATA_MESSAGE [originator node IP] [destination node IP=broadcastIP] [sender IP] [message payload]
+    sscanf(dataMessage, "%*d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n", &senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
+           &destinationIP[0],&destinationIP[1],&destinationIP[2],&destinationIP[3],&nChars);
+
+    // Copy the rest of the string manually
+    strncpy(payload, dataMessage + nChars, payloadSize - 1);
+}
+
+bool Network::isDataMessageEncapsulated(char *dataMessage) {
+    return isMessageTunneled(dataMessage);
+}
+
+
+
 
 /**
  * initMiddlewareStrategyPubSub

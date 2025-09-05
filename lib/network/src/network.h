@@ -60,6 +60,8 @@ class Network {
                                       ,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
     void injectMetric(void*metric); // Inject new node metric into network
     void influenceRoutingStrategyInject(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload, uint8_t *destinationIP);
+    bool isDataMessageEncapsulated(char* dataMessage);
+    void parseDataMessage(char*dataMessage,uint8_t* senderIP,uint8_t*destinationIP,char*payload,size_t payloadSize);
 
     // ================ STRATEGY: PUB/SUB ====================
     void initMiddlewareStrategyPubSub(void (*decodeTopicFunction)(char*,int8_t *)); // Configures the PubSub strategy
