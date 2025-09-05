@@ -673,6 +673,9 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                     }
                 }
 
+                //If the Neuron is a Neuron from the Output layer do something
+                if(isNeuronInList(outputNeurons,MAX_NEURONS,currentNeuronID)) onNetworkOutput(currentNeuronID,neuronOutput);
+
                 //If the Neuron whose output have been computed is an output neurons do something
                 if(isNeuronInList(outputNeurons,nrOutputNeurons,currentNeuronID)){
                     if(onOutputLayerComputation)onOutputLayerComputation(currentNeuronID,neuronOutput);
@@ -912,6 +915,7 @@ void NeuronWorker::generateInputData(NeuronId inputNeuronId){
     }
 }
 
+
 /**
  * manageNeuron
  * Main neuron management function that handles NeuralNetwork timeouts.
@@ -975,18 +979,8 @@ void NeuronWorker::onInputWaitTimeout(){
                 if(!isBitSet(receivedInputs[neuronStorageIndex],j)){
                     missingNeuronId = neuronCore.getInputNeuronId(handledNeuronId,j);
 
-                    // If the missing input is from a neuron this node is responsible for, the missing input value is already available if it was computed
-                    /***if(isNeuronInList(inputNeurons,nrInputNeurons,missingNeuronId)){
-                        processNeuronInput(missingNeuronId,currentInferenceId,inputNeuronsValues[]);
-                    }else if(computesNeuron(missingNeuronId)){
-                        missingNeuronStorageIndex = getNeuronStorageIndex(missingNeuronId);
-                        if(missingNeuronStorageIndex != -1 && isOutputComputed[missingNeuronStorageIndex]){
-                            processNeuronInput(missingNeuronId,currentInferenceId,outputValues[missingNeuronStorageIndex]);
-                        }
-                    }***/
-
                     // Don't include missing neurons handled by this node in the NACK. The neurons we manage feed their
-                    // outputs directly to dependent neurons.If an output isn't provided, it means it's not yet available
+                    // outputs directly to dependent neurons. If an output isn't provided, it means it's not yet available
                     if(isNeuronInList(inputNeurons,nrInputNeurons,missingNeuronId) ||neuronCore.computesNeuron(missingNeuronId)){
                         continue;
                     }

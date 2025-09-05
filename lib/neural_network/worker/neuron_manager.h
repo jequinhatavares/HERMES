@@ -192,6 +192,10 @@ inline void resetAll(BitField& bits){
 }
 
 bool isTopicInList(int8_t *topicList, int listSize, int8_t searchTopic);
+
+void onNetworkOutput(NeuronId outputNeuron, float outputValue);
+
+
 #endif //NEURON_MANAGER_H
 
 

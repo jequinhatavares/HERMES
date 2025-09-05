@@ -335,7 +335,6 @@ ParentInfo requestParentFromRoot(ParentInfo* possibleParents, int nrOfPossiblePa
         }
     }
 
-
     //Disconnect from the temporary parent
     disconnectFromAP();
 
@@ -355,7 +354,6 @@ ParentInfo requestParentFromRoot(ParentInfo* possibleParents, int nrOfPossiblePa
     }
 
     return possibleParents[0];
-
 }
 
 void chooseParentStrategyTopology(char* messageBuffer){

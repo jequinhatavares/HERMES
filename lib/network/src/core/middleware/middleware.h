@@ -13,7 +13,7 @@
 void initMiddlewareCallbacks();
 
 void middlewareSelectStrategy(StrategyType strategyType);
-void initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
+void initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *),void (*printMetricStruct)(TableEntry*));
 void initMiddlewareStrategyPubSub(void (*decodeTopicFunction)(char*,int8_t *));
 void initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *),void (*printMetricFunction)(TableEntry*),uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t));
 //void middlewareInfluenceRouting(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload);

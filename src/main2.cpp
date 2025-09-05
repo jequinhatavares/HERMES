@@ -17,20 +17,20 @@ NeuronWorker worker;
 
 //MetricTableEntry metrics[TABLE_MAX_SIZE];
 
-struct topologyMetric{
+struct metricStruct{
     int processingCapacity;
 };
 
-topologyMetric topologyMetrics[TABLE_MAX_SIZE];
+metricStruct metrics[TABLE_MAX_SIZE];
 
 
 uint8_t* chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t potentialParents[][4], uint8_t nPotentialParents){
     int maxProcessingCapacity = 0;
     int bestParentIndex = -1;
-    topologyMetric *topologyMetricValue;
+    metricStruct *topologyMetricValue;
 
     for (int i = 0; i < nPotentialParents; i++) {
-        topologyMetricValue = (topologyMetric*) network.getParentMetric(potentialParents[i]);
+        topologyMetricValue = (metricStruct*) network.getParentMetric(potentialParents[i]);
         if(topologyMetricValue != nullptr){
             LOG(MIDDLEWARE,DEBUG,"Potential Parent: %hhu.%hhu.%hhu.%hhu metric:%d\n",potentialParents[i][0],potentialParents[i][1],potentialParents[i][2],potentialParents[i][3],topologyMetricValue->processingCapacity);
             if(topologyMetricValue->processingCapacity >= maxProcessingCapacity){
@@ -50,21 +50,39 @@ uint8_t* chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t potent
     return nullptr;
 }
 
+
+int compareMetrics(void *metricAv,void*metricBv){
+    if(metricAv == nullptr && metricBv == nullptr) return -1;
+
+    if(metricAv == nullptr) return 2;
+
+    if(metricBv == nullptr) return 1;
+
+    metricStruct *metricA = (metricStruct*) metricAv;
+    metricStruct *metricB = (metricStruct*) metricBv;
+    if(metricA->processingCapacity >= metricB->processingCapacity){
+        return 1;
+    }else{
+        return 2;
+    }
+}
+
+
 void encodeTopologyMetricEntry(char* buffer, size_t bufferSize, void *metricEntry){
-    topologyMetric *metric = (topologyMetric*) metricEntry;
+    metricStruct *metric = (metricStruct*) metricEntry;
     snprintf(buffer,bufferSize,"%i", metric->processingCapacity);
 }
 
 void decodeTopologyMetricEntry(char* buffer, void *metricEntry){
-    topologyMetric *metric = (topologyMetric*)metricEntry;
+    metricStruct *metric = (metricStruct*)metricEntry;
     sscanf(buffer,"%i", &metric->processingCapacity);
 }
 
 
 void setTopologyMetricValue(void* av, void*bv){
     if(bv == nullptr)return; //
-    topologyMetric *a = (topologyMetric *) av;
-    topologyMetric *b = (topologyMetric *) bv;
+    metricStruct *a = (metricStruct *) av;
+    metricStruct *b = (metricStruct *) bv;
 
     a->processingCapacity = b->processingCapacity;
 }
@@ -72,7 +90,7 @@ void setTopologyMetricValue(void* av, void*bv){
 void printTopologyMetricStruct(TableEntry* Table){
     LOG(MIDDLEWARE,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → (Topology Metric: %d) \n",
         ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
-        ((topologyMetric *)Table->value)->processingCapacity);
+        ((metricStruct *)Table->value)->processingCapacity);
 }
 
 void waitForEnter() {
@@ -103,7 +121,7 @@ void handleDataMessageWrapper(uint8_t * senderIP,uint8_t *destinationIP,char* da
 void setup(){
     uint8_t MAC[6];
     Serial.begin(115200);
-    topologyMetric myMetric;
+    metricStruct myMetric;
 
     enableModule(STATE_MACHINE);
     enableModule(MESSAGES);
@@ -146,7 +164,7 @@ void setup(){
     //context->injectNodeMetric(&myMetric);
 
     /***middlewareSelectStrategy(STRATEGY_TOPOLOGY);
-    initMiddlewareStrategyTopology(topologyMetrics, sizeof(topologyMetric),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,chooseParentByProcessingCapacity);
+    initMiddlewareStrategyTopology(topologyMetrics, sizeof(metricStruct),setTopologyMetricValue,encodeTopologyMetricEntry,decodeTopologyMetricEntry,chooseParentByProcessingCapacity);
     TopologyContext *context = (TopologyContext*) middlewareGetStrategyContext();
     myMetric.processingCapacity = MAC[5];
     if(context != nullptr)context->setParentMetric(&myMetric);***/
@@ -158,12 +176,18 @@ void setup(){
     /***network.middlewareSelectStrategy(STRATEGY_PUBSUB);
     network.initMiddlewareStrategyPubSub(decodeTopicWrapper);***/
 
-    /************* Middleware Strategy: Topology *************/
+    /************* Middleware Strategy: Topology **********
     network.middlewareSelectStrategy(STRATEGY_TOPOLOGY);
-    network.initMiddlewareStrategyTopology(topologyMetrics, sizeof(topologyMetric),setTopologyMetricValue,
+    network.initMiddlewareStrategyTopology(topologyMetrics, sizeof(metricStruct),setTopologyMetricValue,
                                            encodeTopologyMetricEntry, decodeTopologyMetricEntry,
                                            printTopologyMetricStruct,
-                                           chooseParentByProcessingCapacity);
+                                           chooseParentByProcessingCapacity);***/
+
+    /************* Middleware Strategy: Inject *************/
+   network.middlewareSelectStrategy(STRATEGY_INJECT);
+   network.initMiddlewareStrategyInject(metrics, sizeof(metricStruct),setTopologyMetricValue,
+                                          encodeTopologyMetricEntry, decodeTopologyMetricEntry,
+                                          printTopologyMetricStruct);
 
     //Then init the callback function for data message receiving
     network.onDataReceived(handleDataMessageWrapper);
@@ -171,6 +195,7 @@ void setup(){
     //And then the node can be initialized and integrated in the network
     network.begin();
 
+    /*** Strategy Topology Init
     // Assign a topology metric based on device type: NodeMCU = 1, ESP32 = 2, Raspberry Pi = 3
     if(MAC[5] == 89 && MAC[4] == 248 && MAC[3] == 169 && MAC[2] == 45){
         myMetric.processingCapacity=2;
@@ -184,7 +209,7 @@ void setup(){
     }else if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96){
         myMetric.processingCapacity=1;
         network.setParentMetric(&myMetric);
-    }
+    }***/
 
 
     //LOG(APP,INFO,"MY MAC after begin: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);

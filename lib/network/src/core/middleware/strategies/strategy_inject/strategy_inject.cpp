@@ -48,6 +48,9 @@ uint8_t nodes[TABLE_MAX_SIZE][4];
 //Function Pointers Initializers
 void (*encodeMetricValue)(char*,size_t,void *) = nullptr;
 void (*decodeMetricValue)(char*,void *) = nullptr;
+void (*printMetricValue)(TableEntry*) = nullptr;
+
+int (*compareMetrics)(void*,void*) = nullptr;
 
 
 /**
@@ -59,15 +62,17 @@ void (*decodeMetricValue)(char*,void *) = nullptr;
  * @param metricStructSize - Size of the metric structure in bytes.
  * @param encodeMetricFunction - Function pointer to encode metric values into a buffer.
  * @param decodeMetricFunction - Function pointer to decode metric values from a buffer.
+ * @param printMetricStruct - Function pointer to a function that prints the metric struct used
  *
  * @return void
  */
-void initStrategyInject(void *metricValues, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)) {
+void initStrategyInject(void *metricValues, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *),void (*printMetricStruct)(TableEntry*)) {
     metricsTable->setValue = setValueFunction;
     tableInit(metricsTable, nodes, metricValues, sizeof(uint8_t [4]), metricStructSize);
 
     encodeMetricValue = encodeMetricFunction;
     decodeMetricValue = decodeMetricFunction;
+    printMetricValue=printMetricStruct;
 
 }
 
@@ -372,23 +377,12 @@ void registerInjectMetric(uint8_t *nodeIP, char* metricBuffer){
     }
 }
 
-/******************************-----------Application Defined Functions----------------********************************/
-
-int compareMetrics(void *metricAv,void*metricBv){
-    if(metricAv == nullptr && metricBv == nullptr) return -1;
-
-    if(metricAv == nullptr) return 2;
-
-    if(metricBv == nullptr) return 1;
-
-    MetricTableEntry *metricA = (MetricTableEntry*) metricAv;
-    MetricTableEntry *metricB = (MetricTableEntry*) metricBv;
-    if(metricA->processingCapacity >= metricB->processingCapacity){
-        return 1;
-    }else{
-        return 2;
-    }
+void printTopologyTable(){
+    if(printMetricValue)tablePrint(metricsTable,printMetricsTableHeader,printMetricValue);
 }
+
+
+/******************************-----------Application Defined Functions----------------********************************/
 
 void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry){
     MetricTableEntry *metric = (MetricTableEntry*) metricEntry;

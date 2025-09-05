@@ -57,7 +57,8 @@ class Network {
     // ================ STRATEGY: INJECT =====================
     // Configures the Inject strategy
     void initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*)
-                                      ,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
+                                      ,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)
+                                      ,void (*printMetricStruct)(TableEntry*));
     void injectMetric(void*metric); // Inject new node metric into network
     void influenceRoutingStrategyInject(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload, uint8_t *destinationIP);
     bool isDataMessageEncapsulated(char* dataMessage);

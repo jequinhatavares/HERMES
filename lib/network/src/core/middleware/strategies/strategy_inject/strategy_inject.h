@@ -32,7 +32,7 @@ extern Strategy strategyInject;
 
 extern unsigned long lastMiddlewareUpdateTimeInject;
 
-void initStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *));
+void initStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *),void (*printMetricStruct)(TableEntry*));
 
 void encodeMessageInject(char* messageBuffer, size_t bufferSize, int type);
 void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int type);
@@ -54,7 +54,6 @@ void decodeMetricEntry(char* buffer, void *metricEntry);
 void setMetricValue(void* av, void*bv);
 void printMetricStruct(TableEntry* Table);
 void printMetricsTableHeader();
-int compareMetrics(void *metricAv,void*metricBv);
 
 void setIP(void* av, void* bv);
 
