@@ -282,6 +282,9 @@ struct metricStruct{
     int processingCapacity;
 };
 
+metricStruct metrics[TABLE_MAX_SIZE];
+
+
 uint8_t* chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t potentialParents[][4], uint8_t nPotentialParents){
     int maxProcessingCapacity = 0;
     int bestParentIndex = -1;
@@ -417,8 +420,7 @@ int main() {
         //cliInteraction();
     }
 
-    close(sockfd);
-    close(hostapd_sockfd);
+    network.stop();
     return 0;
 
 }

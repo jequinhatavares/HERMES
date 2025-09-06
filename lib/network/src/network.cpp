@@ -98,6 +98,15 @@ void Network::run() {
         cliInteraction();
     #endif
 }
+
+
+//TODO Header
+void Network::stop(){
+    stopWifiAP();
+    endTransport();
+}
+
+
 /**
  * getMiddlewareActiveStrategy
  * Returns the active middleware strategy

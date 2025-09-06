@@ -33,6 +33,7 @@ class Network {
     void setAsRoot(bool isRoot);        // Set this node as root (call before begin())
     void begin();                       // Initialize network components (call in setup()) and integrate the node into the network
     void run();                         // Called in loop() to the node to run the program
+    void stop();                        // Called to stop the terminate the connection of the node to the network
 
     // ==================== CALLBACKS ========================
     void onDataReceived(void (*callback)(uint8_t*, uint8_t*, char*));   // Set the function that handles incoming data messages

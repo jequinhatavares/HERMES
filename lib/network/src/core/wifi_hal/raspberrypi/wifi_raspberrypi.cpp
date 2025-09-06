@@ -651,7 +651,7 @@ bool connectToAP(const char * SSID, const char * PASS){
     FILE *fp = popen(command, "r");
     if (fp == NULL) {
         perror("popen failed");
-        return;
+        return success;
     }
 
     while (fgets(outputLine, sizeof(outputLine), fp) != NULL) {
