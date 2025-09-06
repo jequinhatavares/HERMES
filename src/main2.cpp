@@ -278,13 +278,52 @@ void loop(){
 
 NeuronWorker worker;
 
-void decodeTopicWrapper(char* dataMessage, int8_t* topicType){
-    worker.decodeNeuronTopic(dataMessage,topicType);
-}
-void handleDataMessageWrapper(uint8_t * senderIP,uint8_t *destinationIP,char* dataMessage){
-    worker.handleNeuronMessage(senderIP,destinationIP,dataMessage);
+struct metricStruct{
+    int processingCapacity;
+};
+
+uint8_t* chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t potentialParents[][4], uint8_t nPotentialParents){
+    int maxProcessingCapacity = 0;
+    int bestParentIndex = -1;
+    metricStruct *topologyMetricValue;
+
+    for (int i = 0; i < nPotentialParents; i++) {
+        topologyMetricValue = (metricStruct*) network.getParentMetric(potentialParents[i]);
+        if(topologyMetricValue != nullptr){
+            LOG(MIDDLEWARE,DEBUG,"Potential Parent: %hhu.%hhu.%hhu.%hhu metric:%d\n",potentialParents[i][0],potentialParents[i][1],potentialParents[i][2],potentialParents[i][3],topologyMetricValue->processingCapacity);
+            if(topologyMetricValue->processingCapacity >= maxProcessingCapacity){
+                bestParentIndex = i;
+                maxProcessingCapacity = topologyMetricValue->processingCapacity;
+                LOG(MIDDLEWARE,DEBUG,"Parent Selected\n");
+            }
+        }
+    }
+
+    if(bestParentIndex != -1){
+        LOG(MIDDLEWARE,DEBUG,"Chosen Parent: %hhu.%hhu.%hhu.%hhu metric:%d\n",potentialParents[bestParentIndex][0]
+            ,potentialParents[bestParentIndex][1],potentialParents[bestParentIndex][2],potentialParents[bestParentIndex][3],maxProcessingCapacity);
+        return potentialParents[bestParentIndex];
+    }// If no parent has been selected, return nullptr
+    else{ return nullptr;}/******/
+    return nullptr;
 }
 
+
+int compareMetrics(void *metricAv,void*metricBv){
+    if(metricAv == nullptr && metricBv == nullptr) return -1;
+
+    if(metricAv == nullptr) return 2;
+
+    if(metricBv == nullptr) return 1;
+
+    metricStruct *metricA = (metricStruct*) metricAv;
+    metricStruct *metricB = (metricStruct*) metricBv;
+    if(metricA->processingCapacity >= metricB->processingCapacity){
+        return 1;
+    }else{
+        return 2;
+    }
+}
 
 
 void encodeMetricEntry(char* buffer, size_t bufferSize, void *metricEntry){
@@ -312,6 +351,12 @@ void printMetricStruct(TableEntry* Table){
         ((metricStruct *)Table->value)->processingCapacity);
 }
 
+void decodeTopicWrapper(char* dataMessage, int8_t* topicType){
+    worker.decodeNeuronTopic(dataMessage,topicType);
+}
+void handleDataMessageWrapper(uint8_t * senderIP,uint8_t *destinationIP,char* dataMessage){
+    worker.handleNeuronMessage(senderIP,destinationIP,dataMessage);
+}
 
 
 void setup();
