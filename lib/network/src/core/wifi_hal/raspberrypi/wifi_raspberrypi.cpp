@@ -716,6 +716,8 @@ void changeWifiMode(int mode) {
 
 
 void stopWifiAP(){
+    close(hostapd_sockfd);
+    close(wpa_sockfd);
 }
 
 const char* getWifiStatus(int Status) {
