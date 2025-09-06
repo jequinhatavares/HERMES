@@ -4,6 +4,7 @@
 int sockfd;
 int remoteIP[4];
 
+
 /**
  * beginTransport
  * Initializes the transport layer by creating a UDP socket, binding it to
@@ -121,5 +122,16 @@ void sendMessage(uint8_t IP[4],const char *message) {
         printf("message: %s sent to: %i.%i.%i.%i\n", message,IP[0],IP[1],IP[2],IP[3]); // prints the numeric error code
     }
 }
+
+/**
+ * endTransport
+ * Terminates the UDP transport
+ *
+ * @return void
+ */
+void endTransport(){
+    close(sockfd);
+}
+
 
 #endif

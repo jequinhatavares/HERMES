@@ -8,4 +8,6 @@ int receiveMessage(char* buffer, size_t bufferSize){return 0;}
 
 void beginTransport(){}
 
+void endTransport(){}
+
 #endif

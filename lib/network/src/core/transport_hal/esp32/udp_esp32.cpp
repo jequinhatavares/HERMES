@@ -60,4 +60,15 @@ void beginTransport(){
     Udp.begin(UDP_PORT);
 }
 
+/**
+ * endTransport
+ * Terminates the UDP transport
+ *
+ * @return void
+ */
+void endTransport(){
+    Udp.stop();
+}
+
+
 #endif

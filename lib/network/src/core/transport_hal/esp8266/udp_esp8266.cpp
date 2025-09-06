@@ -61,4 +61,9 @@ int receiveMessage(char* buffer, size_t bufferSize){
 void beginTransport(){
     Udp.begin(UDP_PORT);
 }
+
+void endTransport(){
+    Udp.stop();
+}
+
 #endif
