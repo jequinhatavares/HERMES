@@ -102,8 +102,8 @@ void Network::run() {
 
 //TODO Header
 void Network::stop(){
-    stopWifiAP();
     endTransport();
+    stopWifiAP();
 }
 
 

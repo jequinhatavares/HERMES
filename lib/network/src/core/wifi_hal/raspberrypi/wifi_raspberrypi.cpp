@@ -223,9 +223,9 @@ void initWifiEventHandlers(){
  */
 void startWifiEventListener(){
     struct sockaddr_un localAddr, remoteAddr;
-    const char *localAPSocketPath = "/tmp/hostap_cli_client";
+    const char *localAPSocketPath = "/tmp/hostap_cli_client_ap";
     const char *hostapdSocketPath = "/var/run/hostapd/uap0";
-    const char *localSTASocketPath = "/tmp/hostap_cli_client";
+    const char *localSTASocketPath = "/tmp/hostap_cli_client_sta";
     const char *wpaSupplicantSocketPath = "/var/run/wpa_supplicant/wlan0";
 
     // hostapd LISTENER
@@ -243,7 +243,7 @@ void startWifiEventListener(){
     unlink(localAPSocketPath);
 
     if (bind(hostapd_sockfd, (struct sockaddr *)&localAddr, sizeof(localAddr)) < 0) {
-        perror("bind failed");
+        perror("Wi-Fi bind failed");
         close(hostapd_sockfd);
         exit(1);
     }

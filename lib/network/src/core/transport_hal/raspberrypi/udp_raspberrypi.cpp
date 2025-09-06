@@ -30,7 +30,7 @@ void beginTransport(){
     localAddr.sin_port = htons(UDP_PORT);
 
     if (bind(sockfd, (struct sockaddr *)&localAddr, sizeof(localAddr)) < 0) {
-        perror("bind failed");
+        perror("UDP bind failed");
         printf("errno = %d\n", errno); // prints the numeric error code
         close(sockfd);
         exit(1); // Instantly terminate the program
