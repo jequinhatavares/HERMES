@@ -85,7 +85,6 @@ void initStrategyInject(void *metricValues, size_t metricStructSize,void (*setVa
  * @return void
  */
 void injectNodeMetric(void* metric){
-    uint8_t *nextHopIP;
 
     // Only send the metric message to the root if the node is already part of the network
     if(connectedToMainTree){
@@ -99,6 +98,7 @@ void injectNodeMetric(void* metric){
     }else{ //The node is already present in the table
         tableUpdate(metricsTable, myIP, metric);
     }
+    printInjectTable();
 }
 
 /**
@@ -142,17 +142,21 @@ void rewriteSenderIPInject(char* messageBuffer, char* writeBuffer,size_t writeBu
  *
  * @return void
  */
-void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int type){
+bool encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int type){
     int offset = 0;
     uint8_t *entryIP;
     char tmpBuffer[20];
     void *metricValue;
+    bool encodedMessage=false;
 
     if(type == INJECT_NODE_INFO){
         //Max Size: 20 + metric encoding size
         //MESSAGE_TYPE INJECT_NODE_INFO [sender IP] [nodeIP] metric
-        encodeMyMetric(tmpBuffer, sizeof(tmpBuffer));
-        snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,INJECT_NODE_INFO,myIP[0],myIP[1],myIP[2],myIP[3],tmpBuffer);
+        if(encodeMyMetric(tmpBuffer, sizeof(tmpBuffer))){
+            snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,INJECT_NODE_INFO,myIP[0],myIP[1],myIP[2],myIP[3],tmpBuffer);
+            return true;
+        }
+        return false;
 
     }else if(type == INJECT_TABLE_INFO){//INJECT_TABLE_INFO
         //MESSAGE_TYPE INJECT_TABLE_INFO [sender IP] |[nodeIP] metric |[nodeIP] metric |...
@@ -162,12 +166,13 @@ void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int typ
             entryIP = (uint8_t *)tableKey(metricsTable,i);
             metricValue = tableRead(metricsTable,entryIP);
             if(metricValue != nullptr){
+                encodedMessage=true;
                 encodeMetricValue(tmpBuffer, sizeof(tmpBuffer),metricValue);
                 offset += snprintf(messageBuffer + offset, bufferSize - offset," |%hhu.%hhu.%hhu.%hhu %s",entryIP[0],entryIP[1],entryIP[2],entryIP[3],tmpBuffer);
             }
         }
     }
-
+    return encodedMessage;
 }
 
 /**
@@ -177,7 +182,7 @@ void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int typ
  * @param messageBuffer - Pointer to the buffer where the encoded message will be written.
  * @param bufferSize - Size of the message buffer in bytes.
  */
-void encodeMyMetric(char* messageBuffer, size_t bufferSize){
+bool encodeMyMetric(char* messageBuffer, size_t bufferSize){
     char tmpBuffer[20];
 
     snprintf(messageBuffer,bufferSize,"%hhu.%hhu.%hhu.%hhu ", myIP[0],myIP[1],myIP[2],myIP[3]);
@@ -186,7 +191,9 @@ void encodeMyMetric(char* messageBuffer, size_t bufferSize){
     if(metricValue != nullptr){
         encodeMetricValue(tmpBuffer, sizeof(tmpBuffer),metricValue);
         strcat(messageBuffer, tmpBuffer);
+        return true;
     }
+    return false;
 }
 
 /**
@@ -263,9 +270,10 @@ void onNetworkEventStrategyInject(int networkEvent, uint8_t involvedIP[4]){
             }
             break;
         case NETEVENT_CHILD_CONNECTED:
-            encodeMessageStrategyInject(largeSendBuffer, sizeof(largeSendBuffer),INJECT_TABLE_INFO);
-            sendMessage(involvedIP,largeSendBuffer);
-            LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_TABLE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+            if(encodeMessageStrategyInject(largeSendBuffer, sizeof(largeSendBuffer),INJECT_TABLE_INFO)){
+                sendMessage(involvedIP,largeSendBuffer);
+                LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_TABLE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+            }
             break;
         case NETEVENT_CHILD_DISCONNECTED:
             break;

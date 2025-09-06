@@ -35,7 +35,7 @@ extern unsigned long lastMiddlewareUpdateTimeInject;
 void initStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*),void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *),int(*compareMetricsFunction)(void*,void*),void (*printMetricStruct)(TableEntry*));
 
 void encodeMessageInject(char* messageBuffer, size_t bufferSize, int type);
-void encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int type);
+bool encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int type);
 void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize);
 void onNetworkEventStrategyInject(int networkEvent, uint8_t involvedIP[4]);
 void influenceRoutingStrategyInject(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload,uint8_t* finalDestination);
@@ -44,7 +44,7 @@ void* getContextStrategyInject();
 
 void injectNodeMetric(void* metric);
 
-void encodeMyMetric(char* messageBuffer, size_t bufferSize);
+bool encodeMyMetric(char* messageBuffer, size_t bufferSize);
 void rewriteSenderIPInject(char* messageBuffer, char* writeBuffer, size_t writeBufferSize, InjectMessageType type);
 
 void registerInjectMetric(uint8_t *nodeIP, char* metricBuffer);
