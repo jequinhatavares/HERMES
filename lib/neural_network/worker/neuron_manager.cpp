@@ -16,7 +16,7 @@ void NeuronWorker::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,
     // Therefore, the payload must be parsed first in order to access them.
     if(network.getActiveMiddlewareStrategy() ==STRATEGY_INJECT && network.isDataMessageEncapsulated(messageBuffer)){
         network.parseDataMessage(messageBuffer,originatorIP,senderIP,tmpPayload, sizeof(tmpPayload));
-        sscanf(messageBuffer, "%d",&type);
+        sscanf(tmpPayload, "%d",&type);
     }else{
         sscanf(messageBuffer, "%d",&type);
     }
