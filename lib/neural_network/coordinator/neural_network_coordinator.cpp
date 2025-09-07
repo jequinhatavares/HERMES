@@ -1331,12 +1331,24 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
                 assignOutputTargetsToNode(appPayload, sizeof(appPayload),workersIPs[i]);
                 //network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,workersIPs[i]);
             }
+            for (int i = 0; i < totalInputs; ++i) {
+                // Send the ASSIGN_OUTPUT_TARGETS message to devices responsible for input neurons, if it has not already been sent.
+                if(!isIPinList(inputsIPs[i],workersIPs,totalWorkers)){
+                    assignOutputTargetsToNode(appPayload, sizeof(appPayload),inputsIPs[i]);
+                }
+            }
 
         }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
             //Assign the pub/sub info of the assigned neurons
             for (int i = 0; i < totalWorkers; i++) {
                 assignPubSubInfoToNode(appPayload, sizeof(appPayload),workersIPs[i]);
                 //network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,workersIPs[i]);
+            }
+            for (int i = 0; i < totalInputs; ++i) {
+                // Send the ASSIGN_OUTPUT_TARGETS message to devices responsible for input neurons, if it has not already been sent.
+                if(!isIPinList(inputsIPs[i],workersIPs,totalWorkers)){
+                    assignPubSubInfoToNode(appPayload, sizeof(appPayload),inputsIPs[i]);
+                }
             }
         }
         tablePrint(neuronToNodeTable,printNeuronTableHeader, printNeuronEntry);
