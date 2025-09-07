@@ -98,7 +98,7 @@ void injectNodeMetric(void* metric){
     }else{ //The node is already present in the table
         tableUpdate(metricsTable, myIP, metric);
     }
-    printInjectTable();
+    //printInjectTable();
 }
 
 /**
@@ -223,8 +223,7 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
         registerInjectMetric(nodeIP,messageBuffer+nChars);
 
         //Print the updated table
-        LOG(MESSAGES,INFO,"Updated Middleware Table\n");
-        printInjectTable();
+        //printInjectTable();
 
         //Encode this node IP as the sender IP and propagate the message
         rewriteSenderIPInject(messageBuffer,smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
