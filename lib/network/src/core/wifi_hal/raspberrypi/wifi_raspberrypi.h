@@ -51,6 +51,8 @@ void parseWifiEventInfo(char *msg);
 void onAPModeStationConnectedHandler(wifi_event_info__t *info);
 void onAPModeStationDisconnectedHandler(wifi_event_info__t *info);
 
+const char* getReasonText(uint8_t reason);
+
 //void getMyAPIP(int*IP);
 //void getMySTAIP(int*IP);
 //void getMyMAC(int* MAC);

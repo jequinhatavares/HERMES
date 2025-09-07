@@ -18,6 +18,40 @@ int parentDisconnectionCount = 0;
 List reachableNetworks;
 
 /**
+ * getWiFiStatus
+ * Retrieves the reason for Wi-Fi disconnection into human-readable text
+ *
+ * @return const char* Wi-Fi Status String
+ */
+const char* getReasonText(uint8_t reason) {
+    switch(reason) {
+        case 1:  return "Unspecified reason";
+        case 2:  return "Previous authentication no longer valid";
+        case 3:  return "Deauthenticated because sending station is leaving (or has left) IBSS or ESS";
+        case 4:  return "Disassociated due to inactivity";
+        case 5:  return "Disassociated because AP is unable to handle all currently associated stations";
+        case 6:  return "Class 2 frame received from nonauthenticated station";
+        case 7:  return "Class 3 frame received from nonassociated station";
+        case 8:  return "Disassociated due to inactivity (STA did not respond to AP)";
+        case 9:  return "Station requesting (re)association was not authenticated";
+        case 10: return "Cannot support requested capabilities";
+        case 11: return "Disassociated because AP is unable to handle all currently associated stations (overload)";
+        case 12: return "Unspecified QoS reason";
+        case 13: return "Invalid information element in frame";
+        case 14: return "Message integrity check (MIC) failure";
+        case 15: return "4-way handshake timeout";
+        case 16: return "Group key handshake timeout";
+        case 17: return "Information element in 802.1X frame is invalid";
+        case 18: return "Message integrity check (MIC) failure in 802.1X frame";
+        case 19: return "Reserved";
+        case 20: return "Disassociated due to leaving mesh network";
+        case 21: return "Disassociated due to insufficient bandwidth";
+        case 22: return "Disassociated due to low acknowledgment or reliability";
+        default: return "Unknown reason";
+    }
+}
+
+/**
  * onSoftAPModeStationConnectedHandler
  * Event handler called when a station (client) successfully connects to the device running in AP mode.
  *
@@ -91,7 +125,7 @@ void onStationModeConnectedHandler(wifi_event_info__t *info) {
  * @return void
  */
 void onStationModeDisconnectedHandler(wifi_event_info__t *info){
-    printf("\n[WIFI_EVENTS] Disconnected from AP. Reason: %u\n",info->reason);
+    printf("\n[WIFI_EVENTS] Disconnected from AP. Reason: %u-%s\n",info->reason,getReasonText(info->reason));
 
     unsigned long currentTime = getCurrentTime();
 
@@ -482,7 +516,7 @@ void getMyMAC(uint8_t* MAC){
     // Create a dummy socket for ioctl
     fd = socket(AF_INET, SOCK_DGRAM, 0);
 
-    strncpy(ifr.ifr_name, "uap0", IFNAMSIZ-1);
+    strncpy(ifr.ifr_name, "wlan0", IFNAMSIZ-1);
 
     // Request the MAC address for the interface
     if (ioctl(fd, SIOCGIFHWADDR, &ifr) == 0) {// SIOCGIFHWADDR corresponds to the hardware (MAC) address
