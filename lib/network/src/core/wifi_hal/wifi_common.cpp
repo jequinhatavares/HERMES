@@ -59,3 +59,13 @@ void setTableEntry(TableInfo *table, void* key, void* value){
         tableUpdate(table, key, value);
     }
 }
+
+void printLostChildrenHeader(){
+    LOG(NETWORK,INFO,"==================================| Lost Children Table |=================================\n");
+}
+void printLostChild(TableEntry *Table){
+    LOG(NETWORK,INFO,"NodeMAC[%hhu.%hhu.%hhu.%hhu.%hhu.%hhu] → isDisconnected[%d] | (Time: %lu) | (Sequence Number: %d)\n",
+        ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2]
+        ,((uint8_t *)Table->key)[3],((uint8_t *)Table->key)[4],((uint8_t *)Table->key)[5],
+        ((childConnectionStatus *)Table->value)->childTimedOut,((childConnectionStatus *)Table->value)->childDisconnectionTime);
+}

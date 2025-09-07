@@ -12,4 +12,7 @@ void setMAC(void* av, void* bv);
 void setConnectionStatus(void* av, void* bv);
 void initAuxTables();
 
+void printLostChildrenHeader();
+void printLostChild(TableEntry *Table);
+
 #endif //WIFI_COMMON_H
