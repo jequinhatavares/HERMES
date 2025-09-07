@@ -33,9 +33,9 @@ void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnect
 
     if(isChildRegisteredCallback(lostChildMAC)){
         if(tableFind(lostChildrenTable, (void*)lostChildMAC ) != -1){
-            LOG(NETWORK,INFO,"Removing lost child: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu\n",lostChildMAC[0],lostChildMAC[1],lostChildMAC[2],lostChildMAC[3],lostChildMAC[4],lostChildMAC[5]);
+            //LOG(NETWORK,INFO,"Removing lost child: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu\n",lostChildMAC[0],lostChildMAC[1],lostChildMAC[2],lostChildMAC[3],lostChildMAC[4],lostChildMAC[5]);
             tableRemove(lostChildrenTable,(void*)lostChildMAC);
-            tablePrint(lostChildrenTable,printLostChildrenHeader,printLostChild);
+            //tablePrint(lostChildrenTable,printLostChildrenHeader,printLostChild);
         }
     }
 }

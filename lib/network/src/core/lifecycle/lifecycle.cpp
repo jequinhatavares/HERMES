@@ -87,17 +87,20 @@ void onParentDisconnect(){
 bool isChildRegistered(uint8_t * MAC){
     uint8_t nodeIP[4];
 
-    //LOG(NETWORK,DEBUG, "MAC inside isChildRegistered Callback: %i:%i:%i:%i:%i:%i\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
+    LOG(NETWORK,DEBUG, "MAC inside isChildRegistered Callback: %i:%i:%i:%i:%i:%i\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
     //Translate the MAC address to an IP address
     getIPFromMAC(MAC,nodeIP);
 
-    //LOG(NETWORK,DEBUG, "Node IP: %hhu.%hhu.%hhu.%hhu\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
+    LOG(NETWORK,DEBUG, "Node IP: %hhu.%hhu.%hhu.%hhu\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
     //tablePrint(childrenTable,printChildrenTableHeader,printChildStruct);
 
     //If the node is i my children table means is a registered child
     if(findNode(childrenTable,nodeIP) != nullptr){
+        LOG(NETWORK,DEBUG, "Child\n");
         return true;
     }
+
+    LOG(NETWORK,DEBUG, "NOT Child\n");
 
     return false;
 }
@@ -140,10 +143,8 @@ void onRootReachable(){
      * TOPOLOGY_RESTORED_NOTICE was missed, and the node did not transition properly to the active state.***/
     if(SM->current_state == sRecoveryWait){
         connectedToMainTree = true;
-
         LOG(STATE_MACHINE,DEBUG, "Inserting event:%hhu in snake\n",eTreeConnectionRestored);
         insertLast(stateMachineEngine, eTreeConnectionRestored);
-
     }
 }
 /**
@@ -712,11 +713,11 @@ State executeTask(Event event){
  * This function is called regularly to maintain protocol timing and state transitions.
  */
 void handleTimers(){
-    int* MAC;
+    uint8_t * MAC;
     unsigned long currentTime = getCurrentTime();
     //LOG(NETWORK,DEBUG,"1\n");
     for (int i = 0; i < lostChildrenTable->numberOfItems; i++) {
-        MAC = (int*) tableKey(lostChildrenTable, i);
+        MAC = (uint8_t *) tableKey(lostChildrenTable, i);
         childConnectionStatus *status = (childConnectionStatus*)tableRead(lostChildrenTable, MAC);
         if(currentTime - status->childDisconnectionTime >= CHILD_RECONNECT_TIMEOUT && status->childTimedOut == false){
             status->childTimedOut = true;
