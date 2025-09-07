@@ -236,6 +236,7 @@ void setup(){
     }
     else if(MAC[5] == 12 && MAC[4] == 150 && MAC[3] == 51 && MAC[2] == 26){
         worker.registerNodeAsInput();
+
     }
 
 
@@ -422,6 +423,7 @@ void setup(){
     network.injectMetric(&myMetric);
 
     // Register the RPi device as a worker device
+    worker.registerNodeAsOutput();
     worker.registerNodeAsWorker();
 
 }
