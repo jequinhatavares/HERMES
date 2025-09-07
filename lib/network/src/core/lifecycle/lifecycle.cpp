@@ -294,7 +294,6 @@ State joinNetwork(Event event){
  */
 State active(Event event){
     LOG(STATE_MACHINE,INFO,"Active State\n");
-
     if (event == eMessage){
         handleMessages();
         return sActive;

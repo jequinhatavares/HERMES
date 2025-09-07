@@ -391,17 +391,17 @@ void setup(){
     //Then init the callback function for data message receiving
     network.onDataReceived(handleDataMessageWrapper);
 
-    /************* Middleware Strategy: Inject Inits *************/
-    myMetric.processingCapacity=3;
-    network.injectMetric(&myMetric);
+
+    //And then the node can be initialized and integrated in the network
+    network.begin();
 
     /************* Middleware Strategy: Topology Inits *********
     myMetric.processingCapacity=3;
     network.setParentMetric(&myMetric);****/
 
-
-    //And then the node can be initialized and integrated in the network
-    network.begin();
+    /************* Middleware Strategy: Inject Inits *************/
+    myMetric.processingCapacity=3;
+    network.injectMetric(&myMetric);
 
     // Register the RPi device as a worker device
     worker.registerNodeAsWorker();
