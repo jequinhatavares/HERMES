@@ -12,12 +12,12 @@ TableInfo LTable = {
 };
 TableInfo* lostChildrenTable = &LTable;
 
-int MAC[TABLE_MAX_SIZE][6];
-unsigned long lastChildDisconnectionTime[TABLE_MAX_SIZE];
+uint8_t MAC[TABLE_MAX_SIZE][6];
+childConnectionStatus connectionStatus[TABLE_MAX_SIZE];
 
 bool isMACEqual(void* a, void* b){
-    int* aMAC = (int*) a;
-    int* bMAC = (int*) b;
+    uint8_t * aMAC = (uint8_t *) a;
+    uint8_t * bMAC = (uint8_t *) b;
     //printf("In Function is MACEqual\n");
     if(aMAC[0] == bMAC[0] && aMAC[1] == bMAC[1] && aMAC[2] == bMAC[2] && aMAC[3] == bMAC[3] && aMAC[4] == bMAC[4] && aMAC[5] == bMAC[5]){
         return true;
@@ -27,8 +27,8 @@ bool isMACEqual(void* a, void* b){
 
 
 void setMAC(void* av, void* bv){
-    int* a = (int*) av;
-    int* b = (int*) bv;
+    uint8_t * a = (uint8_t *) av;
+    uint8_t * b = (uint8_t *) bv;
     //Serial.printf("Key.Setting old value: %i.%i.%i.%i to new value:  %i.%i.%i.%i\n", a[0],a[1],a[2],a[3], b[0],b[1],b[2],b[3]);
     a[0] = b[0];
     a[1] = b[1];
@@ -50,7 +50,7 @@ void setConnectionStatus(void* av, void* bv){
 
 void initAuxTables(){
     //Serial.printf("SizeOf int[4]: %i struct: %i", sizeof(int[4]), sizeof(RoutingTableEntry));
-    tableInit(lostChildrenTable,MAC, lastChildDisconnectionTime, sizeof(int[6]),sizeof(unsigned long));
+    tableInit(lostChildrenTable,MAC, connectionStatus, sizeof(int[6]),sizeof(unsigned long));
 }
 
 void setTableEntry(TableInfo *table, void* key, void* value){
@@ -65,7 +65,7 @@ void printLostChildrenHeader(){
     LOG(NETWORK,INFO,"==================================| Lost Children Table |=================================\n");
 }
 void printLostChild(TableEntry *Table){
-    LOG(NETWORK,INFO,"NodeMAC[%hhu.%hhu.%hhu.%hhu.%hhu.%hhu] → isDisconnected[%d] | (Time: %lu) | (Sequence Number: %d)\n",
+    LOG(NETWORK,INFO,"NodeMAC[%hhu.%hhu.%hhu.%hhu.%hhu.%hhu] → isDisconnected[%d] | (Time: %lu)\n",
         ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2]
         ,((uint8_t *)Table->key)[3],((uint8_t *)Table->key)[4],((uint8_t *)Table->key)[5],
         ((childConnectionStatus *)Table->value)->childTimedOut,((childConnectionStatus *)Table->value)->childDisconnectionTime);

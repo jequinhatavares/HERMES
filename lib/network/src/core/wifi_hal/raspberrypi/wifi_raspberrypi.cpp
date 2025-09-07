@@ -68,9 +68,15 @@ void onAPModeStationConnectedHandler(wifi_event_info__t *info){
     //LOG(NETWORK,DEBUG,"STA ConnectionTime: %lu\n", getCurrentTime());
 
     if(isChildRegisteredCallback(lostChildMAC)){
+
+        tablePrint(lostChildrenTable,printLostChildrenHeader,printLostChild);
         if(tableFind(lostChildrenTable, (void*)lostChildMAC ) != -1){
+            LOG(NETWORK,DEBUG,"Removing the child from the lost children table: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu\n",lostChildMAC[0]
+            ,lostChildMAC[1],lostChildMAC[2],lostChildMAC[3],lostChildMAC[4],lostChildMAC[5]);
             tableRemove(lostChildrenTable,(void*)lostChildMAC);
         }
+        tablePrint(lostChildrenTable,printLostChildrenHeader,printLostChild);
+
     }
 }
 
