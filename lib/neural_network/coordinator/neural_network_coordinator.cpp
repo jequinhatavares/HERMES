@@ -1314,7 +1314,7 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
         LOG(APP,INFO,"Distributing hidden layer neurons\n");
 
         // Distribute the NN hidden layers to the available worker devices
-        distributeNeuralNetworkBalanced(&neuralNetwork,workersIPs,totalWorkers,neuronsPerWorker);
+        distributeNeuralNetworkBalancedV2(&neuralNetwork,workersIPs,totalWorkers,neuronsPerWorker);
 
         LOG(APP,INFO,"Distributing output neurons\n");
 
