@@ -104,6 +104,7 @@ void Network::run() {
 void Network::stop(){
     endTransport();
     stopWifiAP();
+    disconnectFromAP();
 }
 
 
