@@ -81,7 +81,7 @@ void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisc
         }else{
             tableUpdate(lostChildrenTable,lostChildMAC, &lostChild);
         }
-        tablePrint(lostChildrenTable,printLostChildrenHeader,printLostChild);
+        //tablePrint(lostChildrenTable,printLostChildrenHeader,printLostChild);
     }
 
 }

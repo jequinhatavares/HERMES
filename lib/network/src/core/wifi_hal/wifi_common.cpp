@@ -4,6 +4,7 @@
 TableEntry lTable[TABLE_MAX_SIZE];
 TableInfo LTable = {
         .numberOfItems = 0,
+        .maxNumberOfItems=10,
         .isEqual = isMACEqual,
         .table = lTable,
         .setKey = setMAC,
