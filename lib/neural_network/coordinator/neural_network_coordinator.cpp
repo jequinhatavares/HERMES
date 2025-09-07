@@ -1565,6 +1565,12 @@ void NeuralNetworkCoordinator::handleNeuralNetworkMessage(uint8_t *senderIP, uin
             handleInputRegistration(messageBuffer);
             break;
 
+        case NN_OUTPUT_REGISTRATION:
+            LOG(APP,INFO,"Received [NN_OUTPUT_REGISTRATION] message: \"%s\" from sender %hhu.%hhu.%hhu.%hhu\n"
+                    ,messageBuffer,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
+            handleOutputRegistration(messageBuffer);
+            break;
+
         case NN_ACK:
             LOG(APP,INFO,"Received [NN_ACK] message: \"%s\" from sender %hhu.%hhu.%hhu.%hhu\n"
                     ,messageBuffer,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
