@@ -87,20 +87,17 @@ void onParentDisconnect(){
 bool isChildRegistered(uint8_t * MAC){
     uint8_t nodeIP[4];
 
-    LOG(NETWORK,DEBUG, "MAC inside isChildRegistered Callback: %i:%i:%i:%i:%i:%i\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
+    //LOG(NETWORK,DEBUG, "MAC inside isChildRegistered Callback: %i:%i:%i:%i:%i:%i\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
     //Translate the MAC address to an IP address
     getIPFromMAC(MAC,nodeIP);
 
-    LOG(NETWORK,DEBUG, "Node IP: %hhu.%hhu.%hhu.%hhu\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
+    //LOG(NETWORK,DEBUG, "Node IP: %hhu.%hhu.%hhu.%hhu\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
     //tablePrint(childrenTable,printChildrenTableHeader,printChildStruct);
 
     //If the node is i my children table means is a registered child
     if(findNode(childrenTable,nodeIP) != nullptr){
-        LOG(NETWORK,DEBUG, "Child\n");
         return true;
     }
-
-    LOG(NETWORK,DEBUG, "NOT Child\n");
 
     return false;
 }

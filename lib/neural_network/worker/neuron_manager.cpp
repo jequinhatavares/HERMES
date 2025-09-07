@@ -465,6 +465,9 @@ void NeuronWorker::handleForwardMessage(char *messageBuffer){
     int inferenceId;
     sscanf(messageBuffer, "%*d %i",&inferenceId);
 
+    //If the device isn't responsible for any input, hidden/output neurons return
+    if(neuronCore.neuronsCount==0 && nrInputNeurons ==0) return;
+
     currentInferenceId = inferenceId;
 
     //LOG(APP,DEBUG,"F1\n");

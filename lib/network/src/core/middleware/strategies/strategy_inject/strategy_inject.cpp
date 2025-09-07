@@ -334,7 +334,7 @@ void influenceRoutingStrategyInject(char* messageEncodeBuffer,size_t encodeBuffe
     encodeTunneledMessage(messageEncodeBuffer,encodeBufferSize, myIP,bestMetricIP,largeSendBuffer);
     nextHopIP = (uint8_t *) findRouteToNode(bestMetricIP);
     if(nextHopIP != nullptr){
-        LOG(MESSAGES,INFO,"Sending tunneled [DATA] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",dataMessagePayload,bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
+        LOG(MESSAGES,INFO,"Sending tunneled [DATA] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",messageEncodeBuffer,bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
         sendMessage(nextHopIP, messageEncodeBuffer);
     }else{
         LOG(MIDDLEWARE,ERROR,"ERROR: Trying to send message to: %hhu.%hhu.%hhu.%hhu but did not find path to node\n",bestMetricIP[0],bestMetricIP[1],bestMetricIP[2],bestMetricIP[3]);
