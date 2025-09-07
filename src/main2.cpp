@@ -270,11 +270,20 @@ void loop(){
 #include "../lib/middleware/strategies/strategy_pubsub/strategy_pubsub.h"
 #include "middleware.h" ***/
 
-
+#include <signal.h>
 #include <network.h>
 #include <neural_network_dispatcher.h>
 
 //pio remote --agent raspberrypi run --force-remote -e raspberrypi_3b
+
+// For Shutdown on CTRL+C gracefully
+volatile bool running = true;
+
+void sigintHandler(int sig) {
+    printf("\nCaught SIGINT, shutting down...\n");
+    running = false;
+}
+
 
 NeuronWorker worker;
 
@@ -378,6 +387,9 @@ void setup(){
     lastModule = MESSAGES;
     currentLogLevel = DEBUG;
 
+    // Register Shutdow handler
+    signal(SIGINT, sigintHandler);
+
     /************* Middleware Strategy: Pub/Sub **********
     network.middlewareSelectStrategy(STRATEGY_PUBSUB);
     network.initMiddlewareStrategyPubSub(decodeTopicWrapper);***/
@@ -414,7 +426,7 @@ int main() {
     LOG(NETWORK, INFO, "Logs are working\n");
     setup();
 
-    while (1) {
+    while (running) {
         network.run();
         worker.manageNeuron();
         //cliInteraction();
