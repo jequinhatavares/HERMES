@@ -12,9 +12,10 @@ void NeuronWorker::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,
     uint8_t originatorIP[4],finalDestination[4];
     char tmpPayload[30];
 
+    bool encapsulatedMessage = network.isDataMessageEncapsulated(messageBuffer);
     // NN_NEURON_OUTPUT messages when using the Strategy Inject are encapsulated within data messages.
     // Therefore, the payload must be parsed first in order to access them.
-    if(network.getActiveMiddlewareStrategy() ==STRATEGY_INJECT && network.isDataMessageEncapsulated(messageBuffer)){
+    if(network.getActiveMiddlewareStrategy() ==STRATEGY_INJECT && encapsulatedMessage){
         network.parseDataMessage(messageBuffer,originatorIP,senderIP,tmpPayload, sizeof(tmpPayload));
         sscanf(tmpPayload, "%d",&type);
     }else{
@@ -51,7 +52,7 @@ void NeuronWorker::handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,
             break;
 
         case NN_NEURON_OUTPUT:
-            if(network.getActiveMiddlewareStrategy()==STRATEGY_INJECT){
+            if(network.getActiveMiddlewareStrategy()==STRATEGY_INJECT && encapsulatedMessage){
                 LOG(APP,INFO,"Received [NN_NEURON_OUTPUT] message: \"%s\" from %hhu.%hhu.%hhu.%hhu\n"
                         ,tmpPayload,senderIP[0],senderIP[1],senderIP[2],senderIP[3]);
                 handleNeuronOutputMessage(tmpPayload);
