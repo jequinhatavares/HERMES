@@ -88,7 +88,6 @@ void injectNodeMetric(void* metric){
 
     // Only send the metric message to the root if the node is already part of the network
     if(connectedToMainTree){
-        LOG(MIDDLEWARE,DEBUG,"Connected to main tree->sending the message\n");
         encodeMessageStrategyInject(smallSendBuffer,sizeof(smallSendBuffer),INJECT_NODE_INFO);
         propagateMessage(smallSendBuffer,myIP);
     }
@@ -99,7 +98,6 @@ void injectNodeMetric(void* metric){
     }else{ //The node is already present in the table
         tableUpdate(metricsTable, myIP, metric);
     }
-    //printInjectTable();
 }
 
 /**
@@ -260,6 +258,7 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
  */
 void onNetworkEventStrategyInject(int networkEvent, uint8_t involvedIP[4]){
     void* metricValue;
+
     switch (networkEvent) {
         case NETEVENT_JOINED_NETWORK:
             metricValue = tableRead(metricsTable,myIP);

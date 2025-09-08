@@ -70,6 +70,7 @@ void Network::begin() {
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//State Join Network
     }
 
+    beginCalled = true;
     //startWifiAP(ssid,PASS, localIP, gateway, subnet);
     //changeWifiMode(3);
     //LOG(NETWORK,INFO,"My SoftAP IP: %s\nMy STA IP %s\nGateway IP: %s\n", getMyAPIP().toString().c_str(), getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());

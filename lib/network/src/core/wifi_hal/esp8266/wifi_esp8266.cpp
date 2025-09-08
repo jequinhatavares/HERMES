@@ -59,32 +59,6 @@ void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisc
     childConnectionStatus lostChild;
     lostChild.childDisconnectionTime = currentTime;
 
-    // On first disconnection, initialize the timer to the current time.
-    // This prevents missing future disconnections after a long inactive period.
-    /***if (childDisconnectionCount == 0) lastChildDisconnectionTime = currentTime;
-
-    // Check if the interval since the last disconnection is short enough
-    // to avoid incrementing the counter for isolated or sporadic events.
-    if(currentTime - lastChildDisconnectionTime <=3000){
-        childDisconnectionCount++;
-        LOG(NETWORK,DEBUG,"Incremented the childDisconnectionCount\n");
-
-        // When repeated disconnections surpass the defined threshold queue an event to initiate child recovery procedures
-        if(childDisconnectionCount >=PARENT_DISCONNECTION_THRESHOLD) {
-            // Callback code, global func pointer defined in wifi_hal.h:22 and initialized in lifecycle.cpp:48
-            if (childDisconnectCallback != nullptr){
-                childDisconnectCallback();
-            }
-        }
-    }***/
-    if(isChildRegisteredCallback(lostChildMAC)){
-        if(tableFind(lostChildrenTable, (void*)lostChildMAC ) == -1){
-            tableAdd(lostChildrenTable,lostChildMAC, &lostChild);
-        }else{
-            tableUpdate(lostChildrenTable,lostChildMAC, &lostChild);
-        }
-    }
-
 }
 
 /**
@@ -125,29 +99,19 @@ void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& in
 
     unsigned long currentTime = getCurrentTime();
 
-    // On first disconnection, initialize the timer to the current time.
-    // This prevents missing future disconnections after a long inactive period.
-    if (parentDisconnectionCount == 0){
-        lastParentDisconnectionTime = currentTime;
-        parentDisconnectionCount++;
-        return;
-    }
+    // Always increment counter on each consecutive disconnect
+    parentDisconnectionCount++;
+    lastParentDisconnectionTime = currentTime;
 
-    // Check if the interval since the last disconnection is short enough
-    // to avoid incrementing the counter for isolated or sporadic events.
-    if(currentTime - lastParentDisconnectionTime <= AP_DISCONNECTION_GRACE_PERIOD){
-        parentDisconnectionCount++;
-        //LOG(NETWORK,DEBUG,"Incremented the parentDisconnectionCount: %i\n", parentDisconnectionCount);
+    Serial.printf("[DEBUG] parentDisconnectionCount=%d\n", parentDisconnectionCount);
 
-        // When repeated disconnections surpass the defined threshold queue an event to initiate parent recovery procedures
-        if(parentDisconnectionCount >=PARENT_DISCONNECTION_THRESHOLD) {
-            //LOG(NETWORK,DEBUG,"parentDisconnectionCount above the threshold\n");
-            // Callback code, global func pointer defined in wifi_hal.h:22 and initialized in lifecycle.cpp:48
-            if (parentDisconnectCallback != nullptr){
-                parentDisconnectCallback();
-            }
+    // Trigger recovery if threshold reached
+    if (parentDisconnectionCount >= PARENT_DISCONNECTION_THRESHOLD) {
+        if (parentDisconnectCallback != nullptr) {
+            parentDisconnectCallback();
         }
     }
+
     WiFi.reconnect();
 
     // Attempt Re-Connection

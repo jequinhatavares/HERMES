@@ -120,23 +120,16 @@ void onStationModeDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info){
 
     unsigned long currentTime = getCurrentTime();
 
-    // On first disconnection, initialize the timer to the current time.
-    // This prevents missing future disconnections after a long inactive period.
-    if (parentDisconnectionCount == 0) lastParentDisconnectionTime = currentTime;
+    // Always increment counter on each consecutive disconnect
+    parentDisconnectionCount++;
+    lastParentDisconnectionTime = currentTime;
 
-    // Check if the interval since the last disconnection is short enough
-    // to avoid incrementing the counter for isolated or sporadic events.
-    if(currentTime - lastParentDisconnectionTime <=AP_DISCONNECTION_GRACE_PERIOD){
-        parentDisconnectionCount++;
-        //LOG(NETWORK,DEBUG,"Incremented the parentDisconnectionCount: %i\n", parentDisconnectionCount);
+    Serial.printf("[DEBUG] parentDisconnectionCount=%d\n", parentDisconnectionCount);
 
-        // When repeated disconnections surpass the defined threshold queue an event to initiate parent recovery procedures
-        if(parentDisconnectionCount >=PARENT_DISCONNECTION_THRESHOLD) {
-            //LOG(NETWORK,DEBUG,"parentDisconnectionCount above the threshold\n");
-            // Callback code, global func pointer defined in wifi_hal.h:22 and initialized in lifecycle.cpp:48
-            if (parentDisconnectCallback != nullptr){
-                parentDisconnectCallback();
-            }
+    // Trigger recovery if threshold reached
+    if (parentDisconnectionCount >= PARENT_DISCONNECTION_THRESHOLD) {
+        if (parentDisconnectCallback != nullptr) {
+            parentDisconnectCallback();
         }
     }
 

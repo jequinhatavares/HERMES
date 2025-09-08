@@ -65,6 +65,7 @@ void reportDeletedNodeToMonitoringServer (uint8_t * nodeIP){
 
 void reportLifecycleTimesToMonitoringServer(unsigned long initTime, unsigned long searchTime, unsigned long joinNetworkTime){
 #ifdef MONITORING_ON
+
 #if defined(ESP8266)
     sprintf(monitoringBuffer,"%d 1 %lu %lu %lu",LIFECYCLE_TIMES,initTime,searchTime,joinNetworkTime);
 #endif
