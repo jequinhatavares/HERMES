@@ -39,7 +39,7 @@ public:
 
     static int encodeMessageHeader(char* messageBuffer, size_t bufferSize,NeuralNetworkMessageType type);
     static int  encodeAssignNeuronMessage(char* messageBuffer, size_t bufferSize,uint8_t neuronId, uint8_t inputSize, uint8_t * inputSaveOrder,const float*weightsValues, float bias);
-    static void encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes);
+    static void encodeAssignOutputTargetsMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes);
     static void encodePubSubInfo(char* messageBuffer, size_t bufferSize, uint8_t * neuronIds, uint8_t nNeurons, int8_t subTopic, int8_t pubTopic);
     static void encodeForwardMessage(char*messageBuffer, size_t bufferSize, int inferenceId);
     static void encodeInputAssignMessage(char*messageBuffer, size_t bufferSize,uint8_t neuronId);

@@ -278,7 +278,7 @@ void NeuronWorker::handleAssignOutputNeuron(char* messageBuffer){
     //Encode the message header of the ACK message
     offset += snprintf(appPayload+offset, sizeof(appPayload)-offset,"%d",NN_ACK);
 
-    //NN_ASSIGN_OUTPUT |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias]
+    //NN_ASSIGN_OUTPUT |[Neuron Number] [Input Size] [Input Save Order] [weights values] [bias] | ...
     neuronEntry = strtok_r(messageBuffer, "|",&saveptr1);
     //Discard the message types
     neuronEntry = strtok_r(NULL, "|",&saveptr1);

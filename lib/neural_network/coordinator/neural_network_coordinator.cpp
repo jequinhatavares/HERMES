@@ -504,7 +504,7 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNetwork(uint8_t nodes[][4],u
                 }
             }
             LOG(APP,DEBUG,"number of neurons: %hhu number of nodes: %hhu\n",nNeurons,nNodes);
-            encodeAssignOutputMessage(appPayload,sizeof(appPayload),outputNeurons,nNeurons,inputNodesIPs,nNodes);
+            encodeAssignOutputTargetsMessage(appPayload,sizeof(appPayload),outputNeurons,nNeurons,inputNodesIPs,nNodes);
 
             network.sendMessageToNode(appBuffer, sizeof(appBuffer),appPayload,nodes[j]);
             nNeurons = 0;
@@ -599,7 +599,7 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNode(char* messageBuffer,siz
         //LOG(APP,DEBUG,"number of neurons: %hhu number of workerNodeIP: %hhu\n",nNeurons,nTargetDevices);
         // If the node computes any neurons in this layer.
         // Encode the message that includes its information along with the IPs to which it should forward the computation
-        encodeAssignOutputMessage(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,targetDevicesIPs,nTargetDevices);
+        encodeAssignOutputTargetsMessage(tmpBuffer,tmpBufferSize,outputNeurons,nNeurons,targetDevicesIPs,nTargetDevices);
 
         /*** Before adding the assignment to the message buffer, check if it fits.
          *  If it doesn't fit, send the current encoded message to the node and
@@ -686,7 +686,7 @@ void NeuralNetworkCoordinator::assignOutputTargetsToNeurons(char* messageBuffer,
             }
         }
 
-        encodeAssignOutputMessage(tmpBuffer,tmpBufferSize,neuronId,1,inputNodesIPs,nNodes);
+        encodeAssignOutputTargetsMessage(tmpBuffer,tmpBufferSize,neuronId,1,inputNodesIPs,nNodes);
         offset += snprintf(messageBuffer + offset, bufferSize-offset,"%s",tmpBuffer);
 
         nNodes = 0;
@@ -754,7 +754,7 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
 
     auto resetPayloadWithHeader = [&](int &msgOffset) {
         msgOffset=0;
-        msgOffset = encodeMessageHeader(appPayload, sizeof(appPayload), NN_ASSIGN_COMPUTATION);
+        msgOffset = encodeMessageHeader(appPayload, sizeof(appPayload), NN_ASSIGN_OUTPUT);
     };
 
     //If the output device its not this node encode the message header
@@ -810,7 +810,7 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
             saveOutputNeuron(currentOutputNeuron);
         }else{
             // If this node doesn't compute the output layer, we must encode a message
-            //assigning the output neurons and their parameters to the correct node.
+            // assigning the output neurons and their parameters to the correct node.
             encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,
                                       currentOutputNeuron,net->layers[outputLayer].numInputs,inputIndexMap,
                                       &net->layers[outputLayer].weights[j * net->layers[outputLayer].numInputs],net->layers[outputLayer].biases[j]);
@@ -1058,7 +1058,7 @@ int NeuralNetworkCoordinator::encodeAssignNeuronMessage(char* messageBuffer, siz
 
 
 /***
- * encodeAssignOutputMessage
+ * encodeAssignOutputTargetsMessage
  * Encodes an NN_ASSIGN_OUTPUT_TARGETS message specifying where neuron outputs should be sent.
  *
  * @param messageBuffer - Buffer to store the encoded message
@@ -1069,7 +1069,7 @@ int NeuralNetworkCoordinator::encodeAssignNeuronMessage(char* messageBuffer, siz
  * @param nNodes - Number of target nodes
  * @return void
  ***/
-void NeuralNetworkCoordinator::encodeAssignOutputMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes){
+void NeuralNetworkCoordinator::encodeAssignOutputTargetsMessage(char* messageBuffer, size_t bufferSize, uint8_t * outputNeuronIds, uint8_t nNeurons, uint8_t IPs[][4], uint8_t nNodes){
     int offset = 0;
     //|[N Neurons] [neuron ID1] [neuron ID2] ...[N Nodes] [IP Address 1] [IP Address 2] ...
     offset = snprintf(messageBuffer, bufferSize, "|");
