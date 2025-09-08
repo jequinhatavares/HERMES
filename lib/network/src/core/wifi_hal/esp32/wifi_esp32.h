@@ -5,7 +5,7 @@
 #include <WiFi.h>
 
 #ifndef WIFI_CONNECTION_TIMEOUT
-#define WIFI_CONNECTION_TIMEOUT_ESP832 3000
+#define WIFI_CONNECTION_TIMEOUT_ESP32 3000
 #endif
 
 #include "../wifi_interface.h"

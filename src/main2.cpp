@@ -196,6 +196,11 @@ void setup(){
                                          encodeMetricEntry, decodeMetricEntry,
                                          compareMetrics,printMetricStruct);
 
+    /************* Middleware Strategy: Inject Inits *************/
+    if(MAC[5] == 89 && MAC[4] == 248 && MAC[3] == 169 && MAC[2] == 45) {
+        myMetric.processingCapacity=1;
+        network.injectMetric(&myMetric);
+    }
 
     //Integrated the node into the network
     network.begin();
