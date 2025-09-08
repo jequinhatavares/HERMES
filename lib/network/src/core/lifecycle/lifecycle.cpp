@@ -29,6 +29,13 @@ void (*onNodeJoinNetworkAppCallback)(uint8_t *) = nullptr;
 //Callback that executes APP specific code when the child connects
 void (*onChildConnectAppCallback)(uint8_t *) = nullptr;
 
+//Variables that save the time spend in each state to report to the monitoring server
+unsigned long initStateTime=0;
+unsigned long searchStateTime=0;
+unsigned long joinStateTime=0;
+unsigned long parentRecoveryStateTime=0;
+bool entryTimestampSet=false;
+
 
 // State machine structure holding the current state and a transition table mapping states to handler functions.
 StateMachine SM_ = {
@@ -158,7 +165,7 @@ State init(Event event){
     char strMAC[30], ssid[256]; // Make sure this buffer is large enough to hold the entire SSID
     RoutingTableEntry me;
     uint8_t invalidIP[4] = {0,0,0,0};
-
+    unsigned long startTime=getCurrentTime();
 
     strcpy(ssid, WIFI_SSID);        // Copy the initial WIFI_SSID to the buffer
     getMyMAC(MAC);
@@ -201,6 +208,7 @@ State init(Event event){
 
     if (!iamRoot){
         insertFirst(stateMachineEngine, eInitSuccess);
+        initStateTime=getCurrentTime()-startTime;
         return sSearch;
     }else{//If the node is the root of the network
         rootHopDistance = 0;
@@ -208,6 +216,7 @@ State init(Event event){
         assignIP(parent, invalidIP);
         assignIP(rootIP,myIP);
         reportNewNodeToMonitoringServer(myIP,invalidIP);
+        initStateTime=getCurrentTime()-startTime;
         return sActive;
     };
 }
@@ -223,6 +232,8 @@ State init(Event event){
 State search(Event event){
     LOG(STATE_MACHINE,INFO,"Search State\n");
     int i;
+    unsigned long startTime=getCurrentTime();
+
 
     // Clear reachableNetworks before rescanning
     for (i = 0; i < reachableNetworks.len; ++i) {
@@ -235,9 +246,10 @@ State search(Event event){
         searchAP(WIFI_SSID);
         //Remove from the reachableNetworks all nodes that belong to my subnetwork (to avoid connecting to them and forming loops)
         filterReachableNetworks();
-    }while(reachableNetworks.len == 0 );
+    }while(reachableNetworks.len == 0);
 
     insertFirst(stateMachineEngine, eFoundParents);
+    searchStateTime=getCurrentTime()-startTime;
     return sJoinNetwork;
 
 }
@@ -253,6 +265,7 @@ State search(Event event){
  */
 State joinNetwork(Event event){
     LOG(STATE_MACHINE,INFO,"Join Network State\n");
+    unsigned long startTime=getCurrentTime();
     int nrOfPossibleParents = 0;
     ParentInfo possibleParents[10];
 
@@ -282,7 +295,9 @@ State joinNetwork(Event event){
     connectedToMainTree = true;
 
     if(onNodeJoinNetworkAppCallback)onNodeJoinNetworkAppCallback(parent);
-    //changeWifiMode(3);
+
+    joinStateTime=getCurrentTime()-startTime;
+    reportLifecycleTimesToMonitoringServer(initStateTime,searchStateTime,joinStateTime);
     return sActive;
 }
 
@@ -415,10 +430,16 @@ void handleMessages(){
  *                 if unable to reconnect to the main tree.
  */
 State parentRecovery(Event event){
+    unsigned long startTime;
     int i, consecutiveSearchCount = 0, nrOfPossibleParents = 0;
     uint8_t * STAIP= nullptr,blankIP[4]={0,0,0,0};
     ParentInfo possibleParents[10];
     MessageType MessageType;
+
+    if(!entryTimestampSet){
+        startTime=getCurrentTime();
+        entryTimestampSet=true;
+    }
 
     // Handles the case where the node loses a child just before or at the same time it loses its parent
     if(event == eLostChildConnection){
@@ -428,7 +449,8 @@ State parentRecovery(Event event){
         sscanf(receiveBuffer, "%d", &MessageType);
         if(!isMessageValid(MessageType, receiveBuffer)){
             LOG(MESSAGES,ERROR,"Error: received message is invalid or malformed \"%s\"\n", receiveBuffer);
-            return sRecoveryWait;
+            //return sRecoveryWait;
+            return sParentRecovery;
         }
 
         switch(MessageType) {
@@ -543,6 +565,11 @@ State parentRecovery(Event event){
     // Notify the children that the main tree connection has been reestablished
     encodeTopologyRestoredNotice(smallSendBuffer, sizeof(smallSendBuffer));
     sendMessageToChildren(smallSendBuffer);
+
+    // Report the time spent on the Parent Recovery State to the monitoring server
+    parentRecoveryStateTime=startTime-getCurrentTime();
+    reportParentRecoveryTimeToMonitoringServer(parentRecoveryStateTime);
+    entryTimestampSet=false;
 
     return sActive;
 }

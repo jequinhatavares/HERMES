@@ -12,7 +12,7 @@ typedef enum MonitoringMessageType{
     NEW_NODE,               //0
     DELETED_NODE,           //1
     CHANGE_PARENT,          //2
-LIFECYCLE_TIMES,            //3
+    LIFECYCLE_TIMES,        //3
     PARENT_RECOVERY_TIME,   //4
 }MonitoringMessageType;
 
@@ -24,6 +24,7 @@ void encodeMonitoringMessage(char* msg, MonitoringMessageType type, messageVizPa
 
 void reportNewNodeToMonitoringServer (uint8_t * nodeIP, uint8_t * parentIP);
 void reportDeletedNodeToMonitoringServer (uint8_t* nodeIP);
-
+void reportLifecycleTimesToMonitoringServer(unsigned long initTime, unsigned long searchTime, unsigned long joinNetworkTime);
+void reportParentRecoveryTimeToMonitoringServer(unsigned long parentRecoveryTime);
 
 #endif //NETWORK_MONITORING_H
