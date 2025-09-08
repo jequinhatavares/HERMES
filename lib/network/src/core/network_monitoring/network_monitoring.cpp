@@ -87,3 +87,29 @@ void reportLifecycleTimesToMonitoringServer(unsigned long initTime, unsigned lon
 
 #endif
 }
+
+
+void reportParentRecoveryTimeToMonitoringServer(unsigned long parentRecoveryTime){
+#ifdef MONITORING_ON
+#if defined(ESP8266)
+    sprintf(monitoringBuffer,"%d 1 %lu",PARENT_RECOVERY_TIME,parentRecoveryTime);
+#endif
+
+#if defined(ESP32)
+    sprintf(monitoringBuffer,"%d 2 %lu",PARENT_RECOVERY_TIME,parentRecoveryTime);
+#endif
+
+#if defined(raspberrypi_3b)
+    sprintf(monitoringBuffer,"%d 3 %lu",PARENT_RECOVERY_TIME,parentRecoveryTime);
+#endif
+    if(!iamRoot){//If i am not the root send the message to the root
+        uint8_t *nextHopIP = findRouteToNode(rootIP);
+        if(nextHopIP != nullptr){
+            sendMessage(rootIP,monitoringBuffer);
+        }else{
+            LOG(NETWORK, ERROR, "❌ No path to the root node was found in the routing table.\n");
+        }
+    }else LOG(MONITORING_SERVER,DEBUG,"%s",monitoringBuffer);//If i am the root print the message to the monitoring server
+
+#endif
+}
