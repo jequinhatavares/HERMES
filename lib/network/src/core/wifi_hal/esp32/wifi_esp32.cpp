@@ -285,7 +285,7 @@ bool connectToAP(const char * SSID, const char * PASS) {
     startTime = getCurrentTime();
     currentTime = startTime;
     // Wait for the Wi-Fi connection to establish or until timeout is reached
-    while( ((currentTime - startTime) <= WIFI_CONNECTION_TIMEOUT) && WiFi.status() != WL_CONNECTED){
+    while( ((currentTime - startTime) <= WIFI_CONNECTION_TIMEOUT_ESP32) && WiFi.status() != WL_CONNECTED){
         Serial.println(getWifiStatus(WiFi.status()));
         delay(150);
         currentTime = getCurrentTime();

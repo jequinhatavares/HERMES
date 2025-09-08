@@ -17,6 +17,9 @@
 #include <linux/wireless.h>
 #include <errno.h>
 
+#ifndef WIFI_CONNECTION_TIMEOUT
+#define WIFI_CONNECTION_TIMEOUT_RPI 6000
+#endif
 #include "../wifi_interface.h"
 
 #define EVENTS_BUFFER_SIZE 1024

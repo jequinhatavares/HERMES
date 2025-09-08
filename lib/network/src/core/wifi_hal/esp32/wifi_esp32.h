@@ -4,6 +4,10 @@
 
 #include <WiFi.h>
 
+#ifndef WIFI_CONNECTION_TIMEOUT
+#define WIFI_CONNECTION_TIMEOUT_ESP832 3000
+#endif
+
 #include "../wifi_interface.h"
 
 void onSoftAPModeStationConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info);

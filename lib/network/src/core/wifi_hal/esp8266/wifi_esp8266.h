@@ -6,6 +6,10 @@
 
 #include "../wifi_interface.h"
 
+#ifndef WIFI_CONNECTION_TIMEOUT
+#define WIFI_CONNECTION_TIMEOUT_ESP8266 6000
+#endif
+
 void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnected& info);
 void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisconnected& info);
 void onStationModeGotIPHandler(const WiFiEventStationModeGotIP& info);
