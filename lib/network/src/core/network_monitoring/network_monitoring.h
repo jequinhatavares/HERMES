@@ -6,11 +6,13 @@
 #include "../transport_hal/transport_hal.h"
 #include "../logger/logger.h"
 
+#define MONITORING_ON
 
 typedef enum MonitoringMessageType{
     NEW_NODE, //0
     DELETED_NODE, //1
     CHANGE_PARENT, //2
+    LIFECYCLE_TIMES, //3
 }MonitoringMessageType;
 
 typedef struct messageVizParameters{

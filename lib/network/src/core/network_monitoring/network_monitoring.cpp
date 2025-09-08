@@ -1,5 +1,6 @@
 #include "network_monitoring.h"
 
+char monitoringBuffer[100];
 
 void encodeMonitoringMessage(char* msg, MonitoringMessageType type, messageVizParameters parameters){
     switch (type) {
@@ -26,16 +27,16 @@ void reportNewNodeToMonitoringServer (uint8_t * nodeIP, uint8_t * parentIP){
     assignIP(vizParameters.IP2, parentIP);
     encodeMonitoringMessage(msg,NEW_NODE,vizParameters);
 
-    encodeDebugMessage(smallSendBuffer, sizeof (smallSendBuffer), msg);
+    encodeDebugMessage(monitoringBuffer, sizeof (monitoringBuffer), msg);
 
     if(!iamRoot){
         uint8_t *nextHopIP = findRouteToNode(rootIP);
         if(nextHopIP != nullptr){
-            sendMessage(rootIP,smallSendBuffer);
+            sendMessage(rootIP,monitoringBuffer);
         }else{
             LOG(NETWORK, ERROR, "❌ ERROR: No path to the root node was found in the routing table.\n");
         }
-    }else LOG(MONITORING_SERVER,DEBUG,smallSendBuffer);
+    }else LOG(MONITORING_SERVER,DEBUG,"%s",monitoringBuffer);
 
 #endif
 }
@@ -57,7 +58,32 @@ void reportDeletedNodeToMonitoringServer (uint8_t * nodeIP){
         }else{
             LOG(NETWORK, ERROR, "❌ No path to the root node was found in the routing table.\n");
         }
-    }else LOG(MONITORING_SERVER,DEBUG,smallSendBuffer);//If i am the root print the message to the monitoring server
+    }else LOG(MONITORING_SERVER,DEBUG,"%s",smallSendBuffer);//If i am the root print the message to the monitoring server
+
+#endif
+}
+
+void reportLifecycleTimesToMonitoringServer(unsigned long initTime, unsigned long searchTime, unsigned long joinNetworkTime){
+#ifdef MONITORING_ON
+#if defined(ESP8266)
+    sprintf(monitoringBuffer,"%d 1 %lu %lu %lu",LIFECYCLE_TIMES,initTime,searchTime,joinNetworkTime);
+#endif
+
+#if defined(ESP32)
+    sprintf(monitoringBuffer,"%d 2 %lu %lu %lu",LIFECYCLE_TIMES,initTime,searchTime,joinNetworkTime);
+#endif
+
+#if defined(raspberrypi_3b)
+    sprintf(monitoringBuffer,"%d 3 %lu %lu %lu",LIFECYCLE_TIMES,initTime,searchTime,joinNetworkTime);
+#endif
+    if(!iamRoot){//If i am not the root send the message to the root
+        uint8_t *nextHopIP = findRouteToNode(rootIP);
+        if(nextHopIP != nullptr){
+            sendMessage(rootIP,monitoringBuffer);
+        }else{
+            LOG(NETWORK, ERROR, "❌ No path to the root node was found in the routing table.\n");
+        }
+    }else LOG(MONITORING_SERVER,DEBUG,"%s",monitoringBuffer);//If i am the root print the message to the monitoring server
 
 #endif
 }
