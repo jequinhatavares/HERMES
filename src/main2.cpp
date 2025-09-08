@@ -236,7 +236,6 @@ void setup(){
     }
     else if(MAC[5] == 12 && MAC[4] == 150 && MAC[3] == 51 && MAC[2] == 26){
         worker.registerNodeAsInput();
-
     }
 
 
@@ -409,7 +408,6 @@ void setup(){
 
     //Then init the callback function for data message receiving
     network.onDataReceived(handleDataMessageWrapper);
-
 
     //And then the node can be initialized and integrated in the network
     network.begin();

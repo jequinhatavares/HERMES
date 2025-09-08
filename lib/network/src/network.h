@@ -31,7 +31,8 @@ class Network {
 
     // ==================== NETWORK CORE =====================
     void setAsRoot(bool isRoot);        // Set this node as root (call before begin())
-    void begin();                       // Initialize network components (call in setup()) and integrate the node into the network
+    void init();                        // Initialize the node parameters (AP IP, AP interface, transport layer ...)
+    void begin();                       // Integrate the node into the network
     void run();                         // Called in loop() to the node to run the program
     void stop();                        // Called to stop the terminate the connection of the node to the network
 
@@ -92,6 +93,10 @@ class Network {
     void sendMessageToNode(char* messageBuffer,size_t bufferSize,const char* messagePayload, uint8_t* nodeIP);// Sends a message to a specific node in the network
     void broadcastMessage(char* messageBuffer,size_t bufferSize,const char* messagePayload); // Broadcasts a message to all nodes in the network
     void encodeDataMessage(char* encodeBuffer,size_t bufferSize,const char* messagePayload, uint8_t *destinationIP); //Encodes a data message
+
+private:
+    bool isInitialized=false;
+    bool beginCalled=false;
 
 };
 

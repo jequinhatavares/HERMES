@@ -26,14 +26,12 @@ void Network::setAsRoot(bool isRoot){
 
 
 /**
- * begin
- * Initializes the node and integrates it into the multi-hop network.
- * Must be called once in the setup phase.
+ * init
+ * Initializes the node. Must be called in the setup phase and before the begin.
  *
  * @return void
  */
-void Network::begin() {
-
+void Network::init() {
     uint8_t MAC[6];
 
     #if defined(raspberrypi_3b)
@@ -46,13 +44,31 @@ void Network::begin() {
     LOG(NETWORK,INFO,"Code uploaded through multi_upload_tool.py V1\n");
     LOG(NETWORK,INFO,"My MAC addr: %i.%i.%i.%i.%i.%i\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
 
-    Advance(SM, eSuccess);//Init
+    Advance(SM, eSuccess);//Init State
+
+    isInitialized = true;
+
+}
+
+
+/**
+ * begin
+ * Initializes the node and integrates it into the multi-hop network.
+ * Must be called once in the setup phase.
+ *
+ * @return void
+ */
+void Network::begin() {
+
+    if(!isInitialized){
+        LOG(NETWORK,ERROR,"Error: init() must be called before begin().\n");
+        return;
+    }
 
     if(!iamRoot){
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//State Search APs
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//State Join Network
     }
-
 
     //startWifiAP(ssid,PASS, localIP, gateway, subnet);
     //changeWifiMode(3);
@@ -69,6 +85,11 @@ void Network::begin() {
  * @return void
  */
 void Network::run() {
+    if(!beginCalled){
+        LOG(NETWORK,ERROR,"Error: begin() must be called before run().\n");
+        return;
+    }
+
     int packetSize;
 
     #if defined(raspberrypi_3b)
@@ -127,6 +148,10 @@ StrategyType Network::getActiveMiddlewareStrategy() {
  * @return void
  */
 void Network::middlewareSelectStrategy(StrategyType strategyType){
+    if(!isInitialized){
+        LOG(NETWORK,ERROR,"Error: init() must be before performing middleware related actions.\n");
+        return;
+    }
     ::middlewareSelectStrategy(strategyType);
 }
 
@@ -139,7 +164,7 @@ void Network::middlewareSelectStrategy(StrategyType strategyType){
  * @return void
  */
 
-void Network::middlewarePrintInfo() {
+void Network::middlewarePrintInfo(){
     ::middlewarePrintInfo(::middlewareActiveStrategy());
 }
 
@@ -163,6 +188,14 @@ void Network::middlewarePrintInfo() {
 void Network::initMiddlewareStrategyInject(void *metricStruct, size_t metricStructSize,void (*setValueFunction)(void*,void*)
                                            ,void (*encodeMetricFunction)(char*,size_t,void *),void (*decodeMetricFunction)(char*,void *)
                                            ,int(*compareMetricsFunction)(void*,void*),void (*printMetricStruct)(TableEntry*)){
+    if(!isInitialized){
+        LOG(NETWORK,ERROR,"Error: init() must be called before performing middleware related actions.\n");
+        return;
+    }
+    if(!::isMiddlewareStrategyActive(STRATEGY_INJECT)){
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to initialize a strategy that inst currently active. \n");
+        return;
+    }
     ::initMiddlewareStrategyInject(metricStruct, metricStructSize,setValueFunction,encodeMetricFunction,decodeMetricFunction,compareMetricsFunction,printMetricStruct);
 }
 
@@ -199,6 +232,10 @@ void Network::injectMetric(void *metric) {
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method (injectMetric) that is not permitted by the active middleware strategy. \n");
         return;
     }
+    if(!isInitialized){
+        LOG(NETWORK,ERROR,"Error: init() must be called before performing middleware related actions.\n");
+        return;
+    }
 
     InjectContext* context = (InjectContext*)::middlewareGetStrategyContext();
     if(context != nullptr)context->injectNodeMetric(metric);
@@ -231,6 +268,14 @@ bool Network::isDataMessageEncapsulated(char *dataMessage) {
  * @return void
  */
 void Network::initMiddlewareStrategyPubSub(void (*decodeTopicFunction)(char*,int8_t *)){
+    if(!isInitialized){
+        LOG(NETWORK,ERROR,"Error: init() must be called before performing middleware related actions.\n");
+        return;
+    }
+    if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to initialize a strategy that inst currently active.\n");
+        return;
+    }
     ::initMiddlewareStrategyPubSub(decodeTopicFunction);
 }
 
@@ -259,6 +304,10 @@ void Network::subscribeToTopic(int8_t topic) {
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method (subscribeToTopic) that is not permitted by the active middleware strategy. \n");
         return;
     }
+    if(!isInitialized){
+        LOG(NETWORK,ERROR,"Error: init() must be called before performing middleware related actions.\n");
+        return;
+    }
 
     PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
     if(context != nullptr)context->subscribeToTopic(topic);
@@ -280,6 +329,10 @@ void Network::unsubscribeToTopic(int8_t topic){
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method (unsubscribeToTopic) that is not permitted by the active middleware strategy. \n");
         return;
     }
+    if(!isInitialized){
+        LOG(NETWORK,ERROR,"Error: init() must be called before performing middleware related actions.\n");
+        return;
+    }
 
     PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
     if(context != nullptr)context->unsubscribeToTopic(topic);
@@ -298,6 +351,10 @@ void Network::unsubscribeToTopic(int8_t topic){
 void Network::advertiseTopic(int8_t topic){
     if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method (advertiseTopic) that is not permitted by the active middleware strategy. \n");
+        return;
+    }
+    if(!isInitialized){
+        LOG(NETWORK,ERROR,"Error: init() must be called before performing middleware related actions.\n");
         return;
     }
 
@@ -321,6 +378,10 @@ void Network::unadvertiseTopic(int8_t topic){
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method (unadvertiseTopic) that is not permitted by the active middleware strategy. \n");
         return;
     }
+    if(!isInitialized){
+        LOG(NETWORK,ERROR,"Error: init() must be called before performing middleware related actions.\n");
+        return;
+    }
 
     PubSubContext* context = (PubSubContext*) ::middlewareGetStrategyContext();
     if(context != nullptr)context->unadvertiseTopic(topic);
@@ -330,6 +391,10 @@ void Network::unadvertiseTopic(int8_t topic){
 void Network::subscribeAndPublishTopics(int8_t *subscribeList, int subCount, int8_t *publishList, int pubCount) {
     if (!::isMiddlewareStrategyActive( STRATEGY_PUBSUB)){
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method (subscribeAndPublishTopics) that is not permitted by the active middleware strategy. \n");
+        return;
+    }
+    if(!isInitialized){
+        LOG(NETWORK,ERROR,"Error: init() must be called before performing middleware related actions.\n");
         return;
     }
 
@@ -351,6 +416,14 @@ void Network::subscribeAndPublishTopics(int8_t *subscribeList, int subCount, int
  * @return void
  */
 void Network::initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *),void (*printMetricFunction)(TableEntry*),uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t)){
+    if(!isInitialized){
+        LOG(NETWORK,ERROR,"Error: init() must be called before performing middleware related actions.\n");
+        return;
+    }
+    if (!::isMiddlewareStrategyActive( STRATEGY_TOPOLOGY)){
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to initialize a strategy that inst currently active.\n");
+        return;
+    }
     ::initMiddlewareStrategyTopology(topologyMetricValues, topologyMetricStructSize,setValueFunction,encodeTopologyMetricFunction,decodeTopologyMetricFunction,printMetricFunction,selectParentFunction);
 }
 
@@ -368,6 +441,10 @@ void Network::initMiddlewareStrategyTopology(void *topologyMetricValues, size_t 
 void Network::setParentMetric(void *metric) {
     if (!::isMiddlewareStrategyActive( STRATEGY_TOPOLOGY)){
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method (setParentMetric) that is not permitted by the active middleware strategy. \n");
+        return;
+    }
+    if(!isInitialized){
+        LOG(NETWORK,ERROR,"Error: init() must be called before performing middleware related actions.\n");
         return;
     }
 
@@ -533,6 +610,7 @@ int Network::getHopDistanceToRoot() {
 int Network::getNumberOfChildren() {
     return numberOfChildren;
 }
+
 
 
 

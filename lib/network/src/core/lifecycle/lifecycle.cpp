@@ -177,8 +177,10 @@ State init(Event event){
     getMyMAC(MAC);
     setIPs(MAC);
 
+    //Start the node AP interface
     startWifiAP(ssid,WIFI_PASSWORD, localIP, gateway, subnet);
 
+    //Start the transport layer
     beginTransport();
 
     numberOfChildren = 0;
@@ -197,7 +199,6 @@ State init(Event event){
 
     //hasParent = false;
 
-
     if (!iamRoot){
         insertFirst(stateMachineEngine, eInitSuccess);
         return sSearch;
@@ -207,7 +208,6 @@ State init(Event event){
         assignIP(parent, invalidIP);
         assignIP(rootIP,myIP);
         reportNewNodeToMonitoringServer(myIP,invalidIP);
-
         return sActive;
     };
 }

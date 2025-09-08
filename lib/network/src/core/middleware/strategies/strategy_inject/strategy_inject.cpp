@@ -88,6 +88,7 @@ void injectNodeMetric(void* metric){
 
     // Only send the metric message to the root if the node is already part of the network
     if(connectedToMainTree){
+        LOG(MIDDLEWARE,DEBUG,"Connected to main tree->sending the message\n");
         encodeMessageStrategyInject(smallSendBuffer,sizeof(smallSendBuffer),INJECT_NODE_INFO);
         propagateMessage(smallSendBuffer,myIP);
     }
@@ -234,7 +235,7 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
         char* token = strtok(messageBuffer, "|");
         //To discard the message type and ensure the token points to the first routing table update entry
         token = strtok(NULL, "|");
-        while (token != NULL) {
+        while (token != NULL){
             sscanf(token,"%hhu.%hhu.%hhu.%hhu %n",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&nChars);
 
             //Decode and save the metric in the table
