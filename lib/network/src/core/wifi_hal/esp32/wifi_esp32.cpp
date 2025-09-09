@@ -127,7 +127,7 @@ void onStationModeDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info){
     Serial.printf("[DEBUG] parentDisconnectionCount=%d\n", parentDisconnectionCount);
 
     // Trigger recovery if threshold reached
-    if (parentDisconnectionCount >= PARENT_DISCONNECTION_THRESHOLD) {
+    if (parentDisconnectionCount >= PARENT_DISCONNECTION_THRESHOLD_ESP32) {
         if (parentDisconnectCallback != nullptr) {
             parentDisconnectCallback();
         }

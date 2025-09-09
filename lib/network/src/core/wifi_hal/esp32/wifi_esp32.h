@@ -8,6 +8,10 @@
 #define WIFI_CONNECTION_TIMEOUT_ESP32 3000
 #endif
 
+#ifndef PARENT_DISCONNECTION_THRESHOLD
+#define PARENT_DISCONNECTION_THRESHOLD_ESP32 4
+#endif
+
 #include "../wifi_interface.h"
 
 void onSoftAPModeStationConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info);

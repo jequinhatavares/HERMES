@@ -10,6 +10,10 @@
 #define WIFI_CONNECTION_TIMEOUT_ESP8266 4000
 #endif
 
+#ifndef PARENT_DISCONNECTION_THRESHOLD
+#define PARENT_DISCONNECTION_THRESHOLD_ESP8266 4
+#endif
+
 void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnected& info);
 void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisconnected& info);
 void onStationModeGotIPHandler(const WiFiEventStationModeGotIP& info);
