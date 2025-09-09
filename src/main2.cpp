@@ -196,9 +196,9 @@ void setup(){
                                          encodeMetricEntry, decodeMetricEntry,
                                          compareMetrics,printMetricStruct);
 
-    /************* Middleware Strategy: Inject Inits *************/
+    /************* Middleware Strategy: Inject Initializations *************/
     if(MAC[5] == 89 && MAC[4] == 248 && MAC[3] == 169 && MAC[2] == 45) {
-        myMetric.processingCapacity=1;
+        myMetric.processingCapacity=2;
         network.injectMetric(&myMetric);
     }
 
@@ -245,7 +245,6 @@ void setup(){
     else if(MAC[5] == 12 && MAC[4] == 150 && MAC[3] == 51 && MAC[2] == 26){
         worker.registerNodeAsInput();
     }
-
 
 }
 
