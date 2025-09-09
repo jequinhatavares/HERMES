@@ -444,7 +444,7 @@ void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
     }
     // Call the middleware function to update the pub/sub information's
     network.subscribeAndPublishTopics(subTopics,nSubTopics,pubTopics,nPubTopics);
-    network.middlewarePrintInfo();
+    //network.middlewarePrintInfo();
 
     //delay(1000);
 

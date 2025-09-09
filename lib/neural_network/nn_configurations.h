@@ -38,7 +38,7 @@
 
 #define INFERENCE_TIMEOUT 6000
 
-#define MIN_WORKERS 1
+#define MIN_WORKERS 4
 
 
 
