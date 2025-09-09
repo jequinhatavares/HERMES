@@ -621,7 +621,7 @@ void searchAP2(const char* SSID){
  * @params SSID - The char array holding the SSID used to filter scan results.
  * @return void
  */
-void searchAP3(const char* SSID){
+void searchAP(const char* SSID){
     char buffer[1024];
     FILE *fp;
     const char* rSSID = "RaspiNet";
@@ -656,12 +656,14 @@ void searchAP3(const char* SSID){
             }
     }
 
+    if(reachableNetworks.len == 0)  sleep(3);  // sleep for 2 seconds
+
     // Close the file pointer after reading
     fclose(fp);
 }
 
 
-void searchAP(const char* SSID) {
+void searchAP3(const char* SSID) {
     char buffer[1024];
     FILE *fp;
     const char* rSSID = "RaspiNet";
@@ -720,7 +722,7 @@ int numberOfSTAConnected(){
     return 1;
 }
 
-bool connectToAP(const char *SSID, const char *PASS) {
+bool connectToAP2(const char *SSID, const char *PASS) {
     char command[512];
     char netid[16];
     FILE *fp;
@@ -765,7 +767,7 @@ bool connectToAP(const char *SSID, const char *PASS) {
     return true;
 }
 
-bool connectToAP2(const char * SSID, const char * PASS){
+bool connectToAP(const char * SSID, const char * PASS){
     char command[256];
     char outputLine[256];
     bool success = false;
@@ -796,7 +798,7 @@ bool connectToAP2(const char * SSID, const char * PASS){
     return success;
 }
 
-void disconnectFromAP() {
+void disconnectFromAP2() {
     // Disconnect from the current network
     if (system("wpa_cli -i wlan0 disconnect") != 0) {
         fprintf(stderr, "Failed to disconnect wlan0\n");
@@ -805,8 +807,8 @@ void disconnectFromAP() {
     // Disable all networks to prevent automatic reconnection
     // system("wpa_cli -i wlan0 disable_network all");
 }
-void disconnectFromAP2() {
-    const char *command = "nmcli dev disconnect wlan0 2>&1";
+
+void disconnectFromAP() {
 
     FILE *fp = popen(command, "r");
     if (fp == NULL) {
@@ -830,6 +832,7 @@ void disconnectFromAP2() {
         perror("pclose failed");
         return ;
     }
+    sleep(2);  // sleep for 2 seconds
 
 }
 

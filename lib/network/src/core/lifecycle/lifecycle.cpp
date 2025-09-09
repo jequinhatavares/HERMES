@@ -946,7 +946,7 @@ int parentHandshakeProcedure(ParentInfo *possibleParents){
     //Connect to each parent to request their information in order to select the preferred parent.
     for (int i = 0; i < reachableNetworks.len; i++){
         //LOG(NETWORK,DEBUG,"Before connecting to AP\n");
-        LOG(NETWORK,INFO,"Connecting to AP\n");
+        LOG(NETWORK,INFO,"Connecting to AP with SSID:%s\n",reachableNetworks.item[i]);
 
         /*** Attempt to connect to the parent node's Wi-Fi network. If the connection fails
          * (e.g., SSID unavailable, parent unreachable, or out of range), proceed to the next candidate parent. ***/

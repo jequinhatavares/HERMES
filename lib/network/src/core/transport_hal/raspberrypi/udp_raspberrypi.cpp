@@ -99,10 +99,11 @@ int receiveMessage(char *buffer,size_t bufferSize) {
  */
 void sendMessage(uint8_t IP[4],const char *message) {
     int sentBytes=0;
+
     struct sockaddr_in targetAddr;
+    memset(&targetAddr, 0, sizeof(targetAddr));
     targetAddr.sin_family = AF_INET;
     targetAddr.sin_port = htons(UDP_PORT);
-    uint32_t addr;
 
 
     char ipString[16];
