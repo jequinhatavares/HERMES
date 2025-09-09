@@ -115,14 +115,12 @@ void rewriteSenderIPInject(char* messageBuffer, char* writeBuffer,size_t writeBu
     uint8_t senderIP[4],nodeIP[4];
     InjectMessageType injectType;
 
-
     if(type == INJECT_NODE_INFO){
         // If the encoded message already contains metric information, it means this is a propagation of an already encoded message.
         // In this case, only the sender address needs to be updated before further propagation.
         if( sscanf(messageBuffer,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&MessageType,&injectType,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]
                 ,&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3], &nChars) == 10 ){
 
-            LOG(MIDDLEWARE,DEBUG,"1\n");
             snprintf(writeBuffer,writeBufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",MessageType,injectType,myIP[0],myIP[1],myIP[2],myIP[3]
                     ,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3], messageBuffer + nChars);
 

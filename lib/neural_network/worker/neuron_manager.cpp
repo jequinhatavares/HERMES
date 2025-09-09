@@ -635,6 +635,8 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                 neuronOutput = neuronCore.computeNeuronOutput(currentNeuronID);
                 outputValues[neuronStorageIndex] = neuronOutput;
 
+                LOG(APP,INFO,"Neuron %hhu generated output: %f\n",currentNeuronID,neuronOutput);
+
                 //Iterates through all neurons managed by this node to identify which require the computed output as their input
                 for (int j = 0; j < neuronCore.neuronsCount; j++) {
                     handledNeuronId = neuronCore.getNeuronId(j);
@@ -642,7 +644,6 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                         neuronsRequireInput=true;
                         break;
                     }
-
                 }
 
                 // If any node requires the computed output, feed it to them by recursively calling this function
@@ -653,8 +654,7 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
 
                 isOutputComputed[neuronStorageIndex] = true;
 
-                //TODO Send the output for the nodes that need him
-                LOG(APP,INFO,"Neuron %hhu generated output: %f\n",currentNeuronID,neuronOutput);
+
                 // Encode the message with the neuron output
                 encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,currentNeuronID,neuronOutput);
                 if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY){
