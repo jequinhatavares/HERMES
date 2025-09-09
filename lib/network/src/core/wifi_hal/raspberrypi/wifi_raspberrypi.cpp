@@ -137,7 +137,6 @@ void onStationModeDisconnectedHandler(wifi_event_info__t *info){
     parentDisconnectionCount++;
     lastParentDisconnectionTime = currentTime;
 
-    Serial.printf("[DEBUG] parentDisconnectionCount=%d\n", parentDisconnectionCount);
 
     // Trigger recovery if threshold reached
     if (parentDisconnectionCount >= PARENT_DISCONNECTION_THRESHOLD) {

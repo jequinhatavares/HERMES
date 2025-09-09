@@ -67,7 +67,7 @@ void reportLifecycleTimesToMonitoringServer(unsigned long initTime, unsigned lon
 #ifdef MONITORING_ON
 
 #if defined(ESP8266)
-    sprintf(monitoringBuffer,"%d 1 %lu %lu %lu",LIFECYCLE_TIMES,initTime,searchTime,joinNetworkTime);
+    sprintf(monitoringBuffer,"%d %d 1 %lu %lu %lu",MONITORING_MESSAGE,LIFECYCLE_TIMES,initTime,searchTime,joinNetworkTime);
 #endif
 
 #if defined(ESP32)
@@ -93,7 +93,7 @@ void reportLifecycleTimesToMonitoringServer(unsigned long initTime, unsigned lon
 void reportParentRecoveryTimeToMonitoringServer(unsigned long parentRecoveryTime){
 #ifdef MONITORING_ON
 #if defined(ESP8266)
-    sprintf(monitoringBuffer,"%d 1 %lu",PARENT_RECOVERY_TIME,parentRecoveryTime);
+    sprintf(monitoringBuffer,"%d %d 1 %lu",MONITORING_MESSAGE,PARENT_RECOVERY_TIME,parentRecoveryTime);
 #endif
 
 #if defined(ESP32)
