@@ -139,7 +139,7 @@ void onStationModeDisconnectedHandler(wifi_event_info__t *info){
 
 
     // Trigger recovery if threshold reached
-    if (parentDisconnectionCount >= PARENT_DISCONNECTION_THRESHOLD) {
+    if (parentDisconnectionCount >= PARENT_DISCONNECTION_THRESHOLD_RPI) {
         if (parentDisconnectCallback != nullptr) {
             parentDisconnectCallback();
         }
@@ -207,6 +207,12 @@ void parseWifiEventInfo(char *msg){
             MAC[i] = (uint8_t)unsignedMAC[i];
             eventInfo.MAC[i]=MAC[i];
         }
+        eventInfo.reason = reason;
+        wifi_event_handlers[WIFI_EVENT_STA_DISCONNECTED](&eventInfo);
+
+    }else if(strcmp(eventType,"CTRL-EVENT-NETWORK-NOT-FOUND") == 0){
+        //<3>CTRL-EVENT-DISCONNECTED bssid=ce:50:e3:60:e6:87 reason=3 locally_generated=1
+        int reason=0;
         eventInfo.reason = reason;
         wifi_event_handlers[WIFI_EVENT_STA_DISCONNECTED](&eventInfo);
 
