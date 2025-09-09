@@ -71,11 +71,11 @@ void reportLifecycleTimesToMonitoringServer(unsigned long initTime, unsigned lon
 #endif
 
 #if defined(ESP32)
-    sprintf(monitoringBuffer,"%d 2 %lu %lu %lu",LIFECYCLE_TIMES,initTime,searchTime,joinNetworkTime);
+    sprintf(monitoringBuffer,"%d %d 2 %lu %lu %lu",MONITORING_MESSAGE,LIFECYCLE_TIMES,initTime,searchTime,joinNetworkTime);
 #endif
 
 #if defined(raspberrypi_3b)
-    sprintf(monitoringBuffer,"%d 3 %lu %lu %lu",LIFECYCLE_TIMES,initTime,searchTime,joinNetworkTime);
+    sprintf(monitoringBuffer,"%d %d 3 %lu %lu %lu",MONITORING_MESSAGE,LIFECYCLE_TIMES,initTime,searchTime,joinNetworkTime);
 #endif
     if(!iamRoot){//If i am not the root send the message to the root
         uint8_t *nextHopIP = findRouteToNode(rootIP);
@@ -97,11 +97,11 @@ void reportParentRecoveryTimeToMonitoringServer(unsigned long parentRecoveryTime
 #endif
 
 #if defined(ESP32)
-    sprintf(monitoringBuffer,"%d 2 %lu",PARENT_RECOVERY_TIME,parentRecoveryTime);
+    sprintf(monitoringBuffer,"%d %d 2 %lu",MONITORING_MESSAGE,PARENT_RECOVERY_TIME,parentRecoveryTime);
 #endif
 
 #if defined(raspberrypi_3b)
-    sprintf(monitoringBuffer,"%d 3 %lu",PARENT_RECOVERY_TIME,parentRecoveryTime);
+    sprintf(monitoringBuffer,"%d %d 3 %lu",MONITORING_MESSAGE,PARENT_RECOVERY_TIME,parentRecoveryTime);
 #endif
     if(!iamRoot){//If i am not the root send the message to the root
         uint8_t *nextHopIP = findRouteToNode(rootIP);

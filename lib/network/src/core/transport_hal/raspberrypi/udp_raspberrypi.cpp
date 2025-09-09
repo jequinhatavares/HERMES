@@ -120,7 +120,7 @@ void sendMessage(uint8_t IP[4],const char *message) {
         perror("Send Message Failed\n");
         printf("errno = %d\n", errno); // prints the numeric error code
     }else{
-        printf("message: %s sent to: %i.%i.%i.%i\n", message,IP[0],IP[1],IP[2],IP[3]); // prints the numeric error code
+        //printf("message: %s sent to: %i.%i.%i.%i\n", message,IP[0],IP[1],IP[2],IP[3]); // prints the numeric error code
     }
 }
 
