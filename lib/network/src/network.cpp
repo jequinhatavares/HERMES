@@ -66,8 +66,9 @@ void Network::begin() {
     }
 
     if(!iamRoot){
-        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//State Search APs
-        Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//State Join Network
+        while(stateMachineEngine->size != 0){
+            Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));//Advance to the states Search and joi network until de the node is connected to the network
+        }
     }
 
     beginCalled = true;

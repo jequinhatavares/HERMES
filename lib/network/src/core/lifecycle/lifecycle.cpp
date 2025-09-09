@@ -250,7 +250,9 @@ State search(Event event){
         filterReachableNetworks();
     }while(reachableNetworks.len == 0);
 
+    //Insert the event in the queue for the SM to advance to the join network state
     insertFirst(stateMachineEngine, eFoundParents);
+
     searchStateTime=getCurrentTime()-startTime;
     return sJoinNetwork;
 

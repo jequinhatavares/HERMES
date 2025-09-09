@@ -621,10 +621,13 @@ void searchAP2(const char* SSID){
  * @params SSID - The char array holding the SSID used to filter scan results.
  * @return void
  */
-void searchAP(const char* SSID){
+void searchAP3(const char* SSID){
     char buffer[1024];
     FILE *fp;
     const char* rSSID = "RaspiNet";
+
+    //Ensure the wlan0 interface is up and ready for scan
+    system("ip link set wlan0 up");
 
     // Open a pipe to execute the 'iwlist' command and get the scan results
     fp = popen("iwlist wlan0 scan 2>/dev/null", "r");
@@ -657,6 +660,45 @@ void searchAP(const char* SSID){
     fclose(fp);
 }
 
+
+void searchAP(const char* SSID) {
+    char buffer[1024];
+    FILE *fp;
+    const char* rSSID = "RaspiNet";
+
+    // Trigger a scan
+    system("wpa_cli -i wlan0 scan");
+
+    // Read scan results
+    fp = popen("wpa_cli -i wlan0 scan_results", "r");
+    if (!fp) {
+        perror("popen scan_results failed");
+        return;
+    }
+
+    // Skip the header line
+    fgets(buffer, sizeof(buffer), fp);
+
+    while (fgets(buffer, sizeof(buffer), fp)) {
+        char bssid[32], freq[16], signal[16], flags[128], current_ssid[256];
+
+        if (sscanf(buffer, "%31s %15s %15s %127s %255[^\n]",
+                   bssid, freq, signal, flags, current_ssid) >= 5) {
+            printf("SSID: %s (Signal: %s)\n", current_ssid, signal);
+
+            //Check if the AP corresponds to a node of the mesh network
+            if(strstr(current_ssid, SSID) == NULL && strstr(current_ssid, rSSID) == NULL){
+                continue;
+            }
+
+             strcpy(reachableNetworks.item[reachableNetworks.len], current_ssid);
+             reachableNetworks.len++;
+        }
+    }
+
+    pclose(fp);
+}
+
 int numberOfSTAConnected(){
     char buffer[1024];
     FILE *fp;
@@ -678,7 +720,52 @@ int numberOfSTAConnected(){
     return 1;
 }
 
-bool connectToAP(const char * SSID, const char * PASS){
+bool connectToAP(const char *SSID, const char *PASS) {
+    char command[512];
+    char netid[16];
+    FILE *fp;
+
+    // Add a new network
+    fp = popen("wpa_cli -i wlan0 add_network", "r");
+    if (!fp) {
+        perror("popen add_network failed");
+        return false;
+    }
+
+    if (!fgets(netid, sizeof(netid), fp)) {
+        pclose(fp);
+        return false;
+    }
+    pclose(fp);
+
+    // Strip newline
+    netid[strcspn(netid, "\n")] = 0;
+
+    // Set SSID (must be double-quoted inside single quotes for wpa_cli)
+    snprintf(command, sizeof(command),
+             "wpa_cli -i wlan0 set_network %s ssid '\"%s\"'", netid, SSID);
+    if (system(command) != 0) return false;
+
+    // Set PSK
+    snprintf(command, sizeof(command),
+             "wpa_cli -i wlan0 set_network %s psk '\"%s\"'", netid, PASS);
+    if (system(command) != 0) return false;
+
+    // Enable the network
+    snprintf(command, sizeof(command),
+             "wpa_cli -i wlan0 enable_network %s", netid);
+    if (system(command) != 0) return false;
+
+    // Select the network (forces immediate connection attempt)
+    snprintf(command, sizeof(command),
+             "wpa_cli -i wlan0 select_network %s", netid);
+    if (system(command) != 0) return false;
+
+
+    return true;
+}
+
+bool connectToAP2(const char * SSID, const char * PASS){
     char command[256];
     char outputLine[256];
     bool success = false;
@@ -710,6 +797,15 @@ bool connectToAP(const char * SSID, const char * PASS){
 }
 
 void disconnectFromAP() {
+    // Disconnect from the current network
+    if (system("wpa_cli -i wlan0 disconnect") != 0) {
+        fprintf(stderr, "Failed to disconnect wlan0\n");
+    }
+
+    // Disable all networks to prevent automatic reconnection
+    // system("wpa_cli -i wlan0 disable_network all");
+}
+void disconnectFromAP2() {
     const char *command = "nmcli dev disconnect wlan0 2>&1";
 
     FILE *fp = popen(command, "r");
