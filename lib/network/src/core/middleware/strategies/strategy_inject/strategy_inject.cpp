@@ -295,16 +295,29 @@ void influenceRoutingStrategyInject(char* messageEncodeBuffer,size_t encodeBuffe
     void* bestMetric = nullptr, *currentMetric;
     uint8_t *IP, bestMetricIP[4], *nextHopIP;
     bool findBestMetric=false;
+    int compareResult,currentNodeDistance,bestMetricDistance;
 
     // In the metricsTable, find the node with the best metric using the user-provided comparison function
     for (int i = 0; i < metricsTable->numberOfItems ; i++) {
         IP = (uint8_t *) tableKey(metricsTable,i);
         if(isIPEqual(IP,myIP)) continue;//Skip my IP
         currentMetric = tableRead(metricsTable,IP);
-        if(compareMetrics(bestMetric,currentMetric) == 2){
+        if(!currentMetric) continue;
+
+        compareResult=compareMetrics(bestMetric,currentMetric);
+        if(compareResult == 2){
             bestMetric = currentMetric;
             assignIP(bestMetricIP,IP);
+            bestMetricDistance=getDistanceToNode(bestMetricIP);
             findBestMetric = true;
+        }else if(compareResult == 0){
+            // In the event of a tie between metrics, the node with the smallest hop distance is chosen.
+            currentNodeDistance = getDistanceToNode(IP);
+            if(currentNodeDistance < bestMetricDistance){
+                bestMetric = currentMetric;
+                assignIP(bestMetricIP,IP);
+                bestMetricDistance=currentNodeDistance;
+            }
         }
     }
 

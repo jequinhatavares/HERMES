@@ -61,10 +61,12 @@ int compareMetrics(void *metricAv,void*metricBv){
 
     metricStruct *metricA = (metricStruct*) metricAv;
     metricStruct *metricB = (metricStruct*) metricBv;
-    if(metricA->processingCapacity >= metricB->processingCapacity){
+    if(metricA->processingCapacity > metricB->processingCapacity){
         return 1;
-    }else{
+    }else if(metricA->processingCapacity < metricB->processingCapacity){
         return 2;
+    }else{
+        return 0;
     }
 }
 
