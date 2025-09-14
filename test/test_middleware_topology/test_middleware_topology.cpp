@@ -193,7 +193,7 @@ void test_root_handle_parent_advertisement_request(){
 void test_root_handle_parent_list_advertisement(){
     //MESSAGE_TYPE TOP_METRICS_REPORT [destination:rootIP] [nodeIP] [metric]
     char MR1[100] = "10 3 1.1.1.1 2.2.2.2 2",MR2[100] = "10 3 1.1.1.1 3.3.3.3 3",MR3[100] = "10 3 1.1.1.1 4.4.4.4 4";
-    char PLA[100] = "10 1 1.1.1.1 2.2.2.2 5.5.5.5 2.2.2.2 4.4.4.4";
+    char PLA[100] = "10 1 2.2.2.2 5.5.5.5 2.2.2.2 4.4.4.4";
     char correctEncodedMsg[100];
     uint8_t IP1[4]={2,2,2,2}, IP2[4]={3,3,3,3}, IP3[4]={4,4,4,4};
 

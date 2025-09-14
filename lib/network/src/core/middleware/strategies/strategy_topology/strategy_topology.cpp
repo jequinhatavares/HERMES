@@ -149,8 +149,8 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
 
         if(!iamRoot){
             //Encode the TOP_PARENT_LIST_ADVERTISEMENT message to be sent to the root
-            //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP =root] [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
-            snprintf(largeSendBuffer, sizeof(largeSendBuffer),"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT,rootIP[0],rootIP[1],rootIP[2],rootIP[3],
+            //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
+            snprintf(largeSendBuffer, sizeof(largeSendBuffer),"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT,
                      myIP[0],myIP[1],myIP[2],myIP[3],tmpChildIP[0],tmpChildIP[1],tmpChildIP[2],tmpChildIP[3],messageBuffer+nChars);
             //Send the encode message to the root
             nextHopIP = findRouteToNode(rootIP);
@@ -166,11 +166,9 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
 
     }else if(type == TOP_PARENT_LIST_ADVERTISEMENT){
         LOG(MESSAGES,INFO,"Received [PARENT_LIST_ADVERTISEMENT] message: \"%s\"\n", messageBuffer);
-        sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %n",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3],&nChars);
         // Check if i am the final destination of the message
-        if(isIPEqual(destinationNodeIP,myIP) && iamRoot){
+        if(iamRoot){
             chooseParentStrategyTopology(messageBuffer);
-
         }else{ // If not, forward the message to the nextHop to the destination
             nextHopIP = findRouteToNode(destinationNodeIP);
             if (nextHopIP != nullptr){
