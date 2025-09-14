@@ -308,7 +308,7 @@ void influenceRoutingStrategyInject(char* messageEncodeBuffer,size_t encodeBuffe
         if(compareResult == 2){
             bestMetric = currentMetric;
             assignIP(bestMetricIP,IP);
-            bestMetricDistance=getDistanceToNode(bestMetricIP);
+            bestMetricDistance = getDistanceToNode(bestMetricIP);
             findBestMetric = true;
         }else if(compareResult == 0){
             // In the event of a tie between metrics, the node with the smallest hop distance is chosen.

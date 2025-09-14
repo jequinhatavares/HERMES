@@ -217,6 +217,7 @@ uint8_t* findRouteToNode(uint8_t nodeIP[4]){
 bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, uint8_t senderIP[4]){
     RoutingTableEntry updatedEntry;
     RoutingTableEntry *nodeEntry = (RoutingTableEntry*) findNode(routingTable, nodeIP);
+    bool relevantUpdate=false;
 
     /*** If the sequence number for my own node in the received routing update is higher than the one
       * stored in RAM, it likely means the node experienced a reset or power loss and lost its volatile memory.
@@ -232,7 +233,7 @@ bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, 
     if( nodeEntry == nullptr){ // If the node is not in the table add it
         // Check the parity of the sequence number. If it's odd (indicating a issue with the node),
         // retain the advertised distance as -1 instead of incrementing it.
-        if ( sequenceNumber % 2 != 0){ //Odd sequence number
+        if (sequenceNumber % 2 != 0){ //Odd sequence number
             updatedEntry.hopDistance = hopDistance;
         }else{
             updatedEntry.hopDistance = hopDistance + 1;
@@ -244,18 +245,20 @@ bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, 
 
     }else{//The node is already present in the table
         if(sequenceNumber > nodeEntry->sequenceNumber){
-
             // Check the parity of the sequence number. If it's odd (indicating a issue with the node),
             // retain the advertised distance as -1 instead of incrementing it.
             if ( sequenceNumber % 2 != 0){ //Odd sequence number
                 updatedEntry.hopDistance = hopDistance;
+                relevantUpdate=true; //An odd value implies a path loss which is relevant information
             }else{
+                // Consider information relevant when either the hop distance or nextHop node value differs from the stored version.
+                if( (hopDistance + 1 != nodeEntry->hopDistance) || (!isIPEqual(nodeEntry->nextHopIP,senderIP))) relevantUpdate=true;
                 updatedEntry.hopDistance = hopDistance + 1;
             }
             assignIP(updatedEntry.nextHopIP ,senderIP);
             updatedEntry.sequenceNumber = sequenceNumber;
             tableUpdate(routingTable, nodeIP, &updatedEntry);
-            return true;
+            return relevantUpdate;
         }
         else if(sequenceNumber == nodeEntry->sequenceNumber){
             //If the new path has a lower cost update the routing with the new information containing the shorter path
