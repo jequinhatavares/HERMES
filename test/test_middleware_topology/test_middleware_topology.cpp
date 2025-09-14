@@ -119,8 +119,7 @@ void test_init_strategy_topology(){
 
 void test_root_handle_message_metrics_report(){
     //MESSAGE_TYPE TOP_METRICS_REPORT [destination:rootIP] [nodeIP] [metric]
-    char MR1[100] = "10 3 1.1.1.1 2.2.2.2 2",MR2[100] = "10 3 1.1.1.1 3.3.3.3 3",MR3[100] = "10 3 1.1.1.1 4.4.4.4 4";
-    char correctEncodedMsg[100] = "10 2 3.3.3.3 2.2.2.2 5.5.5.5";
+    char MR1[100] = "10 3 2.2.2.2 2",MR2[100] = "10 3 3.3.3.3 3",MR3[100] = "10 3 4.4.4.4 4";
     uint8_t IP1[4]={2,2,2,2}, IP2[4]={3,3,3,3}, IP3[4]={4,4,4,4};
 
     uint8_t root[4]={1,1,1,1};

@@ -80,9 +80,9 @@ void encodeNodeMetricReport(char* messageBuffer, size_t bufferSize, void* metric
     //Encode the metric value
     encodeTopologyMetricValue(metricBuffer, sizeof(metricBuffer),metric);
 
-    //MESSAGE_TYPE TOP_METRICS_REPORT [destination:rootIP] [nodeIP] [metric]
-    snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,TOP_METRICS_REPORT,
-             rootIP[0],rootIP[1],rootIP[2],rootIP[3],myIP[0],myIP[1],myIP[2],myIP[3],metricBuffer);
+    //MESSAGE_TYPE TOP_METRICS_REPORT [nodeIP] [metric]
+    snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,TOP_METRICS_REPORT,
+             myIP[0],myIP[1],myIP[2],myIP[3],metricBuffer);
 }
 void encodeParentAssignmentCommand(char* messageBuffer, size_t bufferSize, uint8_t * destinationIP, uint8_t * chosenParentIP, uint8_t * targetNodeIP){
     //MESSAGE_TYPE TOP_PARENT_ASSIGNMENT_COMMAND [destinationIP] [nodeIP] [parentIP]
@@ -205,9 +205,8 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
                 LOG(MIDDLEWARE,ERROR,"❌ERROR: No path to root node was found in the routing table.\n");
             }
         }else{
-            sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n"
-                   ,&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3],
-                   &targetNodeIP[0],&targetNodeIP[1],&targetNodeIP[2],&targetNodeIP[3], &nChars);
+            sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %n"
+                   ,&targetNodeIP[0],&targetNodeIP[1],&targetNodeIP[2],&targetNodeIP[3], &nChars);
 
             //Decode and register the metric in the table
             registerTopologyMetric(targetNodeIP,messageBuffer+nChars);
