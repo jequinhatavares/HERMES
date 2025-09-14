@@ -81,9 +81,9 @@ void test_encode_parent_list_advertisement_request(){
         nParents++;
     }
 
-    snprintf(correctEncodedMsg, sizeof(correctEncodedMsg),"%d %d 3.3.3.3 3.3.3.1 1.1.1.1 2.2.2.2 2.2.2.2 2.2.2.2",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT_REQUEST);
+    snprintf(correctEncodedMsg, sizeof(correctEncodedMsg),"%d %d 3.3.3.1 1.1.1.1 2.2.2.2 2.2.2.2 2.2.2.2",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT_REQUEST);
 
-    encodeParentListAdvertisementRequest(largeSendBuffer, sizeof(largeSendBuffer), possibleParents, nParents, parentIP, mySTAIP);
+    encodeParentListAdvertisementRequest(largeSendBuffer, sizeof(largeSendBuffer), possibleParents, nParents,mySTAIP);
 
     printf("Encoded message: %s\n", correctEncodedMsg);
     printf("Encoded message: %s\n", largeSendBuffer);

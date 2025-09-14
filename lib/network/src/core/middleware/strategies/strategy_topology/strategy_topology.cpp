@@ -91,7 +91,7 @@ void encodeParentAssignmentCommand(char* messageBuffer, size_t bufferSize, uint8
              ,chosenParentIP[0],chosenParentIP[1],chosenParentIP[2],chosenParentIP[3]);
 }
 
-void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize, ParentInfo* possibleParents, int nrOfPossibleParents, uint8_t *temporaryParent, uint8_t *mySTAIP){
+void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize, ParentInfo* possibleParents, int nrOfPossibleParents, uint8_t *mySTAIP){
     int offset;
 
     /*** This is an intermediary message sent to the temporary parent.
@@ -99,10 +99,9 @@ void encodeParentListAdvertisementRequest(char* messageBuffer, size_t bufferSize
          The temporary parent will replace it with the correct root IP before forwarding.
          New Node-> Temporary Parent -> Root Node  ***/
 
-    //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [tmp parent IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
-    offset = snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT_REQUEST
-                      ,temporaryParent[0],temporaryParent[1],temporaryParent[2],temporaryParent[3],
-                      mySTAIP[0],mySTAIP[1],mySTAIP[2],mySTAIP[3],myIP[0],myIP[1],myIP[2],myIP[3]);
+    //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT_REQUEST [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
+    offset = snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",MIDDLEWARE_MESSAGE
+                      ,TOP_PARENT_LIST_ADVERTISEMENT_REQUEST,mySTAIP[0],mySTAIP[1],mySTAIP[2],mySTAIP[3],myIP[0],myIP[1],myIP[2],myIP[3]);
 
     for (int i = 0; i < nrOfPossibleParents; i++) {
         offset += snprintf(messageBuffer + offset, bufferSize - offset," %hhu.%hhu.%hhu.%hhu",
@@ -143,33 +142,28 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
 
     if(type == TOP_PARENT_LIST_ADVERTISEMENT_REQUEST){
         LOG(MESSAGES,INFO,"Received [PARENT_LIST_ADVERTISEMENT_REQUEST] message: \"%s\"\n", messageBuffer);
-        sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n"
-               ,&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3]
+        sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n"
                ,&tmpChildSTAIP[0],&tmpChildSTAIP[1],&tmpChildSTAIP[2],&tmpChildSTAIP[3]
                ,&tmpChildIP[0],&tmpChildIP[1],&tmpChildIP[2],&tmpChildIP[3],&nChars);
 
-        // Check whether this node is the intended destination of the message
-        if(isIPEqual(destinationNodeIP,myIP)){
-            if(!iamRoot){
-                //Encode the TOP_PARENT_LIST_ADVERTISEMENT message to be sent to the root
-                //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP =root] [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
-                snprintf(largeSendBuffer, sizeof(largeSendBuffer),"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT,rootIP[0],rootIP[1],rootIP[2],rootIP[3],
-                         myIP[0],myIP[1],myIP[2],myIP[3],tmpChildIP[0],tmpChildIP[1],tmpChildIP[2],tmpChildIP[3],messageBuffer+nChars);
-                //Send the encode message to the root
-                nextHopIP = findRouteToNode(rootIP);
-                if(nextHopIP != nullptr){
-                    sendMessage(nextHopIP,largeSendBuffer);
-                }
-            }else{
-                // If the new node connects directly to the root and sends the TOP_PARENT_LIST_ADVERTISEMENT_REQUEST,
-                // the root can process the list of advertised parents and select a parent immediately
-                chooseParentStrategyTopology(messageBuffer);
-            }
 
+        if(!iamRoot){
+            //Encode the TOP_PARENT_LIST_ADVERTISEMENT message to be sent to the root
+            //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP =root] [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
+            snprintf(largeSendBuffer, sizeof(largeSendBuffer),"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT,rootIP[0],rootIP[1],rootIP[2],rootIP[3],
+                     myIP[0],myIP[1],myIP[2],myIP[3],tmpChildIP[0],tmpChildIP[1],tmpChildIP[2],tmpChildIP[3],messageBuffer+nChars);
+            //Send the encode message to the root
+            nextHopIP = findRouteToNode(rootIP);
+            if(nextHopIP != nullptr){
+                sendMessage(nextHopIP,largeSendBuffer);
+            }
         }else{
-            // This message type is intended to be sent only by the new node to its directly connected temporary parent
-            LOG(MIDDLEWARE, ERROR, "❌ ERROR: This node should be the destination of the TOP_PARENT_LIST_ADVERTISEMENT_REQUEST message\n");
+            // If the new node connects directly to the root and sends the TOP_PARENT_LIST_ADVERTISEMENT_REQUEST,
+            // the root can process the list of advertised parents and select a parent immediately
+            chooseParentStrategyTopology(messageBuffer);
         }
+
+
     }else if(type == TOP_PARENT_LIST_ADVERTISEMENT){
         LOG(MESSAGES,INFO,"Received [PARENT_LIST_ADVERTISEMENT] message: \"%s\"\n", messageBuffer);
         sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %n",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3],&nChars);
@@ -313,7 +307,7 @@ ParentInfo requestParentFromRoot(ParentInfo* possibleParents, int nrOfPossiblePa
     }
 
     // Encode the PARENT_LIST_ADVERTISEMENT_REQUEST to send to the temporary parent, for in to send a PARENT_LIST_ADVERTISEMENT to the root
-    encodeParentListAdvertisementRequest(largeSendBuffer, sizeof(largeSendBuffer), possibleParents, nrOfPossibleParents, temporaryParent, mySTAIP);
+    encodeParentListAdvertisementRequest(largeSendBuffer, sizeof(largeSendBuffer), possibleParents, nrOfPossibleParents, mySTAIP);
 
     // Send the message to the temporary parent so it can be forwarded toward the root
     sendMessage(temporaryParent,largeSendBuffer);
