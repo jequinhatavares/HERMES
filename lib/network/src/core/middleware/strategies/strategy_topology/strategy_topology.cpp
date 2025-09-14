@@ -175,7 +175,6 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
         sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %n",&destinationNodeIP[0],&destinationNodeIP[1],&destinationNodeIP[2],&destinationNodeIP[3],&nChars);
         // Check if i am the final destination of the message
         if(isIPEqual(destinationNodeIP,myIP) && iamRoot){
-
             chooseParentStrategyTopology(messageBuffer);
 
         }else{ // If not, forward the message to the nextHop to the destination

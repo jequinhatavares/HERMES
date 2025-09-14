@@ -88,7 +88,7 @@ void injectNodeMetric(void* metric){
 
     // Only send the metric message to the root if the node is already part of the network
     if(connectedToMainTree){
-        encodeMessageStrategyInject(smallSendBuffer,sizeof(smallSendBuffer),INJECT_NODE_INFO);
+        encodeMessageStrategyInject(smallSendBuffer,sizeof(smallSendBuffer),INJECT_NODE_METRIC_UPDATE);
         propagateMessage(smallSendBuffer,myIP);
     }
 
@@ -115,7 +115,7 @@ void rewriteSenderIPInject(char* messageBuffer, char* writeBuffer,size_t writeBu
     uint8_t senderIP[4],nodeIP[4];
     InjectMessageType injectType;
 
-    if(type == INJECT_NODE_INFO){
+    if(type == INJECT_NODE_METRIC_UPDATE){
         // If the encoded message already contains metric information, it means this is a propagation of an already encoded message.
         // In this case, only the sender address needs to be updated before further propagation.
         if( sscanf(messageBuffer,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&MessageType,&injectType,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3]
@@ -135,7 +135,7 @@ void rewriteSenderIPInject(char* messageBuffer, char* writeBuffer,size_t writeBu
  *
  * @param messageBuffer - Pointer to the buffer where the encoded message will be written.
  * @param bufferSize - Size of the message buffer in bytes.
- * @param type - The Inject message type to be encoded (e.g., INJECT_NODE_INFO or INJECT_TABLE_INFO).
+ * @param type - The Inject message type to be encoded (e.g., INJECT_NODE_METRIC_UPDATE or INJECT_NETWORK_METRICS_UPDATE).
  *
  * @return void
  */
@@ -146,18 +146,18 @@ bool encodeMessageStrategyInject(char* messageBuffer, size_t bufferSize, int typ
     void *metricValue;
     bool encodedMessage=false;
 
-    if(type == INJECT_NODE_INFO){
+    if(type == INJECT_NODE_METRIC_UPDATE){
         //Max Size: 20 + metric encoding size
-        //MESSAGE_TYPE INJECT_NODE_INFO [sender IP] [nodeIP] metric
+        //MESSAGE_TYPE INJECT_NODE_METRIC_UPDATE [sender IP] [nodeIP] [Metric]
         if(encodeMyMetric(tmpBuffer, sizeof(tmpBuffer))){
-            snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,INJECT_NODE_INFO,myIP[0],myIP[1],myIP[2],myIP[3],tmpBuffer);
+            snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,INJECT_NODE_METRIC_UPDATE,myIP[0],myIP[1],myIP[2],myIP[3],tmpBuffer);
             return true;
         }
         return false;
 
-    }else if(type == INJECT_TABLE_INFO){//INJECT_TABLE_INFO
-        //MESSAGE_TYPE INJECT_TABLE_INFO [sender IP] |[nodeIP] metric |[nodeIP] metric |...
-        offset = snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu",MIDDLEWARE_MESSAGE,INJECT_TABLE_INFO,myIP[0],myIP[1],myIP[2],myIP[3]);
+    }else if(type == INJECT_NETWORK_METRICS_UPDATE){//INJECT_NETWORK_METRICS_UPDATE
+        //MESSAGE_TYPE INJECT_NETWORK_METRICS_UPDATE [sender IP] |[nodeIP] metric |[nodeIP] metric |...
+        offset = snprintf(messageBuffer,bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu",MIDDLEWARE_MESSAGE,INJECT_NETWORK_METRICS_UPDATE,myIP[0],myIP[1],myIP[2],myIP[3]);
 
         for (int i = 0; i < metricsTable->numberOfItems; i++) {
             entryIP = (uint8_t *)tableKey(metricsTable,i);
@@ -211,8 +211,8 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
     //Extract Inject Message Types
     sscanf(messageBuffer,"%*i %i",&injectType);
 
-    if(injectType == INJECT_NODE_INFO){
-        //MESSAGE_TYPE INJECT_NODE_INFO [sender IP] [nodeIP] metric
+    if(injectType == INJECT_NODE_METRIC_UPDATE){
+        //MESSAGE_TYPE INJECT_NODE_METRIC_UPDATE [sender IP] [nodeIP] metric
         sscanf(messageBuffer,"%*d %d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&injectType,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
                &nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&nChars);
 
@@ -223,11 +223,11 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
         //printInjectTable();
 
         //Encode this node IP as the sender IP and propagate the message
-        rewriteSenderIPInject(messageBuffer,smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
+        rewriteSenderIPInject(messageBuffer,smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_METRIC_UPDATE);
         propagateMessage(smallSendBuffer,senderIP);
 
-    }else if(injectType == INJECT_TABLE_INFO){
-        //MESSAGE_TYPE INJECT_TABLE_INFO [sender IP] |[nodeIP] metric |[nodeIP] metric |...
+    }else if(injectType == INJECT_NETWORK_METRICS_UPDATE){
+        //MESSAGE_TYPE INJECT_NETWORK_METRICS_UPDATE [sender IP] |[nodeIP] metric |[nodeIP] metric |...
         char* token = strtok(messageBuffer, "|");
         //To discard the message type and ensure the token points to the first routing table update entry
         token = strtok(NULL, "|");
@@ -261,15 +261,15 @@ void onNetworkEventStrategyInject(int networkEvent, uint8_t involvedIP[4]){
         case NETEVENT_JOINED_NETWORK:
             metricValue = tableRead(metricsTable,myIP);
             if(metricValue != nullptr){ // If a metric was initialized by the application, send my metric value to the parent node
-                encodeMessageStrategyInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
+                encodeMessageStrategyInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_METRIC_UPDATE);
                 sendMessage(involvedIP,smallSendBuffer);
-                LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_NODE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+                LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_NODE_METRIC_UPDATE] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
             }
             break;
         case NETEVENT_CHILD_CONNECTED:
-            if(encodeMessageStrategyInject(largeSendBuffer, sizeof(largeSendBuffer),INJECT_TABLE_INFO)){
+            if(encodeMessageStrategyInject(largeSendBuffer, sizeof(largeSendBuffer),INJECT_NETWORK_METRICS_UPDATE)){
                 sendMessage(involvedIP,largeSendBuffer);
-                LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_TABLE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
+                LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_NETWORK_METRICS_UPDATE] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
             }
             break;
         case NETEVENT_CHILD_DISCONNECTED:
@@ -354,8 +354,8 @@ void onTimerStrategyInject(){
         metricValue = tableRead(metricsTable,myIP);
         if(metricValue != nullptr){ // If a metric was initialized by the application, send my metric value to the parent node
             snprintf(smallSendBuffer, sizeof(smallSendBuffer), "%i ",MIDDLEWARE_MESSAGE);
-            encodeMessageStrategyInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_INFO);
-            LOG(MIDDLEWARE,DEBUG,"Sending periodic [MIDDLEWARE/INJECT_NODE_INFO] Message: %s\n",smallSendBuffer);
+            encodeMessageStrategyInject(smallSendBuffer, sizeof(smallSendBuffer),INJECT_NODE_METRIC_UPDATE);
+            LOG(MIDDLEWARE,DEBUG,"Sending periodic [MIDDLEWARE/INJECT_NODE_METRIC_UPDATE] Message: %s\n",smallSendBuffer);
             propagateMessage(smallSendBuffer,myIP);
         }
         lastMiddlewareUpdateTimeInject = currentTime;

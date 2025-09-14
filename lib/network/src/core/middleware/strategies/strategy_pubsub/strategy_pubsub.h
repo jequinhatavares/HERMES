@@ -31,12 +31,12 @@ typedef struct PubSubInfo{
 }PubSubInfo;
 
 typedef enum PubSubMessageType{
-    PUBSUB_SUBSCRIBE,       //0
-    PUBSUB_UNSUBSCRIBE,     //1
-    PUBSUB_ADVERTISE,       //2
-    PUBSUB_UNADVERTISE,     //3
-    PUBSUB_NODE_UPDATE,     //4
-    PUBSUB_TABLE_UPDATE,    //5
+    PUBSUB_SUBSCRIBE,               // 0 Request to subscribe to a topic
+    PUBSUB_UNSUBSCRIBE,             // 1 Request to unsubscribe from a topic
+    PUBSUB_ADVERTISE,               // 2 Announce a topic is available for publication
+    PUBSUB_UNADVERTISE,             // 3 Withdraw announcement of a topic
+    PUBSUB_NODE_TOPICS_UPDATE,     // 4 Update containing a single node’s metrics
+    PUBSUB_NETWORK_TOPICS_UPDATE,  // 5 Update containing metrics of multiple nodes
 } PubSubMessageType;
 
 // PubSub strategy API
