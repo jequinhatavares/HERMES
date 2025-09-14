@@ -261,8 +261,16 @@ void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]){
 
 void onTimerStrategyTopology(){
     unsigned long currentTime = getCurrentTime();
-    //Periodically send this node's metric to all other nodes in the network
+    uint8_t *nextHopIP;
+    //Periodically send this node's metric and parent IP to the root node
     if( (currentTime - lastMiddlewareUpdateTimeTopology) >= MIDDLEWARE_UPDATE_INTERVAL ){
+        encodeNodeUpdateMessage(smallSendBuffer, sizeof(smallSendBuffer));
+        nextHopIP = findRouteToNode(rootIP);
+        if(nextHopIP != nullptr){
+            sendMessage(nextHopIP,largeSendBuffer);
+        }else{
+            LOG(MIDDLEWARE, ERROR, "❌ ERROR: No path to the root node (%hhu.%hhu.%hhu.%hhu) was found in the routing table.\n",rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
+        }
     }
 }
 void* getContextStrategyTopology(){
