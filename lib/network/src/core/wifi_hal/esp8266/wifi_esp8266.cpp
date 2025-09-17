@@ -201,7 +201,7 @@ void startWifiAP(const char* SSID, const char* Pass, uint8_t* localIP, uint8_t* 
 
     // Start the Access Point with the SSID defined in SSID_PREFIX
     WiFi.softAPConfig(localIP_, gateway_, subnet_);
-    WiFi.softAP(SSID, Pass);
+    WiFi.softAP(SSID,Pass,WIFI_CHANNEL,false,MAX_STA_CONNECTIONS_ESP8266);
 
     //Init Wifi Event Handlers
     initWifiEventHandlers();

@@ -20,6 +20,11 @@
 #define WIFI_PASSWORD     		        "123456789"
 #endif
 
+// Wi-Fi channel (must be fixed across the network)
+#ifndef WIFI_CHANNEL
+#define WIFI_CHANNEL 1
+#endif
+
 
 
 #ifndef AP_DISCONNECTION_GRACE_PERIOD

@@ -14,6 +14,11 @@
 #define PARENT_DISCONNECTION_THRESHOLD_ESP8266 4
 #endif
 
+//The ESP8266 supports a maximum of 8 connected STA devices
+#ifndef MAX_STA_CONNECTIONS_ESP8266
+#define MAX_STA_CONNECTIONS_ESP8266 4
+#endif
+
 void onSoftAPModeStationConnectedHandler(const WiFiEventSoftAPModeStationConnected& info);
 void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisconnected& info);
 void onStationModeGotIPHandler(const WiFiEventStationModeGotIP& info);

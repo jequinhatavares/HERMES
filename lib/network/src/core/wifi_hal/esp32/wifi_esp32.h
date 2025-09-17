@@ -12,6 +12,11 @@
 #define PARENT_DISCONNECTION_THRESHOLD_ESP32 4
 #endif
 
+//The ESP32 supports a maximum of 10 connected STA devices
+#ifndef MAX_STA_CONNECTIONS_ESP32
+#define MAX_STA_CONNECTIONS_ESP32 6
+#endif
+
 #include "../wifi_interface.h"
 
 void onSoftAPModeStationConnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info);

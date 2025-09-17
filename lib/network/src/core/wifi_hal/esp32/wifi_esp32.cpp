@@ -221,7 +221,7 @@ void startWifiAP(const char* SSID, const char* Pass, uint8_t * localIP, uint8_t*
     subnet_ = IPAddress(subnet[0],subnet[1],subnet[2],subnet[3]);
 
     WiFi.softAPConfig(localIP_, gateway_, subnet_);
-    WiFi.softAP(SSID, Pass);
+    WiFi.softAP(SSID, Pass, WIFI_CHANNEL,false,MAX_STA_CONNECTIONS_ESP32);
     Serial.print("My SoftAP IP:");
     Serial.print(WiFi.softAPIP());
 
