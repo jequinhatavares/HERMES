@@ -4,6 +4,8 @@ void (*onDataMessageCallback)(uint8_t*,uint8_t *,char*) = nullptr;
 void (*onACKMessageCallback)(uint8_t*,uint8_t *,char*) = nullptr;
 
 char receiveBuffer[256] = "";
+size_t receivePayload=0;
+
 char largeSendBuffer[255] = "";
 char smallSendBuffer[50] = "";
 

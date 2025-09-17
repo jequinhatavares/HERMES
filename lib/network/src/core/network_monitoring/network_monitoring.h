@@ -29,10 +29,10 @@ void reportLifecycleTimesToMonitoringServer(unsigned long initTime, unsigned lon
 void reportParentRecoveryTimeToMonitoringServer(unsigned long parentRecoveryTime);
 void reportMessagesReceived();
 
-void reportRoutingMessage(size_t nBytes);
-void reportLifecycleMessage(size_t nBytes);
-void reportMiddlewareMessage(size_t nBytes);
-void reportAPPMessage(size_t nBytes);
+void reportRoutingMessageReceived(size_t nBytes);
+void reportLifecycleMessageReceived(size_t nBytes);
+void reportMiddlewareMessageReceived(size_t nBytes);
+void reportDataMessageReceived(size_t nBytes);
 
 void handleTimersNetworkMonitoring();
 

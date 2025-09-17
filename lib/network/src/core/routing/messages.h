@@ -24,6 +24,7 @@ extern void (*onDataMessageCallback)(uint8_t*,uint8_t *,char*);
 extern void (*onACKMessageCallback)(uint8_t*,uint8_t *,char*);
 
 extern char receiveBuffer[256];
+extern size_t receivePayload;
 extern char largeSendBuffer[255];
 extern char smallSendBuffer[50];
 

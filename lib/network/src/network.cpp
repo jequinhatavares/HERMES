@@ -102,6 +102,7 @@ void Network::run() {
     //Wait for incoming requests
     packetSize = receiveMessage(receiveBuffer, sizeof(receiveBuffer));
     if (packetSize > 0){
+        receivePayload=packetSize;
         insertLast(stateMachineEngine, eMessage);
         if(packetSize >= 255){
             LOG(MESSAGES, ERROR,"Receiving buffer is too small packet has size:%i\n", packetSize);

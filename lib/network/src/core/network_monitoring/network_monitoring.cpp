@@ -207,7 +207,7 @@ void reportMiddlewareMessageReceived(size_t nBytes){
     nMiddlewareBytes+=nBytes;
 }
 
-void reportAPPMessageReceived(size_t nBytes){
+void reportDataMessageReceived(size_t nBytes){
     // If the message functionality has already been sampled return
     if(messagesMonitored) return;
 
