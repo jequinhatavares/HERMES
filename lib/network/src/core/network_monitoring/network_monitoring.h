@@ -21,19 +21,52 @@ typedef struct messageVizParameters{
     uint8_t IP1[4] = {0,0,0,0},IP2[4] = {0,0,0,0};
 }messageVizParameters;
 
-void encodeMonitoringMessage(char* msg, MonitoringMessageType type, messageVizParameters parameters);
 
-void reportNewNodeToMonitoringServer (uint8_t * nodeIP, uint8_t * parentIP);
-void reportDeletedNodeToMonitoringServer (uint8_t* nodeIP);
-void reportLifecycleTimesToMonitoringServer(unsigned long initTime, unsigned long searchTime, unsigned long joinNetworkTime);
-void reportParentRecoveryTimeToMonitoringServer(unsigned long parentRecoveryTime);
-void reportMessagesReceived();
 
-void reportRoutingMessageReceived(size_t nBytes);
-void reportLifecycleMessageReceived(size_t nBytes);
-void reportMiddlewareMessageReceived(size_t nBytes);
-void reportDataMessageReceived(size_t nBytes);
+class NetworkMonitoring{
+public:
 
-void handleTimersNetworkMonitoring();
+    void encodeMessage(char* msg, MonitoringMessageType type, messageVizParameters parameters);
+
+    void reportNewNode(uint8_t * nodeIP, uint8_t * parentIP);
+    void reportDeletedNode(uint8_t* nodeIP);
+    void reportLifecycleTimes(unsigned long initTime, unsigned long searchTime, unsigned long joinNetworkTime);
+    void reportParentRecoveryTime(unsigned long parentRecoveryTime);
+    void reportMessagesReceived();
+
+    void reportRoutingMessageReceived(size_t nBytes);
+    void reportLifecycleMessageReceived(size_t nBytes);
+    void reportMiddlewareMessageReceived(size_t nBytes);
+    void reportDataMessageReceived(size_t nBytes);
+
+    void handleTimersNetworkMonitoring();
+
+private:
+    //Buffer used to encode the monitoring messages
+    char monitoringBuffer[100];
+    //TimeStamp that the server started to take the volume of messages that the node sends
+    unsigned long messageMonitoringStartTime;
+    //If the monitoring messages has already started
+    bool messageMonitoringStarted=false;
+    //The time interval that the node monitors the volume of messages sent by the node
+    #define MESSAGE_MONITORING_TIME 300000 //5 minutes
+    // If a sample of the number of messages has already been taken
+    bool messagesMonitored=false;
+
+    int nRoutingMessages=0;
+    int nRoutingBytes=0;
+
+    int nLifecycleMessages=0;
+    int nLifecycleBytes=0;
+
+    int nMiddlewareMessages=0;
+    int nMiddlewareBytes=0;
+
+    int nDataMessages=0;
+    int nDataBytes=0;
+};
+
+extern NetworkMonitoring monitoring;
+
 
 #endif //NETWORK_MONITORING_H

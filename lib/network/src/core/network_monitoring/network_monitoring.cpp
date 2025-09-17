@@ -1,29 +1,9 @@
 #include "network_monitoring.h"
 
-char monitoringBuffer[100];
+NetworkMonitoring monitoring;
 
-//TimeStamp that the server started to take the volume of messages that the node sends
-unsigned long messageMonitoringStartTime;
-//If the monitoring messages has already started
-bool messageMonitoringStarted=false;
-//The time interval that the node monitors the volume of messages sent by the node
-#define MESSAGE_MONITORING_TIME 300000 //5 minutes
-// If a sample of the number of messages has already been taken
-bool messagesMonitored=false;
 
-int nRoutingMessages=0;
-int nRoutingBytes=0;
-
-int nLifecycleMessages=0;
-int nLifecycleBytes=0;
-
-int nMiddlewareMessages=0;
-int nMiddlewareBytes=0;
-
-int nDataMessages=0;
-int nDataBytes=0;
-
-void encodeMonitoringMessage(char* msg, MonitoringMessageType type, messageVizParameters parameters){
+void NetworkMonitoring::encodeMessage(char* msg, MonitoringMessageType type, messageVizParameters parameters){
     switch (type) {
         case NEW_NODE:
             //0 [nodeIP] [parentIP]
@@ -39,14 +19,14 @@ void encodeMonitoringMessage(char* msg, MonitoringMessageType type, messageVizPa
     }
 }
 
-void reportNewNodeToMonitoringServer (uint8_t * nodeIP, uint8_t * parentIP){
+void NetworkMonitoring::reportNewNode(uint8_t * nodeIP, uint8_t * parentIP){
 #ifdef MONITORING_ON
     char msg[50];
     messageVizParameters vizParameters;
     //If the visualization program is active, pass the new node information to it
     assignIP(vizParameters.IP1, nodeIP);
     assignIP(vizParameters.IP2, parentIP);
-    encodeMonitoringMessage(msg,NEW_NODE,vizParameters);
+    encodeMessage(msg,NEW_NODE,vizParameters);
 
     encodeDebugMessage(monitoringBuffer, sizeof (monitoringBuffer), msg);
 
@@ -62,13 +42,13 @@ void reportNewNodeToMonitoringServer (uint8_t * nodeIP, uint8_t * parentIP){
 #endif
 }
 
-void reportDeletedNodeToMonitoringServer (uint8_t * nodeIP){
+void NetworkMonitoring::reportDeletedNode(uint8_t * nodeIP){
 #ifdef MONITORING_ON
     char msg[50];
     messageVizParameters vizParameters;
     //If the visualization program is active, pass the deleted node information to it
     assignIP(vizParameters.IP1, nodeIP);
-    encodeMonitoringMessage(msg,DELETED_NODE,vizParameters);
+    encodeMessage(msg,DELETED_NODE,vizParameters);
 
     encodeDebugMessage(smallSendBuffer, sizeof (smallSendBuffer),msg);
 
@@ -84,7 +64,7 @@ void reportDeletedNodeToMonitoringServer (uint8_t * nodeIP){
 #endif
 }
 
-void reportLifecycleTimesToMonitoringServer(unsigned long initTime, unsigned long searchTime, unsigned long joinNetworkTime){
+void NetworkMonitoring::reportLifecycleTimes(unsigned long initTime, unsigned long searchTime, unsigned long joinNetworkTime){
 #ifdef MONITORING_ON
 
 #if defined(ESP8266)
@@ -111,7 +91,7 @@ void reportLifecycleTimesToMonitoringServer(unsigned long initTime, unsigned lon
 }
 
 
-void reportParentRecoveryTimeToMonitoringServer(unsigned long parentRecoveryTime){
+void NetworkMonitoring::reportParentRecoveryTime(unsigned long parentRecoveryTime){
 #ifdef MONITORING_ON
 #if defined(ESP8266)
     sprintf(monitoringBuffer,"%d %d 1 %lu\n",MONITORING_MESSAGE,PARENT_RECOVERY_TIME,parentRecoveryTime);
@@ -137,7 +117,7 @@ void reportParentRecoveryTimeToMonitoringServer(unsigned long parentRecoveryTime
 }
 
 
-void reportMessagesReceived(){
+void NetworkMonitoring::reportMessagesReceived(){
 #ifdef MONITORING_ON
     //MONITORING_MESSAGE MESSAGES_SENT [N Routing Messages Sent] [N Bytes sent] [N Lifecycle Messages Sent] [N Bytes sent]
     // [N Middleware Messages Sent] [N Bytes sent] [N App Messages Sent] [N Bytes sent]
@@ -168,7 +148,7 @@ void reportMessagesReceived(){
 }
 
 
-void reportRoutingMessageReceived(size_t nBytes){
+void NetworkMonitoring::reportRoutingMessageReceived(size_t nBytes){
     // If the message functionality has already been sampled return
     if(messagesMonitored) return;
 
@@ -181,7 +161,7 @@ void reportRoutingMessageReceived(size_t nBytes){
     nRoutingBytes+=nBytes;
 }
 
-void reportLifecycleMessageReceived(size_t nBytes){
+void NetworkMonitoring::reportLifecycleMessageReceived(size_t nBytes){
     // If the message functionality has already been sampled return
     if(messagesMonitored) return;
 
@@ -194,7 +174,7 @@ void reportLifecycleMessageReceived(size_t nBytes){
     nLifecycleBytes+=nBytes;
 }
 
-void reportMiddlewareMessageReceived(size_t nBytes){
+void NetworkMonitoring::reportMiddlewareMessageReceived(size_t nBytes){
     // If the message functionality has already been sampled return
     if(messagesMonitored) return;
 
@@ -207,7 +187,7 @@ void reportMiddlewareMessageReceived(size_t nBytes){
     nMiddlewareBytes+=nBytes;
 }
 
-void reportDataMessageReceived(size_t nBytes){
+void NetworkMonitoring::reportDataMessageReceived(size_t nBytes){
     // If the message functionality has already been sampled return
     if(messagesMonitored) return;
 
@@ -220,7 +200,7 @@ void reportDataMessageReceived(size_t nBytes){
     nDataBytes+=nBytes;
 }
 
-void handleTimersNetworkMonitoring(){
+void NetworkMonitoring::handleTimersNetworkMonitoring(){
     unsigned long currentTime = getCurrentTime();
 
     if(messageMonitoringStarted && (currentTime-messageMonitoringStartTime)>=MESSAGE_MONITORING_TIME){

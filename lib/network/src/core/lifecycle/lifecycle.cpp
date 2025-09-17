@@ -217,7 +217,7 @@ State init(Event event){
         connectedToMainTree = true;
         assignIP(parent, invalidIP);
         assignIP(rootIP,myIP);
-        reportNewNodeToMonitoringServer(myIP,invalidIP);
+        monitoring.reportNewNode(myIP,invalidIP);
         initStateTime=getCurrentTime()-startTime;
         return sActive;
     };
@@ -301,7 +301,7 @@ State joinNetwork(Event event){
     if(onNodeJoinNetworkAppCallback)onNodeJoinNetworkAppCallback(parent);
 
     joinStateTime=getCurrentTime()-startTime;
-    reportLifecycleTimesToMonitoringServer(initStateTime,searchStateTime,joinStateTime);
+    monitoring.reportLifecycleTimes(initStateTime,searchStateTime,joinStateTime);
     return sActive;
 }
 
@@ -361,7 +361,7 @@ void handleMessages(){
         case PARENT_DISCOVERY_REQUEST:
             LOG(MESSAGES,INFO,"Received [Parent Discovery Request] message: \"%s\"\n", receiveBuffer);
             handleParentDiscoveryRequest(receiveBuffer);
-            reportLifecycleMessageReceived(receivePayload);
+            monitoring.reportLifecycleMessageReceived(receivePayload);
             break;
 
         case CHILD_REGISTRATION_REQUEST:
@@ -371,19 +371,19 @@ void handleMessages(){
                    ,&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
             if(middlewareOnNetworkEventCallback != nullptr)middlewareOnNetworkEventCallback(1,childSTAIP);
             if(onChildConnectAppCallback != nullptr)onChildConnectAppCallback(childAPIP);
-            reportLifecycleMessageReceived(receivePayload);
+            monitoring.reportLifecycleMessageReceived(receivePayload);
             break;
 
         case FULL_ROUTING_TABLE_UPDATE:
             LOG(MESSAGES,INFO,"Received [Full Routing Update] message: \"%s\"\n", receiveBuffer);
             handleFullRoutingTableUpdate(receiveBuffer);
-            reportRoutingMessageReceived(receivePayload);
+            monitoring.reportRoutingMessageReceived(receivePayload);
             break;
 
         case PARTIAL_ROUTING_TABLE_UPDATE:
             LOG(MESSAGES,INFO,"Received [Partial Routing Update] message: \"%s\"\n", receiveBuffer);
             handlePartialRoutingUpdate(receiveBuffer);
-            reportRoutingMessageReceived(receivePayload);
+            monitoring.reportRoutingMessageReceived(receivePayload);
             break;
 
         case TOPOLOGY_BREAK_ALERT:
@@ -393,19 +393,19 @@ void handleMessages(){
             recoveryWaitStartTime = getCurrentTime();
             //LOG(NETWORK,INFO,"In Handle recoveryWaitStartTime:%lu\n",recoveryWaitStartTime);
             insertLast(stateMachineEngine, eLostTreeConnection);
-            reportLifecycleMessageReceived(receivePayload);
+            monitoring.reportLifecycleMessageReceived(receivePayload);
             break;
 
         case TOPOLOGY_RESTORED_NOTICE:
             LOG(MESSAGES,INFO,"Received [TOPOLOGY_RESTORED_NOTICE] message: \"%s\"\n", receiveBuffer);
-            reportLifecycleMessageReceived(receivePayload);
+            monitoring.reportLifecycleMessageReceived(receivePayload);
             break;
 
         case PARENT_RESET_NOTIFICATION:
             LOG(MESSAGES,INFO,"Received [Parent Reset Notification] message: \"%s\"\n", receiveBuffer);
             handleParentResetNotification(receiveBuffer);
             insertLast(stateMachineEngine, eLostParentConnection);
-            reportLifecycleMessageReceived(receivePayload);
+            monitoring.reportLifecycleMessageReceived(receivePayload);
             break;
 
         case MONITORING_MESSAGE:
@@ -415,13 +415,13 @@ void handleMessages(){
         case DATA_MESSAGE:
             //LOG(MESSAGES,INFO,"Received [Data] message: \"%s\"\n", receiveBuffer);
             handleDataMessage(receiveBuffer);
-            reportDataMessageReceived(receivePayload);
+            monitoring.reportDataMessageReceived(receivePayload);
             break;
 
         case MIDDLEWARE_MESSAGE:
             LOG(MESSAGES,INFO,"Received [Middleware] message: \"%s\"\n", receiveBuffer);
             if(middlewareHandleMessageCallback != nullptr)middlewareHandleMessageCallback(receiveBuffer, sizeof(receiveBuffer));
-            reportMiddlewareMessageReceived(receivePayload);
+            monitoring.reportMiddlewareMessageReceived(receivePayload);
             break;
 
         default:
@@ -581,7 +581,7 @@ State parentRecovery(Event event){
 
     // Report the time spent on the Parent Recovery State to the monitoring server
     parentRecoveryStateTime=startTime-getCurrentTime();
-    reportParentRecoveryTimeToMonitoringServer(parentRecoveryStateTime);
+    monitoring.reportParentRecoveryTime(parentRecoveryStateTime);
     entryTimestampSet=false;
 
     return sActive;
@@ -789,7 +789,7 @@ void handleTimers(){
         insertLast(stateMachineEngine, eRecoveryWaitTimeOut);
     }
 
-    handleTimersNetworkMonitoring();
+    monitoring.handleTimersNetworkMonitoring();
 }
 
 /**
@@ -915,7 +915,7 @@ void lostChildProcedure(){
                 tableRemove(lostChildrenTable, MAC);
 
                 //Report the deleted node to the monitoring server
-                reportDeletedNodeToMonitoringServer(lostChildIP);
+                monitoring.reportDeletedNode(lostChildIP);
             }
 
         }

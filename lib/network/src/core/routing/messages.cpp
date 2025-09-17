@@ -420,7 +420,7 @@ void handleChildRegistrationRequest(char * msg){
     //LOG(MESSAGES,INFO,"Sending [PARTIAL ROUTING TABLE UPDATE] message: \"%s\"\n", smallSendBuffer);
     propagateMessage(smallSendBuffer,  childAPIP);
     //Sending new node information to the DEBUG visualization program, if enabled
-    reportNewNodeToMonitoringServer (childAPIP, myIP);
+    monitoring.reportNewNode(childAPIP, myIP);
 
     strcpy(smallSendBuffer , "");
     strcpy(largeSendBuffer , "");
