@@ -2,6 +2,53 @@
 
 NetworkMonitoring monitoring;
 
+void NetworkMonitoring::handleMonitoringMessage(char *messageBuffer) {
+    uint8_t destinationNode[4];
+    MonitoringMessageType type;
+
+    sscanf(messageBuffer, "%*d %d", &type);
+
+    /*** All monitoring messages are sent to the root node, except for the message that measures end-to-end delay
+      * (END_TO_END_DELAY). This message is first sent to a node and then forwarded to the root. ***/
+    if(type == END_TO_END_DELAY){
+        sscanf(messageBuffer, "%*d %*d %hhu.%hhu.%hhu.%hhu",&destinationNode[0],&destinationNode[1],&destinationNode[2],&destinationNode[3]);
+        //If the destination of this message is this then reroute the message to the root node
+        if(isIPEqual(destinationNode,myIP)){
+            uint8_t * nextHopPtr = findRouteToNode(rootIP);
+            if (nextHopPtr != nullptr){
+                assignIP(nextHopPtr, nextHopPtr);
+                sendMessage(nextHopPtr,messageBuffer);
+            }else{
+                LOG(NETWORK, ERROR, "❌-Monitoring Server-Routing failed: No route found to node %d.%d.%d.%d. "
+                                    "Unable to forward message.\n", rootIP[0], rootIP[1],rootIP[2], rootIP[3]);
+            }
+
+        }else{ //If the message is not destined to this node forward it to the destination node
+            uint8_t * nextHopPtr = findRouteToNode(destinationNode);
+            if (nextHopPtr != nullptr){
+                sendMessage(nextHopPtr,messageBuffer);
+            }else{
+                LOG(NETWORK, ERROR, "❌-Monitoring Server-Routing failed: No route found to node %d.%d.%d.%d. "
+                                    "Unable to forward message.\n", destinationNode[0], destinationNode[1],destinationNode[2], destinationNode[3]);
+            }
+        }
+    }else{
+        //If this message is not intended for this node, forward it to the next hop leading to its destination.
+        if(!iamRoot){
+            uint8_t * nextHopPtr = findRouteToNode(rootIP);
+            if (nextHopPtr != nullptr){
+                sendMessage(nextHopPtr,messageBuffer);
+            }else{
+                LOG(NETWORK, ERROR, "❌-Monitoring Server-Routing failed: No route found to node %d.%d.%d.%d. "
+                                    "Unable to forward message.\n", rootIP[0], rootIP[1],rootIP[2], rootIP[3]);
+            }
+        }else{//send message to debug server
+            LOG(MONITORING_SERVER,DEBUG,messageBuffer);
+            //sendMessage(debugServerIP, receiveBuffer);
+        }
+    }
+
+}
 
 void NetworkMonitoring::encodeMessage(char* msg, MonitoringMessageType type, messageVizParameters parameters){
     switch (type) {
@@ -17,6 +64,10 @@ void NetworkMonitoring::encodeMessage(char* msg, MonitoringMessageType type, mes
         case CHANGE_PARENT:
             break;
     }
+}
+
+void encodeEndToEndDelayMessage(){
+
 }
 
 void NetworkMonitoring::reportNewNode(uint8_t * nodeIP, uint8_t * parentIP){
@@ -218,3 +269,5 @@ void NetworkMonitoring::handleTimersNetworkMonitoring(){
         nDataBytes=0;
     }
 }
+
+

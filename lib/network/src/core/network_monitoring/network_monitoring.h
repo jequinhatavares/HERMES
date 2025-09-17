@@ -15,6 +15,7 @@ typedef enum MonitoringMessageType{
     LIFECYCLE_TIMES,        //3
     PARENT_RECOVERY_TIME,   //4
     MESSAGES_RECEIVED,      //5
+    END_TO_END_DELAY,       //6
 }MonitoringMessageType;
 
 typedef struct messageVizParameters{
@@ -26,6 +27,7 @@ typedef struct messageVizParameters{
 class NetworkMonitoring{
 public:
 
+    void handleMonitoringMessage(char* messageBuffer);
     void encodeMessage(char* msg, MonitoringMessageType type, messageVizParameters parameters);
 
     void reportNewNode(uint8_t * nodeIP, uint8_t * parentIP);

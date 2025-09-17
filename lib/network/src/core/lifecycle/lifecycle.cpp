@@ -409,7 +409,8 @@ void handleMessages(){
             break;
 
         case MONITORING_MESSAGE:
-            handleDebugMessage(receiveBuffer);
+            //handleDebugMessage(receiveBuffer);
+            monitoring.handleMonitoringMessage(receiveBuffer);
             break;
 
         case DATA_MESSAGE:
