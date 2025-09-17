@@ -14,7 +14,7 @@ typedef enum MonitoringMessageType{
     CHANGE_PARENT,          //2
     LIFECYCLE_TIMES,        //3
     PARENT_RECOVERY_TIME,   //4
-    MESSAGES_SENT,   //5
+    MESSAGES_RECEIVED,      //5
 }MonitoringMessageType;
 
 typedef struct messageVizParameters{
@@ -27,6 +27,7 @@ void reportNewNodeToMonitoringServer (uint8_t * nodeIP, uint8_t * parentIP);
 void reportDeletedNodeToMonitoringServer (uint8_t* nodeIP);
 void reportLifecycleTimesToMonitoringServer(unsigned long initTime, unsigned long searchTime, unsigned long joinNetworkTime);
 void reportParentRecoveryTimeToMonitoringServer(unsigned long parentRecoveryTime);
+void reportMessagesReceived();
 
 void reportRoutingMessage(size_t nBytes);
 void reportLifecycleMessage(size_t nBytes);

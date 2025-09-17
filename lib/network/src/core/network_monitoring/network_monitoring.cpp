@@ -8,6 +8,8 @@ unsigned long messageMonitoringStartTime;
 bool messageMonitoringStarted=false;
 //The time interval that the node monitors the volume of messages sent by the node
 #define MESSAGE_MONITORING_TIME 300000 //5 minutes
+// If a sample of the number of messages has already been taken
+bool messagesMonitored=false;
 
 int nRoutingMessages=0;
 int nRoutingBytes=0;
@@ -135,22 +137,22 @@ void reportParentRecoveryTimeToMonitoringServer(unsigned long parentRecoveryTime
 }
 
 
-void reportMessagesSent(){
+void reportMessagesReceived(){
 #ifdef MONITORING_ON
     //MONITORING_MESSAGE MESSAGES_SENT [N Routing Messages Sent] [N Bytes sent] [N Lifecycle Messages Sent] [N Bytes sent]
     // [N Middleware Messages Sent] [N Bytes sent] [N App Messages Sent] [N Bytes sent]
 #if defined(ESP8266)
-    sprintf(monitoringBuffer,"%d %d 1 %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_SENT,nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
+    sprintf(monitoringBuffer,"%d %d 1 %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
             nMiddlewareMessages,nMiddlewareBytes,nDataMessages,nDataBytes);
 #endif
 
 #if defined(ESP32)
-    sprintf(monitoringBuffer,"%d %d 2 %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_SENT,nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
+    sprintf(monitoringBuffer,"%d %d 2 %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
             nMiddlewareMessages,nMiddlewareBytes,nDataMessages,nDataBytes);
 #endif
 
 #if defined(raspberrypi_3b)
-    sprintf(monitoringBuffer,"%d %d 3 %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_SENT,nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
+    sprintf(monitoringBuffer,"%d %d 3 %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
             nMiddlewareMessages,nMiddlewareBytes,nDataMessages,nDataBytes);
 #endif
     if(!iamRoot){//If i am not the root send the message to the root
@@ -166,7 +168,10 @@ void reportMessagesSent(){
 }
 
 
-void reportRoutingMessage(size_t nBytes){
+void reportRoutingMessageReceived(size_t nBytes){
+    // If the message functionality has already been sampled return
+    if(messagesMonitored) return;
+
     // If the message monitoring functionality isn’t started, start it
     if(!messageMonitoringStarted){
         messageMonitoringStarted=true;
@@ -176,7 +181,10 @@ void reportRoutingMessage(size_t nBytes){
     nRoutingBytes+=nBytes;
 }
 
-void reportLifecycleMessage(size_t nBytes){
+void reportLifecycleMessageReceived(size_t nBytes){
+    // If the message functionality has already been sampled return
+    if(messagesMonitored) return;
+
     // If the message monitoring functionality isn’t started, start it
     if(!messageMonitoringStarted){
         messageMonitoringStarted=true;
@@ -186,7 +194,10 @@ void reportLifecycleMessage(size_t nBytes){
     nLifecycleBytes+=nBytes;
 }
 
-void reportMiddlewareMessage(size_t nBytes){
+void reportMiddlewareMessageReceived(size_t nBytes){
+    // If the message functionality has already been sampled return
+    if(messagesMonitored) return;
+
     // If the message monitoring functionality isn’t started, start it
     if(!messageMonitoringStarted){
         messageMonitoringStarted=true;
@@ -196,7 +207,10 @@ void reportMiddlewareMessage(size_t nBytes){
     nMiddlewareBytes+=nBytes;
 }
 
-void reportAPPMessage(size_t nBytes){
+void reportAPPMessageReceived(size_t nBytes){
+    // If the message functionality has already been sampled return
+    if(messagesMonitored) return;
+
     // If the message monitoring functionality isn’t started, start it
     if(!messageMonitoringStarted){
         messageMonitoringStarted=true;
@@ -210,6 +224,17 @@ void handleTimersNetworkMonitoring(){
     unsigned long currentTime = getCurrentTime();
 
     if(messageMonitoringStarted && (currentTime-messageMonitoringStartTime)>=MESSAGE_MONITORING_TIME){
-
+        reportMessagesReceived();
+        messagesMonitored=true;
+        //Reset the variables
+        messageMonitoringStarted=false;
+        nRoutingMessages=0;
+        nRoutingBytes=0;
+        nLifecycleMessages=0;
+        nLifecycleBytes=0;
+        nMiddlewareMessages=0;
+        nMiddlewareBytes=0;
+        nDataMessages=0;
+        nDataBytes=0;
     }
 }
