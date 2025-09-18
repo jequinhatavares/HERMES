@@ -67,7 +67,7 @@ void NetworkMonitoring::encodeMessage(char* msg, MonitoringMessageType type, mes
 }
 
 void encodeEndToEndDelayMessage(){
-
+    //MONITORING_MESSAGE END_TO_END_DELAY [bool=is the message round tripped] [destinationIP] sendTime
 }
 
 void NetworkMonitoring::reportNewNode(uint8_t * nodeIP, uint8_t * parentIP){
