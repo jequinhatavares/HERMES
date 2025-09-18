@@ -28,6 +28,7 @@ class NetworkMonitoring{
 public:
 
     void handleMonitoringMessage(char* messageBuffer);
+    void handleTimersNetworkMonitoring();
     void encodeMessage(char* msg, MonitoringMessageType type, messageVizParameters parameters);
 
     void reportNewNode(uint8_t * nodeIP, uint8_t * parentIP);
@@ -41,7 +42,8 @@ public:
     void reportMiddlewareMessageReceived(size_t nBytes);
     void reportDataMessageReceived(size_t nBytes);
 
-    void handleTimersNetworkMonitoring();
+    void sampleEndToEndDelay();
+
 
 private:
     //Buffer used to encode the monitoring messages
@@ -55,17 +57,25 @@ private:
     // If a sample of the number of messages has already been taken
     bool messagesMonitored=false;
 
-    int nRoutingMessages=0;
-    int nRoutingBytes=0;
+    // Routing protocol message metrics
+    int nRoutingMessages=0; // Count of routing messages
+    int nRoutingBytes=0;    // Total bytes routing messages received
 
-    int nLifecycleMessages=0;
-    int nLifecycleBytes=0;
+    // Node lifecycle message metrics
+    int nLifecycleMessages=0;   // Count of lifecycle messages
+    int nLifecycleBytes=0;      // Total bytes lifecycle messages received
 
-    int nMiddlewareMessages=0;
-    int nMiddlewareBytes=0;
+    // Middleware infrastructure message metrics
+    int nMiddlewareMessages=0;  // Count of middleware messages
+    int nMiddlewareBytes=0;     // Total bytes middleware messages received
 
-    int nDataMessages=0;
-    int nDataBytes=0;
+    // Application Level message metrics
+    int nDataMessages=0; // Count of data messages
+    int nDataBytes=0;    // Total bytes of actual data received
+
+    void markEndToEndDelayReceivedByDestinationNode(char*encodeMessageBuffer,size_t encodeBufferSize,uint8_t destinationIP[4]);
+    static static void encodeEndToEndDelayMessageToNode(char* encodeMessageBuffer,size_t encodeBufferSize,uint8_t *nodeIP);
+    int encodeNodeEndToEndDelayToServer(char*encodeBuffer,size_t encodeBufferSize,unsigned long delay, int numberOfHops, uint8_t nodeIP[4]);
 };
 
 extern NetworkMonitoring monitoring;

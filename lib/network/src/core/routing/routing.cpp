@@ -175,6 +175,8 @@ void* findNode(TableInfo* Table, uint8_t nodeIP[4]){
  */
 uint8_t* findRouteToNode(uint8_t nodeIP[4]){
 
+    if(!nodeIP) return nullptr;
+
     //Check if the node is my parent
     if(isIPEqual(nodeIP,parent)){
         //Return the address of the parent itself
