@@ -46,6 +46,7 @@ public:
     void reportMonitoringMessageReceived(size_t nBytes);
 
     void sampleEndToEndDelay();
+    void sampleMessageMetrics();
 
 private:
 

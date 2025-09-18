@@ -362,3 +362,22 @@ void NetworkMonitoring::sampleEndToEndDelay(){
     LOG(MONITORING_SERVER,INFO,"%s\n", monitoringBuffer);
 
 }
+
+void NetworkMonitoring::sampleMessageMetrics() {
+    //Reset all counters
+    nRoutingMessages=0;
+    nRoutingBytes=0;
+    nLifecycleMessages=0;
+    nLifecycleBytes=0;
+    nMiddlewareMessages=0;
+    nMiddlewareBytes=0;
+    nDataMessages=0;
+    nDataBytes=0;
+    nMonitoringMessages=0;
+    nMonitoringBytes=0;
+
+    messageMonitoringStartTime=getCurrentTime();
+    messageMonitoringStarted=true;
+    messagesMonitored=false;
+
+}
