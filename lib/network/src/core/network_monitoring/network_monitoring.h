@@ -9,14 +9,14 @@
 #define MONITORING_ON
 
 typedef enum MonitoringMessageType{
-    NEW_NODE,               //0
-    DELETED_NODE,           //1
-    CHANGE_PARENT,          //2
-    LIFECYCLE_TIMES,        //3
-    PARENT_RECOVERY_TIME,   //4
-    MESSAGES_RECEIVED,      //5
-    END_TO_END_DELAY,       //6
-    APP_LEVEL,              //7
+    NEW_NODE,               // 0 - Notifies monitoring system of new node joining the network
+    DELETED_NODE,           // 1 - Alerts when a node leaves or becomes unreachable
+    CHANGE_PARENT,          // 2 - Indicates node parent reassignment in network topology
+    LIFECYCLE_TIMES,        // 3 - Reports node startup state duration metrics
+    PARENT_RECOVERY_TIME,   // 4 - Measures time to reconnect after parent node failure
+    MESSAGES_RECEIVED,      // 5 - Tracks message count statistics for traffic analysis
+    END_TO_END_DELAY,       // 6 - Measures round-trip latency between nodes
+    APP_LEVEL,              // 7 - Carries application-specific performance metrics
 }MonitoringMessageType;
 
 typedef struct messageVizParameters{
@@ -24,9 +24,10 @@ typedef struct messageVizParameters{
 }messageVizParameters;
 
 
-
 class NetworkMonitoring{
-public:
+public
+    //Buffer used to encode the monitoring messages
+    char monitoringBuffer[100];
 
     void handleMonitoringMessage(char* messageBuffer);
     void handleTimersNetworkMonitoring();
@@ -50,8 +51,7 @@ public:
     void sampleEndToEndDelay();
 
 private:
-    //Buffer used to encode the monitoring messages
-    char monitoringBuffer[100];
+
     //TimeStamp that the server started to take the volume of messages that the node sends
     unsigned long messageMonitoringStartTime;
     //If the monitoring messages has already started
