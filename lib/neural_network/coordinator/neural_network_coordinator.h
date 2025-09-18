@@ -7,6 +7,7 @@
 #include "../worker/neuron_core.h"
 #include "worker/neuron_manager.h"
 #include "../app_globals.h"
+#include "../nn_monitoring/nn_monitoring.h"
 
 #include <cstdio>
 #include <cmath>
@@ -24,6 +25,7 @@ typedef struct NeuronEntry{
 class NeuralNetworkCoordinator : public NeuronWorker {
 public:
     NeuralNetworkCoordinator();
+    ~NeuralNetworkCoordinator();
 
     void handleNeuralNetworkMessage(uint8_t*senderIP,uint8_t*destinationIP,char* messageBuffer);
 
@@ -57,8 +59,15 @@ private:
 
     bool inferenceRunning = false;
     unsigned long inferenceStartTime;
+    bool inferenceComplete = false;
 
     int nnSequenceNumber=0;
+
+    // Output layer state management for neural network inference
+    // Note: All arrays are indexed by output neuron position (0 to nOutputNeurons-1)
+    bool* isOutputReceived;    // Flag array indicating which output neurons have received values
+    float* outputNeuronValues; // Buffer containing computed values for output neurons
+    int nOutputNeurons=0; //Number of output neurons
 
     uint8_t workersIPs[TOTAL_NEURONS][4];
     uint8_t workersDeviceTypes[TOTAL_NEURONS];
@@ -80,6 +89,15 @@ private:
     void handleOutputRegistration(char* messageBuffer);
 
     void assignPubSubInfoToNeuron(char *messageBuffer, size_t bufferSize, NeuronId neuronId);
+
+    bool isOutputNeuron(NeuronId);
+    void saveOutputNeuronValue(NeuronId neuronId, float outputValue);
+
+    void clearInferenceVariables();
+
+protected:
+    //Override the definition of what to do when a NN output is calculated
+    void onNeuralNetworkOutput(NeuronId neuronId,float outputValue) override;
 };
 
 bool isIDEqual(void* av, void* bv);

@@ -9,6 +9,9 @@
 #define NODES_PER_ESP32 1
 #define NODES_PER_RPI 5
 
+unsigned long startAssignmentTime=0;
+unsigned long startInferenceTime=0;
+
 
 /***uint8_t numESP8266Workers=0;
 uint8_t numESP32Workers=0;
@@ -81,6 +84,16 @@ void setNeuronEntry(void* av, void* bv){
  ***/
 NeuralNetworkCoordinator::NeuralNetworkCoordinator() {
     initNeuralNetwork();
+}
+
+
+/***
+ * NeuralNetworkCoordinator (Destructor)
+ * Frees the memory allocated in the coordinator class
+ ***/
+NeuralNetworkCoordinator::~NeuralNetworkCoordinator() {
+    delete [] outputNeuronValues;
+    delete [] isOutputReceived;
 }
 
 
@@ -752,6 +765,11 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
     size_t tmpBufferSize= sizeof(tmpBuffer);
     int messageOffset=0,neuronStorageIndex=-1;
 
+    outputNeuronValues = new float[net->layers[outputLayer].numOutputs];
+    isOutputReceived = new bool[net->layers[outputLayer].numOutputs];
+
+    nOutputNeurons= net->layers[outputLayer].numOutputs;
+
     auto resetPayloadWithHeader = [&](int &msgOffset) {
         msgOffset=0;
         msgOffset = encodeMessageHeader(appPayload, sizeof(appPayload), NN_ASSIGN_OUTPUT);
@@ -1199,6 +1217,7 @@ void NeuralNetworkCoordinator::handleACKMessage(char* messageBuffer){
     }
 
     receivedAllNeuronAcks = isNetworkAcknowledge;
+    if(isNetworkAcknowledge) reportSetupTime(getCurrentTime()-startAssignmentTime);
 
 }
 
@@ -1304,6 +1323,8 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
         2. Enough input nodes are registered
         3. Neural network isn't already distributed across devices ***/
     if(totalWorkers>=MIN_WORKERS && totalInputs == TOTAL_INPUT_NEURONS && !areNeuronsAssigned){
+        startAssignmentTime=getCurrentTime();
+
         LOG(APP,INFO,"Neural network distribution process started\n");
 
         LOG(APP,INFO,"Distributing input neurons\n");
@@ -1372,6 +1393,8 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
     if(!inferenceRunning && receivedAllNeuronAcks){
         LOG(APP,INFO,"Starting an inference cycle\n");
         nnSequenceNumber +=2;
+        //Clear the parameters related to the neurons the coordinator calculates
+        clearNeuronInferenceParameters();
         encodeForwardMessage(appPayload, sizeof(appPayload),nnSequenceNumber);
         network.broadcastMessage(appBuffer,sizeof(appBuffer),appPayload);
         inferenceStartTime=getCurrentTime();
@@ -1380,7 +1403,7 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
 
     currentTime = getCurrentTime();
     // If an inference cycle is running but exceeds the timeout period without results, start a new inference cycle
-    if(inferenceRunning && (currentTime-inferenceStartTime) >= INFERENCE_TIMEOUT ){
+    if(inferenceRunning && !inferenceComplete && (currentTime-inferenceStartTime) >= INFERENCE_TIMEOUT ){
         //TODO something where
     }
 
@@ -1607,6 +1630,55 @@ void NeuralNetworkCoordinator::handleNeuralNetworkMessage(uint8_t *senderIP, uin
             break;
     }
 }
+
+void NeuralNetworkCoordinator::onNeuralNetworkOutput(NeuronId neuronId, float outputValue) {
+
+}
+
+bool NeuralNetworkCoordinator::isOutputNeuron(NeuronId neuronId) {
+    uint8_t outputLayer= neuralNetwork.numLayers - 1;
+
+    NeuronEntry* neuronEntry= (NeuronEntry*) tableRead(neuronToNodeTable,&neuronId);
+
+    if(!neuronEntry)return false;
+
+    if(neuronEntry->layer == outputLayer + 1) return true;
+
+    return false;
+}
+
+void NeuralNetworkCoordinator::saveOutputNeuronValue(NeuronId neuronId, float outputValue){
+    bool allOutputNeuronsReceived=false;
+    NeuronEntry* neuronEntry= (NeuronEntry*) tableRead(neuronToNodeTable,&neuronId);
+    if(!neuronEntry)return;
+
+    // Mark the neuron output value as received
+    if(!isOutputReceived[neuronEntry->layer]){
+        outputNeuronValues[neuronEntry->layer] = outputValue;
+        isOutputReceived[neuronEntry->layer]=true;
+    }
+
+    // Verify if all output neuron value have been received
+    for (int i = 0; i < nOutputNeurons; ++i) {
+        allOutputNeuronsReceived = allOutputNeuronsReceived && isOutputReceived[i];
+    }
+
+    //If all output neurons values have been received report the inference information to the monitoring server
+    if(allOutputNeuronsReceived){
+        reportInferenceResults(nnSequenceNumber,getCurrentTime()-startInferenceTime,nackCount,outputNeuronValues,nOutputNeurons);
+    }
+}
+
+void NeuralNetworkCoordinator::clearInferenceVariables(){
+    for (int i = 0; i < nOutputNeurons; ++i) {
+        isOutputReceived[i]=false;
+        outputNeuronValues[i]=0;
+    }
+    inferenceRunning = false;
+}
+
+
+
 
 
 
