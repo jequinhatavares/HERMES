@@ -874,11 +874,13 @@ void getSenderIP(char* messageBuffer, MessageType type, uint8_t * senderIP){
     }
 }
 
-void sendMessageToNode(char* messageBuffer,uint8_t *destinationIP){
+bool sendMessageToNode(char* messageBuffer,uint8_t *destinationIP){
     uint8_t *nextHopIP = findRouteToNode(destinationIP);
     if(nextHopIP != nullptr){
         sendMessage(destinationIP,messageBuffer);
+        return true;
     }
+    return false;
 }
 
 void sendMessageToChildren(char* messageBuffer){

@@ -80,7 +80,7 @@ bool isMessageTunneled(char* dataMessage);
 bool waitForMessage(MessageType type, uint8_t expectedSenderIP[4], unsigned long timeOut);
 void getSenderIP(char* messageBuffer, MessageType type, uint8_t * senderIP);
 
-void sendMessageToNode(char* messageBuffer,uint8_t *destinationIP);
+bool sendMessageToNode(char* messageBuffer,uint8_t *destinationIP);
 void sendMessageToChildren(char* messageBuffer);
 void sendMessageToParent(char* messageBuffer);
 
