@@ -1,6 +1,11 @@
 #include "network_monitoring.h"
 
+#include "../routing/messages.h"
+#include "../transport_hal/transport_hal.h"
+#include "../logger/logger.h"
+
 NetworkMonitoring monitoring;
+
 
 void NetworkMonitoring::handleMonitoringMessage(char *messageBuffer) {
     uint8_t destinationNode[4];

@@ -2,9 +2,6 @@
 #define NETWORK_MONITORING_H
 
 #include <cstdio>
-#include "../routing/messages.h"
-#include "../transport_hal/transport_hal.h"
-#include "../logger/logger.h"
 
 #define MONITORING_ON
 
