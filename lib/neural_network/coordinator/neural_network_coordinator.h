@@ -91,8 +91,6 @@ private:
     void assignPubSubInfoToNeuron(char *messageBuffer, size_t bufferSize, NeuronId neuronId);
 
     bool isOutputNeuron(NeuronId);
-    void saveOutputNeuronValue(NeuronId neuronId, float outputValue);
-
     void clearInferenceVariables();
 
 protected:

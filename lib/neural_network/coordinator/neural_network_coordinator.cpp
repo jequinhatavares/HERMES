@@ -1573,6 +1573,9 @@ void NeuralNetworkCoordinator::onACKTimeOutInputLayer(){
  */
 void NeuralNetworkCoordinator::handleNeuralNetworkMessage(uint8_t *senderIP, uint8_t *destinationIP, char *messageBuffer) {
     NeuralNetworkMessageType type;
+    NeuronId neuronId;
+    float neuronOutput;
+    int receivedInferenceId;
 
     sscanf(messageBuffer, "%d",&type);
     switch (type) {
@@ -1617,7 +1620,13 @@ void NeuralNetworkCoordinator::handleNeuralNetworkMessage(uint8_t *senderIP, uin
             break;
 
         case NN_NEURON_OUTPUT:
-            handleNeuronMessage(senderIP, destinationIP,messageBuffer);
+            sscanf(messageBuffer, "%*d %i %hhu %f",&receivedInferenceId,&neuronId,&neuronOutput);
+            //If the received neuron is an output layer neuron and its from the current inference running save the value
+            if(isOutputNeuron(neuronId) && nnSequenceNumber == receivedInferenceId){
+                onNeuralNetworkOutput(neuronId,neuronOutput);
+            }else{
+                handleNeuronMessage(senderIP, destinationIP,messageBuffer);
+            }
             break;
         case NN_FORWARD:
             handleNeuronMessage(senderIP, destinationIP,messageBuffer);
@@ -1632,23 +1641,14 @@ void NeuralNetworkCoordinator::handleNeuralNetworkMessage(uint8_t *senderIP, uin
 }
 
 void NeuralNetworkCoordinator::onNeuralNetworkOutput(NeuronId neuronId, float outputValue) {
-
-}
-
-bool NeuralNetworkCoordinator::isOutputNeuron(NeuronId neuronId) {
-    uint8_t outputLayer= neuralNetwork.numLayers - 1;
-
-    NeuronEntry* neuronEntry= (NeuronEntry*) tableRead(neuronToNodeTable,&neuronId);
-
-    if(!neuronEntry)return false;
-
-    if(neuronEntry->layer == outputLayer + 1) return true;
-
-    return false;
-}
-
-void NeuralNetworkCoordinator::saveOutputNeuronValue(NeuronId neuronId, float outputValue){
     bool allOutputNeuronsReceived=false;
+
+    /*** Coordinator-side override of neuron worker output processing:
+     * When the coordinator generates output neuron values, it locally aggregates results
+     * instead of propagating them through the network. Once all output values are computed,
+     * the inference cycle terminates and performance metrics are logged to the monitoring server. ***/
+    LOG(APP,INFO,"/////// Inference Cycle Output - NeuronId:%hhu Output Value:%f //////////\n",neuronId,outputValue);
+
     NeuronEntry* neuronEntry= (NeuronEntry*) tableRead(neuronToNodeTable,&neuronId);
     if(!neuronEntry)return;
 
@@ -1668,6 +1668,16 @@ void NeuralNetworkCoordinator::saveOutputNeuronValue(NeuronId neuronId, float ou
         reportInferenceResults(nnSequenceNumber,getCurrentTime()-startInferenceTime,nackCount,outputNeuronValues,nOutputNeurons);
     }
 }
+
+bool NeuralNetworkCoordinator::isOutputNeuron(NeuronId neuronId) {
+    uint8_t outputLayer= neuralNetwork.numLayers - 1;
+    NeuronEntry* neuronEntry= (NeuronEntry*) tableRead(neuronToNodeTable,&neuronId);
+
+    if(!neuronEntry)return false;
+    if(neuronEntry->layer == outputLayer + 1) return true;
+    return false;
+}
+
 
 void NeuralNetworkCoordinator::clearInferenceVariables(){
     for (int i = 0; i < nOutputNeurons; ++i) {
