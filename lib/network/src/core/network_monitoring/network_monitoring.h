@@ -22,7 +22,7 @@ typedef struct messageVizParameters{
 
 
 class NetworkMonitoring{
-public
+public:
     //Buffer used to encode the monitoring messages
     char monitoringBuffer[100];
 

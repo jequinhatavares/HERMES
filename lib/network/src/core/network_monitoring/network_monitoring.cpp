@@ -91,7 +91,7 @@ void NetworkMonitoring::markEndToEndDelayReceivedByDestinationNode(char*encodeMe
 
 int NetworkMonitoring::encodeNodeEndToEndDelayToServer(char *encodeMessageBuffer, size_t encodeBufferSize, unsigned long delay,int numberOfHops,uint8_t nodeIP[4]){
     int nChars=0;
-    //MONITORING_MESSAGE END_TO_END_DELAY [delay value] [number of Hops]
+    //MONITORING_MESSAGE END_TO_END_DELAY [nodeIP] [delay value] [number of Hops]
     snprintf(encodeMessageBuffer,encodeBufferSize," %hhu.%hhu.%hhu.%hhu %lu %d %n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],delay,numberOfHops,&nChars);
     return nChars;
 }
@@ -185,20 +185,23 @@ void NetworkMonitoring::reportParentRecoveryTime(unsigned long parentRecoveryTim
 
 void NetworkMonitoring::reportMessagesReceived(){
 #ifdef MONITORING_ON
-    //MONITORING_MESSAGE MESSAGES_SENT [N Routing Messages Sent] [N Bytes sent] [N Lifecycle Messages Sent] [N Bytes sent]
+    //MONITORING_MESSAGE MESSAGES_SENT [device type] [NodeIP] [N Routing Messages Sent] [N Bytes sent] [N Lifecycle Messages Sent] [N Bytes sent]
     // [N Middleware Messages Sent] [N Bytes sent] [N App Messages Sent] [N Bytes sent] [N Monitoring Messages Sent] [N Bytes sent]
 #if defined(ESP8266)
-    sprintf(monitoringBuffer,"%d %d 1 %d %d %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
+    sprintf(monitoringBuffer,"%d %d 1 %hhu.%hhu.%hhu.%hhu %d %d %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,
+            myIP[0],myIP[1],myIP[2],myIP[3],nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
             nMiddlewareMessages,nMiddlewareBytes,nDataMessages,nDataBytes,nMonitoringMessages,nMonitoringBytes);
 #endif
 
 #if defined(ESP32)
-    sprintf(monitoringBuffer,"%d %d 2 %d %d %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
+    sprintf(monitoringBuffer,"%d %d 2 %hhu.%hhu.%hhu.%hhu %d %d %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,
+             myIP[0],myIP[1],myIP[2],myIP[3],nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
             nMiddlewareMessages,nMiddlewareBytes,nDataMessages,nDataBytes,nMonitoringMessages,nMonitoringBytes);
 #endif
 
 #if defined(raspberrypi_3b)
-    sprintf(monitoringBuffer,"%d %d 3 %d %d %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
+    sprintf(monitoringBuffer,"%d %d 3 %hhu.%hhu.%hhu.%hhu %d %d %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,
+            myIP[0],myIP[1],myIP[2],myIP[3],nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
             nMiddlewareMessages,nMiddlewareBytes,nDataMessages,nDataBytes,nMonitoringMessages,nMonitoringBytes);
 #endif
     if(!iamRoot){//If i am not the root send the message to the root
