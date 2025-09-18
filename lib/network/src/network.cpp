@@ -152,7 +152,7 @@ StrategyType Network::getActiveMiddlewareStrategy() {
  */
 void Network::middlewareSelectStrategy(StrategyType strategyType){
     if(!isInitialized){
-        LOG(NETWORK,ERROR,"Error: init() must be before performing middleware related actions.\n");
+        LOG(NETWORK,ERROR,"Error: network.init() must be before performing middleware related actions.\n");
         return;
     }
     ::middlewareSelectStrategy(strategyType);
@@ -427,6 +427,7 @@ void Network::initMiddlewareStrategyTopology(void *topologyMetricValues, size_t 
         LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to initialize a strategy that inst currently active.\n");
         return;
     }
+
     ::initMiddlewareStrategyTopology(topologyMetricValues, topologyMetricStructSize,setValueFunction,encodeTopologyMetricFunction,decodeTopologyMetricFunction,printMetricFunction,selectParentFunction);
 }
 

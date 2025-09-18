@@ -71,6 +71,10 @@ void NetworkMonitoring::encodeMessage(char* msg, MonitoringMessageType type, mes
     }
 }
 
+void NetworkMonitoring::encodeAppLevelMessage(char*appLevelMonitoringMessage, char*encodeMessageBuffer, size_t encodeBufferSize){
+    snprintf(encodeMessageBuffer, encodeBufferSize,"%d %d %s\n", MONITORING_MESSAGE,APP_LEVEL,appLevelMonitoringMessage);
+}
+
 void  NetworkMonitoring::encodeEndToEndDelayMessageToNode(char* encodeMessageBuffer,size_t encodeBufferSize,uint8_t *nodeIP){
     //MONITORING_MESSAGE END_TO_END_DELAY [bool=is the message round tripped] [destinationIP]
     snprintf(encodeMessageBuffer,encodeBufferSize,"%d %d 0 %hhu.%hhu.%hhu.%hhu\n",MONITORING_MESSAGE,END_TO_END_DELAY,nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
@@ -267,6 +271,15 @@ void NetworkMonitoring::reportMonitoringMessageReceived(size_t nBytes){
     nMonitoringBytes+=nBytes;
 }
 
+void NetworkMonitoring::reportAppLevelMonitoringMessage(char *appMonitoringMessage) {
+    //If the node is the root himself print the message for the monitoring server
+    if(iamRoot) LOG(MONITORING_SERVER,INFO,"%s",appMonitoringMessage);
+    else{
+        //Send the monitoring message to the root node
+        sendMessageToNode(appMonitoringMessage,rootIP);
+    }
+}
+
 void NetworkMonitoring::handleTimersNetworkMonitoring(){
     unsigned long currentTime = getCurrentTime();
 
@@ -340,9 +353,4 @@ void NetworkMonitoring::sampleEndToEndDelay(){
     //Print the information to the serial so the monitoring server
     LOG(MONITORING_SERVER,INFO,"%s\n", monitoringBuffer);
 
-
 }
-
-
-
-

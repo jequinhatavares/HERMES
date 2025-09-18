@@ -16,6 +16,7 @@ typedef enum MonitoringMessageType{
     PARENT_RECOVERY_TIME,   //4
     MESSAGES_RECEIVED,      //5
     END_TO_END_DELAY,       //6
+    APP_LEVEL,              //7
 }MonitoringMessageType;
 
 typedef struct messageVizParameters{
@@ -30,6 +31,9 @@ public:
     void handleMonitoringMessage(char* messageBuffer);
     void handleTimersNetworkMonitoring();
     void encodeMessage(char* msg, MonitoringMessageType type, messageVizParameters parameters);
+    void encodeAppLevelMessage(char*appLevelMonitoringMessage, char*encodeMessageBuffer, size_t encodeBufferSize);
+
+    void reportAppLevelMonitoringMessage(char* appMonitoringMessage);
 
     void reportNewNode(uint8_t * nodeIP, uint8_t * parentIP);
     void reportDeletedNode(uint8_t* nodeIP);
@@ -44,7 +48,6 @@ public:
     void reportMonitoringMessageReceived(size_t nBytes);
 
     void sampleEndToEndDelay();
-
 
 private:
     //Buffer used to encode the monitoring messages
