@@ -411,6 +411,7 @@ void handleMessages(){
         case MONITORING_MESSAGE:
             //handleDebugMessage(receiveBuffer);
             monitoring.handleMonitoringMessage(receiveBuffer);
+            monitoring.reportMonitoringMessageReceived(receivePayload);
             break;
 
         case DATA_MESSAGE:

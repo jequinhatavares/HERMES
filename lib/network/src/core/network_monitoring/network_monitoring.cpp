@@ -100,10 +100,7 @@ void NetworkMonitoring::reportNewNode(uint8_t * nodeIP, uint8_t * parentIP){
     encodeDebugMessage(monitoringBuffer, sizeof (monitoringBuffer), msg);
 
     if(!iamRoot){
-        uint8_t *nextHopIP = findRouteToNode(rootIP);
-        if(nextHopIP != nullptr){
-            sendMessage(rootIP,monitoringBuffer);
-        }else{
+        if(!sendMessageToNode(monitoringBuffer,rootIP)){
             LOG(NETWORK, ERROR, "❌ ERROR: No path to the root node was found in the routing table.\n");
         }
     }else LOG(MONITORING_SERVER,DEBUG,"%s",monitoringBuffer);
@@ -122,10 +119,7 @@ void NetworkMonitoring::reportDeletedNode(uint8_t * nodeIP){
     encodeDebugMessage(smallSendBuffer, sizeof (smallSendBuffer),msg);
 
     if(!iamRoot){//If i am not the root send the message to the root
-        uint8_t *nextHopIP = findRouteToNode(rootIP);
-        if(nextHopIP != nullptr){
-            sendMessage(rootIP,smallSendBuffer);
-        }else{
+        if(!sendMessageToNode(monitoringBuffer,rootIP)){
             LOG(NETWORK, ERROR, "❌ No path to the root node was found in the routing table.\n");
         }
     }else LOG(MONITORING_SERVER,DEBUG,"%s",smallSendBuffer);//If i am the root print the message to the monitoring server
@@ -148,10 +142,7 @@ void NetworkMonitoring::reportLifecycleTimes(unsigned long initTime, unsigned lo
     sprintf(monitoringBuffer,"%d %d 3 %lu %lu %lu\n",MONITORING_MESSAGE,LIFECYCLE_TIMES,initTime,searchTime,joinNetworkTime);
 #endif
     if(!iamRoot){//If i am not the root send the message to the root
-        uint8_t *nextHopIP = findRouteToNode(rootIP);
-        if(nextHopIP != nullptr){
-            sendMessage(rootIP,monitoringBuffer);
-        }else{
+        if(!sendMessageToNode(monitoringBuffer,rootIP)){
             LOG(NETWORK, ERROR, "❌ No path to the root node was found in the routing table.\n");
         }
     }else LOG(MONITORING_SERVER,DEBUG,"%s",monitoringBuffer);//If i am the root print the message to the monitoring server
@@ -174,10 +165,7 @@ void NetworkMonitoring::reportParentRecoveryTime(unsigned long parentRecoveryTim
     sprintf(monitoringBuffer,"%d %d 3 %lu\n",MONITORING_MESSAGE,PARENT_RECOVERY_TIME,parentRecoveryTime);
 #endif
     if(!iamRoot){//If i am not the root send the message to the root
-        uint8_t *nextHopIP = findRouteToNode(rootIP);
-        if(nextHopIP != nullptr){
-            sendMessage(rootIP,monitoringBuffer);
-        }else{
+        if(!sendMessageToNode(monitoringBuffer,rootIP)){
             LOG(NETWORK, ERROR, "❌ No path to the root node was found in the routing table.\n");
         }
     }else LOG(MONITORING_SERVER,DEBUG,"%s",monitoringBuffer);//If i am the root print the message to the monitoring server
@@ -189,26 +177,23 @@ void NetworkMonitoring::reportParentRecoveryTime(unsigned long parentRecoveryTim
 void NetworkMonitoring::reportMessagesReceived(){
 #ifdef MONITORING_ON
     //MONITORING_MESSAGE MESSAGES_SENT [N Routing Messages Sent] [N Bytes sent] [N Lifecycle Messages Sent] [N Bytes sent]
-    // [N Middleware Messages Sent] [N Bytes sent] [N App Messages Sent] [N Bytes sent]
+    // [N Middleware Messages Sent] [N Bytes sent] [N App Messages Sent] [N Bytes sent] [N Monitoring Messages Sent] [N Bytes sent]
 #if defined(ESP8266)
-    sprintf(monitoringBuffer,"%d %d 1 %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
-            nMiddlewareMessages,nMiddlewareBytes,nDataMessages,nDataBytes);
+    sprintf(monitoringBuffer,"%d %d 1 %d %d %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
+            nMiddlewareMessages,nMiddlewareBytes,nDataMessages,nDataBytes,nMonitoringMessages,nMonitoringBytes);
 #endif
 
 #if defined(ESP32)
-    sprintf(monitoringBuffer,"%d %d 2 %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
-            nMiddlewareMessages,nMiddlewareBytes,nDataMessages,nDataBytes);
+    sprintf(monitoringBuffer,"%d %d 2 %d %d %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
+            nMiddlewareMessages,nMiddlewareBytes,nDataMessages,nDataBytes,nMonitoringMessages,nMonitoringBytes);
 #endif
 
 #if defined(raspberrypi_3b)
-    sprintf(monitoringBuffer,"%d %d 3 %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
-            nMiddlewareMessages,nMiddlewareBytes,nDataMessages,nDataBytes);
+    sprintf(monitoringBuffer,"%d %d 3 %d %d %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
+            nMiddlewareMessages,nMiddlewareBytes,nDataMessages,nDataBytes,nMonitoringMessages,nMonitoringBytes);
 #endif
     if(!iamRoot){//If i am not the root send the message to the root
-        uint8_t *nextHopIP = findRouteToNode(rootIP);
-        if(nextHopIP != nullptr){
-            sendMessage(rootIP,monitoringBuffer);
-        }else{
+        if(!sendMessageToNode(monitoringBuffer,rootIP)){
             LOG(NETWORK, ERROR, "❌ No path to the root node was found in the routing table.\n");
         }
     }else LOG(MONITORING_SERVER,DEBUG,"%s",monitoringBuffer);//If i am the root print the message to the monitoring server
@@ -267,6 +252,19 @@ void NetworkMonitoring::reportDataMessageReceived(size_t nBytes){
     }
     nDataMessages++;
     nDataBytes+=nBytes;
+}
+
+void NetworkMonitoring::reportMonitoringMessageReceived(size_t nBytes){
+    // If the message functionality has already been sampled return
+    if(messagesMonitored) return;
+
+    // If the message monitoring functionality isn’t started, start it
+    if(!messageMonitoringStarted){
+        messageMonitoringStarted=true;
+        messageMonitoringStartTime=getCurrentTime();
+    }
+    nMonitoringMessages++;
+    nMonitoringBytes+=nBytes;
 }
 
 void NetworkMonitoring::handleTimersNetworkMonitoring(){

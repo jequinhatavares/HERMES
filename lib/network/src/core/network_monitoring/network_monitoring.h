@@ -41,6 +41,7 @@ public:
     void reportLifecycleMessageReceived(size_t nBytes);
     void reportMiddlewareMessageReceived(size_t nBytes);
     void reportDataMessageReceived(size_t nBytes);
+    void reportMonitoringMessageReceived(size_t nBytes);
 
     void sampleEndToEndDelay();
 
@@ -72,6 +73,10 @@ private:
     // Application Level message metrics
     int nDataMessages=0; // Count of data messages
     int nDataBytes=0;    // Total bytes of actual data received
+
+    // Monitoring Level message metrics
+    int nMonitoringMessages=0; // Count of monitoring messages
+    int nMonitoringBytes=0;    // Total bytes of actual monitoring received
 
     void markEndToEndDelayReceivedByDestinationNode(char*encodeMessageBuffer,size_t encodeBufferSize,uint8_t destinationIP[4]);
     static static void encodeEndToEndDelayMessageToNode(char* encodeMessageBuffer,size_t encodeBufferSize,uint8_t *nodeIP);
