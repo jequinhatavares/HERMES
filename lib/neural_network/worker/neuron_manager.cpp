@@ -455,6 +455,26 @@ void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
 
 
 /**
+ * clearNeuronInferenceParameters
+ * Resets all neuron state variables to prepare for a new inference cycle.
+ */
+void NeuronWorker::clearNeuronInferenceParameters() {
+    for (int i = 0; i < neuronCore.neuronsCount; i++) {
+        resetAll(receivedInputs[i]);
+        isOutputComputed[i] = false;
+    }
+    //LOG(APP,DEBUG,"F2\n");
+
+    allOutputsComputed = false;
+
+    forwardPassRunning = true;
+    firstInputTimestamp = getCurrentTime();
+
+    nackTriggered = false;
+    nackCount=0;
+}
+
+/**
  * handleForwardMessage
  * Processes the message that initiates the forward propagation of the neural network,
  * initializing the relevant variables and storing the current inferenceId set by the coordinator.
@@ -470,20 +490,7 @@ void NeuronWorker::handleForwardMessage(char *messageBuffer){
 
     currentInferenceId = inferenceId;
 
-    //LOG(APP,DEBUG,"F1\n");
-
-    for (int i = 0; i < neuronCore.neuronsCount; i++) {
-        resetAll(receivedInputs[i]);
-        isOutputComputed[i] = false;
-    }
-    //LOG(APP,DEBUG,"F2\n");
-
-    allOutputsComputed = false;
-
-    forwardPassRunning = true;
-    firstInputTimestamp = getCurrentTime();
-
-    nackTriggered = false;
+    clearNeuronInferenceParameters();
 
     //LOG(APP,DEBUG,"F3\n");
     //Generate the input of all input neurons hosted in this node
@@ -554,6 +561,9 @@ void NeuronWorker::handleNACKMessage(char*messageBuffer,uint8_t *senderIP){
 
         token = strtok_r(NULL, " ",&saveptr1);
     }
+
+    nackCount++;
+
 }
 
 
@@ -598,6 +608,8 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
         // Also reset other variables that should have been reset when the new forward message arrived
         forwardPassRunning = true;
         allOutputsComputed = false;
+        nackCount=0;
+        nackTriggered=false;
         firstInputTimestamp = getCurrentTime();
     }
 
@@ -678,7 +690,7 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                 }
 
                 //If the Neuron is a Neuron from the Output layer do something
-                if(isNeuronInList(outputNeurons,MAX_NEURONS,currentNeuronID)) onNetworkOutput(currentNeuronID,neuronOutput);
+                if(isNeuronInList(outputNeurons,MAX_NEURONS,currentNeuronID)) onNeuralNetworkOutput(currentNeuronID,neuronOutput);
 
                 //If the Neuron whose output have been computed is an output neurons do something
                 if(isNeuronInList(outputNeurons,nrOutputNeurons,currentNeuronID)){
@@ -1184,6 +1196,17 @@ void NeuronWorker::saveWorkerPubSubInfo(NeuronId neuronId, int8_t pubTopic) {
 
 }
 
+void NeuronWorker::onNeuralNetworkOutput(NeuronId neuronId, float outputValue) {
+    uint8_t rootIP[4];
+    network.getRootIP(rootIP);
+
+    // Send inference results to the root node for aggregation and reporting to the monitoring server.
+    LOG(APP,INFO,"/////// Inference Cycle Output - NeuronId:%hhu Output Value:%f //////////\n",neuronId,outputValue);
+    encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,neuronId,outputValue);
+    network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
+
+}
+
 
 bool isTopicInList(int8_t *topicList, int listSize, int8_t searchTopic){
     for (int i = 0; i < listSize; ++i) {
@@ -1192,6 +1215,3 @@ bool isTopicInList(int8_t *topicList, int listSize, int8_t searchTopic){
     return false;
 }
 
-void onNetworkOutput(NeuronId outputNeuron, float outputValue){
-    LOG(APP,INFO,"/////// Inference Cycle Output - NeuronId:%hhu Output Value:%f //////////\n",outputNeuron,outputValue);
-}

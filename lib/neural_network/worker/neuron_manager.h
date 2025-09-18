@@ -9,6 +9,8 @@
 #include "../nn_types.h"
 #include "neuron_core.h"
 #include "../app_globals.h"
+#include "../nn_monitoring/nn_monitoring.h"
+
 
 typedef uint32_t BitField;
 
@@ -44,7 +46,10 @@ public:
     // Contain the input values of the current inference iteration
     float inputNeuronsValues[MAX_INPUT_NEURONS];
 
-    NeuronCore neuronCore; //owns the neuron core data & computations
+    //owns the neuron core data & computations
+    NeuronCore neuronCore;
+
+    int nackCount=0;
 
     void handleNeuronMessage(uint8_t* senderIP,uint8_t* destinationIP,char* messageBuffer);
     void manageNeuron();
@@ -59,6 +64,7 @@ public:
     static void encodeWorkerRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4],DeviceType type);
     static void encodeInputRegistration(char *messageBuffer, size_t bufferSize, uint8_t *nodeIP, DeviceType type);
     static void encodeOutputRegistration(char* messageBuffer, size_t bufferSize,uint8_t nodeIP[4]);
+
     void decodeNeuronTopic(char* dataMessage, int8_t* topicType);
 
     void clearAllNeuronMemory();
@@ -115,6 +121,9 @@ protected:
     void saveInputNeuron(NeuronId inputNeuronId);
     void saveWorkerTargets(NeuronId neuronId,uint8_t targetNodeIP[][4],uint8_t nTargets);
     void saveWorkerPubSubInfo(NeuronId neuronId,int8_t pubTopic);
+
+    void clearNeuronInferenceParameters();
+    virtual void onNeuralNetworkOutput(NeuronId neuronId,float outputValue);
 
 };
 
@@ -193,7 +202,6 @@ inline void resetAll(BitField& bits){
 
 bool isTopicInList(int8_t *topicList, int listSize, int8_t searchTopic);
 
-void onNetworkOutput(NeuronId outputNeuron, float outputValue);
 
 
 #endif //NEURON_MANAGER_H

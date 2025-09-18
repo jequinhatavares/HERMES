@@ -7,6 +7,7 @@
 #define TOTAL_INPUT_NEURONS 2
 
 
+
 #if defined(ESP8266)
 #define MAX_NEURONS 2
 #endif
