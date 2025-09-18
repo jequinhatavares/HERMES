@@ -185,7 +185,7 @@ void NetworkMonitoring::reportParentRecoveryTime(unsigned long parentRecoveryTim
 
 void NetworkMonitoring::reportMessagesReceived(){
 #ifdef MONITORING_ON
-    //MONITORING_MESSAGE MESSAGES_SENT [device type] [NodeIP] [N Routing Messages Sent] [N Bytes sent] [N Lifecycle Messages Sent] [N Bytes sent]
+    //MONITORING_MESSAGE MESSAGES_SENT [device type] [Sampled Time] [NodeIP] [N Routing Messages Sent] [N Bytes sent] [N Lifecycle Messages Sent] [N Bytes sent]
     // [N Middleware Messages Sent] [N Bytes sent] [N App Messages Sent] [N Bytes sent] [N Monitoring Messages Sent] [N Bytes sent]
 #if defined(ESP8266)
     sprintf(monitoringBuffer,"%d %d 1 %hhu.%hhu.%hhu.%hhu %d %d %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,
@@ -218,11 +218,9 @@ void NetworkMonitoring::reportRoutingMessageReceived(size_t nBytes){
     // If the message functionality has already been sampled return
     if(messagesMonitored) return;
 
-    // If the message monitoring functionality isn’t started, start it
-    if(!messageMonitoringStarted){
-        messageMonitoringStarted=true;
-        messageMonitoringStartTime=getCurrentTime();
-    }
+    // If the message monitoring functionality isn’t ON don't count the messages
+    if(!messageMonitoringStarted) return;
+
     nRoutingMessages++;
     nRoutingBytes+=nBytes;
 }
@@ -231,11 +229,9 @@ void NetworkMonitoring::reportLifecycleMessageReceived(size_t nBytes){
     // If the message functionality has already been sampled return
     if(messagesMonitored) return;
 
-    // If the message monitoring functionality isn’t started, start it
-    if(!messageMonitoringStarted){
-        messageMonitoringStarted=true;
-        messageMonitoringStartTime=getCurrentTime();
-    }
+    // If the message monitoring functionality isn’t ON don't count the messages
+    if(!messageMonitoringStarted) return;
+
     nLifecycleMessages++;
     nLifecycleBytes+=nBytes;
 }
@@ -244,11 +240,9 @@ void NetworkMonitoring::reportMiddlewareMessageReceived(size_t nBytes){
     // If the message functionality has already been sampled return
     if(messagesMonitored) return;
 
-    // If the message monitoring functionality isn’t started, start it
-    if(!messageMonitoringStarted){
-        messageMonitoringStarted=true;
-        messageMonitoringStartTime=getCurrentTime();
-    }
+    // If the message monitoring functionality isn’t ON don't count the messages
+    if(!messageMonitoringStarted) return;
+
     nMiddlewareMessages++;
     nMiddlewareBytes+=nBytes;
 }
@@ -257,11 +251,9 @@ void NetworkMonitoring::reportDataMessageReceived(size_t nBytes){
     // If the message functionality has already been sampled return
     if(messagesMonitored) return;
 
-    // If the message monitoring functionality isn’t started, start it
-    if(!messageMonitoringStarted){
-        messageMonitoringStarted=true;
-        messageMonitoringStartTime=getCurrentTime();
-    }
+    // If the message monitoring functionality isn’t ON don't count the messages
+    if(!messageMonitoringStarted) return;
+
     nDataMessages++;
     nDataBytes+=nBytes;
 }
@@ -270,11 +262,9 @@ void NetworkMonitoring::reportMonitoringMessageReceived(size_t nBytes){
     // If the message functionality has already been sampled return
     if(messagesMonitored) return;
 
-    // If the message monitoring functionality isn’t started, start it
-    if(!messageMonitoringStarted){
-        messageMonitoringStarted=true;
-        messageMonitoringStartTime=getCurrentTime();
-    }
+    // If the message monitoring functionality isn’t ON don't count the messages
+    if(!messageMonitoringStarted) return;
+
     nMonitoringMessages++;
     nMonitoringBytes+=nBytes;
 }
@@ -291,19 +281,11 @@ void NetworkMonitoring::reportAppLevelMonitoringMessage(char *appMonitoringMessa
 void NetworkMonitoring::handleTimersNetworkMonitoring(){
     unsigned long currentTime = getCurrentTime();
 
-    if(messageMonitoringStarted && (currentTime-messageMonitoringStartTime)>=MESSAGE_MONITORING_TIME){
+    if(messageMonitoringStarted && (currentTime-messageMonitoringStartTime)>=messageMonitoringTime){
         reportMessagesReceived();
         messagesMonitored=true;
         //Reset the variables
         messageMonitoringStarted=false;
-        nRoutingMessages=0;
-        nRoutingBytes=0;
-        nLifecycleMessages=0;
-        nLifecycleBytes=0;
-        nMiddlewareMessages=0;
-        nMiddlewareBytes=0;
-        nDataMessages=0;
-        nDataBytes=0;
     }
 }
 
@@ -363,7 +345,7 @@ void NetworkMonitoring::sampleEndToEndDelay(){
 
 }
 
-void NetworkMonitoring::sampleMessageMetrics() {
+void NetworkMonitoring::sampleMessageMetrics(unsigned long sampleTime) {
     //Reset all counters
     nRoutingMessages=0;
     nRoutingBytes=0;
@@ -379,5 +361,6 @@ void NetworkMonitoring::sampleMessageMetrics() {
     messageMonitoringStartTime=getCurrentTime();
     messageMonitoringStarted=true;
     messagesMonitored=false;
+    messageMonitoringTime = sampleTime;
 
 }

@@ -72,9 +72,7 @@ void Network::begin() {
     }
 
     beginCalled = true;
-    //startWifiAP(ssid,PASS, localIP, gateway, subnet);
-    //changeWifiMode(3);
-    //LOG(NETWORK,INFO,"My SoftAP IP: %s\nMy STA IP %s\nGateway IP: %s\n", getMyAPIP().toString().c_str(), getMySTAIP().toString().c_str(), getGatewayIP().toString().c_str());
+    monitoring.sampleMessageMetrics(60000);//Sample the number of messages for 1 minute
 }
 
 
