@@ -15,7 +15,7 @@ void showMenu() {
     LOG(CLI,INFO,"[1] Send a new message\n");
     LOG(CLI,INFO,"[2] Print Routing Table\n");
     LOG(CLI,INFO,"[3] Print Children Table\n");
-    LOG(CLI,INFO,"[4] Print Middleware Table\n");
+    LOG(CLI,INFO,"[4] Print Middleware Info\n");
     LOG(CLI,INFO,"[5] Print Root Node\n");
     LOG(CLI,INFO,"[6] Force the node to disconnect from its current parent\n");
     LOG(CLI,INFO,"[7] Exit program\n");
@@ -144,6 +144,12 @@ void cliInteraction(){
 
                 case 7:
                     LOG(CLI,INFO,"Exiting...\n");
+                    break;
+
+                case 8:
+                #ifdef ROOT
+                    monitoring.sampleEndToEndDelay();
+                #endif
                     break;
 
                 default:
