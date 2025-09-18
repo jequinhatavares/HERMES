@@ -16,12 +16,11 @@ void NetworkMonitoring::handleMonitoringMessage(char *messageBuffer) {
 
         if(forwardToRoot == 1){ // This message has been echoed back by the destination node and is now returning to the root.
 
+            /*** Root node received a delayed echo message, discarding outdated measurement.This message was expected
+             * during the active monitoring window but arrived after the timeout period. ***/
             if(!iamRoot)return;
 
-            uint8_t * nextHopPtr = findRouteToNode(rootIP);
-            if (nextHopPtr != nullptr){
-                sendMessage(nextHopPtr,messageBuffer);
-            }else{
+            if(!sendMessageToNode(messageBuffer,rootIP)){
                 LOG(NETWORK, ERROR, "❌-Monitoring Server-Routing failed: No route found to node %d.%d.%d.%d. "
                                     "Unable to forward message.\n", rootIP[0], rootIP[1],rootIP[2], rootIP[3]);
             }
@@ -30,18 +29,12 @@ void NetworkMonitoring::handleMonitoringMessage(char *messageBuffer) {
             if(isIPEqual(destinationNode,myIP)){
                 markEndToEndDelayReceivedByDestinationNode(monitoringBuffer, sizeof(monitoringBuffer),myIP);
                 //Send it to the root node
-                uint8_t * nextHopPtr = findRouteToNode(rootIP);
-                if (nextHopPtr != nullptr){
-                    sendMessage(nextHopPtr,monitoringBuffer);
-                }else{
+                if(!sendMessageToNode(monitoringBuffer,rootIP)){
                     LOG(NETWORK, ERROR, "❌-Monitoring Server-Routing failed: No route found to node %d.%d.%d.%d. "
                                         "Unable to forward message.\n", rootIP[0], rootIP[1],rootIP[2], rootIP[3]);
                 }
             }else{ //If the message is not destined to this node forward it to the destination node
-                uint8_t * nextHopPtr = findRouteToNode(destinationNode);
-                if (nextHopPtr != nullptr){
-                    sendMessage(nextHopPtr,messageBuffer);
-                }else{
+                if(!sendMessageToNode(messageBuffer,destinationNode)){
                     LOG(NETWORK, ERROR, "❌-Monitoring Server-Routing failed: No route found to node %d.%d.%d.%d. "
                                         "Unable to forward message.\n", destinationNode[0], destinationNode[1],destinationNode[2], destinationNode[3]);
                 }
@@ -50,10 +43,7 @@ void NetworkMonitoring::handleMonitoringMessage(char *messageBuffer) {
     }else{ //Other MONITORING_MESSAGE sub types are handled were
         //If this message is not intended for this node, forward it to the next hop leading to its destination.
         if(!iamRoot){
-            uint8_t * nextHopPtr = findRouteToNode(rootIP);
-            if (nextHopPtr != nullptr){
-                sendMessage(nextHopPtr,messageBuffer);
-            }else{
+            if(!sendMessageToNode(messageBuffer,rootIP)){
                 LOG(NETWORK, ERROR, "❌-Monitoring Server-Routing failed: No route found to node %d.%d.%d.%d. "
                                     "Unable to forward message.\n", rootIP[0], rootIP[1],rootIP[2], rootIP[3]);
             }
