@@ -33,7 +33,7 @@ void (*onChildConnectAppCallback)(uint8_t *) = nullptr;
 unsigned long initStateTime=0;
 unsigned long searchStateTime=0;
 unsigned long joinStateTime=0;
-unsigned long parentRecoveryStateTime=0;
+unsigned long parentRecoveryStartTime=0;
 bool entryTimestampSet=false;
 
 
@@ -445,14 +445,13 @@ void handleMessages(){
  *                 if unable to reconnect to the main tree.
  */
 State parentRecovery(Event event){
-    unsigned long startTime;
     int i, consecutiveSearchCount = 0, nrOfPossibleParents = 0;
     uint8_t * STAIP= nullptr,blankIP[4]={0,0,0,0};
     ParentInfo possibleParents[10];
     MessageType MessageType;
 
     if(!entryTimestampSet){
-        startTime=getCurrentTime();
+        parentRecoveryStartTime=getCurrentTime();
         entryTimestampSet=true;
     }
 
@@ -582,8 +581,9 @@ State parentRecovery(Event event){
     sendMessageToChildren(smallSendBuffer);
 
     // Report the time spent on the Parent Recovery State to the monitoring server
-    parentRecoveryStateTime=startTime-getCurrentTime();
-    monitoring.reportParentRecoveryTime(parentRecoveryStateTime);
+    unsigned long currentTime = getCurrentTime();
+    //LOG(NETWORK,DEBUG,"Start Time: %lu Current Time: %lu (CurrentTime-StartTime): %lu ",parentRecoveryStartTime,currentTime,currentTime-recoveryWaitStartTime);
+    monitoring.reportParentRecoveryTime(getCurrentTime()-parentRecoveryStartTime);
     entryTimestampSet=false;
 
     return sActive;

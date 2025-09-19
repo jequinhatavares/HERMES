@@ -60,8 +60,8 @@ private:
     bool messagesMonitored=false;
 
     // Routing protocol message metrics
-    int nRoutingMessages=0; // Count of routing messages
-    int nRoutingBytes=0;    // Total bytes routing messages received
+    int nRoutingMessages=0;     // Count of routing messages
+    int nRoutingBytes=0;        // Total bytes routing messages received
 
     // Node lifecycle message metrics
     int nLifecycleMessages=0;   // Count of lifecycle messages
@@ -72,8 +72,8 @@ private:
     int nMiddlewareBytes=0;     // Total bytes middleware messages received
 
     // Application Level message metrics
-    int nDataMessages=0; // Count of data messages
-    int nDataBytes=0;    // Total bytes of actual data received
+    int nDataMessages=0;        // Count of data messages
+    int nDataBytes=0;           // Total bytes of actual data received
 
     // Monitoring Level message metrics
     int nMonitoringMessages=0; // Count of monitoring messages

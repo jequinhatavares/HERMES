@@ -6,7 +6,7 @@
 
 
 #define NODES_PER_ESP8266 1
-#define NODES_PER_ESP32 1
+#define NODES_PER_ESP32 3
 #define NODES_PER_RPI 5
 
 unsigned long startAssignmentTime=0;
