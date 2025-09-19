@@ -39,7 +39,7 @@ typedef enum MessageType{
     PARENT_RESET_NOTIFICATION,//7
     MONITORING_MESSAGE,//8
     DATA_MESSAGE,//9
-    MIDDLEWARE_MESSAGE,//11
+    MIDDLEWARE_MESSAGE,//10
 }MessageType;
 
 

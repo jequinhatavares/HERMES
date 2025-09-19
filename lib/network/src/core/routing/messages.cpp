@@ -697,6 +697,8 @@ void handleDataMessage(char *msg){
     }else if(!isIPEqual(destinationIP, myIP)){ // If this message is not intended for this node, forward it to the next hop leading to its destination.
         //LOG(NETWORK, DEBUG, "DATA Message as arrived for forwarding to other node:%hhu.%hhu.%hhu.%hhu.\n",destinationIP[0],destinationIP[1],destinationIP[2],destinationIP[3]);
 
+        monitoring.reportDataMessageReceived(receivePayload,DATA_MESSAGE,-1);
+
         //Find the route to the destination IP of the message
         nextHopPtr = findRouteToNode(destinationIP);
         if (nextHopPtr != nullptr){
