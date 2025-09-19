@@ -104,6 +104,10 @@ int NetworkMonitoring::encodeNodeEndToEndDelayToServer(char *encodeMessageBuffer
     return nChars;
 }
 
+void NetworkMonitoring::encodeMessageContinuousToServer(char *encodeBuffer, size_t encodeBufferSize, int messageType, int messageSubType, int nBytes) {
+    //MONITORING_MESSAGE MESSAGE_CONTINUOUS [Message Type] [Message SubType] [N Bytes]
+    snprintf(encodeMessageBuffer,encodeBufferSize,"%d %d %d %d %d",MONITORING_MESSAGE,MESSAGES_CONTINUOUS,messageType,messageSubType,nBytes);
+}
 
 void NetworkMonitoring::reportNewNode(uint8_t * nodeIP, uint8_t * parentIP){
 #ifdef MONITORING_ON
@@ -196,7 +200,7 @@ void NetworkMonitoring::reportMessagesReceived(){
     //MONITORING_MESSAGE MESSAGES_SENT [device type] [Sampled Time] [NodeIP] [N Routing Messages Sent] [N Bytes sent] [N Lifecycle Messages Sent] [N Bytes sent]
     // [N Middleware Messages Sent] [N Bytes sent] [N App Messages Sent] [N Bytes sent] [N Monitoring Messages Sent] [N Bytes sent]
 #if defined(ESP8266)
-    sprintf(monitoringBuffer,"%d %d 1 %hhu.%hhu.%hhu.%hhu %lu %d %d %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_RECEIVED,
+    sprintf(monitoringBuffer,"%d %d 1 %hhu.%hhu.%hhu.%hhu %lu %d %d %d %d %d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_BATCHED,
             myIP[0],myIP[1],myIP[2],myIP[3],messageMonitoringTime,nRoutingMessages,nRoutingBytes,nLifecycleMessages,nLifecycleBytes,
             nMiddlewareMessages,nMiddlewareBytes,nDataMessages,nDataBytes,nMonitoringMessages,nMonitoringBytes);
 #endif
@@ -222,7 +226,7 @@ void NetworkMonitoring::reportMessagesReceived(){
 }
 
 
-void NetworkMonitoring::reportRoutingMessageReceived(size_t nBytes){
+void NetworkMonitoring::reportRoutingMessageReceived(size_t nBytes,int messageType){
     // If the message functionality has already been sampled return
     if(messagesMonitored) return;
 
@@ -231,9 +235,15 @@ void NetworkMonitoring::reportRoutingMessageReceived(size_t nBytes){
 
     nRoutingMessages++;
     nRoutingBytes+=nBytes;
+
+    if(iamRoot){
+        encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,-1,nBytes);
+        LOG(MONITORING_SERVER, INFO,"%s",monitoringBuffer);
+    }
+
 }
 
-void NetworkMonitoring::reportLifecycleMessageReceived(size_t nBytes){
+void NetworkMonitoring::reportLifecycleMessageReceived(size_t nBytes,int messageType){
     // If the message functionality has already been sampled return
     if(messagesMonitored) return;
 
@@ -242,9 +252,14 @@ void NetworkMonitoring::reportLifecycleMessageReceived(size_t nBytes){
 
     nLifecycleMessages++;
     nLifecycleBytes+=nBytes;
+
+    if(iamRoot){
+        encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,-1,nBytes);
+        LOG(MONITORING_SERVER, INFO,"%s",monitoringBuffer);
+    }
 }
 
-void NetworkMonitoring::reportMiddlewareMessageReceived(size_t nBytes){
+void NetworkMonitoring::reportMiddlewareMessageReceived(size_t nBytes,int messageType, int messageSubType){
     // If the message functionality has already been sampled return
     if(messagesMonitored) return;
 
@@ -253,9 +268,14 @@ void NetworkMonitoring::reportMiddlewareMessageReceived(size_t nBytes){
 
     nMiddlewareMessages++;
     nMiddlewareBytes+=nBytes;
+
+    if(iamRoot){
+        encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,messageSubType,nBytes);
+        LOG(MONITORING_SERVER, INFO,"%s",monitoringBuffer);
+    }
 }
 
-void NetworkMonitoring::reportDataMessageReceived(size_t nBytes){
+void NetworkMonitoring::reportDataMessageReceived(size_t nBytes,int messageType, int messageSubType){
     // If the message functionality has already been sampled return
     if(messagesMonitored) return;
 
@@ -264,6 +284,11 @@ void NetworkMonitoring::reportDataMessageReceived(size_t nBytes){
 
     nDataMessages++;
     nDataBytes+=nBytes;
+
+    if(iamRoot){
+        encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,messageSubType,nBytes);
+        LOG(MONITORING_SERVER, INFO,"%s",monitoringBuffer);
+    }
 }
 
 void NetworkMonitoring::reportMonitoringMessageReceived(size_t nBytes){
@@ -275,6 +300,11 @@ void NetworkMonitoring::reportMonitoringMessageReceived(size_t nBytes){
 
     nMonitoringMessages++;
     nMonitoringBytes+=nBytes;
+
+    if(iamRoot){
+        encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,-1,nBytes);
+        LOG(MONITORING_SERVER, INFO,"%s",monitoringBuffer);
+    }
 }
 
 void NetworkMonitoring::reportAppLevelMonitoringMessage(char *appMonitoringMessage) {
@@ -383,5 +413,7 @@ void NetworkMonitoring::sampleMessageMetrics(unsigned long sampleTime) {
     messageMonitoringTime = sampleTime;
 
 }
+
+
 
 

@@ -11,9 +11,10 @@ typedef enum MonitoringMessageType{
     CHANGE_PARENT,          // 2 - Indicates node parent reassignment in network topology
     LIFECYCLE_TIMES,        // 3 - Reports node startup state duration metrics
     PARENT_RECOVERY_TIME,   // 4 - Measures time to reconnect after parent node failure
-    MESSAGES_RECEIVED,      // 5 - Tracks message count statistics for traffic analysis
-    END_TO_END_DELAY,       // 6 - Measures round-trip latency between nodes
-    APP_LEVEL,              // 7 - Carries application-specific performance metrics
+    MESSAGES_BATCHED,       // 5 - Tracks message count statistics for traffic analysis
+    MESSAGES_CONTINUOUS,    // 6 - Tracks message count statistics for traffic analysis
+    END_TO_END_DELAY,       // 7 - Measures round-trip latency between nodes
+    APP_LEVEL,              // 8 - Carries application-specific performance metrics
 }MonitoringMessageType;
 
 typedef struct messageVizParameters{
@@ -39,17 +40,16 @@ public:
     void reportParentRecoveryTime(unsigned long parentRecoveryTime);
     void reportMessagesReceived();
 
-    void reportRoutingMessageReceived(size_t nBytes);
-    void reportLifecycleMessageReceived(size_t nBytes);
-    void reportMiddlewareMessageReceived(size_t nBytes);
-    void reportDataMessageReceived(size_t nBytes);
+    void reportRoutingMessageReceived(size_t nBytes,int messageType);
+    void reportLifecycleMessageReceived(size_t nBytes,int messageType);
+    void reportMiddlewareMessageReceived(size_t nBytes,int messageType, int messageSubType);
+    void reportDataMessageReceived(size_t nBytes,int messageType, int messageSubType);
     void reportMonitoringMessageReceived(size_t nBytes);
 
     void sampleEndToEndDelay();
     void sampleMessageMetrics(unsigned long sampleTime);
 
 private:
-
     //TimeStamp that the server started to take the volume of messages that the node sends
     unsigned long messageMonitoringStartTime;
     //If the monitoring messages has already started
@@ -76,12 +76,13 @@ private:
     int nDataBytes=0;           // Total bytes of actual data received
 
     // Monitoring Level message metrics
-    int nMonitoringMessages=0; // Count of monitoring messages
-    int nMonitoringBytes=0;    // Total bytes of actual monitoring received
+    int nMonitoringMessages=0;  // Count of monitoring messages
+    int nMonitoringBytes=0;     // Total bytes of actual monitoring received
 
     void markEndToEndDelayReceivedByDestinationNode(char*encodeMessageBuffer,size_t encodeBufferSize,uint8_t destinationIP[4]);
     static void encodeEndToEndDelayMessageToNode(char* encodeMessageBuffer,size_t encodeBufferSize,uint8_t *nodeIP);
     int encodeNodeEndToEndDelayToServer(char*encodeBuffer,size_t encodeBufferSize,unsigned long delay, int numberOfHops, uint8_t nodeIP[4]);
+    void encodeMessageContinuousToServer(char*encodeBuffer,size_t encodeBufferSize,int messageType, int messageSubType, int nBytes);
 
     void handleEndToEndDelayMessage(char* messageBuffer);
 };
