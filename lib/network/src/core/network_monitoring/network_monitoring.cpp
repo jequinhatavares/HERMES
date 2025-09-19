@@ -8,53 +8,14 @@ NetworkMonitoring monitoring;
 
 
 void NetworkMonitoring::handleMonitoringMessage(char *messageBuffer) {
-    uint8_t destinationNode[4];
     MonitoringMessageType type;
-    int forwardToRoot=0;
 
     sscanf(messageBuffer, "%*d %d", &type);
-
 
     /*** All monitoring messages are sent to the root node, except for the message that measures end-to-end delay
       * (END_TO_END_DELAY). This message is first sent to a node and then forwarded to the root. ***/
     if(type == END_TO_END_DELAY){
-        LOG(NETWORK,DEBUG,"END_TO_END_DELAY message:%s\n",messageBuffer);
-
-        sscanf(messageBuffer, "%*d %*d %d %hhu.%hhu.%hhu.%hhu",&forwardToRoot,&destinationNode[0],&destinationNode[1],&destinationNode[2],&destinationNode[3]);
-
-        if(forwardToRoot == 1){ // This message has been echoed back by the destination node and is now returning to the root.
-            LOG(NETWORK,DEBUG,"End-to-end delay message returning to the root node\n");
-
-            /*** Root node received a delayed echo message, discarding outdated measurement.This message was expected
-             * during the active monitoring window but arrived after the timeout period. ***/
-            if(iamRoot)return;
-
-            if(!sendMessageToNode(messageBuffer,rootIP)){
-                LOG(NETWORK, ERROR, "❌-Monitoring Server-Routing failed: No route found to node %d.%d.%d.%d. "
-                                    "Unable to forward message.\n", rootIP[0], rootIP[1],rootIP[2], rootIP[3]);
-            }
-        }else{ //If the message didn't arrive yet to the final destination
-            //If the destination of this message is this then reroute the message to the root node
-            if(isIPEqual(destinationNode,myIP)){
-                LOG(NETWORK,DEBUG,"I am destination of end-to-end delay message\n");
-
-                markEndToEndDelayReceivedByDestinationNode(monitoringBuffer, sizeof(monitoringBuffer),myIP);
-                //Send it to the root node
-                LOG(NETWORK,DEBUG,"Sending the message: %s\n",monitoringBuffer);
-
-                if(!sendMessageToNode(monitoringBuffer,rootIP)){
-                    LOG(NETWORK, ERROR, "❌-Monitoring Server-Routing failed: No route found to node %d.%d.%d.%d. "
-                                        "Unable to forward message.\n", rootIP[0], rootIP[1],rootIP[2], rootIP[3]);
-                }
-            }else{ //If the message is not destined to this node forward it to the destination node
-                LOG(NETWORK,DEBUG,"I am NOT destination of end-to-end delay message\n");
-
-                if(!sendMessageToNode(messageBuffer,destinationNode)){
-                    LOG(NETWORK, ERROR, "❌-Monitoring Server-Routing failed: No route found to node %d.%d.%d.%d. "
-                                        "Unable to forward message.\n", destinationNode[0], destinationNode[1],destinationNode[2], destinationNode[3]);
-                }
-            }
-        }
+        handleEndToEndDelayMessage(messageBuffer);
     }else{ //Other MONITORING_MESSAGE sub types are handled were
         //If this message is not intended for this node, forward it to the next hop leading to its destination.
         if(!iamRoot){
@@ -68,6 +29,43 @@ void NetworkMonitoring::handleMonitoringMessage(char *messageBuffer) {
         }
     }
 
+}
+
+
+void NetworkMonitoring::handleEndToEndDelayMessage(char *messageBuffer) {
+    int forwardToRoot=0;
+    uint8_t destinationNode[4];
+
+    LOG(NETWORK,DEBUG,"END_TO_END_DELAY message:%s\n",messageBuffer);
+
+    sscanf(messageBuffer, "%*d %*d %d %hhu.%hhu.%hhu.%hhu",&forwardToRoot,&destinationNode[0],&destinationNode[1],&destinationNode[2],&destinationNode[3]);
+
+    if(forwardToRoot == 1){ // This message has been echoed back by the destination node and is now returning to the root.
+        /*** Root node received a delayed echo message, discarding outdated measurement.This message was expected
+         * during the active monitoring window but arrived after the timeout period. ***/
+        if(iamRoot)return;
+
+        if(!sendMessageToNode(messageBuffer,rootIP)){
+            LOG(NETWORK, ERROR, "❌-Monitoring Server-Routing failed: No route found to node %d.%d.%d.%d. "
+                                "Unable to forward message.\n", rootIP[0], rootIP[1],rootIP[2], rootIP[3]);
+        }
+    }else{ //If the message didn't arrive yet to the final destination
+        //If the destination of this message is this then reroute the message to the root node
+        if(isIPEqual(destinationNode,myIP)){
+            markEndToEndDelayReceivedByDestinationNode(monitoringBuffer, sizeof(monitoringBuffer),myIP);
+            //Send it to the root node
+            if(!sendMessageToNode(monitoringBuffer,rootIP)){
+                LOG(NETWORK, ERROR, "❌-Monitoring Server-Routing failed: No route found to node %d.%d.%d.%d. "
+                                    "Unable to forward message.\n", rootIP[0], rootIP[1],rootIP[2], rootIP[3]);
+            }
+        }else{ //If the message is not destined to this node forward it to the destination node
+
+            if(!sendMessageToNode(messageBuffer,destinationNode)){
+                LOG(NETWORK, ERROR, "❌-Monitoring Server-Routing failed: No route found to node %d.%d.%d.%d. "
+                                    "Unable to forward message.\n", destinationNode[0], destinationNode[1],destinationNode[2], destinationNode[3]);
+            }
+        }
+    }
 }
 
 void NetworkMonitoring::encodeMessage(char* msg, MonitoringMessageType type, messageVizParameters parameters){
@@ -385,3 +383,5 @@ void NetworkMonitoring::sampleMessageMetrics(unsigned long sampleTime) {
     messageMonitoringTime = sampleTime;
 
 }
+
+

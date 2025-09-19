@@ -10,7 +10,6 @@
 #define NODES_PER_RPI 5
 
 unsigned long startAssignmentTime=0;
-unsigned long startInferenceTime=0;
 
 
 /***uint8_t numESP8266Workers=0;
@@ -767,6 +766,9 @@ void NeuralNetworkCoordinator::distributeOutputNeurons(const NeuralNetwork *net,
 
     outputNeuronValues = new float[net->layers[outputLayer].numOutputs];
     isOutputReceived = new bool[net->layers[outputLayer].numOutputs];
+    for (int i = 0; i < net->layers[outputLayer].numOutputs; i++) {
+        isOutputReceived[i] = false;
+    }
 
     nOutputNeurons= net->layers[outputLayer].numOutputs;
 
@@ -1641,7 +1643,8 @@ void NeuralNetworkCoordinator::handleNeuralNetworkMessage(uint8_t *senderIP, uin
 }
 
 void NeuralNetworkCoordinator::onNeuralNetworkOutput(NeuronId neuronId, float outputValue) {
-    bool allOutputNeuronsReceived=false;
+    bool allOutputNeuronsReceived=true;
+    unsigned long currentTime=getCurrentTime();
 
     /*** Coordinator-side override of neuron worker output processing:
      * When the coordinator generates output neuron values, it locally aggregates results
@@ -1653,19 +1656,21 @@ void NeuralNetworkCoordinator::onNeuralNetworkOutput(NeuronId neuronId, float ou
     if(!neuronEntry)return;
 
     // Mark the neuron output value as received
-    if(!isOutputReceived[neuronEntry->layer]){
-        outputNeuronValues[neuronEntry->layer] = outputValue;
-        isOutputReceived[neuronEntry->layer]=true;
+    if(!isOutputReceived[neuronEntry->indexInLayer]){
+        outputNeuronValues[neuronEntry->indexInLayer] = outputValue;
+        isOutputReceived[neuronEntry->indexInLayer]=true;
     }
 
     // Verify if all output neuron value have been received
     for (int i = 0; i < nOutputNeurons; ++i) {
         allOutputNeuronsReceived = allOutputNeuronsReceived && isOutputReceived[i];
+        //LOG(APP,DEBUG,"isOutputReceived[i]=%d\n",isOutputReceived[i]);
     }
+    //LOG(APP,DEBUG,"allOutputNeuronsReceived=%d\n",allOutputNeuronsReceived);
 
     //If all output neurons values have been received report the inference information to the monitoring server
     if(allOutputNeuronsReceived){
-        reportInferenceResults(nnSequenceNumber,getCurrentTime()-startInferenceTime,nackCount,outputNeuronValues,nOutputNeurons);
+        reportInferenceResults(nnSequenceNumber,currentTime-inferenceStartTime,nackCount,outputNeuronValues,nOutputNeurons);
     }
 }
 
