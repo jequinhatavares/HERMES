@@ -56,6 +56,9 @@ private:
     bool areNeuronsAssigned = false;
 
     bool receivedAllNeuronAcks = false;
+    unsigned long readyForInferenceTime=0;
+
+    bool hasWaitedBeforeInference = false;
 
     bool inferenceRunning = false;
     unsigned long inferenceStartTime;

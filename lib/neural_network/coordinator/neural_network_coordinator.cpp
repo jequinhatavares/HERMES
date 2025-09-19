@@ -1219,7 +1219,10 @@ void NeuralNetworkCoordinator::handleACKMessage(char* messageBuffer){
     }
 
     receivedAllNeuronAcks = isNetworkAcknowledge;
-    if(isNetworkAcknowledge) reportSetupTime(getCurrentTime()-startAssignmentTime);
+    if(isNetworkAcknowledge){
+        reportSetupTime(getCurrentTime()-startAssignmentTime);
+        readyForInferenceTime=getCurrentTime();
+    }
 
 }
 
@@ -1391,8 +1394,17 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
         neuronAssignmentTime = getCurrentTime();
     }
 
-    // If all neurons have acknowledged and no inference cycle is currently running, start a new inference cycle
-    if(!inferenceRunning && receivedAllNeuronAcks){
+    currentTime = getCurrentTime();
+    // If all ACKs have been received, wait for a set interval before starting a new inference cycle
+    if(receivedAllNeuronAcks && (currentTime-readyForInferenceTime)>= INFERENCE_INTERVAL ){
+        hasWaitedBeforeInference=true;
+    }
+
+    /*** Inference Cycle Initiation:
+     * 1. Verify no inference cycle is currently active
+     * 2. Confirm all neurons have acknowledged previous operations
+     * 3. Ensure minimum interval between inference cycles has elapsed ***/
+    if(!inferenceRunning && receivedAllNeuronAcks && hasWaitedBeforeInference){
         LOG(APP,INFO,"Starting an inference cycle\n");
         nnSequenceNumber +=2;
         //Clear the parameters related to the neurons the coordinator calculates
@@ -1400,7 +1412,9 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
         encodeForwardMessage(appPayload, sizeof(appPayload),nnSequenceNumber);
         network.broadcastMessage(appBuffer,sizeof(appBuffer),appPayload);
         inferenceStartTime=getCurrentTime();
+        //Reset the variables to don't start a new inference until the current one finishes
         inferenceRunning=true;/******/
+        hasWaitedBeforeInference=false;
     }
 
     currentTime = getCurrentTime();
