@@ -141,6 +141,8 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
     sscanf(messageBuffer,"%*i %i",&type);
 
     if(type == TOP_PARENT_LIST_ADVERTISEMENT_REQUEST){
+        monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,STRATEGY_TOPOLOGY,TOP_PARENT_LIST_ADVERTISEMENT_REQUEST);
+
         LOG(MESSAGES,INFO,"Received [PARENT_LIST_ADVERTISEMENT_REQUEST] message: \"%s\"\n", messageBuffer);
         sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n"
                ,&tmpChildSTAIP[0],&tmpChildSTAIP[1],&tmpChildSTAIP[2],&tmpChildSTAIP[3]
@@ -165,6 +167,8 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
 
 
     }else if(type == TOP_PARENT_LIST_ADVERTISEMENT){
+        monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,STRATEGY_TOPOLOGY,TOP_PARENT_LIST_ADVERTISEMENT);
+
         LOG(MESSAGES,INFO,"Received [PARENT_LIST_ADVERTISEMENT] message: \"%s\"\n", messageBuffer);
         // Check if i am the final destination of the message
         if(iamRoot){
@@ -176,6 +180,8 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
             }
         }
     }else if(type == TOP_PARENT_ASSIGNMENT_COMMAND){
+        monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,STRATEGY_TOPOLOGY,TOP_PARENT_ASSIGNMENT_COMMAND);
+
         LOG(MESSAGES,INFO,"Received [PARENT_REASSIGNMENT_COMMAND] message: \"%s\"\n", messageBuffer);
 
         //MESSAGE_TYPE TOP_PARENT_ASSIGNMENT_COMMAND [destinationIP] [nodeIP] [parentIP]
@@ -196,6 +202,8 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
             }
         }
     }else if(type == TOP_METRICS_REPORT){
+        monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,STRATEGY_TOPOLOGY,TOP_METRICS_REPORT);
+
         //MESSAGE_TYPE TOP_METRICS_REPORT [destination:rootIP] [nodeIP] [metric]
         if(!iamRoot){// If the node is not the root, the metrics message is not intended for it
             nextHopIP = findRouteToNode(rootIP);
@@ -212,6 +220,8 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
             registerTopologyMetric(targetNodeIP,messageBuffer+nChars);
         }
     }else if(type == TOP_NODE_UPDATE){
+        monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,STRATEGY_TOPOLOGY,TOP_NODE_UPDATE);
+
         if(!iamRoot){ // If the node is not the root, the update message is not intended for it
             nextHopIP = findRouteToNode(rootIP);
             if(nextHopIP != nullptr){

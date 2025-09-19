@@ -263,6 +263,8 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
     switch (type) {
 
         case PUBSUB_SUBSCRIBE:
+            monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,STRATEGY_PUBSUB,PUBSUB_SUBSCRIBE);
+
             //Message sent when a one node subscribes to a certain topic
             //13 1 [sender IP] [Subscriber IP] [Topic]
             sscanf(infoPubSub,"%hhu.%hhu.%hhu.%hhu %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
@@ -297,6 +299,8 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             break;
 
         case PUBSUB_UNSUBSCRIBE:
+            monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,PUBSUB_UNSUBSCRIBE,PUBSUB_SUBSCRIBE);
+
             //Message sent when a one unsubscribes to a certain topic
             //13 2 [sender IP] [Unsubscriber IP] [Topic]
             sscanf(infoPubSub,"%hhu.%hhu.%hhu.%hhu %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
@@ -337,6 +341,8 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
 
             break;
         case PUBSUB_ADVERTISE:
+            monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,PUBSUB_ADVERTISE,PUBSUB_SUBSCRIBE);
+
             // Message used to advertise that a node is publishing a new topic
             //13 3 [sender IP] [Publisher IP] [Published Topic]
             sscanf(infoPubSub,"%hhu.%hhu.%hhu.%hhu %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
@@ -369,6 +375,8 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             break;
 
         case PUBSUB_UNADVERTISE:
+            monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,PUBSUB_UNADVERTISE,PUBSUB_SUBSCRIBE);
+
             // Message used to advertise that a node is unpublishing a topic
             //13 4 [sender IP] [Publisher IP] [UnPublished Topic]
             sscanf(infoPubSub,"%hhu.%hhu.%hhu.%hhu %i",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&topic);
@@ -400,6 +408,8 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             break;
 
         case PUBSUB_NODE_TOPICS_UPDATE:
+            monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,PUBSUB_NODE_TOPICS_UPDATE,PUBSUB_SUBSCRIBE);
+
             //Max size: 40 + nTopics * 2 +(nTopics-1)*2
             // Message used to advertise all publish-subscribe information of the node
             //13 5 [sender IP] [node IP] | [Published Topic List] [Subscribed Topics List]
@@ -437,6 +447,8 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             break;/******/
 
         case PUBSUB_NETWORK_TOPICS_UPDATE:
+            monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,PUBSUB_NETWORK_TOPICS_UPDATE,PUBSUB_SUBSCRIBE);
+
             //Buffer max size = 22 + 30*nNodes
             //13 6 [sender IP] |[node IP] [Published Topic List] [Subscribed Topics List] |[node IP] [Published Topic List] [Subscribed Topics List]...
             entry = strtok_r(infoPubSub, "|", &saveptr1);

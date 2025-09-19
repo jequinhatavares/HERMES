@@ -212,6 +212,8 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
     sscanf(messageBuffer,"%*i %i",&injectType);
 
     if(injectType == INJECT_NODE_METRIC_UPDATE){
+        monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,STRATEGY_INJECT,INJECT_NODE_METRIC_UPDATE);
+
         //MESSAGE_TYPE INJECT_NODE_METRIC_UPDATE [sender IP] [nodeIP] metric
         sscanf(messageBuffer,"%*d %d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&injectType,&senderIP[0],&senderIP[1],&senderIP[2],&senderIP[3],
                &nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&nChars);
@@ -227,6 +229,8 @@ void handleMessageStrategyInject(char* messageBuffer, size_t bufferSize){
         propagateMessage(smallSendBuffer,senderIP);
 
     }else if(injectType == INJECT_NETWORK_METRICS_UPDATE){
+        monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,STRATEGY_INJECT,INJECT_NETWORK_METRICS_UPDATE);
+
         //MESSAGE_TYPE INJECT_NETWORK_METRICS_UPDATE [sender IP] |[nodeIP] metric |[nodeIP] metric |...
         char* token = strtok(messageBuffer, "|");
         //To discard the message type and ensure the token points to the first routing table update entry
