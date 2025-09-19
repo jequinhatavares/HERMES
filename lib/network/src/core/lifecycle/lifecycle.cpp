@@ -422,7 +422,6 @@ void handleMessages(){
         case MIDDLEWARE_MESSAGE:
             LOG(MESSAGES,INFO,"Received [Middleware] message: \"%s\"\n", receiveBuffer);
             if(middlewareHandleMessageCallback != nullptr)middlewareHandleMessageCallback(receiveBuffer, sizeof(receiveBuffer));
-
             break;
 
         default:
@@ -831,10 +830,10 @@ void parseMAC(const char* macStr, int* macArray) {
  */
 void setIPs(const uint8_t * MAC){
     localIP[0] = 10;localIP[1] = MAC[5];
-    localIP[2] = MAC[4];localIP[3] = MAC[3];
+    localIP[2] = MAC[4];localIP[3] = 1;
 
     gateway[0] = 10;gateway[1] = MAC[5];
-    gateway[2] = MAC[4];gateway[3] = MAC[3];
+    gateway[2] = MAC[4];gateway[3] =1;
 
     subnet[0] = 255;subnet[1] = 255;
     subnet[2] = 255;subnet[3] =0;

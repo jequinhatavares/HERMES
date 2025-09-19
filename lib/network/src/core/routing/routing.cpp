@@ -482,7 +482,7 @@ void getIPFromMAC(uint8_t * MAC, uint8_t * IPAddr){
     IPAddr[0] = 10;
     IPAddr[1] = MAC[5];
     IPAddr[2] = MAC[4];
-    IPAddr[3] = MAC[3];
+    IPAddr[3] = 1;
 }
 
 int getDistanceToNode(uint8_t *nodeIP){
