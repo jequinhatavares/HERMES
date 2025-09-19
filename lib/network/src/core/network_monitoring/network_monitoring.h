@@ -42,9 +42,9 @@ public:
 
     void reportRoutingMessageReceived(size_t nBytes,int messageType);
     void reportLifecycleMessageReceived(size_t nBytes,int messageType);
-    void reportMiddlewareMessageReceived(size_t nBytes,int messageType, int messageSubType);
+    void reportMiddlewareMessageReceived(size_t nBytes,int messageType,int strategyType,int messageSubType);
     void reportDataMessageReceived(size_t nBytes,int messageType, int messageSubType);
-    void reportMonitoringMessageReceived(size_t nBytes);
+    void reportMonitoringMessageReceived(size_t nBytes,int messageType);
 
     void sampleEndToEndDelay();
     void sampleMessageMetrics(unsigned long sampleTime);
@@ -82,7 +82,7 @@ private:
     void markEndToEndDelayReceivedByDestinationNode(char*encodeMessageBuffer,size_t encodeBufferSize,uint8_t destinationIP[4]);
     static void encodeEndToEndDelayMessageToNode(char* encodeMessageBuffer,size_t encodeBufferSize,uint8_t *nodeIP);
     int encodeNodeEndToEndDelayToServer(char*encodeBuffer,size_t encodeBufferSize,unsigned long delay, int numberOfHops, uint8_t nodeIP[4]);
-    void encodeMessageContinuousToServer(char*encodeBuffer,size_t encodeBufferSize,int messageType, int messageSubType, int nBytes);
+    void encodeMessageContinuousToServer(char *encodeBuffer, size_t encodeBufferSize, int messageType, int strategyType,int messageSubType, int nBytes);
 
     void handleEndToEndDelayMessage(char* messageBuffer);
 };

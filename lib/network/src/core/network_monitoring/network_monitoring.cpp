@@ -104,9 +104,15 @@ int NetworkMonitoring::encodeNodeEndToEndDelayToServer(char *encodeMessageBuffer
     return nChars;
 }
 
-void NetworkMonitoring::encodeMessageContinuousToServer(char *encodeBuffer, size_t encodeBufferSize, int messageType, int messageSubType, int nBytes) {
-    //MONITORING_MESSAGE MESSAGE_CONTINUOUS [Message Type] [Message SubType] [N Bytes]
-    snprintf(encodeMessageBuffer,encodeBufferSize,"%d %d %d %d %d",MONITORING_MESSAGE,MESSAGES_CONTINUOUS,messageType,messageSubType,nBytes);
+void NetworkMonitoring::encodeMessageContinuousToServer(char *encodeBuffer, size_t encodeBufferSize, int messageType, int strategyType,int messageSubType, int nBytes) {
+
+    if(messageType != MIDDLEWARE_MESSAGE){
+        //MONITORING_MESSAGE MESSAGE_CONTINUOUS [Message Type] [Message SubType] [N Bytes]
+        snprintf(encodeBuffer,encodeBufferSize,"%d %d %d %d %d",MONITORING_MESSAGE,MESSAGES_CONTINUOUS,messageType,messageSubType,nBytes);
+    }else{
+        //MONITORING_MESSAGE MESSAGE_CONTINUOUS [Message Type] [Strategy Type] [Message SubType] [N Bytes]
+        snprintf(encodeBuffer,encodeBufferSize,"%d %d %d %d %d %d",MONITORING_MESSAGE,MESSAGES_CONTINUOUS,messageType,messageSubType,nBytes);
+    }
 }
 
 void NetworkMonitoring::reportNewNode(uint8_t * nodeIP, uint8_t * parentIP){
@@ -237,7 +243,7 @@ void NetworkMonitoring::reportRoutingMessageReceived(size_t nBytes,int messageTy
     nRoutingBytes+=nBytes;
 
     if(iamRoot){
-        encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,-1,nBytes);
+        encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,-1,-1,nBytes);
         LOG(MONITORING_SERVER, INFO,"%s",monitoringBuffer);
     }
 
@@ -254,12 +260,12 @@ void NetworkMonitoring::reportLifecycleMessageReceived(size_t nBytes,int message
     nLifecycleBytes+=nBytes;
 
     if(iamRoot){
-        encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,-1,nBytes);
+        encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,-1,-1,nBytes);
         LOG(MONITORING_SERVER, INFO,"%s",monitoringBuffer);
     }
 }
 
-void NetworkMonitoring::reportMiddlewareMessageReceived(size_t nBytes,int messageType, int messageSubType){
+void NetworkMonitoring::reportMiddlewareMessageReceived(size_t nBytes,int messageType,int strategyType,int messageSubType){
     // If the message functionality has already been sampled return
     if(messagesMonitored) return;
 
@@ -270,7 +276,7 @@ void NetworkMonitoring::reportMiddlewareMessageReceived(size_t nBytes,int messag
     nMiddlewareBytes+=nBytes;
 
     if(iamRoot){
-        encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,messageSubType,nBytes);
+        encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,strategyType,messageSubType,nBytes);
         LOG(MONITORING_SERVER, INFO,"%s",monitoringBuffer);
     }
 }
@@ -286,12 +292,12 @@ void NetworkMonitoring::reportDataMessageReceived(size_t nBytes,int messageType,
     nDataBytes+=nBytes;
 
     if(iamRoot){
-        encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,messageSubType,nBytes);
+        encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,-1,messageSubType,nBytes);
         LOG(MONITORING_SERVER, INFO,"%s",monitoringBuffer);
     }
 }
 
-void NetworkMonitoring::reportMonitoringMessageReceived(size_t nBytes){
+void NetworkMonitoring::reportMonitoringMessageReceived(size_t nBytes,int messageType){
     // If the message functionality has already been sampled return
     if(messagesMonitored) return;
 
@@ -302,7 +308,7 @@ void NetworkMonitoring::reportMonitoringMessageReceived(size_t nBytes){
     nMonitoringBytes+=nBytes;
 
     if(iamRoot){
-        encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,-1,nBytes);
+        encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,-1,-1,nBytes);
         LOG(MONITORING_SERVER, INFO,"%s",monitoringBuffer);
     }
 }
