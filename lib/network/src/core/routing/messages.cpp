@@ -877,7 +877,7 @@ void getSenderIP(char* messageBuffer, MessageType type, uint8_t * senderIP){
 bool sendMessageToNode(char* messageBuffer,uint8_t *destinationIP){
     uint8_t *nextHopIP = findRouteToNode(destinationIP);
     if(nextHopIP != nullptr){
-        sendMessage(destinationIP,messageBuffer);
+        sendMessage(nextHopIP,messageBuffer);
         return true;
     }
     return false;
