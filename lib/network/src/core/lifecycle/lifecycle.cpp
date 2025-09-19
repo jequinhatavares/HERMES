@@ -581,7 +581,6 @@ State parentRecovery(Event event){
     sendMessageToChildren(smallSendBuffer);
 
     // Report the time spent on the Parent Recovery State to the monitoring server
-    unsigned long currentTime = getCurrentTime();
     //LOG(NETWORK,DEBUG,"Start Time: %lu Current Time: %lu (CurrentTime-StartTime): %lu ",parentRecoveryStartTime,currentTime,currentTime-recoveryWaitStartTime);
     monitoring.reportParentRecoveryTime(getCurrentTime()-parentRecoveryStartTime);
     entryTimestampSet=false;

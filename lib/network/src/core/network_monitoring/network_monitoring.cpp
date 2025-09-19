@@ -14,16 +14,20 @@ void NetworkMonitoring::handleMonitoringMessage(char *messageBuffer) {
 
     sscanf(messageBuffer, "%*d %d", &type);
 
+
     /*** All monitoring messages are sent to the root node, except for the message that measures end-to-end delay
       * (END_TO_END_DELAY). This message is first sent to a node and then forwarded to the root. ***/
     if(type == END_TO_END_DELAY){
+        LOG(NETWORK,DEBUG,"END_TO_END_DELAY message:%s\n",messageBuffer);
+
         sscanf(messageBuffer, "%*d %*d %d %hhu.%hhu.%hhu.%hhu",&forwardToRoot,&destinationNode[0],&destinationNode[1],&destinationNode[2],&destinationNode[3]);
 
         if(forwardToRoot == 1){ // This message has been echoed back by the destination node and is now returning to the root.
+            LOG(NETWORK,DEBUG,"End-to-end delay message returning to the root node\n");
 
             /*** Root node received a delayed echo message, discarding outdated measurement.This message was expected
              * during the active monitoring window but arrived after the timeout period. ***/
-            if(!iamRoot)return;
+            if(iamRoot)return;
 
             if(!sendMessageToNode(messageBuffer,rootIP)){
                 LOG(NETWORK, ERROR, "❌-Monitoring Server-Routing failed: No route found to node %d.%d.%d.%d. "
@@ -32,13 +36,19 @@ void NetworkMonitoring::handleMonitoringMessage(char *messageBuffer) {
         }else{ //If the message didn't arrive yet to the final destination
             //If the destination of this message is this then reroute the message to the root node
             if(isIPEqual(destinationNode,myIP)){
+                LOG(NETWORK,DEBUG,"I am destination of end-to-end delay message\n");
+
                 markEndToEndDelayReceivedByDestinationNode(monitoringBuffer, sizeof(monitoringBuffer),myIP);
                 //Send it to the root node
+                LOG(NETWORK,DEBUG,"Sending the message: %s\n",monitoringBuffer);
+
                 if(!sendMessageToNode(monitoringBuffer,rootIP)){
                     LOG(NETWORK, ERROR, "❌-Monitoring Server-Routing failed: No route found to node %d.%d.%d.%d. "
                                         "Unable to forward message.\n", rootIP[0], rootIP[1],rootIP[2], rootIP[3]);
                 }
             }else{ //If the message is not destined to this node forward it to the destination node
+                LOG(NETWORK,DEBUG,"I am NOT destination of end-to-end delay message\n");
+
                 if(!sendMessageToNode(messageBuffer,destinationNode)){
                     LOG(NETWORK, ERROR, "❌-Monitoring Server-Routing failed: No route found to node %d.%d.%d.%d. "
                                         "Unable to forward message.\n", destinationNode[0], destinationNode[1],destinationNode[2], destinationNode[3]);
@@ -92,7 +102,7 @@ void NetworkMonitoring::markEndToEndDelayReceivedByDestinationNode(char*encodeMe
 int NetworkMonitoring::encodeNodeEndToEndDelayToServer(char *encodeMessageBuffer, size_t encodeBufferSize, unsigned long delay,int numberOfHops,uint8_t nodeIP[4]){
     int nChars=0;
     //MONITORING_MESSAGE END_TO_END_DELAY [nodeIP] [delay value] [number of Hops]
-    snprintf(encodeMessageBuffer,encodeBufferSize," %hhu.%hhu.%hhu.%hhu %lu %d %n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],delay,numberOfHops,&nChars);
+    snprintf(encodeMessageBuffer,encodeBufferSize," %hhu.%hhu.%hhu.%hhu %lu %d%n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],delay,numberOfHops,&nChars);
     return nChars;
 }
 
@@ -311,15 +321,24 @@ void NetworkMonitoring::sampleEndToEndDelay(){
      * 4. Calculates one-way delay assuming symmetric paths (RTT/2)
      * 5. Logs the computed latency metrics to the Monitoring Server
     ***/
-    for (int i = 0; i < routingTable->numberOfItems; ++i) {
+    for (int i = 0; i < routingTable->numberOfItems; i++) {
         nodeIP = (uint8_t*) tableKey(routingTable,i);
         nextHopIP = findRouteToNode(nodeIP);
+
+        //Skip the own node
+        if(isIPEqual(nodeIP,myIP)) continue;
+
+        LOG(NETWORK,DEBUG,"1\n");
         //If one of the addresses its nullptr continue to the next node
         if(!nodeIP||!nextHopIP) continue;
+        LOG(NETWORK,DEBUG,"NodeIP: %hhu.%hhu.%hhu.%hhu\n", nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3]);
+
 
         //Encode the end to end delay message destined to the current node
         encodeEndToEndDelayMessageToNode(tmpBuffer, sizeof(tmpBuffer),nodeIP);
         sendTime=getCurrentTime();//Sample the send time
+        currentTime=sendTime;
+
         sendMessage(nextHopIP,tmpBuffer);
 
         //Waits for a message of type MONITORING_MESSAGE from that node
@@ -328,7 +347,9 @@ void NetworkMonitoring::sampleEndToEndDelay(){
             currentTime = getCurrentTime();
             if(packetSize>0){
                 //Verify is the MONITORING_MESSAGE subtype is the expected END_TO_END_DELAY and the message is from the intended node
-                sscanf(receiveBuffer, "%d %d %hhu.%hhu.%hhu.%hhu",&type,&subType,&receivedMessageIP[0],&receivedMessageIP[1],&receivedMessageIP[2],&receivedMessageIP[3]);
+                sscanf(receiveBuffer, "%d %d %*d %hhu.%hhu.%hhu.%hhu",&type,&subType,&receivedMessageIP[0],&receivedMessageIP[1],&receivedMessageIP[2],&receivedMessageIP[3]);
+                LOG(NETWORK,DEBUG,"Receive message: %s\n",receiveBuffer);
+
                 if(type==MONITORING_MESSAGE && subType==END_TO_END_DELAY && isIPEqual(nodeIP,receivedMessageIP)) isExpectedMessage=true;
             }
         }
