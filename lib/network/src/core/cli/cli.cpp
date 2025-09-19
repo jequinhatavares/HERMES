@@ -10,14 +10,14 @@
  */
 void showMenu() {
     LOG(CLI,INFO,"\n======================================================================\n");
-    LOG(CLI,INFO,"                       💻 Command Line Menu 💻                       \n");
+    LOG(CLI,INFO,"                       Command Line Interface Menu                    \n");
     LOG(CLI,INFO,"======================================================================\n");
     LOG(CLI,INFO,"[1] Send a new message\n");
-    LOG(CLI,INFO,"[2] Print Routing Table\n");
-    LOG(CLI,INFO,"[3] Print Children Table\n");
-    LOG(CLI,INFO,"[4] Print Middleware Info\n");
-    LOG(CLI,INFO,"[5] Print Root Node\n");
-    LOG(CLI,INFO,"[6] Force the node to disconnect from its current parent\n");
+    LOG(CLI,INFO,"[2] Display Routing Table\n");
+    LOG(CLI,INFO,"[3] Display Children Table\n");
+    LOG(CLI,INFO,"[4] Display Middleware Info\n");
+    LOG(CLI,INFO,"[5] Display Root Node IP\n");
+    LOG(CLI,INFO,"[6] Disconnect from Parent\n");
     LOG(CLI,INFO,"[7] Exit program\n");
     LOG(CLI,INFO,"======================================================================\n");
     LOG(CLI,INFO,"> ");
