@@ -828,14 +828,14 @@ void parseMAC(const char* macStr, int* macArray) {
  *
  * Example:
  * Given the MAC address: CC:50:E3:60:E6:87
- * The generated IP address will be: 227.96.230.135 //TODO correct this docs
+ * The generated IP address will be: 10.MAC[5].MAC[4].MAC[3]
  */
 void setIPs(const uint8_t * MAC){
-    localIP[0] = MAC[5];localIP[1] = MAC[4];
-    localIP[2] = MAC[3];localIP[3] = 1;
+    localIP[0] = 10;localIP[1] = MAC[5];
+    localIP[2] = MAC[4];localIP[3] = MAC[3];
 
-    gateway[0] = MAC[5];gateway[1] = MAC[4];
-    gateway[2] = MAC[3];gateway[3] = 1;
+    gateway[0] = 10;gateway[1] = MAC[5];
+    gateway[2] = MAC[4];gateway[3] = MAC[3];
 
     subnet[0] = 255;subnet[1] = 255;
     subnet[2] = 255;subnet[3] =0;
