@@ -59,6 +59,13 @@ void onSoftAPModeStationDisconnectedHandler(const WiFiEventSoftAPModeStationDisc
     childConnectionStatus lostChild;
     lostChild.childDisconnectionTime = currentTime;
 
+    if(isChildRegisteredCallback(lostChildMAC)){
+        if(tableFind(lostChildrenTable, (void*)lostChildMAC ) == -1){
+            tableAdd(lostChildrenTable,lostChildMAC, &lostChild);
+        }else{
+            tableUpdate(lostChildrenTable,lostChildMAC, &lostChild);
+        }
+    }
 }
 
 /**
@@ -202,6 +209,7 @@ void startWifiAP(const char* SSID, const char* Pass, uint8_t* localIP, uint8_t* 
     // Start the Access Point with the SSID defined in SSID_PREFIX
     WiFi.softAPConfig(localIP_, gateway_, subnet_);
     WiFi.softAP(SSID,Pass,WIFI_CHANNEL,false,MAX_STA_CONNECTIONS_ESP8266);
+    //WiFi.softAP(SSID,Pass);
 
     //Init Wifi Event Handlers
     initWifiEventHandlers();
