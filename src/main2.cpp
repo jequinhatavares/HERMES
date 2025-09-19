@@ -208,6 +208,7 @@ void setup(){
     //Integrated the node into the network
     network.begin();
 
+
     /*** Strategy Topology Init
     // Assign a topology metric based on device type: NodeMCU = 1, ESP32 = 2, Raspberry Pi = 3
     if(MAC[5] == 89 && MAC[4] == 248 && MAC[3] == 169 && MAC[2] == 45){
@@ -253,9 +254,9 @@ void setup(){
 
 void loop(){
    network.run();
-   worker.manageNeuron();
+   //worker.manageNeuron();
 #ifdef ROOT
-   worker.manageNeuralNetwork();
+   //worker.manageNeuralNetwork();
 #endif
 }
 
@@ -413,9 +414,9 @@ void setup(){
     //Initialize the node parameters
     network.init();
 
-    /************* Middleware Strategy: Pub/Sub *************/
+    /************* Middleware Strategy: Pub/Sub **********
     network.middlewareSelectStrategy(STRATEGY_PUBSUB);
-    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);
+    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);***/
 
     /************* Middleware Strategy: Topology Inits *********
     myMetric.processingCapacity=3;
@@ -436,7 +437,7 @@ void setup(){
 
     // Register the RPi device as a worker device
     //worker.registerNodeAsOutput();
-    worker.registerNodeAsWorker();
+    //worker.registerNodeAsWorker();
 
 }
 
@@ -448,8 +449,7 @@ int main() {
 
     while (running) {
         network.run();
-        worker.manageNeuron();
-        //cliInteraction();
+        //worker.manageNeuron();
     }
 
     return 0;
