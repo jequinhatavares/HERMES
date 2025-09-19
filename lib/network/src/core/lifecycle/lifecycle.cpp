@@ -360,40 +360,42 @@ void handleMessages(){
     switch (MessageType) {
         case PARENT_DISCOVERY_REQUEST:
             LOG(MESSAGES,INFO,"Received [Parent Discovery Request] message: \"%s\"\n", receiveBuffer);
-            handleParentDiscoveryRequest(receiveBuffer);
             monitoring.reportLifecycleMessageReceived(receivePayload,PARENT_DISCOVERY_REQUEST);
+            handleParentDiscoveryRequest(receiveBuffer);
             break;
 
         case CHILD_REGISTRATION_REQUEST:
             LOG(MESSAGES,INFO,"Received [Child Registration Request] message: \"%s\"\n", receiveBuffer);
+            monitoring.reportLifecycleMessageReceived(receivePayload,CHILD_REGISTRATION_REQUEST);
+
             handleChildRegistrationRequest(receiveBuffer);
             sscanf(receiveBuffer,"%*d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",&childAPIP[0],&childAPIP[1],&childAPIP[2],&childAPIP[3]
                    ,&childSTAIP[0],&childSTAIP[1],&childSTAIP[2],&childSTAIP[3]);
             if(middlewareOnNetworkEventCallback != nullptr)middlewareOnNetworkEventCallback(1,childSTAIP);
             if(onChildConnectAppCallback != nullptr)onChildConnectAppCallback(childAPIP);
-            monitoring.reportLifecycleMessageReceived(receivePayload,CHILD_REGISTRATION_REQUEST);
             break;
 
         case FULL_ROUTING_TABLE_UPDATE:
             LOG(MESSAGES,INFO,"Received [Full Routing Update] message: \"%s\"\n", receiveBuffer);
-            handleFullRoutingTableUpdate(receiveBuffer);
             monitoring.reportRoutingMessageReceived(receivePayload,FULL_ROUTING_TABLE_UPDATE);
+            handleFullRoutingTableUpdate(receiveBuffer);
             break;
 
         case PARTIAL_ROUTING_TABLE_UPDATE:
             LOG(MESSAGES,INFO,"Received [Partial Routing Update] message: \"%s\"\n", receiveBuffer);
-            handlePartialRoutingUpdate(receiveBuffer);
             monitoring.reportRoutingMessageReceived(receivePayload,PARTIAL_ROUTING_TABLE_UPDATE);
+            handlePartialRoutingUpdate(receiveBuffer);
             break;
 
         case TOPOLOGY_BREAK_ALERT:
             LOG(MESSAGES,INFO,"Received [Topology Break Alert] message: \"%s\"\n", receiveBuffer);
+            monitoring.reportLifecycleMessageReceived(receivePayload,TOPOLOGY_BREAK_ALERT);
+
             handleTopologyBreakAlert(receiveBuffer);
             connectedToMainTree = false;
             recoveryWaitStartTime = getCurrentTime();
             //LOG(NETWORK,INFO,"In Handle recoveryWaitStartTime:%lu\n",recoveryWaitStartTime);
             insertLast(stateMachineEngine, eLostTreeConnection);
-            monitoring.reportLifecycleMessageReceived(receivePayload,TOPOLOGY_BREAK_ALERT);
             break;
 
         case TOPOLOGY_RESTORED_NOTICE:
@@ -403,15 +405,15 @@ void handleMessages(){
 
         case PARENT_RESET_NOTIFICATION:
             LOG(MESSAGES,INFO,"Received [Parent Reset Notification] message: \"%s\"\n", receiveBuffer);
+            monitoring.reportLifecycleMessageReceived(receivePayload,PARENT_RESET_NOTIFICATION);
             handleParentResetNotification(receiveBuffer);
             insertLast(stateMachineEngine, eLostParentConnection);
-            monitoring.reportLifecycleMessageReceived(receivePayload,PARENT_RESET_NOTIFICATION);
             break;
 
         case MONITORING_MESSAGE:
             //handleDebugMessage(receiveBuffer);
-            monitoring.handleMonitoringMessage(receiveBuffer);
             monitoring.reportMonitoringMessageReceived(receivePayload,MONITORING_MESSAGE);
+            monitoring.handleMonitoringMessage(receiveBuffer);
             break;
 
         case DATA_MESSAGE:
