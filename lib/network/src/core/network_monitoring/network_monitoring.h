@@ -55,7 +55,7 @@ private:
     //If the monitoring messages has already started
     bool messageMonitoringStarted=false;
     //The time interval that the node monitors the volume of messages sent by the node
-    unsigned long messageMonitoringTime 300000; //5 minutes
+    unsigned long messageMonitoringTime = 300000; //5 minutes
     // If a sample of the number of messages has already been taken
     bool messagesMonitored=false;
 
