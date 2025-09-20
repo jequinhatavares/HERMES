@@ -6,7 +6,7 @@
 
 
 #define NODES_PER_ESP8266 1
-#define NODES_PER_ESP32 3
+#define NODES_PER_ESP32 1
 #define NODES_PER_RPI 5
 
 unsigned long startAssignmentTime=0;
@@ -1396,7 +1396,7 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
 
     currentTime = getCurrentTime();
     // If all ACKs have been received, wait for a set interval before starting a new inference cycle
-    if(receivedAllNeuronAcks && (currentTime-readyForInferenceTime)>= INFERENCE_INTERVAL ){
+    if(receivedAllNeuronAcks && (currentTime-readyForInferenceTime)>= INFERENCE_INTERVAL && !inferenceRunning){
         hasWaitedBeforeInference=true;
     }
 
@@ -1690,6 +1690,11 @@ void NeuralNetworkCoordinator::onNeuralNetworkOutput(NeuronId neuronId, float ou
     if(allOutputNeuronsReceived){
         reportInferenceResults(nnSequenceNumber,currentTime-inferenceStartTime,nackCount,outputNeuronValues,nOutputNeurons);
     }
+
+    //To start a new inference
+    inferenceRunning=false;
+    hasWaitedBeforeInference=false;
+    readyForInferenceTime=getCurrentTime();
 }
 
 bool NeuralNetworkCoordinator::isOutputNeuron(NeuronId neuronId) {

@@ -29,7 +29,7 @@
  *   number of sensors it can integrate. Each sensor maps to exactly one input neuron.***/
 #define MAX_INPUT_NEURONS 2
 
-#define MAX_TARGET_OUTPUTS 4
+#define MAX_TARGET_OUTPUTS 5
 
 #define NACK_TIMEOUT 3000
 
@@ -39,9 +39,9 @@
 
 #define INFERENCE_TIMEOUT 6000
 
-#define INFERENCE_INTERVAL 3000
+#define INFERENCE_INTERVAL 120000
 
-#define MIN_WORKERS 3
+#define MIN_WORKERS 4
 
 
 

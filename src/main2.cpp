@@ -189,10 +189,10 @@ void setup(){
     //Initialize the node parameters
     network.init();
 
-    /************* Middleware Strategy: PubSub *********
+    /************* Middleware Strategy: PubSub ************/
     //First init the middleware pub/sub strategy
     network.middlewareSelectStrategy(STRATEGY_PUBSUB);
-    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);***/
+    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);
 
     /************* Middleware Strategy: Inject **********
     network.middlewareSelectStrategy(STRATEGY_INJECT);
@@ -230,7 +230,7 @@ void setup(){
 
     //LOG(APP,INFO,"MY MAC after begin: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
 
-    /************* Middleware Strategy: Pub/Sub or Topology **********
+    /************* Middleware Strategy: Pub/Sub or Topology *************/
     // Register each device in the network along with its assigned role
     if(MAC[5] == 89 && MAC[4] == 248 && MAC[3] == 169 && MAC[2] == 45){
         worker.registerNodeAsInput();
@@ -241,7 +241,7 @@ void setup(){
         worker.registerNodeAsWorker();
     }else if(MAC[5] == 252 && MAC[4] == 8 && MAC[3] == 107 && MAC[2] == 164){
         worker.registerNodeAsWorker();
-    }***/
+    }
 
     /************* Middleware Strategy: Inject **********
     // Register each device in the network along with its assigned role
@@ -439,7 +439,7 @@ void setup(){
 
     // Register the RPi device as a worker device
     //worker.registerNodeAsOutput();
-    //worker.registerNodeAsWorker();
+    worker.registerNodeAsWorker();
 
 }
 
@@ -452,7 +452,7 @@ int main() {
 
     while (running) {
         network.run();
-        //worker.manageNeuron();
+        worker.manageNeuron();
     }
 
     return 0;
