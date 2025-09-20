@@ -4,6 +4,10 @@
 
 float sensorData = 0.0;
 
+NeuronWorker::NeuronWorker() {
+    random = rand()%6;//Generates a random number between 0-5
+}
+
 /**
  * handleNeuronMessage
  * Processes all incoming neural network neuron related messages
@@ -978,7 +982,7 @@ void NeuronWorker::manageNeuron(){
      2. Not all outputs have been computed yet
      3. The NACK mechanism hasn't been triggered yet
      Then initialize the onInputWaitTimeout procedure that sends NACKs related to the missing neurons ***/
-    if(!allOutputsComputed && !nackTriggered && (currentTime-firstInputTimestamp) >= INPUT_WAIT_TIMEOUT ){
+    if(!allOutputsComputed && !nackTriggered && (currentTime-firstInputTimestamp) >= (INPUT_WAIT_TIMEOUT+random*200)){
         LOG(APP,INFO,"Missing Input Values: starting the onInputWaitTimeOut process\n");
         onInputWaitTimeout();
     }

@@ -21,6 +21,7 @@ typedef struct OutputTarget{
 
 class NeuronWorker{
 public:
+    NeuronWorker();
     /*** Stores the target nodes of the input neurons. Since all input neurons belong to the same layer,
      * they share the same set of target nodes (i.e., the neurons in the next layer).
      * Therefore, only one instance of the OutputTarget structure is needed. ***/
@@ -70,6 +71,8 @@ public:
     void clearAllNeuronMemory();
 
 private:
+    //Random Seed that is going to be used missing Inputs mechanism
+    int random=0;
     // Variables used to track when the NACK mechanism was triggered, to manage this neuron's output in the presence of missing inputs
     unsigned long nackTriggerTime;
     bool nackTriggered = false;
