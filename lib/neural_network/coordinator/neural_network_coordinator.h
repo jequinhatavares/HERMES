@@ -52,6 +52,7 @@ public:
     void manageNeuralNetwork();
 
 private:
+    unsigned long timeSince;
     unsigned long neuronAssignmentTime;
     bool areNeuronsAssigned = false;
 

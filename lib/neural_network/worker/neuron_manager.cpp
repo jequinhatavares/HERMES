@@ -509,9 +509,15 @@ void NeuronWorker::handleForwardMessage(char *messageBuffer){
     //If the device isn't responsible for any input, hidden/output neurons return
     if(neuronCore.neuronsCount==0 && nrInputNeurons ==0) return;
 
-    currentInferenceId = inferenceId;
+    /***
+     * Clear inference variables only if the received inference ID is greater. This handles the case where a node
+     * first receives an NN_NEURON_OUTPUT with a newer inference ID and clears its variables, ensuring they are
+     * not cleared redundantly for the same inference, and that previously received output values are preserved.***/
+    if(inferenceId>currentInferenceId){
+        clearNeuronInferenceParameters();
+    }
 
-    clearNeuronInferenceParameters();
+    currentInferenceId = inferenceId;
 
     //LOG(APP,DEBUG,"F3\n");
     //Generate the input of all input neurons hosted in this node
@@ -625,6 +631,7 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
      it means this node's sequence is outdated, possibly due to missing the coordinator's message
      that signaled the start of the forward propagation cycle.***/
     else if(inferenceId > currentInferenceId){
+        LOG(APP,INFO,"Received Output value with an InferenceId(%i) greater than the stored one(%i)\n",inferenceId,currentInferenceId);
         currentInferenceId = inferenceId;
         // Also reset other variables that should have been reset when the new forward message arrived
         clearNeuronInferenceParameters();
@@ -632,16 +639,10 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
 
     for (int i = 0; i < neuronCore.neuronsCount; i++) {
 
-
         currentNeuronID = neuronCore.getNeuronId(i);
 
         // Check if the current neuron requires the input produced by outputNeuronId
         if(neuronCore.isInputRequired(currentNeuronID,inputNeuronId)){
-
-            /*** Skip this neuron if its output is already computed. This prevents duplicate computations
-             when an NN_OUTPUT message arrives in response to a NACK, but the output was already
-             calculated locally due to the NACK timeout.***/
-            if(isOutputComputed[neuronStorageIndex])continue;
             // Find the index where the neuron is stored
             neuronStorageIndex = neuronCore.getNeuronStorageIndex(currentNeuronID);
             // Find the storage index of this specific input value for the given neuron
@@ -652,12 +653,20 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
             if(inputSize == -1 || inputStorageIndex == -1 || neuronStorageIndex == -1){
                 LOG(APP,ERROR,"ERROR: Invalid index detected: inputSize=%d, inputStorageIndex=%d, neuronStorageIndex=%d",
                     inputSize, inputStorageIndex, neuronStorageIndex);
-                return;
+                continue;
             }
 
+            /*** Skip this neuron if its output is already computed. This prevents duplicate computations
+             when an NN_OUTPUT message arrives in response to a NACK, but the output was already
+             calculated locally due to the NACK timeout.***/
+            if(isOutputComputed[neuronStorageIndex]){
+                    LOG(APP,INFO,"Output from the neuron:%i is already computed\n",currentNeuronID);
+                continue;
+            }
 
             //Save the input value in the input vector
             neuronCore.setInput(currentNeuronID,inputValue,inputNeuronId);
+            LOG(APP,INFO,"Input saved for neuron:%hhu\n",currentNeuronID);
 
             // Set the bit corresponding to the received input to 1
             setBit(receivedInputs[neuronStorageIndex],inputStorageIndex);
@@ -687,7 +696,6 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                 resetAll(receivedInputs[neuronStorageIndex]);//TODO PASS THIS FOR WHE THE FOWARD MESSAGE IS RECEIVED
 
                 isOutputComputed[neuronStorageIndex] = true;
-
 
                 // Encode the message with the neuron output
                 encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,currentNeuronID,neuronOutput);

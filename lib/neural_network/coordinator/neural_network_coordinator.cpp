@@ -1323,6 +1323,10 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
 
     network.getNodeIP(myIP);
 
+    if(totalWorkers>=MIN_WORKERS && totalInputs == TOTAL_INPUT_NEURONS && !areNeuronsAssigned) {
+
+    }
+
     /*** Verify three conditions before distribution:
         1. Sufficient physical devices exist in the network
         2. Enough input nodes are registered
@@ -1694,9 +1698,9 @@ void NeuralNetworkCoordinator::onNeuralNetworkOutput(NeuronId neuronId, float ou
     }
 
     //To start a new inference
-    inferenceRunning=false;
-    hasWaitedBeforeInference=false;
-    readyForInferenceTime=getCurrentTime();
+    //inferenceRunning=false;
+    //asWaitedBeforeInference=false;
+    //readyForInferenceTime=getCurrentTime();
 }
 
 bool NeuralNetworkCoordinator::isOutputNeuron(NeuronId neuronId) {
@@ -1704,6 +1708,7 @@ bool NeuralNetworkCoordinator::isOutputNeuron(NeuronId neuronId) {
     NeuronEntry* neuronEntry= (NeuronEntry*) tableRead(neuronToNodeTable,&neuronId);
 
     if(!neuronEntry)return false;
+    LOG(APP,DEBUG,"Neuron id:%hhu is Output?%d\n",neuronId,neuronEntry->layer == outputLayer + 1);
     if(neuronEntry->layer == outputLayer + 1) return true;
     return false;
 }
