@@ -1688,7 +1688,9 @@ void NeuralNetworkCoordinator::onNeuralNetworkOutput(NeuronId neuronId, float ou
 
     //If all output neurons values have been received report the inference information to the monitoring server
     if(allOutputNeuronsReceived){
+        LOG(APP,DEBUG,"NACK Count before logging:%d\n",nackCount);
         reportInferenceResults(nnSequenceNumber,currentTime-inferenceStartTime,nackCount,outputNeuronValues,nOutputNeurons);
+        nackCount=0;
     }
 
     //To start a new inference

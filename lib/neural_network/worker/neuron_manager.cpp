@@ -493,7 +493,6 @@ void NeuronWorker::clearNeuronInferenceParameters() {
     firstInputTimestamp = getCurrentTime();
 
     nackTriggered = false;
-    nackCount=0;
 }
 
 /**
@@ -628,11 +627,7 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
     else if(inferenceId > currentInferenceId){
         currentInferenceId = inferenceId;
         // Also reset other variables that should have been reset when the new forward message arrived
-        forwardPassRunning = true;
-        allOutputsComputed = false;
-        nackCount=0;
-        nackTriggered=false;
-        firstInputTimestamp = getCurrentTime();
+        clearNeuronInferenceParameters();
     }
 
     for (int i = 0; i < neuronCore.neuronsCount; i++) {
@@ -642,6 +637,11 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
 
         // Check if the current neuron requires the input produced by outputNeuronId
         if(neuronCore.isInputRequired(currentNeuronID,inputNeuronId)){
+
+            /*** Skip this neuron if its output is already computed. This prevents duplicate computations
+             when an NN_OUTPUT message arrives in response to a NACK, but the output was already
+             calculated locally due to the NACK timeout.***/
+            if(isOutputComputed[neuronStorageIndex])continue;
             // Find the index where the neuron is stored
             neuronStorageIndex = neuronCore.getNeuronStorageIndex(currentNeuronID);
             // Find the storage index of this specific input value for the given neuron
@@ -1104,7 +1104,7 @@ void NeuronWorker::onNACKTimeout(){
             }
 
             //reset the bit field for the next NN run
-            resetAll(receivedInputs[i]);
+            //resetAll(receivedInputs[i]);
         }
     }
 
