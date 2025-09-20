@@ -1,6 +1,9 @@
 #include "neuron_manager.h"
 
 //#include <Arduino.h>
+
+float sensorData = 0.0;
+
 /**
  * handleNeuronMessage
  * Processes all incoming neural network neuron related messages
@@ -267,8 +270,13 @@ void NeuronWorker::handleAssignInput(char* messageBuffer){
         LOG(APP,ERROR,"The number of assigned input neurons exceeds the allowed maximum. Neuron ID: %hhu was not accepted",inputNeuronId);
         return;
     }
-    inputNeurons[nrInputNeurons] = inputNeuronId;
-    nrInputNeurons++;
+
+    //If the input neuron inst in the list add it (this safeguards against multiple messages assign the same input neuron)
+    if(!isNeuronInList(inputNeurons,nrInputNeurons,inputNeuronId)){
+        inputNeurons[nrInputNeurons] = inputNeuronId;
+        nrInputNeurons++;
+    }
+
     //todo
     //inputNeuronAssignmentCallback(input Neuron Id)
 }
@@ -330,15 +338,21 @@ void NeuronWorker::handleAssignOutputNeuron(char* messageBuffer){
         bias=atof(spaceToken);
         //LOG(APP,DEBUG," bias token:%s\n",spaceToken);
 
-        //Save the parsed neuron parameters
-        neuronCore.configureNeuron(neuronID,inputSize,weightValues,bias, inputIndexMap);
+        // Store the parsed neuron parameters if they have not been saved yet
+        if(!neuronCore.computesNeuron(neuronID)){
+            neuronCore.configureNeuron(neuronID,inputSize,weightValues,bias, inputIndexMap);
+        }
 
         // If the device has reached the maximum number of supported neurons, no additional output neurons can be stored
         if(nrOutputNeurons>=MAX_NEURONS){
             LOG(APP,ERROR,"The number of assigned output neurons exceeds the allowed maximum. Neuron ID: %hhu was not accepted",neuronID);
         }else{
-            outputNeurons[nrOutputNeurons] = neuronID;
-            nrOutputNeurons++;
+            //If the output neuron inst in the list add it
+            if(!isNeuronInList(outputNeurons,nrOutputNeurons,neuronID)){
+                outputNeurons[nrOutputNeurons] = neuronID;
+                nrOutputNeurons++;
+            }
+
         }
 
         //Add the parsed neuronID to the NACK message
@@ -888,7 +902,7 @@ void NeuronWorker::encodeOutputRegistration(char* messageBuffer, size_t bufferSi
 void NeuronWorker::generateInputData(NeuronId inputNeuronId){
     uint8_t myLocalIP[4];
     int inputNeuronStorageIndex=-1;
-    float sensorData = 1.0;
+    sensorData += 1.0;
 
     //sensorData = inputGenerationCallback(inputNeuronId);
 
