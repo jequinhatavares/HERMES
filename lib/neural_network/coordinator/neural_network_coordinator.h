@@ -52,7 +52,10 @@ public:
     void manageNeuralNetwork();
 
 private:
-    unsigned long timeSince;
+    unsigned long allWorkersReadyTime;
+    bool minDevicesRegistered=false;
+    bool hasWaitedBeforeDistribution=false;
+
     unsigned long neuronAssignmentTime;
     bool areNeuronsAssigned = false;
 

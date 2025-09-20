@@ -245,8 +245,7 @@ void NeuralNetworkCoordinator::distributeNeuralNetwork(const NeuralNetwork *net,
         delete [] inputIndexMap;
     }
 
-    neuronAssignmentTime = getCurrentTime();
-    areNeuronsAssigned = true;
+
 }
 
 
@@ -1323,15 +1322,24 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
 
     network.getNodeIP(myIP);
 
-    if(totalWorkers>=MIN_WORKERS && totalInputs == TOTAL_INPUT_NEURONS && !areNeuronsAssigned) {
-
-    }
-
-    /*** Verify three conditions before distribution:
+    /*** Verify three conditions before the waiting periodic before the distribution:
         1. Sufficient physical devices exist in the network
         2. Enough input nodes are registered
         3. Neural network isn't already distributed across devices ***/
-    if(totalWorkers>=MIN_WORKERS && totalInputs == TOTAL_INPUT_NEURONS && !areNeuronsAssigned){
+    if(totalWorkers>=MIN_WORKERS && totalInputs == TOTAL_INPUT_NEURONS && !minDevicesRegistered) {
+        minDevicesRegistered=true;
+        allWorkersReadyTime = getCurrentTime();
+    }
+
+    //Verify if the waiting periodic before the NN assignment has elapsed
+    if(!areNeuronsAssigned && minDevicesRegistered && (currentTime-allWorkersReadyTime)>=WAIT_BEFORE_ASSIGNMENT){
+        hasWaitedBeforeDistribution=true;
+    }
+
+    /*** Verify three conditions before the distribution:
+      1. The waiting period before NN distribution has elapsed
+      2. The neural network has not yet been distributed to devices***/
+    if(hasWaitedBeforeDistribution && !areNeuronsAssigned){
         startAssignmentTime=getCurrentTime();
 
         LOG(APP,INFO,"Neural network distribution process started\n");
@@ -1382,7 +1390,9 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
             }
         }
         tablePrint(neuronToNodeTable,printNeuronTableHeader, printNeuronEntry);
+
         neuronAssignmentTime = getCurrentTime();
+        areNeuronsAssigned = true;
     }
 
     currentTime = getCurrentTime();

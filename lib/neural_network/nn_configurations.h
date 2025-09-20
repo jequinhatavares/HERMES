@@ -7,7 +7,6 @@
 #define TOTAL_INPUT_NEURONS 2
 
 
-
 #if defined(ESP8266)
 #define MAX_NEURONS 2
 #endif
@@ -40,6 +39,8 @@
 #define INFERENCE_TIMEOUT 6000
 
 #define INFERENCE_INTERVAL 60000
+
+#define WAIT_BEFORE_ASSIGNMENT 120000
 
 #define MIN_WORKERS 4
 
