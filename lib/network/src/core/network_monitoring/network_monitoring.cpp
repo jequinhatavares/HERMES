@@ -236,7 +236,6 @@ void NetworkMonitoring::reportRoutingMessageReceived(size_t nBytes,int messageTy
 
     if(iamRoot){
         encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,-1,-1,nBytes);
-        LOG(MONITORING_SERVER, INFO,"New Routing message to moni server\n");
         LOG(MONITORING_SERVER, INFO,"%s",monitoringBuffer);
     }
 

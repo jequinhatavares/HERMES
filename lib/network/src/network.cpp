@@ -72,7 +72,7 @@ void Network::begin() {
     }
 
     beginCalled = true;
-    monitoring.sampleMessageMetrics(180000);//Sample the number of messages for 3 minutes
+    //monitoring.sampleMessageMetrics(180000);//Sample the number of messages for 3 minutes
 }
 
 

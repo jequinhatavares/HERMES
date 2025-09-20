@@ -1329,10 +1329,11 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
     if(totalWorkers>=MIN_WORKERS && totalInputs == TOTAL_INPUT_NEURONS && !minDevicesRegistered) {
         minDevicesRegistered=true;
         allWorkersReadyTime = getCurrentTime();
+
     }
 
     //Verify if the waiting periodic before the NN assignment has elapsed
-    if(!areNeuronsAssigned && minDevicesRegistered && (currentTime-allWorkersReadyTime)>=WAIT_BEFORE_ASSIGNMENT){
+    if(!areNeuronsAssigned && !hasWaitedBeforeDistribution && minDevicesRegistered && (currentTime-allWorkersReadyTime)>=WAIT_BEFORE_ASSIGNMENT){
         hasWaitedBeforeDistribution=true;
     }
 
