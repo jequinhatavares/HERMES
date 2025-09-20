@@ -85,9 +85,6 @@ private:
     // Indicates whether all outputs of the neurons owned by this node have been computed
     bool allOutputsComputed = false;
 
-    // Identifier of the current inference cycle, assigned by the root node
-    int currentInferenceId = 0;
-
     //List of neurons that this node handles that are output neurons
     NeuronId outputNeurons[MAX_NEURONS];
     uint8_t nrOutputNeurons=0;
@@ -117,6 +114,9 @@ private:
 protected:
     // saves the topics that each node publishes
     int8_t neuronToTopicMap[MAX_NEURONS];
+
+    // Identifier of the current inference cycle, assigned by the root node
+    int currentInferenceId = 0;
 
     //Functions to be used by the coordinator class to initialize the neuronworker
     // parameters without accessing its variables directly (to be impemented)

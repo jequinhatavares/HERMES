@@ -68,7 +68,6 @@ private:
     unsigned long inferenceStartTime;
     bool inferenceComplete = false;
 
-    int nnSequenceNumber=0;
 
     // Output layer state management for neural network inference
     // Note: All arrays are indexed by output neuron position (0 to nOutputNeurons-1)

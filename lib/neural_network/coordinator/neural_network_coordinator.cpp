@@ -1421,10 +1421,10 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
      * 3. Ensure minimum interval between inference cycles has elapsed ***/
     if(!inferenceRunning && receivedAllNeuronAcks && hasWaitedBeforeInference){
         LOG(APP,INFO,"Starting an inference cycle\n");
-        nnSequenceNumber +=2;
+        currentInferenceId +=2;
         //Clear the parameters related to the neurons the coordinator calculates
         clearNeuronInferenceParameters();
-        encodeForwardMessage(appPayload, sizeof(appPayload),nnSequenceNumber);
+        encodeForwardMessage(appPayload, sizeof(appPayload),currentInferenceId);
         network.broadcastMessage(appBuffer,sizeof(appBuffer),appPayload);
         inferenceStartTime=getCurrentTime();
         //Reset the variables to don't start a new inference until the current one finishes
@@ -1657,7 +1657,7 @@ void NeuralNetworkCoordinator::handleNeuralNetworkMessage(uint8_t *senderIP, uin
         case NN_NEURON_OUTPUT:
             sscanf(messageBuffer, "%*d %i %hhu %f",&receivedInferenceId,&neuronId,&neuronOutput);
             //If the received neuron is an output layer neuron and its from the current inference running save the value
-            if(isOutputNeuron(neuronId) && nnSequenceNumber == receivedInferenceId){
+            if(isOutputNeuron(neuronId) && currentInferenceId == receivedInferenceId){
                 onNeuralNetworkOutput(neuronId,neuronOutput);
             }else{
                 handleNeuronMessage(senderIP, destinationIP,messageBuffer);
@@ -1704,7 +1704,7 @@ void NeuralNetworkCoordinator::onNeuralNetworkOutput(NeuronId neuronId, float ou
     //If all output neurons values have been received report the inference information to the monitoring server
     if(allOutputNeuronsReceived){
         LOG(APP,DEBUG,"NACK Count before logging:%d\n",nackCount);
-        reportInferenceResults(nnSequenceNumber,currentTime-inferenceStartTime,nackCount,outputNeuronValues,nOutputNeurons);
+        reportInferenceResults(currentInferenceId,currentTime-inferenceStartTime,nackCount,outputNeuronValues,nOutputNeurons);
         nackCount=0;
     }
 
