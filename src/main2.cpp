@@ -156,6 +156,7 @@ void setup(){
     {
         network.setAsRoot(true);
     }
+
     waitForEnter();
 
 
@@ -207,6 +208,7 @@ void setup(){
 
     //Integrated the node into the network
     network.begin();
+
 
 
     /*** Strategy Topology Init
@@ -442,6 +444,7 @@ void setup(){
 }
 
 int main() {
+
 
     printf("Hello, world from Raspberry Pi 12!\n");
     LOG(NETWORK, INFO, "Logs are working\n");

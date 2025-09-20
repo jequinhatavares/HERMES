@@ -24,7 +24,7 @@ void NetworkMonitoring::handleMonitoringMessage(char *messageBuffer) {
                                     "Unable to forward message.\n", rootIP[0], rootIP[1],rootIP[2], rootIP[3]);
             }
         }else{//send message to debug server
-            LOG(MONITORING_SERVER,DEBUG,messageBuffer);
+            LOG(MONITORING_SERVER,INFO,messageBuffer);
             //sendMessage(debugServerIP, receiveBuffer);
         }
     }

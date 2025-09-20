@@ -2,6 +2,7 @@
 #define NETWORK_MONITORING_H
 
 #include <cstdio>
+#include <cstdint>
 
 #define MONITORING_ON
 

@@ -809,6 +809,7 @@ void disconnectFromAP2() {
 }
 
 void disconnectFromAP() {
+    const char *command = "nmcli dev disconnect wlan0 2>&1";
 
     FILE *fp = popen(command, "r");
     if (fp == NULL) {
@@ -832,7 +833,7 @@ void disconnectFromAP() {
         perror("pclose failed");
         return ;
     }
-    sleep(2);  // sleep for 2 seconds
+    sleep(0.5);  // sleep for 2 seconds
 
 }
 
