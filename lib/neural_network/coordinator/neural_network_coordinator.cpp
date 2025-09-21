@@ -1219,7 +1219,7 @@ void NeuralNetworkCoordinator::handleACKMessage(char* messageBuffer){
 
     receivedAllNeuronAcks = isNetworkAcknowledge;
     if(isNetworkAcknowledge){
-        reportSetupTime(getCurrentTime()-startAssignmentTime);
+        reportSetupTime((getCurrentTime()-startAssignmentTime),missingACKs);
         readyForInferenceTime=getCurrentTime();
     }
 
@@ -1489,6 +1489,7 @@ void NeuralNetworkCoordinator::onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices
              * with other unacknowledged neurons, then include it in the assigning message together with the others.
              ***/
             if(neuronEntry != nullptr && isIPEqual(nodeIP[k],neuronEntry->nodeIP) && !neuronEntry->isAcknowledged && neuronEntry->layer!=0){
+                missingACKs++;
                 // The current layer index needs to be normalized because the neuronToNode table uses 0 for the input
                 // layer, while in the NN structure, index 0 corresponds to the first hidden layer.
                 currentLayerIndex = neuronEntry->layer - 1;
@@ -1572,7 +1573,7 @@ void NeuralNetworkCoordinator::onACKTimeOutInputLayer(){
         neuronEntry = (NeuronEntry*)tableRead(neuronToNodeTable,currentId);
         // If a input neuron was not acknowledged then send the message to the node responsible for computing it
         if(neuronEntry != nullptr && !neuronEntry->isAcknowledged && neuronEntry->layer==0){
-
+            missingACKs++;
             //Encode the message assigning the input neuron to the node
             encodeInputAssignMessage(appPayload, sizeof(appPayload),*currentId);
             network.sendMessageToNode(appBuffer,sizeof(appBuffer),appPayload,neuronEntry->nodeIP);

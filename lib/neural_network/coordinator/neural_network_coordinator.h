@@ -68,6 +68,7 @@ private:
     unsigned long inferenceStartTime;
     bool inferenceComplete = false;
 
+    uint8_t missingACKs=0;
 
     // Output layer state management for neural network inference
     // Note: All arrays are indexed by output neuron position (0 to nOutputNeurons-1)

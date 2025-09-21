@@ -2,9 +2,9 @@
 
 char appTmpMonitoringBuffer[50];
 
-void reportSetupTime(unsigned long nnSetUpTime){
-    //NEURAL_NETWORK_SETUP_TIME [NN Setup Time]
-    snprintf(appTmpMonitoringBuffer, sizeof(appTmpMonitoringBuffer),"%d %lu",NEURAL_NETWORK_SETUP_TIME,nnSetUpTime);
+void reportSetupTime(unsigned long nnSetUpTime, uint8_t missingACKs){
+    //NEURAL_NETWORK_SETUP_TIME [NN Setup Time] [Number of Missing ACKs]
+    snprintf(appTmpMonitoringBuffer, sizeof(appTmpMonitoringBuffer),"%d %lu %hhu",NEURAL_NETWORK_SETUP_TIME,nnSetUpTime,missingACKs);
     monitoring.encodeAppLevelMessage(appTmpMonitoringBuffer,monitoring.monitoringBuffer, sizeof(monitoring.monitoringBuffer));
     monitoring.reportAppLevelMonitoringMessage(monitoring.monitoringBuffer);
 }
