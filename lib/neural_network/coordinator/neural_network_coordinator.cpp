@@ -1711,12 +1711,17 @@ void NeuralNetworkCoordinator::onNeuralNetworkOutput(NeuronId neuronId, float ou
         unsigned long inferenceDuration = currentTime-inferenceStartTime;
         reportInferenceResults(currentInferenceId,inferenceDuration,nackCount,outputNeuronValues,nOutputNeurons);
         nackCount=0;
+
+        for (int i = 0; i < nOutputNeurons; ++i) {
+            isOutputReceived[i] = false;
+        }
+
+        //To start a new inference
+        inferenceRunning=false;
+        hasWaitedBeforeInference=false;
+        readyForInferenceTime=getCurrentTime();
     }
 
-    //To start a new inference
-    inferenceRunning=false;
-    hasWaitedBeforeInference=false;
-    readyForInferenceTime=getCurrentTime();
 }
 
 bool NeuralNetworkCoordinator::isOutputNeuron(NeuronId neuronId) {
