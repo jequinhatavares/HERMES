@@ -360,7 +360,7 @@ void waitForWifiEvent() {
     FD_SET(hostapd_sockfd, &readfds);
     FD_SET(wpa_sockfd, &readfds);
 
-    timeOut.tv_sec = 1;
+    timeOut.tv_sec = 0;
     timeOut.tv_usec = 0;
 
     // Definir o maior descritor para o select

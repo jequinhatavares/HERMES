@@ -1496,12 +1496,12 @@ void NeuralNetworkCoordinator::onACKTimeOut(uint8_t nodeIP[][4],uint8_t nDevices
                 currentIndexInLayer = neuronEntry->indexInLayer;
                 unACKNeurons = true;
 
+
                 //Remake the part of the message that maps the inputs into the input vector
                 inputIndexMap = new uint8_t [neuralNetwork.layers[currentLayerIndex].numInputs];
                 for (uint8_t j = 0; j < neuralNetwork.layers[currentLayerIndex].numInputs ; j++){
-                    inputIndexMap[j] = *currentId+(j-neuralNetwork.layers[currentLayerIndex].numInputs);
+                    inputIndexMap[j] = (*currentId-currentIndexInLayer) + (j - neuralNetwork.layers[currentLayerIndex].numInputs);
                 }
-
 
                 //Encode the part assigning neuron information (weights, bias, inputs etc..)
                 encodeAssignNeuronMessage(tmpBuffer, tmpBufferSize,

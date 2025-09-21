@@ -77,8 +77,7 @@ int receiveMessage(char *buffer,size_t bufferSize) {
     }
 
     // Socket is ready, receive data
-    ssize_t n = recvfrom(sockfd, buffer, BUFFER_SIZE - 1, 0,
-                         (struct sockaddr *)&senderAddr, &addrLen);
+    ssize_t n = recvfrom(sockfd, buffer, BUFFER_SIZE - 1, 0,(struct sockaddr *)&senderAddr, &addrLen);
     if (n >= 0) {
         buffer[n] = '\0';  // Null-terminate the received data
         ipAddr = ntohl(senderAddr.sin_addr.s_addr);

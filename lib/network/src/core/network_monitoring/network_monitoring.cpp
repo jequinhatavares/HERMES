@@ -107,11 +107,11 @@ int NetworkMonitoring::encodeNodeEndToEndDelayToServer(char *encodeMessageBuffer
 void NetworkMonitoring::encodeMessageContinuousToServer(char *encodeBuffer, size_t encodeBufferSize, int messageType, int strategyType,int messageSubType, int nBytes) {
 
     if(messageType != MIDDLEWARE_MESSAGE){
-        //MONITORING_MESSAGE MESSAGE_CONTINUOUS [Message Type] [Message SubType] [N Bytes]
+        //MONITORING_MESSAGE MESSAGE_CONTINUOUS [Monitoring Message Type] [Message SubType] [N Bytes]
         snprintf(encodeBuffer,encodeBufferSize,"%d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_CONTINUOUS,messageType,messageSubType,nBytes);
     }else{
-        //MONITORING_MESSAGE MESSAGE_CONTINUOUS [Message Type] [Strategy Type] [Message SubType] [N Bytes]
-        snprintf(encodeBuffer,encodeBufferSize,"%d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_CONTINUOUS,messageType,messageSubType,nBytes);
+        //MONITORING_MESSAGE MESSAGE_CONTINUOUS [Monitoring Message Type] [Strategy Type] [Message SubType] [N Bytes]
+        snprintf(encodeBuffer,encodeBufferSize,"%d %d %d %d %d %d\n",MONITORING_MESSAGE,MESSAGES_CONTINUOUS,messageType,strategyType,messageSubType,nBytes);
     }
 }
 
