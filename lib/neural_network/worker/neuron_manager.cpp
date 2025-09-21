@@ -560,6 +560,8 @@ void NeuronWorker::handleNACKMessage(char*messageBuffer,uint8_t *senderIP){
         // Extract the ID of the neuron whose output is currently missing
         currentId = atoi(token);
 
+        nackCount++;
+
         //LOG(APP,DEBUG,"NACK neuronID: %hhu\n",currentId);
         neuronStorageIndex = neuronCore.getNeuronStorageIndex(currentId);
 
@@ -593,7 +595,7 @@ void NeuronWorker::handleNACKMessage(char*messageBuffer,uint8_t *senderIP){
         token = strtok_r(NULL, " ",&saveptr1);
     }
 
-    nackCount++;
+
 
 }
 

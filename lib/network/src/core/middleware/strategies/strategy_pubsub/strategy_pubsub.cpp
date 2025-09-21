@@ -299,7 +299,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             break;
 
         case PUBSUB_UNSUBSCRIBE:
-            monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,PUBSUB_UNSUBSCRIBE,PUBSUB_SUBSCRIBE);
+            monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,STRATEGY_PUBSUB,PUBSUB_UNSUBSCRIBE);
 
             //Message sent when a one unsubscribes to a certain topic
             //13 2 [sender IP] [Unsubscriber IP] [Topic]
@@ -341,7 +341,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
 
             break;
         case PUBSUB_ADVERTISE:
-            monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,PUBSUB_ADVERTISE,PUBSUB_SUBSCRIBE);
+            monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,STRATEGY_PUBSUB,PUBSUB_ADVERTISE);
 
             // Message used to advertise that a node is publishing a new topic
             //13 3 [sender IP] [Publisher IP] [Published Topic]
@@ -375,7 +375,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             break;
 
         case PUBSUB_UNADVERTISE:
-            monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,PUBSUB_UNADVERTISE,PUBSUB_SUBSCRIBE);
+            monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,STRATEGY_PUBSUB,PUBSUB_UNADVERTISE);
 
             // Message used to advertise that a node is unpublishing a topic
             //13 4 [sender IP] [Publisher IP] [UnPublished Topic]
@@ -408,7 +408,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             break;
 
         case PUBSUB_NODE_TOPICS_UPDATE:
-            monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,PUBSUB_NODE_TOPICS_UPDATE,PUBSUB_SUBSCRIBE);
+            monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,STRATEGY_PUBSUB,PUBSUB_NODE_TOPICS_UPDATE);
 
             //Max size: 40 + nTopics * 2 +(nTopics-1)*2
             // Message used to advertise all publish-subscribe information of the node
@@ -447,7 +447,7 @@ void handleMessageStrategyPubSub(char* messageBuffer, size_t bufferSize) {
             break;/******/
 
         case PUBSUB_NETWORK_TOPICS_UPDATE:
-            monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,PUBSUB_NETWORK_TOPICS_UPDATE,PUBSUB_SUBSCRIBE);
+            monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,STRATEGY_PUBSUB,PUBSUB_NETWORK_TOPICS_UPDATE);
 
             //Buffer max size = 22 + 30*nNodes
             //13 6 [sender IP] |[node IP] [Published Topic List] [Subscribed Topics List] |[node IP] [Published Topic List] [Subscribed Topics List]...

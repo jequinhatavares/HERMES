@@ -1421,7 +1421,7 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
      * 3. Ensure minimum interval between inference cycles has elapsed ***/
     if(!inferenceRunning && receivedAllNeuronAcks && hasWaitedBeforeInference){
         LOG(APP,INFO,"Starting an inference cycle\n");
-        currentInferenceId +=2;
+        currentInferenceId += 2;
         //Clear the parameters related to the neurons the coordinator calculates
         clearNeuronInferenceParameters();
         encodeForwardMessage(appPayload, sizeof(appPayload),currentInferenceId);
@@ -1705,7 +1705,8 @@ void NeuralNetworkCoordinator::onNeuralNetworkOutput(NeuronId neuronId, float ou
     //If all output neurons values have been received report the inference information to the monitoring server
     if(allOutputNeuronsReceived){
         LOG(APP,DEBUG,"NACK Count before logging:%d\n",nackCount);
-        reportInferenceResults(currentInferenceId,currentTime-inferenceStartTime,nackCount,outputNeuronValues,nOutputNeurons);
+        unsigned long inferenceDuration = currentTime-inferenceStartTime;
+        reportInferenceResults(currentInferenceId,inferenceDuration,nackCount,outputNeuronValues,nOutputNeurons);
         nackCount=0;
     }
 

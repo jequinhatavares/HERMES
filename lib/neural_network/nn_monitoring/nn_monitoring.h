@@ -10,7 +10,7 @@ enum NNMonitoringMessageType{
 };
 
 
-void reportSetupTime(unsigned long nnSetUpTime, int missingACKs);
+void reportSetupTime(unsigned long nnSetUpTime, uint8_t missingACKs);
 void reportInferenceResults(int inferenceId, unsigned long nnInferenceTime, int nackCount,float* outputValues, int nOutputs);
 
 #endif //NN_MONITORING_H
