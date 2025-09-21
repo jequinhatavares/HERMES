@@ -287,6 +287,7 @@ void onTimerStrategyTopology(){
         }else{
             LOG(MIDDLEWARE, ERROR, "❌ ERROR: No path to the root node (%hhu.%hhu.%hhu.%hhu) was found in the routing table.\n",rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
         }/******/
+        lastMiddlewareUpdateTimeTopology=getCurrentTime();
     }
 }
 void* getContextStrategyTopology(){
