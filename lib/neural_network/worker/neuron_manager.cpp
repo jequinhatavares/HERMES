@@ -980,6 +980,9 @@ void NeuronWorker::manageNeuron(){
     // Skip neuron management if a forward pass is not in progress
     if(!forwardPassRunning)return;
 
+    //If the device isn't responsible for any input, hidden/output neurons return
+    if(neuronCore.neuronsCount==0 && nrInputNeurons ==0) return;
+
     /*** Verify two conditions before proceeding:
      1. The input wait timeout has elapsed
      2. Not all outputs have been computed yet
