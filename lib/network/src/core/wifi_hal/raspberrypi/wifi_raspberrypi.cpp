@@ -589,7 +589,7 @@ void searchAP2(const char* SSID){
     }
 
     printf("Scan requested, waiting for results...\n");
-    sleep(5); // Wait for scan to complete
+    //sleep(5); // Wait for scan to complete
 
     // Prepare to fetch scan results
     memset(&req, 0, sizeof(req));
@@ -833,7 +833,7 @@ void disconnectFromAP() {
         perror("pclose failed");
         return ;
     }
-    sleep(0.5);  // sleep for 2 seconds
+    sleep(0.5);  // sleep for 1/2 second
 
 }
 

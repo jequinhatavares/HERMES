@@ -1192,6 +1192,9 @@ void NeuralNetworkCoordinator::handleACKMessage(char* messageBuffer){
     NeuronEntry *neuronEntry;
     bool isNetworkAcknowledge = true;
 
+    // Return if all neurons in the network have already been acknowledged.
+    if(receivedAllNeuronAcks)return;
+
     token = strtok_r(messageBuffer, " ",&saveptr1);
 
     //Skip the message header
@@ -1218,7 +1221,7 @@ void NeuralNetworkCoordinator::handleACKMessage(char* messageBuffer){
     }
 
     receivedAllNeuronAcks = isNetworkAcknowledge;
-    if(isNetworkAcknowledge){
+    if(receivedAllNeuronAcks){
         reportSetupTime((getCurrentTime()-startAssignmentTime),missingACKs);
         readyForInferenceTime=getCurrentTime();
     }
@@ -1421,7 +1424,7 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
      * 3. Ensure minimum interval between inference cycles has elapsed ***/
     if(!inferenceRunning && receivedAllNeuronAcks && hasWaitedBeforeInference){
         LOG(APP,INFO,"Starting an inference cycle\n");
-        currentInferenceId += 2;
+        currentInferenceId += 1;
         //Clear the parameters related to the neurons the coordinator calculates
         clearNeuronInferenceParameters();
         encodeForwardMessage(appPayload, sizeof(appPayload),currentInferenceId);
@@ -1711,9 +1714,9 @@ void NeuralNetworkCoordinator::onNeuralNetworkOutput(NeuronId neuronId, float ou
     }
 
     //To start a new inference
-    //inferenceRunning=false;
-    //asWaitedBeforeInference=false;
-    //readyForInferenceTime=getCurrentTime();
+    inferenceRunning=false;
+    hasWaitedBeforeInference=false;
+    readyForInferenceTime=getCurrentTime();
 }
 
 bool NeuralNetworkCoordinator::isOutputNeuron(NeuronId neuronId) {
