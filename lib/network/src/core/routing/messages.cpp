@@ -686,9 +686,9 @@ void handleDataMessage(char *msg){
 
     if(isBroadcast){ //if the message is a broadcast message
         //Process the message with the user provided callback
-        if(onDataMessageCallback) onDataMessageCallback(originatorIP,destinationIP,payload);
+        LOG(NETWORK, DEBUG, "Receive the Broadcast Message: %s\n",msg);
 
-        //LOG(NETWORK, DEBUG, "Is Broadcast Message.\n");
+        if(onDataMessageCallback) onDataMessageCallback(originatorIP,destinationIP,payload);
 
         //Propagate the message to the rest of the message
         encodeDataMessage(largeSendBuffer, sizeof(largeSendBuffer),payload,originatorIP,broadcastIP);

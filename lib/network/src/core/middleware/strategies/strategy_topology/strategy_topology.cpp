@@ -140,7 +140,7 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
     if(type == TOP_PARENT_LIST_ADVERTISEMENT_REQUEST){
         monitoring.reportMiddlewareMessageReceived(receivePayload,MIDDLEWARE_MESSAGE,STRATEGY_TOPOLOGY,TOP_PARENT_LIST_ADVERTISEMENT_REQUEST);
 
-        LOG(MESSAGES,INFO,"Received [PARENT_LIST_ADVERTISEMENT_REQUEST] message: \"%s\"\n", messageBuffer);
+        LOG(MIDDLEWARE,INFO,"Received [PARENT_LIST_ADVERTISEMENT_REQUEST] message: \"%s\"\n", messageBuffer);
         sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n"
                ,&tmpChildSTAIP[0],&tmpChildSTAIP[1],&tmpChildSTAIP[2],&tmpChildSTAIP[3]
                ,&tmpChildIP[0],&tmpChildIP[1],&tmpChildIP[2],&tmpChildIP[3],&nChars);
@@ -155,7 +155,7 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
             //Send the encode message to the root
             nextHopIP = findRouteToNode(rootIP);
             if(nextHopIP != nullptr){
-                LOG(MESSAGES,DEBUG,"Sending message: \"%s\" to (nextHopIp): %hhu.%hhu.%hhu.%hhu\n",
+                LOG(MIDDLEWARE,DEBUG,"Sending message: \"%s\" to (nextHopIp): %hhu.%hhu.%hhu.%hhu\n",
                     largeSendBuffer,nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3]);
                 sendMessage(nextHopIP,largeSendBuffer);
 
@@ -177,7 +177,7 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
         }else{ // If not, forward the message to the nextHop to the destination
             nextHopIP = findRouteToNode(rootIP);
             if (nextHopIP != nullptr){
-                LOG(MESSAGES,DEBUG,"Sending message: \"%s\" to (nextHopIp): %hhu.%hhu.%hhu.%hhu\n",
+                LOG(MIDDLEWARE,DEBUG,"Sending message: \"%s\" to (nextHopIp): %hhu.%hhu.%hhu.%hhu\n",
                     messageBuffer,nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3]);
                 sendMessage(nextHopIP,messageBuffer);
             }
