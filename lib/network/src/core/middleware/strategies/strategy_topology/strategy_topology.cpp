@@ -119,15 +119,12 @@ void encodeNodeUpdateMessage(char* messageBuffer, size_t bufferSize){
     // If the node has no associated metric, the message includes only the connected parent and omits the metric value
     if(metricValue == nullptr){
         //MIDDLEWARE_MESSAGE TOP_NODE_UPDATE [nodeIP] [Node Parent IP]
-        snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",MIDDLEWARE_MESSAGE,TOP_NODE_UPDATE
-                ,myIP[0],myIP[1],myIP[2],myIP[3]
-                ,parent[0],parent[1],parent[2],parent[3]);
+        snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %d",MIDDLEWARE_MESSAGE,TOP_NODE_UPDATE
+                ,myIP[0],myIP[1],myIP[2],myIP[3],parent[0],parent[1],parent[2],parent[3],0);
     }else{
         //MIDDLEWARE_MESSAGE TOP_NODE_UPDATE [nodeIP] [Node Parent IP] [node metric]
-        snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,TOP_NODE_UPDATE
-                ,myIP[0],myIP[1],myIP[2],myIP[3]
-                ,parent[0],parent[1],parent[2],parent[3]
-                ,metricBuffer);
+        snprintf(messageBuffer, bufferSize,"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %d %s",MIDDLEWARE_MESSAGE,TOP_NODE_UPDATE
+                ,myIP[0],myIP[1],myIP[2],myIP[3],parent[0],parent[1],parent[2],parent[3],1,metricBuffer);
     }
 
 }
@@ -151,6 +148,7 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
 
         if(!iamRoot){
             //Encode the TOP_PARENT_LIST_ADVERTISEMENT message to be sent to the root
+
             //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
             snprintf(largeSendBuffer, sizeof(largeSendBuffer),"%i %i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %s",MIDDLEWARE_MESSAGE,TOP_PARENT_LIST_ADVERTISEMENT,
                      myIP[0],myIP[1],myIP[2],myIP[3],tmpChildIP[0],tmpChildIP[1],tmpChildIP[2],tmpChildIP[3],messageBuffer+nChars);
@@ -230,13 +228,16 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
                 LOG(MIDDLEWARE,ERROR,"❌ERROR: No path to root node was found in the routing table.\n");
             }
         }else{
+            int hasMetric=0;
             //MIDDLEWARE_MESSAGE TOP_NODE_UPDATE [nodeIP] [Node Parent IP] [metric value, if any]
-            sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n"
+            sscanf(messageBuffer,"%*d %*d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %d %n"
                     ,&targetNodeIP[0],&targetNodeIP[1],&targetNodeIP[2],&targetNodeIP[3],
-                   &parentIP[0],&parentIP[1],&parentIP[2],&parentIP[3], &nChars);
+                   &parentIP[0],&parentIP[1],&parentIP[2],&parentIP[3],&hasMetric,&nChars);
 
             //Decode and register the metric in the table if any metric is available
-            if (nChars < bufferSize && messageBuffer[nChars] != '\0') registerTopologyMetric(targetNodeIP,messageBuffer+nChars);
+            if(hasMetric == 1){
+                registerTopologyMetric(targetNodeIP,messageBuffer+nChars);
+            }
         }
     }
 }
@@ -272,15 +273,20 @@ void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]){
 void onTimerStrategyTopology(){
     unsigned long currentTime = getCurrentTime();
     uint8_t *nextHopIP;
+
+
+    //The root does not send periodic message to himself
+    if(iamRoot)return;
+
     //Periodically send this node's metric and parent IP to the root node
     if( (currentTime - lastMiddlewareUpdateTimeTopology) >= MIDDLEWARE_UPDATE_INTERVAL ){
         encodeNodeUpdateMessage(smallSendBuffer, sizeof(smallSendBuffer));
         nextHopIP = findRouteToNode(rootIP);
         if(nextHopIP != nullptr){
-            sendMessage(nextHopIP,largeSendBuffer);
+            sendMessage(nextHopIP,smallSendBuffer);
         }else{
             LOG(MIDDLEWARE, ERROR, "❌ ERROR: No path to the root node (%hhu.%hhu.%hhu.%hhu) was found in the routing table.\n",rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
-        }
+        }/******/
     }
 }
 void* getContextStrategyTopology(){
@@ -367,10 +373,11 @@ ParentInfo requestParentFromRoot(ParentInfo* possibleParents, int nrOfPossiblePa
 void chooseParentStrategyTopology(char* messageBuffer){
     uint8_t sourceIP[4], targetNodeIP[4],possibleParents[TABLE_MAX_SIZE][4],IP[4],*chosenParentIP = nullptr,*nextHopIP;
     int middlewareMessageType,nChars=0,parentsCount=0;
-    //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP] [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
-    //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [destination IP =root] [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
+    //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
+    //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
 
-    sscanf(messageBuffer,"%*d %d %*u.%*u.%*u.%*u %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&middlewareMessageType,
+    //sscanf(messageBuffer,"%*d %d %*u.%*u.%*u.%*u %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&middlewareMessageType,
+    sscanf(messageBuffer,"%*d %d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&middlewareMessageType,
             &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],&targetNodeIP[0],&targetNodeIP[1],&targetNodeIP[2],&targetNodeIP[3],&nChars);
 
     // Extract the list of possible parents from the message
