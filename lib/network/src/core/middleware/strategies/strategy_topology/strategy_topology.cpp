@@ -155,7 +155,10 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
             //Send the encode message to the root
             nextHopIP = findRouteToNode(rootIP);
             if(nextHopIP != nullptr){
+                LOG(MESSAGES,DEBUG,"Sending message: \"%s\" to (nextHopIp): %hhu.%hhu.%hhu.%hhu\n",
+                    largeSendBuffer,nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3]);
                 sendMessage(nextHopIP,largeSendBuffer);
+
             }
         }else{
             // If the new node connects directly to the root and sends the TOP_PARENT_LIST_ADVERTISEMENT_REQUEST,
@@ -172,8 +175,10 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
         if(iamRoot){
             chooseParentStrategyTopology(messageBuffer);
         }else{ // If not, forward the message to the nextHop to the destination
-            nextHopIP = findRouteToNode(destinationNodeIP);
+            nextHopIP = findRouteToNode(rootIP);
             if (nextHopIP != nullptr){
+                LOG(MESSAGES,DEBUG,"Sending message: \"%s\" to (nextHopIp): %hhu.%hhu.%hhu.%hhu\n",
+                    messageBuffer,nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3]);
                 sendMessage(nextHopIP,messageBuffer);
             }
         }
@@ -274,7 +279,6 @@ void onTimerStrategyTopology(){
     unsigned long currentTime = getCurrentTime();
     uint8_t *nextHopIP;
 
-
     //The root does not send periodic message to himself
     if(iamRoot)return;
 
@@ -334,7 +338,7 @@ ParentInfo requestParentFromRoot(ParentInfo* possibleParents, int nrOfPossiblePa
     // Send the message to the temporary parent so it can be forwarded toward the root
     sendMessage(temporaryParent,largeSendBuffer);
 
-    LOG(MIDDLEWARE,INFO,"Sending TOP_METRICS_REPORT%s to Temporary Parent: %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer, temporaryParent[0],temporaryParent[1],temporaryParent[2],temporaryParent[3]);
+    LOG(MIDDLEWARE,INFO,"Sending Parent List Advertisement Request %s to Temporary Parent: %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer, temporaryParent[0],temporaryParent[1],temporaryParent[2],temporaryParent[3]);
 
     // Wait for the message from the root assigning me a parent
     unsigned long startTime = getCurrentTime();
@@ -377,7 +381,6 @@ void chooseParentStrategyTopology(char* messageBuffer){
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [nodeSTAIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
     //MESSAGE_TYPE TOP_PARENT_LIST_ADVERTISEMENT [tmpParentIP] [nodeIP] [Possible Parent 1] [Possible Parent 2] ...
 
-    //sscanf(messageBuffer,"%*d %d %*u.%*u.%*u.%*u %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&middlewareMessageType,
     sscanf(messageBuffer,"%*d %d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu %n",&middlewareMessageType,
             &sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],&targetNodeIP[0],&targetNodeIP[1],&targetNodeIP[2],&targetNodeIP[3],&nChars);
 
