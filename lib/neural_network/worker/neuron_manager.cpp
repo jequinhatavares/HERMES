@@ -468,14 +468,15 @@ void NeuronWorker::handleAssignPubSubInfo(char* messageBuffer){
         neuronEntry = strtok_r(NULL, "|", &saveptr1);
         nComputedNeurons=0;
     }
+    // Send message with the acknowledged neurons to the root
+    network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
+
     // Call the middleware function to update the pub/sub information's
     network.subscribeAndPublishTopics(subTopics,nSubTopics,pubTopics,nPubTopics);
     //network.middlewarePrintInfo();
 
     //delay(1000);
 
-    // Send message with the acknowledged neurons to the root
-    network.sendMessageToRoot(appBuffer, sizeof(appBuffer),appPayload);
 
 }
 
