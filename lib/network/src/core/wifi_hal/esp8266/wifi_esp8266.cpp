@@ -116,6 +116,7 @@ void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& in
     if (parentDisconnectionCount >= PARENT_DISCONNECTION_THRESHOLD_ESP8266) {
         if (parentDisconnectCallback != nullptr) {
             parentDisconnectCallback();
+            parentDisconnectionCount = 0;
         }
     }
 

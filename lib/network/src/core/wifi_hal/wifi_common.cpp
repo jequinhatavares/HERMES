@@ -1,6 +1,8 @@
 //#include "wifi_interface.h"
 #include "wifi_common.h"
 
+
+
 TableEntry lTable[TABLE_MAX_SIZE];
 TableInfo LTable = {
         .numberOfItems = 0,

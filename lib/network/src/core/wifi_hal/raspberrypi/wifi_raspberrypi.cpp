@@ -142,6 +142,7 @@ void onStationModeDisconnectedHandler(wifi_event_info__t *info){
     if (parentDisconnectionCount >= PARENT_DISCONNECTION_THRESHOLD_RPI) {
         if (parentDisconnectCallback != nullptr) {
             parentDisconnectCallback();
+            parentDisconnectionCount = 0;
         }
     }
 

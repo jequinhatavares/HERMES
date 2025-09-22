@@ -44,6 +44,7 @@ typedef struct List{
 extern TableInfo* lostChildrenTable;
 
 
+
 extern List reachableNetworks;
 
 

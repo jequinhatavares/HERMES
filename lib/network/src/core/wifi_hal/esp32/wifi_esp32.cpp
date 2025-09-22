@@ -130,6 +130,7 @@ void onStationModeDisconnectedHandler(WiFiEvent_t event, WiFiEventInfo_t info){
     if (parentDisconnectionCount >= PARENT_DISCONNECTION_THRESHOLD_ESP32) {
         if (parentDisconnectCallback != nullptr) {
             parentDisconnectCallback();
+            parentDisconnectionCount = 0;
         }
     }
 
