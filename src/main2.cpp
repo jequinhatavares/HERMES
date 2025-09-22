@@ -222,7 +222,7 @@ void setup(){
         worker.registerNodeAsWorker();
     }***/
 
-    /************* Middleware Strategy: Inject *************/
+    /************* Centralized Middleware Strategy: Inject or Topology *************/
     // Register each device in the network along with its assigned role
     if(MAC[5] == 89 && MAC[4] == 248 && MAC[3] == 169 && MAC[2] == 45){
         worker.registerNodeAsInput();
@@ -399,12 +399,12 @@ void setup(){
     network.middlewareSelectStrategy(STRATEGY_PUBSUB);
     network.initMiddlewareStrategyPubSub(decodeTopicWrapper);***/
 
-    /************* Middleware Strategy: Topology **********
+    /************* Middleware Strategy: Topology *********
     network.middlewareSelectStrategy(STRATEGY_TOPOLOGY);
     network.initMiddlewareStrategyTopology(metrics, sizeof(metricStruct),setMetricValue,
                                            encodeMetricEntry, decodeMetricEntry,
                                            printMetricStruct,
-                                           chooseParentByProcessingCapacity);***/
+                                           chooseParentByProcessingCapacity);****/
 
 
 
