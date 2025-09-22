@@ -1662,6 +1662,7 @@ void NeuralNetworkCoordinator::handleNeuralNetworkMessage(uint8_t *senderIP, uin
             sscanf(messageBuffer, "%*d %i %hhu %f",&receivedInferenceId,&neuronId,&neuronOutput);
             //If the received neuron is an output layer neuron and its from the current inference running save the value
             if(isOutputNeuron(neuronId) && currentInferenceId == receivedInferenceId){
+                monitoring.reportDataMessageReceived(sizeof(messageBuffer),9,NN_NEURON_OUTPUT);
                 onNeuralNetworkOutput(neuronId,neuronOutput);
             }else{
                 handleNeuronMessage(senderIP, destinationIP,messageBuffer);
