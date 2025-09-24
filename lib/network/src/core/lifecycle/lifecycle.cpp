@@ -763,6 +763,7 @@ void handleTimers(){
         }
     }
 
+    currentTime = getCurrentTime();
     // Periodically send routing updates to neighbors, but only if connected to the main tree
     // (i.e., the node has an uplink connection that ultimately leads to the root).
     if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
@@ -777,12 +778,14 @@ void handleTimers(){
     // Handle middleware related periodic events
     if(middlewareOnTimerCallback != nullptr && connectedToMainTree)middlewareOnTimerCallback();
 
+    currentTime = getCurrentTime();
     // Handle APP related periodic events
     if( APPLICATION_RUNS_PERIODIC_TASKS && connectedToMainTree && (currentTime-lastApplicationProcessingTime) >=APPLICATION_PROCESSING_INTERVAL ){
         requestTaskExecution();
         lastApplicationProcessingTime = currentTime;
     }
 
+    currentTime = getCurrentTime();
     // Handle the timeout for the recovery wait state (i.e., the node has been waiting too long for the tree to reconnect to the main root).
     if( (currentTime-recoveryWaitStartTime)>=MAIN_TREE_RECONNECT_TIMEOUT && SM->current_state == sRecoveryWait){
         LOG(NETWORK,INFO,"Entered in RecoveryWait time out. recoveryWaitStartTime:%lu currentTime:%lu\n",recoveryWaitStartTime,currentTime);
