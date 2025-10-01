@@ -79,7 +79,7 @@ void NetworkMonitoring::encodeMessage(char* msg, MonitoringMessageType type, mes
             //1 [nodeIP]
             sprintf(msg,"1 %i.%i.%i.%i",parameters.IP1[0],parameters.IP1[1],parameters.IP1[2],parameters.IP1[3]);
             break;
-        case CHANGE_PARENT:
+        default:
             break;
     }
 }
@@ -286,11 +286,18 @@ void NetworkMonitoring::reportMiddlewareMessageReceived(size_t nBytes,int messag
 
 void NetworkMonitoring::reportDataMessageReceived(size_t nBytes,int messageType, int messageSubType){
     if(iamRoot){
-        encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,-1,messageSubType,nBytes);
+        //If the message is reported as an unknown type it is a message that is being forwarded but not analysed by this node so the header size is already accounted for
+        if(messageSubType == -1){
+            encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,-1,messageSubType,nBytes);
+        }else{
+            //If the message comes from the app layer then we have to add to their size the header
+            size_t headerSize=receivePayload-nBytes;
+            encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,-1,messageSubType,nBytes+headerSize);
+        }
         LOG(MONITORING_SERVER, INFO,"%s",monitoringBuffer);
     }
     // If the message functionality has already been sampled return
-    if(messagesMonitored) return;
+    if(messagesMonitored)return;
 
     // If the message monitoring functionality isn’t ON don't count the messages
     if(!messageMonitoringStarted) return;
