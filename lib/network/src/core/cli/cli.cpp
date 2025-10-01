@@ -10,9 +10,9 @@
  */
 void showMenu() {
     LOG(CLI,INFO,"\n======================================================================\n");
-    LOG(CLI,INFO,"                       Command Line Interface Menu                    \n");
+    LOG(CLI,INFO,"                                CLI Menu                              \n");
     LOG(CLI,INFO,"======================================================================\n");
-    LOG(CLI,INFO,"[1] Send a new message\n");
+    LOG(CLI,INFO,"[1] Send data message to node\n");
     LOG(CLI,INFO,"[2] Display Routing Table\n");
     LOG(CLI,INFO,"[3] Display Children Table\n");
     LOG(CLI,INFO,"[4] Display Middleware Info\n");
