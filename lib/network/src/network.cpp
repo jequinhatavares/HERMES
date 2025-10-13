@@ -454,6 +454,31 @@ void Network::setParentMetric(void *metric) {
     if(context != nullptr)context->setParentMetric(metric);
 }
 
+void* Network::getParentMetric(uint8_t *nodeIP) {
+    if(!iamRoot)return nullptr;
+    if (!::isMiddlewareStrategyActive( STRATEGY_TOPOLOGY)){
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        return nullptr;
+    }
+
+    TopologyContext* context = (TopologyContext*) ::middlewareGetStrategyContext();
+    if(context != nullptr) return context->getParentMetric(nodeIP);
+
+    return nullptr;
+}
+
+void Network::getParentNode(uint8_t *nodeIP, uint8_t *parentIP){
+    if(!iamRoot)return;
+    if (!::isMiddlewareStrategyActive( STRATEGY_TOPOLOGY)){
+        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
+        return;
+    }
+
+    TopologyContext* context = (TopologyContext*) ::middlewareGetStrategyContext();
+    if(context != nullptr) context->getParentNode(nodeIP,parentIP);
+
+    return;
+}
 
 /**
  * sendMessageToRoot
@@ -588,18 +613,7 @@ void Network::getRootIP(uint8_t *IP) {
     assignIP(IP,rootIP);
 }
 
-void *Network::getParentMetric(uint8_t *nodeIP) {
-    if(!iamRoot)return nullptr;
-    if (!::isMiddlewareStrategyActive( STRATEGY_TOPOLOGY)){
-        LOG(MIDDLEWARE, INFO, "⚠️ Warning: Attempted to access a method that is not permitted by the active middleware strategy. \n");
-        return nullptr;
-    }
 
-    TopologyContext* context = (TopologyContext*) ::middlewareGetStrategyContext();
-    if(context != nullptr) return context->getParentMetric(nodeIP);
-
-    return nullptr;
-}
 
 int Network::getHopDistanceToNode(uint8_t *nodeIP) {
     return getDistanceToNode(nodeIP);
@@ -612,6 +626,8 @@ int Network::getHopDistanceToRoot() {
 int Network::getNumberOfChildren() {
     return numberOfChildren;
 }
+
+
 
 
 
