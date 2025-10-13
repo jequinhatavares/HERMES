@@ -492,3 +492,13 @@ int getDistanceToNode(uint8_t *nodeIP){
     }
     return -1;
 }
+
+int getNodeIndexInRoutingTable(uint8_t *nodeIP){
+    uint8_t *currentNode;
+    for (int i = 0; i < routingTable->numberOfItems; ++i) {
+        currentNode = (uint8_t*) tableKey(routingTable,i);
+        if(isIPEqual(currentNode,nodeIP)) return i;
+    }
+    return -1;
+}
+

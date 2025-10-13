@@ -74,5 +74,6 @@ bool isNodeReachable(uint8_t *nodeIP);
 void getIPFromMAC(uint8_t * MAC, uint8_t * IP);
 
 int getDistanceToNode(uint8_t *nodeIP);
+int getNodeIndexInRoutingTable(uint8_t *nodeIP);
 
 #endif //ROUTING_H
