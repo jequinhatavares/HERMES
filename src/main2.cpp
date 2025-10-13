@@ -152,7 +152,11 @@ void setup(){
     //LOG(APP,INFO,"MY MAC: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
 
     //To auto initialize the root node has the node with the IP 135.230.96.1
-    if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96)
+    /***if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96)
+    {
+        network.setAsRoot(true);
+    }***/
+    if(MAC[5] == 252 && MAC[4] == 8 && MAC[3] == 107 && MAC[2] == 164)
     {
         network.setAsRoot(true);
     }
@@ -173,12 +177,12 @@ void setup(){
     network.middlewareSelectStrategy(STRATEGY_PUBSUB);
     network.initMiddlewareStrategyPubSub(decodeTopicWrapper);***/
 
-    /************* Middleware Strategy: Topology *************/
+    /************* Middleware Strategy: Topology **********
     network.middlewareSelectStrategy(STRATEGY_TOPOLOGY);
     network.initMiddlewareStrategyTopology(metrics, sizeof(metricStruct),setMetricValue,
                                            encodeMetricEntry, decodeMetricEntry,
                                            printMetricStruct,
-                                           chooseParentByProcessingCapacity);
+                                           chooseParentByProcessingCapacity);***/
 
     /************* Middleware Strategy: Inject **********
     network.middlewareSelectStrategy(STRATEGY_INJECT);
@@ -190,21 +194,21 @@ void setup(){
     network.begin();
 
 
-    /*** Strategy Topology Init ***/
+    /*** Strategy Topology Init
     // Assign a topology metric based on device type: NodeMCU = 1, ESP32 = 2, Raspberry Pi = 3
     if(MAC[5] == 89 && MAC[4] == 248 && MAC[3] == 169 && MAC[2] == 45){
         myMetric.processingCapacity=2;
         network.setParentMetric(&myMetric);
     }else if(MAC[5] == 12 && MAC[4] == 150 && MAC[3] == 51 && MAC[2] == 26){
-        //myMetric.processingCapacity=2;
-        //network.setParentMetric(&myMetric);
+        myMetric.processingCapacity=2;
+        network.setParentMetric(&myMetric);
     }else if(MAC[5] == 252 && MAC[4] == 8 && MAC[3] == 107 && MAC[2] == 164){
         myMetric.processingCapacity=2;
         network.setParentMetric(&myMetric);
     }else if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96){
         myMetric.processingCapacity=1;
         network.setParentMetric(&myMetric);
-    }
+    } ***/
 
 
     //LOG(APP,INFO,"MY MAC after begin: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
@@ -408,11 +412,11 @@ void setup(){
 
 
 
-    /************* Middleware Strategy: Inject *************/
+    /************* Middleware Strategy: Inject **********
     network.middlewareSelectStrategy(STRATEGY_INJECT);
     network.initMiddlewareStrategyInject(metrics, sizeof(metricStruct),setMetricValue,
                                           encodeMetricEntry, decodeMetricEntry,
-                                          compareMetrics,printMetricStruct);
+                                          compareMetrics,printMetricStruct);***/
 
     //Integrated the node into the network
     network.begin();
@@ -421,14 +425,14 @@ void setup(){
     myMetric.processingCapacity=3;
     network.setParentMetric(&myMetric);****/
 
-    /************* Middleware Strategy: Inject Inits *************/
+    /************* Middleware Strategy: Inject Inits **********
     myMetric.processingCapacity=3;
-    network.injectMetric(&myMetric);
+    network.injectMetric(&myMetric);***/
 
 
     // Register the RPi device as a worker device
-    worker.registerNodeAsOutput();
-    worker.registerNodeAsWorker();
+    //worker.registerNodeAsOutput();
+    //worker.registerNodeAsWorker();
 
 }
 
@@ -440,10 +444,9 @@ int main() {
 
     while (running) {
         network.run();
-        worker.manageNeuron();
+        //worker.manageNeuron();
     }
 
     return 0;
-
 }
 #endif
