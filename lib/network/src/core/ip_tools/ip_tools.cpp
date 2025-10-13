@@ -10,6 +10,8 @@
  * @return (bool) - True if the IP addresses are equal, false otherwise.
  */
 bool isIPEqual(void* a, void* b){
+    //Protect against nullptr
+    if(a == nullptr || b == nullptr) return false;
     uint8_t * aIP = (uint8_t *) a;
     uint8_t * bIP = (uint8_t *) b;
     //printf("In Function is IPEqual\n");
@@ -18,7 +20,6 @@ bool isIPEqual(void* a, void* b){
     }
     return false;
 }
-
 
 void assignIP(uint8_t destIP[4], uint8_t sourceIP[4]){
     //Protect against nullptr
