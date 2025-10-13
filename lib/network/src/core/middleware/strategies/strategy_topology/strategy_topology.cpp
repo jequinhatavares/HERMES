@@ -258,17 +258,14 @@ void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]){
     uint8_t *nextHopIP;
     switch (networkEvent) {
         case NETEVENT_JOINED_NETWORK:
-            if(hasTopologyMetric && !iamRoot){//If the node already has an associated metric then send it to the root
-                metricValue = tableRead(topologyMetricsTable,myIP);
-                if(metricValue != nullptr){
-                    encodeNodeMetricReport(smallSendBuffer, sizeof(smallSendBuffer),metricValue);
-                    nextHopIP = findRouteToNode(rootIP);
-                    if(nextHopIP != nullptr){
-                        sendMessage(nextHopIP,smallSendBuffer);
-                        LOG(MESSAGES,INFO,"Sending [MIDDLEWARE/INJECT_NODE_INFO] message: \"%s\" to: %hhu.%hhu.%hhu.%hhu\n",smallSendBuffer,involvedIP[0],involvedIP[1],involvedIP[2],involvedIP[3]);
-                    }else{
-                        LOG(MIDDLEWARE, ERROR, "❌ ERROR: No path to the root node (%hhu.%hhu.%hhu.%hhu) was found in the routing table.\n",rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
-                    }
+            //If the node already has an associated metric then send it to the root
+            if(!iamRoot){
+                encodeNodeUpdateMessage(smallSendBuffer, sizeof(smallSendBuffer));
+                nextHopIP = findRouteToNode(rootIP);
+                if(nextHopIP != nullptr){
+                    sendMessage(nextHopIP,smallSendBuffer);
+                }else{
+                    LOG(MIDDLEWARE, ERROR, "❌ ERROR: No path to the root node (%hhu.%hhu.%hhu.%hhu) was found in the routing table.\n",rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
                 }
             }
             break;

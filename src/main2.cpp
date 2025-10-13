@@ -196,8 +196,8 @@ void setup(){
         myMetric.processingCapacity=2;
         network.setParentMetric(&myMetric);
     }else if(MAC[5] == 12 && MAC[4] == 150 && MAC[3] == 51 && MAC[2] == 26){
-        myMetric.processingCapacity=2;
-        network.setParentMetric(&myMetric);
+        //myMetric.processingCapacity=2;
+        //network.setParentMetric(&myMetric);
     }else if(MAC[5] == 252 && MAC[4] == 8 && MAC[3] == 107 && MAC[2] == 164){
         myMetric.processingCapacity=2;
         network.setParentMetric(&myMetric);
