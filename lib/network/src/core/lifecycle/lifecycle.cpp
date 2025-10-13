@@ -787,8 +787,8 @@ void handleTimers(){
     // Handle the timeout for the recovery wait state (i.e., the node has been waiting too long for the tree to reconnect to the main root).
     // RecoveryAwait timeout scales with tree depth and triggers sequentially by layer, not simultaneously across the subtree.
     if( (currentTime-recoveryWaitStartTime)>=(MAIN_TREE_RECONNECT_TIMEOUT+rootHopDistance*500) && SM->current_state == sRecoveryWait){
-        LOG(NETWORK,INFO,"Entered in RecoveryWait time out. recoveryWaitStartTime:%lu currentTime:%lu\n",recoveryWaitStartTime,currentTime);
-        LOG(NETWORK,INFO,"currentTime-recoveryWaitStartTime:%lu\n",(currentTime-recoveryWaitStartTime));
+        //LOG(NETWORK,INFO,"Entered in RecoveryWait time out. recoveryWaitStartTime:%lu currentTime:%lu\n",recoveryWaitStartTime,currentTime);
+        //LOG(NETWORK,INFO,"currentTime-recoveryWaitStartTime:%lu\n",(currentTime-recoveryWaitStartTime));
         insertLast(stateMachineEngine, eRecoveryWaitTimeOut);
     }
 
