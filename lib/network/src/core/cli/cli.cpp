@@ -147,9 +147,7 @@ void cliInteraction(){
                     break;
 
                 case 8:
-                #ifdef ROOT
-                    monitoring.sampleEndToEndDelay();
-                #endif
+                    if(iamRoot){monitoring.sampleEndToEndDelay();}
                     break;
 
                 default:

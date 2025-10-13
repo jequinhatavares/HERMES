@@ -498,7 +498,7 @@ State parentRecovery(Event event){
     //Tell my children that i lost connection to my parent
     encodeTopologyBreakAlert(smallSendBuffer,sizeof(smallSendBuffer));
     LOG(MESSAGES,INFO,"Informing my children about the lost connection\n");
-    for (i = 0; i < childrenTable->numberOfItems; ++i) {
+    for (i = 0; i < childrenTable->numberOfItems; ++i){
         STAIP = (uint8_t *) findNode(childrenTable, (uint8_t *) childrenTable->table[i].key);
         if(STAIP != nullptr){
             uint8_t *childAPIP = (uint8_t *) childrenTable->table[i].key;
@@ -776,7 +776,7 @@ void handleTimers(){
     }
 
     // Handle middleware related periodic events
-    if(middlewareOnTimerCallback != nullptr && connectedToMainTree)middlewareOnTimerCallback();
+    if(middlewareOnTimerCallback != nullptr && connectedToMainTree) middlewareOnTimerCallback();
 
     currentTime = getCurrentTime();
     // Handle APP related periodic events
@@ -787,7 +787,8 @@ void handleTimers(){
 
     currentTime = getCurrentTime();
     // Handle the timeout for the recovery wait state (i.e., the node has been waiting too long for the tree to reconnect to the main root).
-    if( (currentTime-recoveryWaitStartTime)>=MAIN_TREE_RECONNECT_TIMEOUT && SM->current_state == sRecoveryWait){
+    // RecoveryAwait timeout scales with tree depth and triggers sequentially by layer, not simultaneously across the subtree.
+    if( (currentTime-recoveryWaitStartTime)>=(MAIN_TREE_RECONNECT_TIMEOUT+rootHopDistance*500) && SM->current_state == sRecoveryWait){
         LOG(NETWORK,INFO,"Entered in RecoveryWait time out. recoveryWaitStartTime:%lu currentTime:%lu\n",recoveryWaitStartTime,currentTime);
         LOG(NETWORK,INFO,"currentTime-recoveryWaitStartTime:%lu\n",(currentTime-recoveryWaitStartTime));
         insertLast(stateMachineEngine, eRecoveryWaitTimeOut);
