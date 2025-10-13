@@ -1,7 +1,6 @@
 #include "strategy_topology.h"
 
 //TODO Problemas: todos os nós tem uma tabela de métricas inicializada na memória
-// TODO Talvez retirar o endereço da raiz da mensagem já que a mensagem PLA é sempre para a raíz
 
 Strategy strategyTopology = {
         .handleMessage = handleMessageStrategyTopology,
@@ -55,9 +54,13 @@ void (*printTopologyMetricValue)(TableEntry*) = nullptr;
 uint8_t * (*chooseParentFunction)(uint8_t *, uint8_t (*)[4] , uint8_t) = nullptr;
 
 
+uint8_t nodesParents[TABLE_MAX_SIZE][4];
+
+
 TopologyContext topologyContext ={
         .setParentMetric = topologySetNodeMetric,
         .getParentMetric = getNodeTopologyMetric,
+        .getParentNode = getNodeParent,
 };
 
 void initStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize,void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *),void (*decodeTopologyMetricFunction)(char*,void *),void (*printMetricFunction)(TableEntry*), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t)){
@@ -239,10 +242,13 @@ void handleMessageStrategyTopology(char* messageBuffer, size_t bufferSize){
                     ,&targetNodeIP[0],&targetNodeIP[1],&targetNodeIP[2],&targetNodeIP[3],
                    &parentIP[0],&parentIP[1],&parentIP[2],&parentIP[3],&hasMetric,&nChars);
 
+            //Update the nodes part IP if necessary
+            setNodeParent(targetNodeIP, parentIP);
             //Decode and register the metric in the table if any metric is available
             if(hasMetric == 1){
                 registerTopologyMetric(targetNodeIP,messageBuffer+nChars);
             }
+
         }
     }
 }
@@ -465,13 +471,36 @@ void* getNodeTopologyMetric(uint8_t * nodeIP){
     return tableRead(topologyMetricsTable,nodeIP);
 }
 
+void getNodeParent(uint8_t *nodeIP, uint8_t *parentIP){
+    uint8_t blankIP[4]={0,0,0,0};
+    int index = getNodeIndexInRoutingTable(nodeIP);
+    if(index == -1)assignIP(parentIP,blankIP);
+    else assignIP(parentIP,nodesParents[index]);
+}
+
+void setNodeParent(uint8_t *nodeIP, uint8_t *parentIP){
+    int index = getNodeIndexInRoutingTable(nodeIP);
+    //If the node inst present in the routing table return
+    if(index==-1) return;
+    //If the node's parent is already updated return
+    if(isIPEqual(parentIP,nodesParents[index]))return;
+    //Update the parent of the node
+    assignIP(nodesParents[index],parentIP);
+}
+
 void printTopologyTable(){
     if(printTopologyMetricValue)tablePrint(topologyMetricsTable,printTopologyTableHeader,printTopologyMetricValue);
 }
 
-/******************************-----------Application Defined Functions----------------********************************/
-
-
 void printTopologyTableHeader(){
     LOG(MIDDLEWARE,INFO,"**********************| Middleware Strategy Topology Table |**********************\n");
+}
+
+void printNetworkTopologyInformation(){
+    LOG(MIDDLEWARE,DEBUG,"---------------------- Network Topology Information ----------------------\n");
+    for (int i = 0; i < routingTable->numberOfItems; ++i) {
+        uint8_t *nodeIP = (uint8_t*) tableKey(routingTable,i);
+        LOG(MIDDLEWARE,DEBUG,"NodeIP:%hhu.%hhu.%hhu.%hhu ParentIP:%hhu.%hhu.%hhu.%hhu\n",
+            nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],nodesParents[i][0],nodesParents[i][1],nodesParents[i][2],nodesParents[i][3]);
+    }
 }

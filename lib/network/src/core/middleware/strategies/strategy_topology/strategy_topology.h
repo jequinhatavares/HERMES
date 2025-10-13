@@ -17,8 +17,6 @@
 
 extern Strategy strategyTopology;
 
-extern int orphanIP[4];
-extern int newParentIP[4];
 
 extern TableInfo* topologyMetricsTable;
 
@@ -36,6 +34,7 @@ typedef enum TopologyMessageType{
 typedef struct TopologyContext{
     void (*setParentMetric)(void* metric);
     void* (*getParentMetric)(uint8_t * nodeIP);
+    void (*getParentNode)(uint8_t * nodeIP,uint8_t *parentIP);
 } TopologyContext;
 
 
@@ -60,8 +59,12 @@ void topologySetNodeMetric(void* metric);
 
 void printTopologyTable();
 void printTopologyTableHeader();
+void printNetworkTopologyInformation();
 
 void* getNodeTopologyMetric(uint8_t * nodeIP);
+void getNodeParent(uint8_t *nodeIP, uint8_t *parentIP);
+void setNodeParent(uint8_t *nodeIP, uint8_t *parentIP);
+
 
 /******************************-----------Application Defined Functions----------------********************************/
 
