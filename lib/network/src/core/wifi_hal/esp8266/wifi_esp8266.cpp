@@ -110,7 +110,6 @@ void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& in
     parentDisconnectionCount++;
     lastParentDisconnectionTime = currentTime;
 
-    Serial.printf("[DEBUG] parentDisconnectionCount=%d\n", parentDisconnectionCount);
 
     // Trigger recovery if threshold reached
     if (parentDisconnectionCount >= PARENT_DISCONNECTION_THRESHOLD_ESP8266) {
@@ -121,6 +120,7 @@ void onStationModeDisconnectedHandler(const WiFiEventStationModeDisconnected& in
     }
 
     WiFi.reconnect();
+
 
     // Attempt Re-Connection
     //WiFi.begin(SSID_PREFIX,PASS);

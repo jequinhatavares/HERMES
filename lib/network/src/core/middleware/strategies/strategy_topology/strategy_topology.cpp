@@ -270,8 +270,6 @@ void onNetworkEventStrategyTopology(int networkEvent, uint8_t involvedIP[4]){
                         LOG(MIDDLEWARE, ERROR, "❌ ERROR: No path to the root node (%hhu.%hhu.%hhu.%hhu) was found in the routing table.\n",rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
                     }
                 }
-            }else{
-                LOG(MIDDLEWARE,DEBUG,"Did not sent any middleware metric because no metric data is initialized\n");
             }
             break;
 

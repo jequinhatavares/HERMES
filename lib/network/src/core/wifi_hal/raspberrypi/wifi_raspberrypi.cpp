@@ -137,7 +137,6 @@ void onStationModeDisconnectedHandler(wifi_event_info__t *info){
     parentDisconnectionCount++;
     lastParentDisconnectionTime = currentTime;
 
-
     // Trigger recovery if threshold reached
     if (parentDisconnectionCount >= PARENT_DISCONNECTION_THRESHOLD_RPI) {
         if (parentDisconnectCallback != nullptr) {

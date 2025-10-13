@@ -74,8 +74,7 @@ CircularBuffer* stateMachineEngine = &cb_;
  * @return void
 */
 void onParentDisconnect(){
-    LOG(NETWORK, DEBUG,"onParentDisconnect callback!\n");
-
+    //LOG(NETWORK, DEBUG,"onParentDisconnect callback!\n");
     if(!connectedToMainTree) return;
     insertLast(stateMachineEngine, eLostParentConnection);
     connectedToMainTree = false;

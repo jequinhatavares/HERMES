@@ -128,6 +128,7 @@ void cliInteraction(){
                         tablePrint(pubsubTable,printPubSubTableHeader,printPubSubStruct);
                     }else if(isMiddlewareStrategyActive(STRATEGY_TOPOLOGY) && iamRoot){
                         printTopologyTable();
+                        printNetworkTopologyInformation();
                     }
                     break;
 
