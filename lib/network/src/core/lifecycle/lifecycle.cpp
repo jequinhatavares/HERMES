@@ -457,30 +457,28 @@ State parentRecovery(Event event){
     // Handles the case where the node loses a child just before or at the same time it loses its parent
     if(event == eLostChildConnection){
         lostChildProcedure();
-        return sParentRestart;
     }else if (event == eMessage){
         sscanf(receiveBuffer, "%d", &MessageType);
         if(!isMessageValid(MessageType, receiveBuffer)){
             LOG(MESSAGES,ERROR,"Error: received message is invalid or malformed \"%s\"\n", receiveBuffer);
-            //return sRecoveryWait;
-            return sParentRecovery;
-        }
+            //return sParentRecovery;
+        }else{
+            switch(MessageType) {
+                case FULL_ROUTING_TABLE_UPDATE:
+                    LOG(MESSAGES, INFO, "Received [FULL_ROUTING_TABLE_UPDATE] message: \"%s\"\n", receiveBuffer);
+                    handleFullRoutingTableUpdate(receiveBuffer);
+                    break;
 
-        switch(MessageType) {
-            case FULL_ROUTING_TABLE_UPDATE:
-                LOG(MESSAGES, INFO, "Received [FULL_ROUTING_TABLE_UPDATE] message: \"%s\"\n", receiveBuffer);
-                handleFullRoutingTableUpdate(receiveBuffer);
-                break;
+                case PARTIAL_ROUTING_TABLE_UPDATE:
+                    LOG(MESSAGES, INFO, "Received [PARTIAL_ROUTING_TABLE_UPDATE] message: \"%s\"\n", receiveBuffer);
+                    handlePartialRoutingUpdate(receiveBuffer);
+                    break;
 
-            case PARTIAL_ROUTING_TABLE_UPDATE:
-                LOG(MESSAGES, INFO, "Received [PARTIAL_ROUTING_TABLE_UPDATE] message: \"%s\"\n", receiveBuffer);
-                handlePartialRoutingUpdate(receiveBuffer);
-                break;
-
-            /*** Reject all other message types (e.g., PARENT_DISCOVERY_REQUEST, CHILD_REGISTRATION_REQUEST,
-            , DATA_MESSAGE, MIDDLEWARE_MESSAGE etc.) since the node is not in an active state. ***/
-            default:
-                break;
+                /*** Reject all other message types (e.g., PARENT_DISCOVERY_REQUEST, CHILD_REGISTRATION_REQUEST,
+                , DATA_MESSAGE, MIDDLEWARE_MESSAGE etc.) since the node is not in an active state. ***/
+                default:
+                    break;
+            }
         }
     }
 
@@ -601,11 +599,12 @@ State parentRestart(Event event){
     uint8_t invalidIP[4] = {0,0,0,0};
     RoutingTableEntry me;
 
-    // Handles the case where the node loses a child just before restarting
+    /***
     if(event == eLostChildConnection){
+     // Handles the case where the node loses a child just before restarting
         lostChildProcedure();
         return sParentRestart;
-    }else if(event == eMessage) return sParentRestart;
+    }else if(event == eMessage) return sParentRestart;***/
 
     // If the node has children, notify them that its parent (this node) is restarting.
     // This means it will no longer be their parent, and they should start searching for a new one.
