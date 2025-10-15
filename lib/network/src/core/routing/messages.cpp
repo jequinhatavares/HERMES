@@ -490,8 +490,8 @@ void handleFullRoutingTableUpdate(char * msg){
        * it indicates that this node is also part of a detached subtree. If the node is not yet
        * aware of its disconnected status, update its lifecycle information (states, variables) accordingly ***/
 
-    // Verify whether the root's routing information has been updated
-    if(isIPinList(rootIP,changedNodes,nrOfChanges)){
+    // If i am not the root, verify whether the root's routing information has been updated
+    if(!iamRoot && isIPinList(rootIP,changedNodes,nrOfChanges)){
         RoutingTableEntry *rootEntry = (RoutingTableEntry*) findNode(routingTable,rootIP);
         if(rootEntry != nullptr){
             if(rootEntry->sequenceNumber%2!=0){
