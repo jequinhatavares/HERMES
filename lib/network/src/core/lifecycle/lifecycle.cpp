@@ -10,6 +10,7 @@ uint8_t dns[4];
 unsigned long lastApplicationProcessingTime = 0;
 
 // Timestamp marking the start of a waiting period during recovery procedures
+// This variable is only altered when the node receives a TBA or a PRTU/FRTU with information that the root is unreachable
 unsigned long recoveryWaitStartTime  = 0;
 
 // Callback pointer for middleware code to execute periodic timer events.
@@ -129,7 +130,7 @@ void onRootUnreachable(){
     connectedToMainTree = false;
     recoveryWaitStartTime = getCurrentTime();
 
-    LOG(STATE_MACHINE,DEBUG, "Inserting event:%hhu in snake\n",eLostTreeConnection);
+    LOG(STATE_MACHINE,DEBUG, "Root is Unreachable. Inserting event:%hhu in snake\n",eLostTreeConnection);
     insertLast(stateMachineEngine, eLostTreeConnection);
 
 }
@@ -148,8 +149,10 @@ void onRootReachable(){
      * TOPOLOGY_RESTORED_NOTICE was missed, and the node did not transition properly to the active state.***/
     if(SM->current_state == sRecoveryWait){
         connectedToMainTree = true;
-        LOG(STATE_MACHINE,DEBUG, "Inserting event:%hhu in snake\n",eTreeConnectionRestored);
-        insertLast(stateMachineEngine, eTreeConnectionRestored);
+        LOG(STATE_MACHINE,DEBUG, "Root is Reachable. Inserting event:%hhu in snake\n",eTreeConnectionRestored);
+        //If the root is reachable then the node can go to the active state
+        SM->current_state = sActive;
+        //insertLast(stateMachineEngine, eTreeConnectionRestored);
     }
 }
 /**
@@ -789,7 +792,7 @@ void handleTimers(){
     // Handle the timeout for the recovery wait state (i.e., the node has been waiting too long for the tree to reconnect to the main root).
     // RecoveryAwait timeout scales with tree depth and triggers sequentially by layer, not simultaneously across the subtree.
     if( (currentTime-recoveryWaitStartTime)>=(MAIN_TREE_RECONNECT_TIMEOUT+rootHopDistance*500) && SM->current_state == sRecoveryWait){
-        //LOG(NETWORK,INFO,"Entered in RecoveryWait time out. recoveryWaitStartTime:%lu currentTime:%lu\n",recoveryWaitStartTime,currentTime);
+         LOG(NETWORK,INFO,"RecoveryAwait TimedOut.\n");
         //LOG(NETWORK,INFO,"currentTime-recoveryWaitStartTime:%lu\n",(currentTime-recoveryWaitStartTime));
         insertLast(stateMachineEngine, eRecoveryWaitTimeOut);
     }
