@@ -656,7 +656,7 @@ void searchAP(const char* SSID){
             }
     }
 
-    if(reachableNetworks.len == 0)  sleep(3);  // sleep for 2 seconds
+    if(reachableNetworks.len == 0)  sleep(2);  // sleep for 2 seconds
 
     // Close the file pointer after reading
     fclose(fp);
@@ -822,9 +822,8 @@ void disconnectFromAP() {
     while (fgets(outputLine, sizeof(outputLine), fp) != NULL) {
         printf("%s", outputLine); // optional: print what happened
 
-        if (strstr(outputLine, "successfully disconnected") != NULL ||
-            strstr(outputLine, "device disconnected") != NULL ||
-            strstr(outputLine, "successfully deactivated") != NULL) {
+        if (strstr(outputLine, "successfully disconnected") != NULL || strstr(outputLine, "device disconnected") != NULL || strstr(outputLine, "successfully deactivated") != NULL) {
+
         }
     }
 
