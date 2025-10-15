@@ -257,8 +257,7 @@ bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, 
                 // Consider information relevant when either the hop distance or nextHop node value differs from the stored version.
                 if( (hopDistance + 1 != nodeEntry->hopDistance) || (!isIPEqual(nodeEntry->nextHopIP,senderIP))) relevantUpdate=true;
                 // Also consider the update relevant if it comes from a node who as previously marked as unreachable (odd sequence number)
-                // and its now reachable (with a greater sequence number than the odd stored one)
-                if( nodeEntry->sequenceNumber % 2 != 0 && sequenceNumber > nodeEntry->sequenceNumber) relevantUpdate=true;
+                if( nodeEntry->sequenceNumber % 2 != 0) relevantUpdate=true;
                 updatedEntry.hopDistance = hopDistance + 1;
             }
             assignIP(updatedEntry.nextHopIP ,senderIP);

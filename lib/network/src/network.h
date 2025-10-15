@@ -29,7 +29,6 @@ class Network {
     public:
     bool iamRoot=false;
 
-
     // ==================== NETWORK CORE =====================
     void setAsRoot(bool isRoot);        // Set this node as root (call before begin())
     void init();                        // Initialize the node parameters (AP IP, AP interface, transport layer ...)
