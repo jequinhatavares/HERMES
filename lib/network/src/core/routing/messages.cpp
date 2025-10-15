@@ -467,11 +467,10 @@ void handleFullRoutingTableUpdate(char * msg){
             // It must notify the sender so they can update their routing table accordingly.
             if(isIPEqual(nodeIP,myIP)){
                 encodePartialRoutingUpdate(smallSendBuffer,sizeof(smallSendBuffer),&myIP,1);
-                childIndex = tableFind(childrenTable, sourceIP) ;
-                if(childIndex != -1){ // If the sender is one of my children, the update must be sent to its childSTAIP
-                    childSTAIP = (uint8_t *)tableValueAtIndex(childrenTable,childIndex);
-                    if(childSTAIP!= nullptr)sendMessage(childSTAIP,smallSendBuffer);
-                }else sendMessage(sourceIP,smallSendBuffer);
+                // Find the nextHopIP that leads to the sender(if it is a child then its the child STA IP)
+                uint8_t *nextHopIP = (uint8_t *) findRouteToNode(sourceIP);
+                if(nextHopIP != nullptr) sendMessage(nextHopIP,smallSendBuffer);
+
             }
         }
         isRoutingTableChanged = isRoutingTableChanged || isRoutingEntryChanged ;
