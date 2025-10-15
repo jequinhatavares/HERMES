@@ -710,6 +710,8 @@ State recoveryAwait(Event event){
     }else if(event == eLostChildConnection){
         lostChildProcedure();
     }else if (event == eLostParentConnection || event == eRecoveryWaitTimeOut){
+        //Put an event in the queue for the de ice to run the ParentRecovery State code
+        insertLast(stateMachineEngine, eLostParentConnection);
         return sParentRecovery;
     }else if(event == eTreeConnectionRestored){
         return sActive;
