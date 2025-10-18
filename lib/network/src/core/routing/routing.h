@@ -31,9 +31,10 @@ typedef struct ParentInfo{
 }ParentInfo;
 
 typedef struct RoutingTableEntry {
-    int hopDistance;
-    uint8_t nextHopIP[4];
-    int sequenceNumber;
+    int hopDistance;        //Hop Distance to a destination
+    uint8_t nextHopIP[4];   //Next Hop IP to reach a destination
+    int sequenceNumber;     //Sequence number associated with that destination
+    bool isChanged;         //Indicates if the routing entry was changed since the last update
 } RoutingTableEntry;
 
 extern TableInfo* routingTable;

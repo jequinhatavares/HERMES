@@ -135,7 +135,8 @@ void encodeChildRegistrationRequest(char* messageBuffer, size_t bufferSize,uint8
 
 void encodeFullRoutingTableUpdate(char* messageBuffer, size_t bufferSize){
     int offset=0;
-    //FULL_ROUTING_TABLE_UPDATE [senderIP] [rootIP] |[node1 IP] [hopDistance] [Sequence Number1]|[node2 IP] [hopDistance] [Sequence Number2]|....
+    //Message Size: Header Max-33 Each Routing Entry Max-22
+    //FULL_ROUTING_TABLE_UPDATE [senderIP] [rootIP]|[node1 IP] [hopDistance] [Sequence Number1]|[node2 IP] [hopDistance] [Sequence Number2]|....
     offset+=snprintf(messageBuffer+offset,bufferSize-offset,"%i %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu|",FULL_ROUTING_TABLE_UPDATE,myIP[0],myIP[1],myIP[2],
              myIP[3],rootIP[0],rootIP[1],rootIP[2],rootIP[3]);
 
@@ -152,7 +153,8 @@ void encodeFullRoutingTableUpdate(char* messageBuffer, size_t bufferSize){
 void encodePartialRoutingUpdate(char* messageBuffer, size_t bufferSize,uint8_t nodeIPs[][4],int nrNodes){
     int offset=0;
     RoutingTableEntry *nodeRoutingEntry;
-    //PARTIAL_ROUTING_TABLE_UPDATE [senderIP] |[node1 IP] [hopDistance] [sequenceNumber]| [node2 IP] [hopDistance] [sequenceNumber] ...
+    //Message Size: Header Max-18 Each routing Entry Max-22
+    //PARTIAL_ROUTING_TABLE_UPDATE [senderIP]|[node1 IP] [hopDistance] [sequenceNumber]|[node2 IP] [hopDistance] [sequenceNumber] ...
     offset += snprintf(messageBuffer+offset,bufferSize-offset,"%i %hhu.%hhu.%hhu.%hhu|",PARTIAL_ROUTING_TABLE_UPDATE,myIP[0],myIP[1],myIP[2],myIP[3]);
 
     for (int i = 0; i < nrNodes; i++){
@@ -959,3 +961,28 @@ void sendACKMessageToNode(char* messageBuffer,size_t bufferSize,const char* ackP
     }
 }
 
+void encodePeriodicRoutingMessage(){
+    uint8_t changedNodes[TABLE_MAX_SIZE][4];
+    uint8_t nChanges=0;
+    RoutingTableEntry *entry;
+    uint8_t *currentIP;
+
+    //The own node is going in the update
+    assignIP(changedNodes[nChanges],myIP);
+    nChanges++;
+
+    for (int i = 0; i < routingTable->numberOfItems; i++){
+        currentIP = (uint8_t *) tableKey(routingTable,i);
+        entry = (RoutingTableEntry*) tableRead(routingTable,currentIP);
+        // If the current node has changes that were not sent in the last routing update, include them in this update.
+        if(entry!=nullptr && entry->isChanged){
+            assignIP(changedNodes[nChanges],currentIP);
+            nChanges++;
+        }
+    }
+
+    //Encode the periodic routing message with the changes since the last update
+    encodePartialRoutingUpdate(largeSendBuffer, sizeof(largeSendBuffer),changedNodes,nChanges);
+    propagateMessage(largeSendBuffer,myIP);
+
+}
