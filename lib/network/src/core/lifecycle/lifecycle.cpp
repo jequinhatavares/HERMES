@@ -573,9 +573,11 @@ State parentRecovery(Event event){
 
     // If the joining node has children (i.e., his subnetwork has nodes), it must also send its routing table to its new parent.
     // This ensures that the rest of the network becomes aware of the entire subtree associated with the new node
-    encodeFullRoutingTableUpdate(largeSendBuffer,sizeof(largeSendBuffer));
-    sendMessage(parent, largeSendBuffer);
-    lastRoutingUpdateTime = getCurrentTime();
+    if(childrenTable->numberOfItems>0){
+        encodeFullRoutingTableUpdate(largeSendBuffer,sizeof(largeSendBuffer));
+        sendMessage(parent, largeSendBuffer);
+        lastRoutingUpdateTime = getCurrentTime();
+    }
 
     // Notify the children that the main tree connection has been reestablished
     encodeTopologyRestoredNotice(smallSendBuffer, sizeof(smallSendBuffer));
@@ -774,8 +776,9 @@ void handleTimers(){
         LOG(NETWORK,INFO,"Sending a Periodic Routing Update to my Neighbors\n");
         //Update my sequence number
         updateMySequenceNumber(mySequenceNumber+2);
-        encodeFullRoutingTableUpdate(largeSendBuffer, sizeof(largeSendBuffer));
-        propagateMessage(largeSendBuffer,myIP);
+        /***encodeFullRoutingTableUpdate(largeSendBuffer, sizeof(largeSendBuffer));
+        propagateMessage(largeSendBuffer,myIP);***/
+        onPeriodicRoutingUpdate();
         lastRoutingUpdateTime = currentTime;
     }
 
