@@ -9,6 +9,7 @@
 #include "../table/table.h"
 #include "../logger/logger.h"
 #include "../ip_tools/ip_tools.h"
+//#include "messages.h"
 
 #include <cstdint>
 
@@ -76,5 +77,6 @@ void getIPFromMAC(uint8_t * MAC, uint8_t * IP);
 
 int getDistanceToNode(uint8_t *nodeIP);
 int getNodeIndexInRoutingTable(uint8_t *nodeIP);
+
 
 #endif //ROUTING_H

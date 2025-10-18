@@ -961,7 +961,8 @@ void sendACKMessageToNode(char* messageBuffer,size_t bufferSize,const char* ackP
     }
 }
 
-void encodePeriodicRoutingMessage(){
+
+void onPeriodicRoutingUpdate(){
     uint8_t changedNodes[TABLE_MAX_SIZE][4];
     uint8_t nChanges=0;
     RoutingTableEntry *entry;
@@ -978,11 +979,17 @@ void encodePeriodicRoutingMessage(){
         if(entry!=nullptr && entry->isChanged){
             assignIP(changedNodes[nChanges],currentIP);
             nChanges++;
+            entry->isChanged=false;
         }
     }
 
-    //Encode the periodic routing message with the changes since the last update
-    encodePartialRoutingUpdate(largeSendBuffer, sizeof(largeSendBuffer),changedNodes,nChanges);
-    propagateMessage(largeSendBuffer,myIP);
-
+    // If more than 70% of the routing table entries have changed since the last update, send a FRTU
+    if(nChanges>=0.7*routingTable->numberOfItems){
+        encodeFullRoutingTableUpdate(largeSendBuffer, sizeof(largeSendBuffer));
+        propagateMessage(largeSendBuffer,myIP);
+    }else{
+        //Encode the periodic routing message with the changes since the last update ON A PRTU
+        encodePartialRoutingUpdate(largeSendBuffer, sizeof(largeSendBuffer),changedNodes,nChanges);
+        propagateMessage(largeSendBuffer,myIP);
+    }
 }

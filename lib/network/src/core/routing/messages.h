@@ -90,4 +90,6 @@ void sendDataMessageToParent(char* messageBuffer,size_t bufferSize,const char* m
 void sendDataMessageToNode(char* messageBuffer,size_t bufferSize,const char* messagePayload,uint8_t *originatorIP,uint8_t *destinationIP);
 void sendACKMessageToNode(char* messageBuffer,size_t bufferSize,const char* ackPayload,uint8_t *destinationIP);
 
+void onPeriodicRoutingUpdate();
+
 #endif //MESSAGES_H

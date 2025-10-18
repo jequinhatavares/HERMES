@@ -152,14 +152,14 @@ void setup(){
     //LOG(APP,INFO,"MY MAC: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
 
     //To auto initialize the root node has the node with the IP 135.230.96.1
-    /***if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96)
-    {
-        network.setAsRoot(true);
-    }***/
-    if(MAC[5] == 252 && MAC[4] == 8 && MAC[3] == 107 && MAC[2] == 164)
+    if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96)
     {
         network.setAsRoot(true);
     }
+    /***if(MAC[5] == 252 && MAC[4] == 8 && MAC[3] == 107 && MAC[2] == 164)
+    {
+        network.setAsRoot(true);
+    }***/
 
     waitForEnter();
 
