@@ -975,7 +975,6 @@ void onPeriodicRoutingUpdate(){
         // If the current node has relevant changes that were not sent in the last routing update, include them in this update.
         LOG(MESSAGES,DEBUG,"Is Node Entry changed since last update?: %hhu.%hhu.%hhu.%hhu isEntryChanged:%i\n",currentIP[0],currentIP[1],currentIP[2],currentIP[3],entry->isChangeRelevant);
         if(entry != nullptr && entry->isChangeRelevant){
-            LOG(MESSAGES,DEBUG,"YES\n");
             assignIP(changedNodes[nChanges],currentIP);
             nChanges++;
         }
@@ -989,7 +988,7 @@ void onPeriodicRoutingUpdate(){
         propagateMessage(largeSendBuffer,myIP);
         lastFullRoutingUpdateTime=getCurrentTime(); // Update the time of the last FRTU
         clearRelevantFlag();//Clear the relevant flags on each routing entry
-    }else{
+    }else if(nChanges>0){
         //Encode the periodic routing message with the changes since the last update ON A PRTU
         encodePartialRoutingUpdate(largeSendBuffer, sizeof(largeSendBuffer),changedNodes,nChanges);
         propagateMessage(largeSendBuffer,myIP);

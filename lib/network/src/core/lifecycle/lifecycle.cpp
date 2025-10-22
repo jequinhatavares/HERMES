@@ -789,7 +789,7 @@ void handleTimers(){
      ***/
     currentTime = getCurrentTime();
     if((currentTime - lastFullRoutingUpdateTime) >= FULL_ROUTING_UPDATE_INTERVAL){
-        LOG(NETWORK,INFO,"Sending a Periodic Routing Update to my Neighbors\n");
+        LOG(NETWORK,INFO,"Sending a Periodic Full Routing Update to my Neighbors\n");
         onPeriodicFullRoutingUpdate();
         lastFullRoutingUpdateTime = currentTime;
     }
