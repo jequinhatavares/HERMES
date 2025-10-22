@@ -18,7 +18,7 @@
 #endif
 
 #ifndef FULL_ROUTING_UPDATE_INTERVAL
-#define FULL_ROUTING_UPDATE_INTERVAL 240000
+#define FULL_ROUTING_UPDATE_INTERVAL 300000
 #endif
 
 // Flag indicating whether this node is currently connected to the main network tree
