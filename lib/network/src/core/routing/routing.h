@@ -14,7 +14,11 @@
 #include <cstdint>
 
 #ifndef ROUTING_UPDATE_INTERVAL
-#define ROUTING_UPDATE_INTERVAL 60000
+#define ROUTING_UPDATE_INTERVAL 30000
+#endif
+
+#ifndef FULL_ROUTING_UPDATE_INTERVAL
+#define FULL_ROUTING_UPDATE_INTERVAL 240000
 #endif
 
 // Flag indicating whether this node is currently connected to the main network tree
@@ -35,7 +39,7 @@ typedef struct RoutingTableEntry {
     int hopDistance;        //Hop Distance to a destination
     uint8_t nextHopIP[4];   //Next Hop IP to reach a destination
     int sequenceNumber;     //Sequence number associated with that destination
-    bool isChanged;         //Indicates if the routing entry was changed since the last update
+    bool isChangeRelevant;         //Indicates if the routing entry was a relevant changed since the last update FRTU
 } RoutingTableEntry;
 
 extern TableInfo* routingTable;
@@ -53,6 +57,7 @@ extern uint8_t parent[4];
 extern int mySequenceNumber;
 
 extern unsigned long lastRoutingUpdateTime;
+extern unsigned long lastFullRoutingUpdateTime;
 
 
 void setIP(void* av, void* bv);
@@ -77,6 +82,7 @@ void getIPFromMAC(uint8_t * MAC, uint8_t * IP);
 
 int getDistanceToNode(uint8_t *nodeIP);
 int getNodeIndexInRoutingTable(uint8_t *nodeIP);
+void clearRelevantFlag();
 
 
 #endif //ROUTING_H

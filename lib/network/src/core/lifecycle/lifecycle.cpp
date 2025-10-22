@@ -204,7 +204,7 @@ State init(Event event){
     me.nextHopIP[0] = localIP[0]; me.nextHopIP[1] = localIP[1];me.nextHopIP[2] = localIP[2]; me.nextHopIP[3] = localIP[3];
     me.hopDistance = 0;
     me.sequenceNumber = mySequenceNumber;
-    me.isChanged=false;
+    me.isChangeRelevant=false;
     tableAdd(routingTable,myIP,&me);
 
     lastRoutingUpdateTime = getCurrentTime();
@@ -511,7 +511,7 @@ State parentRecovery(Event event){
         }
     }
 
-    // Increment mySequence Number
+    // Increment mySequence Number so when i reconnect to the main tree the update is immediately accepted
     updateMySequenceNumber(mySequenceNumber+2);
 
     // Handle routing mechanisms triggered by the loss of connection to the parent node (e.g., routing table update, network-wide notification)
@@ -769,17 +769,29 @@ void handleTimers(){
         }
     }
 
+    /***
+    * A node periodically sends a routing update containing all entries that have undergone
+    * significant changes since the last Full Routing Table Update (FRTU).
+    * If the amount of significant changes is too large, the node sends an FRTU immediately.
+    * This type of update is sent more frequently than full updates. ***/
     currentTime = getCurrentTime();
-    // Periodically send routing updates to neighbors, but only if connected to the main tree
-    // (i.e., the node has an uplink connection that ultimately leads to the root).
     if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
         LOG(NETWORK,INFO,"Sending a Periodic Routing Update to my Neighbors\n");
-        //Update my sequence number
-        updateMySequenceNumber(mySequenceNumber+2);
         /***encodeFullRoutingTableUpdate(largeSendBuffer, sizeof(largeSendBuffer));
         propagateMessage(largeSendBuffer,myIP);***/
         onPeriodicRoutingUpdate();
         lastRoutingUpdateTime = currentTime;
+    }
+
+    /***
+     * Less frequently, at a higher interval, the node sends a Full Routing Table Update (FRTU),
+     * which acts as a safety net to ensure that all nodes eventually receive up-to-date information.
+     ***/
+    currentTime = getCurrentTime();
+    if((currentTime - lastFullRoutingUpdateTime) >= FULL_ROUTING_UPDATE_INTERVAL){
+        LOG(NETWORK,INFO,"Sending a Periodic Routing Update to my Neighbors\n");
+        onPeriodicFullRoutingUpdate();
+        lastFullRoutingUpdateTime = currentTime;
     }
 
     // Handle middleware related periodic events

@@ -91,5 +91,6 @@ void sendDataMessageToNode(char* messageBuffer,size_t bufferSize,const char* mes
 void sendACKMessageToNode(char* messageBuffer,size_t bufferSize,const char* ackPayload,uint8_t *destinationIP);
 
 void onPeriodicRoutingUpdate();
+void onPeriodicFullRoutingUpdate();
 
 #endif //MESSAGES_H

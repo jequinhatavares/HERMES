@@ -968,28 +968,40 @@ void onPeriodicRoutingUpdate(){
     RoutingTableEntry *entry;
     uint8_t *currentIP;
 
-    //The own node is going in the update
-    assignIP(changedNodes[nChanges],myIP);
-    nChanges++;
-
+    // Construct a list of all nodes that have undergone relevant changes since the last FRTU.
     for (int i = 0; i < routingTable->numberOfItems; i++){
         currentIP = (uint8_t *) tableKey(routingTable,i);
         entry = (RoutingTableEntry*) tableRead(routingTable,currentIP);
-        // If the current node has changes that were not sent in the last routing update, include them in this update.
-        if(entry!=nullptr && entry->isChanged){
+        // If the current node has relevant changes that were not sent in the last routing update, include them in this update.
+        LOG(MESSAGES,DEBUG,"Is Node Entry changed since last update?: %hhu.%hhu.%hhu.%hhu isEntryChanged:%i\n",currentIP[0],currentIP[1],currentIP[2],currentIP[3],entry->isChangeRelevant);
+        if(entry != nullptr && entry->isChangeRelevant){
+            LOG(MESSAGES,DEBUG,"YES\n");
             assignIP(changedNodes[nChanges],currentIP);
             nChanges++;
-            entry->isChanged=false;
         }
     }
 
-    // If more than 70% of the routing table entries have changed since the last update, send a FRTU
-    if(nChanges>=0.7*routingTable->numberOfItems){
+    // If more than 60% of the routing table entries have changed since the last update, send a FRTU
+    if(nChanges>=0.6*routingTable->numberOfItems){
+        //Update my sequence number
+        updateMySequenceNumber(mySequenceNumber+2);
         encodeFullRoutingTableUpdate(largeSendBuffer, sizeof(largeSendBuffer));
         propagateMessage(largeSendBuffer,myIP);
+        lastFullRoutingUpdateTime=getCurrentTime(); // Update the time of the last FRTU
+        clearRelevantFlag();//Clear the relevant flags on each routing entry
     }else{
         //Encode the periodic routing message with the changes since the last update ON A PRTU
         encodePartialRoutingUpdate(largeSendBuffer, sizeof(largeSendBuffer),changedNodes,nChanges);
         propagateMessage(largeSendBuffer,myIP);
     }
+}
+
+void onPeriodicFullRoutingUpdate(){
+    // The node increments its sequence number with each periodic FRTU to ensure the information remains fresh.
+    updateMySequenceNumber(mySequenceNumber+2);
+    encodeFullRoutingTableUpdate(largeSendBuffer, sizeof(largeSendBuffer));
+    propagateMessage(largeSendBuffer,myIP);
+    // Update the time of the last FRTU
+    lastFullRoutingUpdateTime=getCurrentTime();
+    clearRelevantFlag();//Clear the relevant flags on each routing entry
 }

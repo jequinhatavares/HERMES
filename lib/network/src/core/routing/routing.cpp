@@ -9,7 +9,9 @@ uint8_t parent[4];
 uint8_t myIP[4];
 uint8_t rootIP[4];
 int mySequenceNumber = 2;
-unsigned long lastRoutingUpdateTime;
+
+unsigned long lastRoutingUpdateTime=0;
+unsigned long lastFullRoutingUpdateTime=0;
 
 // Flag indicating whether this node is currently connected to the main network tree
 bool connectedToMainTree = false;
@@ -88,7 +90,6 @@ uint8_t STA[TABLE_MAX_SIZE][4], AP[TABLE_MAX_SIZE][4];
 
 
 
-
 void setIP(void* av, void* bv){
     uint8_t * a = (uint8_t *) av;
     uint8_t * b = (uint8_t *) bv;
@@ -111,6 +112,7 @@ void setValue(void* av, void* bv){
     a->nextHopIP[2] = b->nextHopIP[2];
     a->nextHopIP[3] = b->nextHopIP[3];
     a->sequenceNumber = b->sequenceNumber;
+    a->isChangeRelevant = b->isChangeRelevant;
 
 }
 
@@ -134,11 +136,12 @@ void initTables(){
  * @return (void)
  */
 void printRoutingStruct(TableEntry* Table){
-    LOG(NETWORK,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → NextHop[%hhu.%hhu.%hhu.%hhu] | (Distance: %d) | (Sequence Number: %d)\n",
+    LOG(NETWORK,INFO,"Node[%hhu.%hhu.%hhu.%hhu] → NextHop[%hhu.%hhu.%hhu.%hhu] | (Distance: %d) | (Sequence Number: %d) | (is Changed: %d)\n",
            ((uint8_t *)Table->key)[0],((uint8_t *)Table->key)[1],((uint8_t *)Table->key)[2],((uint8_t *)Table->key)[3],
            ((RoutingTableEntry *)Table->value)->nextHopIP[0],((RoutingTableEntry *)Table->value)->nextHopIP[1],
            ((RoutingTableEntry *)Table->value)->nextHopIP[2],((RoutingTableEntry *)Table->value)->nextHopIP[3],
-           ((RoutingTableEntry *)Table->value)->hopDistance,((RoutingTableEntry *)Table->value)->sequenceNumber);
+           ((RoutingTableEntry *)Table->value)->hopDistance,((RoutingTableEntry *)Table->value)->sequenceNumber
+            ,((RoutingTableEntry *)Table->value)->isChangeRelevant);
 }
 
 void printRoutingTableHeader(){
@@ -221,7 +224,7 @@ bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, 
     RoutingTableEntry *nodeEntry = (RoutingTableEntry*) findNode(routingTable, nodeIP);
     bool relevantUpdate=false;
     //Init the routing entry as unchanged
-    updatedEntry.isChanged=false;
+    updatedEntry.isChangeRelevant=false;
 
     /*** If the sequence number for my own node in the received routing update is higher than the one
       * stored in RAM, it likely means the node experienced a reset or power loss and lost its volatile memory.
@@ -231,6 +234,8 @@ bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, 
         // my sequence number should be even to indicate I'm reachable again.
         if(sequenceNumber % 2 != 0)updateMySequenceNumber(sequenceNumber+1);
         else updateMySequenceNumber(sequenceNumber+2);
+        // Changes to the node's own sequence number are considered relevant and must be included in the next routing update.
+        if(nodeEntry!= nullptr)nodeEntry->isChangeRelevant=true;
         return true;
     }
 
@@ -242,8 +247,8 @@ bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, 
         }else{
             updatedEntry.hopDistance = hopDistance + 1;
         }
-        // A change in the routing entry (e.g., a fresher sequence number), it will be included in the next routing update.
-        updatedEntry.isChanged=true;
+        // A new entry in the routing table is relevant information
+        updatedEntry.isChangeRelevant=true;
         assignIP(updatedEntry.nextHopIP, senderIP);
         updatedEntry.sequenceNumber = sequenceNumber;
         tableAdd(routingTable, nodeIP, & updatedEntry);
@@ -265,8 +270,12 @@ bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, 
                     relevantUpdate=true;
                 updatedEntry.hopDistance = hopDistance + 1;
             }
-            // A change in the routing entry (e.g., a fresher sequence number), it will be included in the next routing update.
-            updatedEntry.isChanged=true;
+            /*** A change is considered relevant if a node has become unreachable or if its path information has changed.
+             * The new data is merged with the information already stored in the routing table, since 'isRelevantChanged'
+             * is evaluated relative to the last FRTU. If a previous update has already marked the entry as 'relevant changed',
+             * that status must persist until the next FRTU.***/
+            updatedEntry.isChangeRelevant = relevantUpdate || nodeEntry->isChangeRelevant;
+
             assignIP(updatedEntry.nextHopIP ,senderIP);
             updatedEntry.sequenceNumber = sequenceNumber;
             tableUpdate(routingTable, nodeIP, &updatedEntry);
@@ -278,7 +287,7 @@ bool updateRoutingTable(uint8_t nodeIP[4], int hopDistance, int sequenceNumber, 
             if(hopDistance + 1 < nodeEntry->hopDistance){
                 //LOG(NETWORK,DEBUG,"lowerHop Count\n");
                 // A change in the routing entry (e.g., a fresher sequence number), it will be included in the next routing update.
-                updatedEntry.isChanged=true;
+                updatedEntry.isChangeRelevant=true;
                 assignIP(updatedEntry.nextHopIP ,senderIP);
                 updatedEntry.hopDistance = hopDistance + 1;
                 updatedEntry.sequenceNumber = sequenceNumber;
@@ -456,6 +465,7 @@ void updateMySequenceNumber(int newSequenceNumber){
         assignIP(updatedEntry.nextHopIP,myIP);
         updatedEntry.hopDistance = 0;
         updatedEntry.sequenceNumber = mySequenceNumber;
+        updatedEntry.isChangeRelevant = false;
         tableUpdate(routingTable, myIP, &updatedEntry);
     }
 }
@@ -513,5 +523,15 @@ int getNodeIndexInRoutingTable(uint8_t *nodeIP){
         if(isIPEqual(currentNode,nodeIP)) return i;
     }
     return -1;
+}
+
+void clearRelevantFlag(){
+    uint8_t *currentNode;
+    RoutingTableEntry *currentEntry;
+    for (int i = 0; i < routingTable->numberOfItems; i++) {
+        currentNode = (uint8_t *) tableKey(routingTable,i);
+        currentEntry = (RoutingTableEntry*) tableRead(routingTable,currentNode);
+        if(currentEntry != nullptr)currentEntry->isChangeRelevant=false;
+    }
 }
 
