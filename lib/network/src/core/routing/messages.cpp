@@ -438,15 +438,16 @@ void handleChildRegistrationRequest(char * msg){
 */
 void handleFullRoutingTableUpdate(char * msg){
     int type, nrOfChanges = 0,childIndex=-1;
-    uint8_t *childSTAIP;
     uint8_t nodeIP[4], sourceIP[4],changedNodes[TABLE_MAX_SIZE][4];
     int hopDistance,sequenceNumber;
     bool isRoutingTableChanged = false, isRoutingEntryChanged = false ;
+    RoutingTableEntry *entry;
 
     char* token = strtok(msg, "|");
 
     //Parse Message Type and root node IP
-    sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",&type,&sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],&rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
+    sscanf(msg, "%d %hhu.%hhu.%hhu.%hhu %hhu.%hhu.%hhu.%hhu",&type,&sourceIP[0],&sourceIP[1],&sourceIP[2],&sourceIP[3],
+           &rootIP[0],&rootIP[1],&rootIP[2],&rootIP[3]);
 
     //To discard the message type and ensure the token points to the first routing table update entry
     token = strtok(nullptr, "|");
@@ -455,16 +456,12 @@ void handleFullRoutingTableUpdate(char * msg){
         sscanf(token, "%hhu.%hhu.%hhu.%hhu %d %d",&nodeIP[0],&nodeIP[1],&nodeIP[2],&nodeIP[3],&hopDistance,&sequenceNumber);
         //Serial.printf("Token: %s\n", token);
 
-        //Serial.printf("Parsed IP values: nodeIP %d.%d.%d.%d nextHopIp %d.%d.%d.%d hopDistance %d\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],
-                     // nextHopIP[0],nextHopIP[1],nextHopIP[2],nextHopIP[3], hopDistance);
         //Update the Routing Table
-        //updateRoutingTable(nodeIP,newNode,sourceIP);
         isRoutingEntryChanged = updateRoutingTable(nodeIP,hopDistance,sequenceNumber,sourceIP);
         // If the node's routing entry was modified, add it to the list of nodes to include in the Partial routing update
         if(isRoutingEntryChanged == true){
             assignIP(changedNodes[nrOfChanges], nodeIP);
             nrOfChanges ++;
-
             // If the node's own routing entry changed, it was previously unreachable and is now returning.
             // It must notify the sender so they can update their routing table accordingly.
             if(isIPEqual(nodeIP,myIP)){
@@ -472,9 +469,24 @@ void handleFullRoutingTableUpdate(char * msg){
                 // Find the nextHopIP that leads to the sender(if it is a child then its the child STA IP)
                 uint8_t *nextHopIP = (uint8_t *) findRouteToNode(sourceIP);
                 if(nextHopIP != nullptr) sendMessage(nextHopIP,smallSendBuffer);
-
             }
         }
+        /***
+         * If a received update does not significantly change the local routing table, it will not be propagated.
+         * However, if that update marks a node as unreachable when it is actually reachable
+         * (i.e., that node has a stored sequence number greater than the odd one in the update),
+         * the false unreachability would otherwise persist until the next FRTU
+         * To avoid stale information remaining that long, the node immediately sends a correction
+         * back to the sender, informing it that the advertised node is in fact reachable.
+         ***/
+        entry = (RoutingTableEntry*)tableRead(routingTable,nodeIP);
+        if(!isRoutingEntryChanged && (sequenceNumber % 2 != 0) && entry->sequenceNumber>sequenceNumber){
+            encodePartialRoutingUpdate(smallSendBuffer,sizeof(smallSendBuffer),&nodeIP,1);
+            // Find the nextHopIP that leads to the sender(if it is a child then its the child STA IP)
+            uint8_t *nextHopIP = (uint8_t *) findRouteToNode(sourceIP);
+            if(nextHopIP != nullptr) sendMessage(nextHopIP,smallSendBuffer);
+        }
+
         isRoutingTableChanged = isRoutingTableChanged || isRoutingEntryChanged ;
         token = strtok(nullptr, "|");
     }
@@ -491,7 +503,6 @@ void handleFullRoutingTableUpdate(char * msg){
     /*** If the routing update is flagged as coming from a node in a detached subtree,
        * it indicates that this node is also part of a detached subtree. If the node is not yet
        * aware of its disconnected status, update its lifecycle information (states, variables) accordingly ***/
-
     // If i am not the root, verify whether the root's routing information has been updated
     if(!iamRoot && isIPinList(rootIP,changedNodes,nrOfChanges)){
         RoutingTableEntry *rootEntry = (RoutingTableEntry*) findNode(routingTable,rootIP);
@@ -534,7 +545,7 @@ void handlePartialRoutingUpdate(char *msg){
     int sequenceNumber;
     int hopDistance;
     bool isRoutingTableChanged = false, isRoutingEntryChanged = false;
-
+    RoutingTableEntry *entry;
     char* token = strtok(msg, "|");
 
     //Parse Message Type and senderIP
@@ -549,6 +560,7 @@ void handlePartialRoutingUpdate(char *msg){
 
         //Update the Routing Table
         isRoutingEntryChanged = updateRoutingTable(nodeIP,hopDistance,sequenceNumber,senderIP);
+        LOG(MESSAGES,DEBUG,"NodeEntry: %hhu.%hhu.%hhu.%hhu isChanged:%d\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],isRoutingEntryChanged);
         // If the node's routing entry was modified, add it to the list of nodes to include in the Partial routing update
         if(isRoutingEntryChanged == true){
             assignIP(changedNodes[nrOfChanges],nodeIP);
@@ -565,8 +577,25 @@ void handlePartialRoutingUpdate(char *msg){
                 }else sendMessage(senderIP,smallSendBuffer);
             }
         }
+
+        /***
+         * If a received update does not significantly change the local routing table, it will not be propagated.
+         * However, if that update marks a node as unreachable when it is actually reachable
+         * (i.e., that node has a stored sequence number greater than the odd one in the update),
+         * the false unreachability would otherwise persist until the next FRTU
+         * To avoid stale information remaining that long, the node immediately sends a correction
+         * back to the sender, informing it that the advertised node is in fact reachable.
+         ***/
+        entry = (RoutingTableEntry*)tableRead(routingTable,nodeIP);
+        if(!isRoutingEntryChanged && (sequenceNumber % 2 != 0) && entry->sequenceNumber>sequenceNumber){
+            encodePartialRoutingUpdate(smallSendBuffer,sizeof(smallSendBuffer),&nodeIP,1);
+            // Find the nextHopIP that leads to the sender(if it is a child then its the child STA IP)
+            uint8_t *nextHopIP = (uint8_t *) findRouteToNode(senderIP);
+            if(nextHopIP != nullptr) sendMessage(nextHopIP,smallSendBuffer);
+        }
+
         //updateRoutingTable(nodeIP,newNode,sourceIP);
-        isRoutingTableChanged = isRoutingTableChanged || isRoutingEntryChanged ;
+        isRoutingTableChanged = isRoutingTableChanged || isRoutingEntryChanged;
         token = strtok(nullptr, "|");
     }
 
@@ -973,15 +1002,15 @@ void onPeriodicRoutingUpdate(){
         currentIP = (uint8_t *) tableKey(routingTable,i);
         entry = (RoutingTableEntry*) tableRead(routingTable,currentIP);
         // If the current node has relevant changes that were not sent in the last routing update, include them in this update.
-        LOG(MESSAGES,DEBUG,"Is Node Entry changed since last update?: %hhu.%hhu.%hhu.%hhu isEntryChanged:%i\n",currentIP[0],currentIP[1],currentIP[2],currentIP[3],entry->isChangeRelevant);
+        //LOG(MESSAGES,DEBUG,"Is Node Entry changed since last update?: %hhu.%hhu.%hhu.%hhu isEntryChanged:%i\n",currentIP[0],currentIP[1],currentIP[2],currentIP[3],entry->isChangeRelevant);
         if(entry != nullptr && entry->isChangeRelevant){
             assignIP(changedNodes[nChanges],currentIP);
             nChanges++;
         }
     }
 
-    // If more than 60% of the routing table entries have changed since the last update, send a FRTU
-    if(nChanges>=0.6*routingTable->numberOfItems){
+    // If more than 50% of the routing table entries have changed since the last update, send a FRTU
+    if(nChanges>=0.5*routingTable->numberOfItems){
         //Update my sequence number
         updateMySequenceNumber(mySequenceNumber+2);
         encodeFullRoutingTableUpdate(largeSendBuffer, sizeof(largeSendBuffer));

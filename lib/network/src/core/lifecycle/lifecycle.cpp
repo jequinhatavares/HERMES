@@ -39,7 +39,7 @@ bool entryTimestampSet=false;
 
 
 // State machine structure holding the current state and a transition table mapping states to handler functions.
-StateMachine SM_ = {
+/***StateMachine SM_ = {
         .current_state = sInit,
         .TransitionTable = {
                 [sInit] = init,
@@ -51,6 +51,20 @@ StateMachine SM_ = {
                 [sRecoveryWait] = recoveryAwait,
                 [sExecuteTask] = executeTask,
         },
+};***/
+
+StateMachine SM_ = {
+        sInit,
+        {
+            init,
+            search,
+            joinNetwork,
+            active,
+            parentRecovery,
+            parentRestart,
+            recoveryAwait,
+            executeTask
+        }
 };
 StateMachine* SM = &SM_;
 
@@ -130,7 +144,7 @@ void onRootUnreachable(){
     connectedToMainTree = false;
     recoveryWaitStartTime = getCurrentTime();
 
-    LOG(STATE_MACHINE,DEBUG, "Root is Unreachable. Inserting event:%hhu in snake\n",eLostTreeConnection);
+    LOG(STATE_MACHINE,DEBUG, "->Root is Unreachable. Inserting event:%hhu in snake\n",eLostTreeConnection);
     insertLast(stateMachineEngine, eLostTreeConnection);
 
 }
@@ -149,10 +163,11 @@ void onRootReachable(){
      * TOPOLOGY_RESTORED_NOTICE was missed, and the node did not transition properly to the active state.***/
     if(SM->current_state == sRecoveryWait){
         connectedToMainTree = true;
-        LOG(STATE_MACHINE,DEBUG, "Root is Reachable. Inserting event:%hhu in snake\n",eTreeConnectionRestored);
+        LOG(STATE_MACHINE,DEBUG, "->Root is Reachable. Transitioning to Active State\n");
         //If the root is reachable then the node can go to the active state
-        SM->current_state = sActive;
-        //insertLast(stateMachineEngine, eTreeConnectionRestored);
+        //SM->current_state = sActive;
+        LOG(STATE_MACHINE,DEBUG, "->Current State: %d\n",SM->current_state);
+        insertLast(stateMachineEngine, eTreeConnectionRestored);
     }
 }
 /**
@@ -397,6 +412,8 @@ void handleMessages(){
             handleTopologyBreakAlert(receiveBuffer);
             connectedToMainTree = false;
             recoveryWaitStartTime = getCurrentTime();
+            // Increment mySequence Number so when i reconnect to the main tree the update is immediately accepted
+            updateMySequenceNumber(mySequenceNumber+2);
             //LOG(NETWORK,INFO,"In Handle recoveryWaitStartTime:%lu\n",recoveryWaitStartTime);
             insertLast(stateMachineEngine, eLostTreeConnection);
             break;
@@ -571,13 +588,14 @@ State parentRecovery(Event event){
     connectedToMainTree = true;
     hasParent = true;
 
-    // If the joining node has children (i.e., his subnetwork has nodes), it must also send its routing table to its new parent.
-    // This ensures that the rest of the network becomes aware of the entire subtree associated with the new node
-    if(childrenTable->numberOfItems>0){
-        encodeFullRoutingTableUpdate(largeSendBuffer,sizeof(largeSendBuffer));
-        sendMessage(parent, largeSendBuffer);
-        lastRoutingUpdateTime = getCurrentTime();
-    }
+
+    /*** When rejoining, the node must also send its routing table to its new parent. This ensures that the rest of the
+     * network becomes aware of the entire subtree associated with the rejoining node (if any), and that any nodes
+     * previously marked as unreachable can now respond with their updated sequence numbers.***/
+    encodeFullRoutingTableUpdate(largeSendBuffer,sizeof(largeSendBuffer));
+    sendMessage(parent, largeSendBuffer);
+    lastRoutingUpdateTime = getCurrentTime();
+
 
     // Notify the children that the main tree connection has been reestablished
     encodeTopologyRestoredNotice(smallSendBuffer, sizeof(smallSendBuffer));
@@ -776,7 +794,7 @@ void handleTimers(){
     * This type of update is sent more frequently than full updates. ***/
     currentTime = getCurrentTime();
     if((currentTime - lastRoutingUpdateTime) >= ROUTING_UPDATE_INTERVAL){
-        LOG(NETWORK,INFO,"Sending a Periodic Routing Update to my Neighbors\n");
+        LOG(NETWORK,INFO,"On Periodic Routing Update to my Neighbors\n");
         /***encodeFullRoutingTableUpdate(largeSendBuffer, sizeof(largeSendBuffer));
         propagateMessage(largeSendBuffer,myIP);***/
         onPeriodicRoutingUpdate();
@@ -789,7 +807,7 @@ void handleTimers(){
      ***/
     currentTime = getCurrentTime();
     if((currentTime - lastFullRoutingUpdateTime) >= FULL_ROUTING_UPDATE_INTERVAL){
-        LOG(NETWORK,INFO,"Sending a Periodic Full Routing Update to my Neighbors\n");
+        LOG(NETWORK,INFO,"On Periodic Full Routing Update to my Neighbors\n");
         onPeriodicFullRoutingUpdate();
         lastFullRoutingUpdateTime = currentTime;
     }
@@ -1150,6 +1168,7 @@ void routingHandleConnectionLoss(uint8_t *lostNodeIP){
             assignIP(unreachableEntry.nextHopIP,lostNodeTableEntry->nextHopIP);
             unreachableEntry.sequenceNumber = lostNodeTableEntry->sequenceNumber + 1;
             unreachableEntry.hopDistance = -1;
+            unreachableEntry.isChangeRelevant=true;
             tableUpdate(routingTable, lostNodeSubnetwork[i],&unreachableEntry);
         }
 

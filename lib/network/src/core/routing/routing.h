@@ -14,11 +14,11 @@
 #include <cstdint>
 
 #ifndef ROUTING_UPDATE_INTERVAL
-#define ROUTING_UPDATE_INTERVAL 30000
+#define ROUTING_UPDATE_INTERVAL 60000
 #endif
 
 #ifndef FULL_ROUTING_UPDATE_INTERVAL
-#define FULL_ROUTING_UPDATE_INTERVAL 300000
+#define FULL_ROUTING_UPDATE_INTERVAL 360000
 #endif
 
 // Flag indicating whether this node is currently connected to the main network tree
