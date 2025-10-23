@@ -39,7 +39,7 @@ bool entryTimestampSet=false;
 
 
 // State machine structure holding the current state and a transition table mapping states to handler functions.
-/***StateMachine SM_ = {
+StateMachine SM_ = {
         .current_state = sInit,
         .TransitionTable = {
                 [sInit] = init,
@@ -51,21 +51,8 @@ bool entryTimestampSet=false;
                 [sRecoveryWait] = recoveryAwait,
                 [sExecuteTask] = executeTask,
         },
-};***/
+};/******/
 
-StateMachine SM_ = {
-        sInit,
-        {
-            init,
-            search,
-            joinNetwork,
-            active,
-            parentRecovery,
-            parentRestart,
-            recoveryAwait,
-            executeTask
-        }
-};
 StateMachine* SM = &SM_;
 
 // Circular buffer structure used to implement the state machine event queue (called engine because makes the state machine run)
@@ -144,7 +131,7 @@ void onRootUnreachable(){
     connectedToMainTree = false;
     recoveryWaitStartTime = getCurrentTime();
 
-    LOG(STATE_MACHINE,DEBUG, "->Root is Unreachable. Inserting event:%hhu in snake\n",eLostTreeConnection);
+    LOG(STATE_MACHINE,DEBUG, "->Root is Unreachable.\n");
     insertLast(stateMachineEngine, eLostTreeConnection);
 
 }
@@ -163,10 +150,9 @@ void onRootReachable(){
      * TOPOLOGY_RESTORED_NOTICE was missed, and the node did not transition properly to the active state.***/
     if(SM->current_state == sRecoveryWait){
         connectedToMainTree = true;
-        LOG(STATE_MACHINE,DEBUG, "->Root is Reachable. Transitioning to Active State\n");
+        LOG(STATE_MACHINE,DEBUG, "->Root is Reachable.\n");
         //If the root is reachable then the node can go to the active state
         //SM->current_state = sActive;
-        LOG(STATE_MACHINE,DEBUG, "->Current State: %d\n",SM->current_state);
         insertLast(stateMachineEngine, eTreeConnectionRestored);
     }
 }
@@ -595,6 +581,7 @@ State parentRecovery(Event event){
     encodeFullRoutingTableUpdate(largeSendBuffer,sizeof(largeSendBuffer));
     sendMessage(parent, largeSendBuffer);
     lastRoutingUpdateTime = getCurrentTime();
+    LOG(MESSAGES,INFO,"Sending a [Full Routing Update]:%s to %hhu.%hhu.%hhu.%hhu\n",largeSendBuffer,parent[0],parent[1],parent[2],parent[3]);
 
 
     // Notify the children that the main tree connection has been reestablished
@@ -798,7 +785,7 @@ void handleTimers(){
         /***encodeFullRoutingTableUpdate(largeSendBuffer, sizeof(largeSendBuffer));
         propagateMessage(largeSendBuffer,myIP);***/
         onPeriodicRoutingUpdate();
-        lastRoutingUpdateTime = currentTime;
+        lastRoutingUpdateTime = getCurrentTime();
     }
 
     /***
@@ -809,7 +796,7 @@ void handleTimers(){
     if((currentTime - lastFullRoutingUpdateTime) >= FULL_ROUTING_UPDATE_INTERVAL){
         LOG(NETWORK,INFO,"On Periodic Full Routing Update to my Neighbors\n");
         onPeriodicFullRoutingUpdate();
-        lastFullRoutingUpdateTime = currentTime;
+        lastFullRoutingUpdateTime = getCurrentTime();
     }
 
     // Handle middleware related periodic events

@@ -111,8 +111,8 @@ void Network::run() {
     handleTimers();
 
     while(stateMachineEngine->size != 0){
-        printSnake((CircularBuffer *)stateMachineEngine);
-        LOG(STATE_MACHINE,DEBUG, "Current State:%d\n",SM->current_state);
+        //printSnake((CircularBuffer *)stateMachineEngine);
+        //LOG(STATE_MACHINE,DEBUG, "Current State:%d\n",SM->current_state);
         Advance(SM, getFirst((CircularBuffer *) stateMachineEngine));
     }
 
