@@ -172,17 +172,17 @@ void setup(){
     //Initialize the node parameters
     network.init();
 
-    /************* Middleware Strategy: PubSub *********
+    /************* Middleware Strategy: PubSub ************/
     //First init the middleware pub/sub strategy
     network.middlewareSelectStrategy(STRATEGY_PUBSUB);
-    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);***/
+    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);
 
-    /************* Middleware Strategy: Topology *************/
+    /************* Middleware Strategy: Topology **********
     network.middlewareSelectStrategy(STRATEGY_TOPOLOGY);
     network.initMiddlewareStrategyTopology(metrics, sizeof(metricStruct),setMetricValue,
                                            encodeMetricEntry, decodeMetricEntry,
                                            printMetricStruct,
-                                           chooseParentByProcessingCapacity);
+                                           chooseParentByProcessingCapacity);***/
 
     /************* Middleware Strategy: Inject **********
     network.middlewareSelectStrategy(STRATEGY_INJECT);
@@ -194,7 +194,7 @@ void setup(){
     network.begin();
 
 
-    /*** Strategy Topology Init***/
+    /*** Strategy Topology Init
     // Assign a topology metric based on device type: NodeMCU = 1, ESP32 = 2, Raspberry Pi = 3
     if(MAC[5] == 89 && MAC[4] == 248 && MAC[3] == 169 && MAC[2] == 45){
         myMetric.processingCapacity=2;
@@ -208,7 +208,7 @@ void setup(){
     }else if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96){
         myMetric.processingCapacity=1;
         network.setParentMetric(&myMetric);
-    }
+    }***/
 
 
     //LOG(APP,INFO,"MY MAC after begin: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
@@ -398,16 +398,16 @@ void setup(){
     network.init();
 
 
-    /************* Middleware Strategy: Pub/Sub **********
+    /************* Middleware Strategy: Pub/Sub *************/
     network.middlewareSelectStrategy(STRATEGY_PUBSUB);
-    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);***/
+    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);
 
-    /************* Middleware Strategy: Topology *************/
+    /************* Middleware Strategy: Topology **********
     network.middlewareSelectStrategy(STRATEGY_TOPOLOGY);
     network.initMiddlewareStrategyTopology(metrics, sizeof(metricStruct),setMetricValue,
                                            encodeMetricEntry, decodeMetricEntry,
                                            printMetricStruct,
-                                           chooseParentByProcessingCapacity);
+                                           chooseParentByProcessingCapacity);***/
 
 
 
@@ -420,9 +420,9 @@ void setup(){
     //Integrated the node into the network
     network.begin();
 
-    /************* Middleware Strategy: Topology Inits *************/
+    /************* Middleware Strategy: Topology Inits **********
     myMetric.processingCapacity=3;
-    network.setParentMetric(&myMetric);
+    network.setParentMetric(&myMetric);***/
 
     /************* Middleware Strategy: Inject Inits **********
     myMetric.processingCapacity=3;
@@ -442,7 +442,6 @@ int main() {
 
     while (running) {
         network.run();
-
         worker.manageNeuron();
     }
 
