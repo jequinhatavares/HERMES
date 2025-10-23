@@ -42,7 +42,7 @@
 
 #define WAIT_BEFORE_ASSIGNMENT 100000
 
-#define MIN_WORKERS 1
+#define MIN_WORKERS 4
 
 
 
