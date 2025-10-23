@@ -4,7 +4,7 @@ void (*onDataMessageCallback)(uint8_t*,uint8_t *,char*) = nullptr;
 void (*onACKMessageCallback)(uint8_t*,uint8_t *,char*) = nullptr;
 
 char receiveBuffer[256] = "";
-size_t receivePayload=0;
+int receivePayload=0;
 
 char largeSendBuffer[255] = "";
 char smallSendBuffer[50] = "";
@@ -560,7 +560,7 @@ void handlePartialRoutingUpdate(char *msg){
 
         //Update the Routing Table
         isRoutingEntryChanged = updateRoutingTable(nodeIP,hopDistance,sequenceNumber,senderIP);
-        LOG(MESSAGES,DEBUG,"NodeEntry: %hhu.%hhu.%hhu.%hhu isChanged:%d\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],isRoutingEntryChanged);
+        //LOG(MESSAGES,DEBUG,"NodeEntry: %hhu.%hhu.%hhu.%hhu isChanged:%d\n",nodeIP[0],nodeIP[1],nodeIP[2],nodeIP[3],isRoutingEntryChanged);
         // If the node's routing entry was modified, add it to the list of nodes to include in the Partial routing update
         if(isRoutingEntryChanged == true){
             assignIP(changedNodes[nrOfChanges],nodeIP);
@@ -743,21 +743,6 @@ void handleDataMessage(char *msg){
         //LOG(NETWORK, DEBUG, "DATA Message as arrived for this node\n");
         if(onDataMessageCallback) onDataMessageCallback(originatorIP,destinationIP,payload);
 
-        //isTunneled = isMessageTunneled(msg);
-        //if(isTunneled)LOG(MESSAGES,INFO,"Tunneled Message arrived\n");
-
-        //Send ACK Message back to the source of the message
-        //assignIP(parameters.IP1,myIP);
-        //assignIP(parameters.IP2,originatorIP);
-        //encodeMessage(smallSendBuffer, sizeof(smallSendBuffer),ACK_MESSAGE, parameters);
-
-        /***nextHopPtr = findRouteToNode(originatorIP);
-        if (nextHopPtr != nullptr){
-            sendMessage(nextHopPtr,smallSendBuffer);
-        }else{
-            LOG(NETWORK, ERROR, "❌Routing failed: No route found to node %d.%d.%d.%d. "
-                                "Unable to forward message.\n", originatorIP[0], originatorIP[1],originatorIP[2], originatorIP[3]);
-        }***/
     }
 
 
@@ -1029,7 +1014,5 @@ void onPeriodicFullRoutingUpdate(){
     updateMySequenceNumber(mySequenceNumber+2);
     encodeFullRoutingTableUpdate(largeSendBuffer, sizeof(largeSendBuffer));
     propagateMessage(largeSendBuffer,myIP);
-    // Update the time of the last FRTU
-    lastFullRoutingUpdateTime=getCurrentTime();
     clearRelevantFlag();//Clear the relevant flags on each routing entry
 }
