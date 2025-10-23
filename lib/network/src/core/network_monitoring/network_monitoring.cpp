@@ -284,14 +284,15 @@ void NetworkMonitoring::reportMiddlewareMessageReceived(size_t nBytes,int messag
     nMiddlewareBytes+=nBytes;
 }
 
-void NetworkMonitoring::reportDataMessageReceived(size_t nBytes,int messageType, int messageSubType){
+void NetworkMonitoring::reportDataMessageReceived(int nBytes,int messageType, int messageSubType){
     if(iamRoot){
         //If the message is reported as an unknown type it is a message that is being forwarded but not analysed by this node so the header size is already accounted for
         if(messageSubType == -1){
             encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,-1,messageSubType,nBytes);
         }else{
             //If the message comes from the app layer then we have to add to their size the header
-            size_t headerSize=receivePayload-nBytes;
+            int headerSize=receivePayload-nBytes;
+            if (headerSize<0) headerSize=0;
             encodeMessageContinuousToServer(monitoringBuffer, sizeof(monitoringBuffer),messageType,-1,messageSubType,nBytes+headerSize);
         }
         LOG(MONITORING_SERVER, INFO,"%s",monitoringBuffer);

@@ -44,7 +44,7 @@ public:
     void reportRoutingMessageReceived(size_t nBytes,int messageType);
     void reportLifecycleMessageReceived(size_t nBytes,int messageType);
     void reportMiddlewareMessageReceived(size_t nBytes,int messageType,int strategyType,int messageSubType);
-    void reportDataMessageReceived(size_t nBytes,int messageType, int messageSubType);
+    void reportDataMessageReceived(int nBytes,int messageType, int messageSubType);
     void reportMonitoringMessageReceived(size_t nBytes,int messageType);
 
     void sampleEndToEndDelay();
