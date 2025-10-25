@@ -33,7 +33,7 @@ uint8_t* chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t potent
     for (int i = 0; i < nPotentialParents; i++) {
         topologyMetricValue = (metricStruct*) network.getParentMetric(potentialParents[i]);
         if(topologyMetricValue != nullptr){
-            LOG(MIDDLEWARE,DEBUG,"Potential Parent: %hhu.%hhu.%hhu.%hhu metric:%d\n",potentialParents[i][0],potentialParents[i][1],potentialParents[i][2],potentialParents[i][3],topologyMetricValue->processingCapacity);
+            //LOG(MIDDLEWARE,DEBUG,"Potential Parent: %hhu.%hhu.%hhu.%hhu metric:%d\n",potentialParents[i][0],potentialParents[i][1],potentialParents[i][2],potentialParents[i][3],topologyMetricValue->processingCapacity);
             if(topologyMetricValue->processingCapacity >= maxProcessingCapacity){
                 bestParentIndex = i;
                 maxProcessingCapacity = topologyMetricValue->processingCapacity;
@@ -43,8 +43,7 @@ uint8_t* chooseParentByProcessingCapacity(uint8_t * targetNodeIP, uint8_t potent
     }
 
     if(bestParentIndex != -1){
-        LOG(MIDDLEWARE,DEBUG,"Chosen Parent: %hhu.%hhu.%hhu.%hhu metric:%d\n",potentialParents[bestParentIndex][0]
-            ,potentialParents[bestParentIndex][1],potentialParents[bestParentIndex][2],potentialParents[bestParentIndex][3],maxProcessingCapacity);
+        //LOG(MIDDLEWARE,DEBUG,"Chosen Parent: %hhu.%hhu.%hhu.%hhu metric:%d\n",potentialParents[bestParentIndex][0],potentialParents[bestParentIndex][1],potentialParents[bestParentIndex][2],potentialParents[bestParentIndex][3],maxProcessingCapacity);
         return potentialParents[bestParentIndex];
     }// If no parent has been selected, return nullptr
     else{ return nullptr;}/******/
@@ -172,17 +171,17 @@ void setup(){
     //Initialize the node parameters
     network.init();
 
-    /************* Middleware Strategy: PubSub *********
+    /************* Middleware Strategy: PubSub ************/
     //First init the middleware pub/sub strategy
     network.middlewareSelectStrategy(STRATEGY_PUBSUB);
-    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);***/
+    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);
 
-    /************* Middleware Strategy: Topology *************/
+    /************* Middleware Strategy: Topology **********
     network.middlewareSelectStrategy(STRATEGY_TOPOLOGY);
     network.initMiddlewareStrategyTopology(metrics, sizeof(metricStruct),setMetricValue,
                                            encodeMetricEntry, decodeMetricEntry,
                                            printMetricStruct,
-                                           chooseParentByProcessingCapacity);
+                                           chooseParentByProcessingCapacity);***/
 
     /************* Middleware Strategy: Inject **********
     network.middlewareSelectStrategy(STRATEGY_INJECT);
@@ -194,7 +193,7 @@ void setup(){
     network.begin();
 
 
-    /*** Strategy Topology Init***/
+    /*** Strategy Topology Init
     // Assign a topology metric based on device type: NodeMCU = 1, ESP32 = 2, Raspberry Pi = 3
     if(MAC[5] == 89 && MAC[4] == 248 && MAC[3] == 169 && MAC[2] == 45){
         myMetric.processingCapacity=2;
@@ -208,7 +207,7 @@ void setup(){
     }else if(MAC[5] == 135 && MAC[4] == 230 && MAC[3] == 96){
         myMetric.processingCapacity=1;
         network.setParentMetric(&myMetric);
-    }
+    }***/
 
 
     //LOG(APP,INFO,"MY MAC after begin: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
@@ -398,16 +397,16 @@ void setup(){
     network.init();
 
 
-    /************* Middleware Strategy: Pub/Sub **********
+    /************* Middleware Strategy: Pub/Sub *************/
     network.middlewareSelectStrategy(STRATEGY_PUBSUB);
-    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);***/
+    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);
 
-    /************* Middleware Strategy: Topology *************/
+    /************* Middleware Strategy: Topology **********
     network.middlewareSelectStrategy(STRATEGY_TOPOLOGY);
     network.initMiddlewareStrategyTopology(metrics, sizeof(metricStruct),setMetricValue,
                                            encodeMetricEntry, decodeMetricEntry,
                                            printMetricStruct,
-                                           chooseParentByProcessingCapacity);
+                                           chooseParentByProcessingCapacity);***/
 
 
 
@@ -420,9 +419,9 @@ void setup(){
     //Integrated the node into the network
     network.begin();
 
-    /************* Middleware Strategy: Topology Inits *************/
+    /************* Middleware Strategy: Topology Inits *********
     myMetric.processingCapacity=3;
-    network.setParentMetric(&myMetric);
+    network.setParentMetric(&myMetric);****/
 
     /************* Middleware Strategy: Inject Inits **********
     myMetric.processingCapacity=3;
