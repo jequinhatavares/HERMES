@@ -43,7 +43,6 @@ typedef enum MessageType{
 }MessageType;
 
 
-
 //void encodeMessage(char * msg, size_t bufferSize, MessageType type, messageParameters parameters);
 
 void encodeParentInfoResponse(char* messageBuffer, size_t bufferSize,uint8_t *APIP,int hopDistance,int childrenNumber);
