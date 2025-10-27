@@ -1425,10 +1425,11 @@ void NeuralNetworkCoordinator::manageNeuralNetwork(){
     if(!inferenceRunning && receivedAllNeuronAcks && hasWaitedBeforeInference){
         LOG(APP,INFO,"Starting an inference cycle\n");
         currentInferenceId += 1;
-        //Clear the parameters related to the neurons the coordinator calculates
-        clearNeuronInferenceParameters();
+
         encodeForwardMessage(appPayload, sizeof(appPayload),currentInferenceId);
         network.broadcastMessage(appBuffer,sizeof(appBuffer),appPayload);
+        //Clear the parameters related to the neurons the coordinator calculates
+        clearNeuronInferenceParameters();
         inferenceStartTime=getCurrentTime();
         //Reset the variables to don't start a new inference until the current one finishes
         inferenceRunning=true;/******/

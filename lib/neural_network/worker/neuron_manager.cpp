@@ -687,23 +687,10 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
 
                 LOG(APP,INFO,"Neuron %hhu generated output: %f\n",currentNeuronID,neuronOutput);
 
-                //Iterates through all neurons managed by this node to identify which require the computed output as their input
-                for (int j = 0; j < neuronCore.neuronsCount; j++) {
-                    handledNeuronId = neuronCore.getNeuronId(j);
-                    if(handledNeuronId != 255 && neuronCore.isInputRequired(handledNeuronId,currentNeuronID)){
-                        neuronsRequireInput=true;
-                        break;
-                    }
-                }
-
-                // If any node requires the computed output, feed it to them by recursively calling this function
-                if(neuronsRequireInput)processNeuronInput(currentNeuronID,inferenceId,neuronOutput);
-
-                //reset the bit field for the next NN run
-                resetAll(receivedInputs[neuronStorageIndex]);//TODO PASS THIS FOR WHE THE FOWARD MESSAGE IS RECEIVED
-
+                //Mark the output as computed
                 isOutputComputed[neuronStorageIndex] = true;
 
+                /***Send the Neuron Output to the other nodes ***/
                 // Encode the message with the neuron output
                 encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,currentNeuronID,neuronOutput);
                 if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY){
@@ -734,6 +721,27 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                     if(onOutputLayerComputation)onOutputLayerComputation(currentNeuronID,neuronOutput);
                 }
 
+                //Iterates through all neurons managed by this node to identify which require the computed output as their input
+                for (int j = 0; j < neuronCore.neuronsCount; j++) {
+                    handledNeuronId = neuronCore.getNeuronId(j);
+                    if(handledNeuronId != 255 && neuronCore.isInputRequired(handledNeuronId,currentNeuronID)){
+                        neuronsRequireInput=true;
+                        break;
+                    }
+                }
+
+                unsigned long waitStartTime=getCurrentTime();
+                // If any node requires the computed output, feed it to them by recursively calling this function
+                if(neuronsRequireInput){
+                    while((getCurrentTime()-waitStartTime) <= 15){
+                        waitStartTime=getCurrentTime();
+                    }
+                    processNeuronInput(currentNeuronID,inferenceId,neuronOutput);
+                }
+
+                //reset the bit field for the next NN run
+                resetAll(receivedInputs[neuronStorageIndex]);//TODO PASS THIS FOR WHE THE FOWARD MESSAGE IS RECEIVED
+
             }
         }
     }
@@ -743,8 +751,10 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
         outputsComputed = isOutputComputed[i] && outputsComputed;
     }
 
+    LOG(APP,DEBUG,"(onProcessNeuronInput) allOutputComputes? %d\n",outputsComputed );
+
     // If the NACK mechanism was triggered but all missing inputs have now arrived (and all outputs are computed),the NACK process can be stopped.
-    if(nackTriggered) nackTriggered = outputsComputed;
+    if(nackTriggered && outputsComputed) nackTriggered = false;
 
     allOutputsComputed = outputsComputed;
 
@@ -988,16 +998,25 @@ void NeuronWorker::manageNeuron(){
      2. Not all outputs have been computed yet
      3. The NACK mechanism hasn't been triggered yet
      Then initialize the onInputWaitTimeout procedure that sends NACKs related to the missing neurons ***/
+    currentTime = getCurrentTime();
     if(!allOutputsComputed && !nackTriggered && (currentTime-firstInputTimestamp) >= (INPUT_WAIT_TIMEOUT+random*200)){
-        LOG(APP,INFO,"Missing Input Values: starting the onInputWaitTimeOut process\n");
+        LOG(APP,INFO,"Missing Input Values: starting the onInputWaitTimeOut process. NackTrigered? %d allOutputsComputed? %d\n",nackTriggered,allOutputsComputed);
         onInputWaitTimeout();
+        //Set up the NACK control variables
+        nackTriggered = true;
+        nackTriggerTime = getCurrentTime();
     }
 
-    currentTime = getCurrentTime();
     // Check if any sent NACKs have timed out, meaning the corresponding inputs should have arrived by now but did’t
+    currentTime = getCurrentTime();
     if((currentTime - nackTriggerTime) >= NACK_TIMEOUT  &&  nackTriggered){
         LOG(APP,INFO,"Missing Input Values, after sending NACKs: computing the missing neuron values\n");
         onNACKTimeout();
+        allOutputsComputed = true;
+        nackTriggered = false;
+
+        // If all outputs have been computed, the forward pass has ended at this node.
+        forwardPassRunning = false;
     }
 }
 
@@ -1061,10 +1080,6 @@ void NeuronWorker::onInputWaitTimeout(){
     //TODO BroadCast the message to the network
     network.broadcastMessage(appBuffer, sizeof(appBuffer),appPayload);
 
-    //Set up the NACK control variables
-    nackTriggered = true;
-    nackTriggerTime = getCurrentTime();
-
 }
 
 /**
@@ -1126,11 +1141,7 @@ void NeuronWorker::onNACKTimeout(){
         }
     }
 
-    allOutputsComputed = true;
-    nackTriggered = false;
 
-    // If all outputs have been computed, the forward pass has ended at this node.
-    forwardPassRunning = false;
 }
 
 void NeuronWorker::clearAllNeuronMemory(){
