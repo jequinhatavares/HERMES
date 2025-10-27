@@ -690,7 +690,7 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                 //Mark the output as computed
                 isOutputComputed[neuronStorageIndex] = true;
 
-                /***Send the Neuron Output to the other nodes ***/
+                /*********** Send the Neuron Output to the other nodes *********/
                 // Encode the message with the neuron output
                 encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,currentNeuronID,neuronOutput);
                 if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY){
@@ -704,6 +704,10 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                 }else if(network.getActiveMiddlewareStrategy()==STRATEGY_PUBSUB){
                     // With the pub/sub strategy simply call the function to influence routing and the middleware will deal with who needs the output
                     network.influenceRoutingStrategyPubSub(appBuffer, sizeof(appBuffer),appPayload);
+
+                    //Wait a short time after sending the output results, for in case of in close time sending more outputs dont congests the network
+                    unsigned long waitStartTime=getCurrentTime();
+                    while((getCurrentTime()-waitStartTime) <= 15){}
                 }else if(network.getActiveMiddlewareStrategy()==STRATEGY_INJECT){
                     network.getRootIP(rootIP);
                     // The output undergoes influence routing only if it requires further computation,
@@ -730,12 +734,8 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
                     }
                 }
 
-                unsigned long waitStartTime=getCurrentTime();
                 // If any node requires the computed output, feed it to them by recursively calling this function
                 if(neuronsRequireInput){
-                    while((getCurrentTime()-waitStartTime) <= 15){
-                        waitStartTime=getCurrentTime();
-                    }
                     processNeuronInput(currentNeuronID,inferenceId,neuronOutput);
                 }
 
@@ -751,7 +751,7 @@ void NeuronWorker::processNeuronInput(NeuronId inputNeuronId,int inferenceId,flo
         outputsComputed = isOutputComputed[i] && outputsComputed;
     }
 
-    LOG(APP,DEBUG,"(onProcessNeuronInput) allOutputComputes? %d\n",outputsComputed );
+    //LOG(APP,DEBUG,"(onProcessNeuronInput) allOutputComputes? %d\n",outputsComputed );
 
     // If the NACK mechanism was triggered but all missing inputs have now arrived (and all outputs are computed),the NACK process can be stopped.
     if(nackTriggered && outputsComputed) nackTriggered = false;
@@ -1090,7 +1090,7 @@ void NeuronWorker::onInputWaitTimeout(){
  */
 void NeuronWorker::onNACKTimeout(){
     float outputValue;
-    NeuronId handledNeuronId;
+    NeuronId currentNeuronId,handledNeuronId;
     int neuronStorageIndex=-1;
     uint8_t myIP[4];
 
@@ -1098,22 +1098,22 @@ void NeuronWorker::onNACKTimeout(){
     // Search for outputs that have not been computed yet and compute them, filling in any missing inputs with the values from the last inference.
     for (int i = 0; i < neuronCore.neuronsCount; i++){
         if(!isOutputComputed[i]){
-            handledNeuronId = neuronCore.getNeuronId(i);
-            neuronStorageIndex =neuronCore.getNeuronStorageIndex(handledNeuronId);
-            if(handledNeuronId == 255 || neuronStorageIndex == -1)continue; //skip invalid values
+            currentNeuronId = neuronCore.getNeuronId(i);
+            neuronStorageIndex =neuronCore.getNeuronStorageIndex(currentNeuronId);
+            if(currentNeuronId == 255 || neuronStorageIndex == -1)continue; //skip invalid values
 
             //Compute the neuron Output value
-            outputValue = neuronCore.computeNeuronOutput(handledNeuronId);
+            outputValue = neuronCore.computeNeuronOutput(currentNeuronId);
             outputValues[i] = outputValue;
 
             //Mark the output as computed
             isOutputComputed[i] = true;
-            //TODO Send the output for the nodes that need him
 
-            LOG(APP,INFO,"Neuron %hhu generated output: %f\n",handledNeuronId,outputValue);
+            LOG(APP,INFO,"Neuron %hhu generated output: %f\n",currentNeuronId,outputValue);
 
+            /******* Send the output to the nodes that need him *******/
             // Encode the message with the neuron output
-            encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,handledNeuronId,outputValue);
+            encodeNeuronOutputMessage(appPayload, sizeof(appPayload),currentInferenceId,currentNeuronId,outputValue);
             if(network.getActiveMiddlewareStrategy()==STRATEGY_NONE || network.getActiveMiddlewareStrategy()==STRATEGY_TOPOLOGY){
                 // Send the computed neuron output value to every target node that need it
                 for (int j = 0; j < neuronTargets[neuronStorageIndex].nTargets; j++) {
@@ -1134,6 +1134,24 @@ void NeuronWorker::onNACKTimeout(){
                     // Apply influence routing to pass the values through a higher-capacity device, with the root node as the final recipient.
                     network.influenceRoutingStrategyInject(appBuffer, sizeof(appBuffer),appPayload,rootIP);
                 }
+            }
+
+            //If the Neuron is a Neuron from the Output layer do something
+            if(isNeuronInList(outputNeurons,MAX_NEURONS,currentNeuronId)) onNeuralNetworkOutput(currentNeuronId,outputValue);
+
+            //Iterates through all neurons managed by this node to identify which require the computed output as their input
+            bool neuronsRequireInput=false;
+            for (int j = 0; j < neuronCore.neuronsCount; j++) {
+                handledNeuronId = neuronCore.getNeuronId(j);
+                if(handledNeuronId != 255 && neuronCore.isInputRequired(handledNeuronId,currentNeuronId)){
+                    neuronsRequireInput=true;
+                    break;
+                }
+            }
+
+            // If any node requires the computed output, feed it to them by recursively calling this function
+            if(neuronsRequireInput){
+                processNeuronInput(currentNeuronId,currentInferenceId,outputValue);
             }
 
             //reset the bit field for the next NN run
