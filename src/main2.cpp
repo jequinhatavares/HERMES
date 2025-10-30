@@ -170,10 +170,10 @@ void setup(){
     //Initialize the node parameters
     network.init();
 
-    /************* Middleware Strategy: PubSub *********
+    /************* Middleware Strategy: PubSub ************/
     //First init the middleware pub/sub strategy
     network.middlewareSelectStrategy(STRATEGY_PUBSUB);
-    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);***/
+    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);
 
     /************* Middleware Strategy: Topology *********
     network.middlewareSelectStrategy(STRATEGY_TOPOLOGY);
@@ -182,11 +182,11 @@ void setup(){
                                            printMetricStruct,
                                            chooseParentByProcessingCapacity);****/
 
-    /************* Middleware Strategy: Inject *************/
+    /************* Middleware Strategy: Inject **********
     network.middlewareSelectStrategy(STRATEGY_INJECT);
     network.initMiddlewareStrategyInject(metrics, sizeof(metricStruct),setMetricValue,
                                          encodeMetricEntry, decodeMetricEntry,
-                                         compareMetrics,printMetricStruct);
+                                         compareMetrics,printMetricStruct);***/
 
     //Integrated the node into the network
     network.begin();
@@ -211,7 +211,7 @@ void setup(){
 
     //LOG(APP,INFO,"MY MAC after begin: %hhu.%hhu.%hhu.%hhu.%hhu.%hhu\n",MAC[0],MAC[1],MAC[2],MAC[3],MAC[4],MAC[5]);
 
-    /************* Distributed Middleware Strategy: Pub/Sub or Topology **********
+    /************* Distributed Middleware Strategy: Pub/Sub or Topology *************/
     // Register each device in the network along with its assigned role
     if(MAC[5] == 89 && MAC[4] == 248 && MAC[3] == 169 && MAC[2] == 45){
         worker.registerNodeAsInput();
@@ -221,15 +221,15 @@ void setup(){
     }else if(MAC[5] == 252 && MAC[4] == 8 && MAC[3] == 107 && MAC[2] == 164){
         worker.registerNodeAsInput();
         worker.registerNodeAsWorker();
-    }***/
+    }
 
-    /************* Centralized Middleware Strategy: Inject or Topology *************/
+    /************* Centralized Middleware Strategy: Inject or Topology **********
     // Register each device in the network along with its assigned role
     if(MAC[5] == 89 && MAC[4] == 248 && MAC[3] == 169 && MAC[2] == 45){
         worker.registerNodeAsInput();
     }else if(MAC[5] == 252 && MAC[4] == 8 && MAC[3] == 107 && MAC[2] == 164){
         worker.registerNodeAsInput();
-    }
+    }***/
 
 }
 
@@ -396,9 +396,9 @@ void setup(){
     network.init();
 
 
-    /************* Middleware Strategy: Pub/Sub **********
+    /************* Middleware Strategy: Pub/Sub *************/
     network.middlewareSelectStrategy(STRATEGY_PUBSUB);
-    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);***/
+    network.initMiddlewareStrategyPubSub(decodeTopicWrapper);
 
     /************* Middleware Strategy: Topology **********
     network.middlewareSelectStrategy(STRATEGY_TOPOLOGY);
@@ -409,11 +409,11 @@ void setup(){
 
 
 
-    /************* Middleware Strategy: Inject *************/
+    /************* Middleware Strategy: Inject **********
     network.middlewareSelectStrategy(STRATEGY_INJECT);
     network.initMiddlewareStrategyInject(metrics, sizeof(metricStruct),setMetricValue,
                                           encodeMetricEntry, decodeMetricEntry,
-                                          compareMetrics,printMetricStruct);
+                                          compareMetrics,printMetricStruct);***/
 
     //Integrated the node into the network
     network.begin();
@@ -422,13 +422,13 @@ void setup(){
     myMetric.processingCapacity=3;
     network.setParentMetric(&myMetric);***/
 
-    /************* Middleware Strategy: Inject Inits *************/
+    /************* Middleware Strategy: Inject Inits **********
     myMetric.processingCapacity=3;
-    network.injectMetric(&myMetric);
+    network.injectMetric(&myMetric);***/
 
 
     // Register the RPi device as a worker device
-    worker.registerNodeAsOutput();
+    //worker.registerNodeAsOutput();
     worker.registerNodeAsWorker();
 
 }
