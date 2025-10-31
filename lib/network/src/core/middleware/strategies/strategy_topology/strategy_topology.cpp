@@ -1,6 +1,5 @@
 #include "strategy_topology.h"
 
-//TODO Problemas: todos os nós tem uma tabela de métricas inicializada na memória
 
 Strategy strategyTopology = {
         .handleMessage = handleMessageStrategyTopology,
