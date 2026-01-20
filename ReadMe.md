@@ -1,10 +1,16 @@
-# Project Documentation
+# HERMES Documentation
 
 ## Overview
 
-This project implements a multihop routing protocol designed for devices such as ESP32 and NodeMCU. 
-It autonomously builds and manages a self-constructed tree topology, handling all aspects of routing within the network.
-The communication technology used is Wi-Fi.
+HERMES(Heterogeneous Application-Enabled Routing Middleware for Edge-IoT Systems) is a library built for ESP8266, ESP32, and Raspberry Pi based devices and is composed of two principal components. 
+At its base, HERMES implements a multi-hop network on top of Wi-Fi. The library autonomously builds and manages a self-constructed tree topology, handling all aspects of routing within the network.
+
+On top of this core network lies the second component, the middleware layer, which allows the application layer to define custom metrics and policies that tailor network behaviour to specific objectives.
+This enables IoT applications to customise the network layer according to their goals and requirements.
+
+For example, in edge computing applications, information about which nodes have higher processing capacity or are currently available for computation resides at the application layer. 
+This information directly affects how data should be handled, since packets are required to be processed by nodes with these characteristics. 
+HERMES enables this application-level knowledge to be taken into account during network formation and packet forwarding, for example by routing packets through intermediate processing nodes before they reach their final destination.
 
 ## Table of Contents
 1. [How to Run the Project](#how-to-run-the-project)
@@ -17,6 +23,12 @@ The communication technology used is Wi-Fi.
 8. [Unit Testing](#unit-testing)
 
 ## How to Run the Project
+
+The project was developed and tested using CLion IDE version 2024.1.6 together with PlatformIO version 6.1.18. 
+However, the use of CLion is not mandatory. 
+The project can also be built and uploaded using other IDEs, such as Visual Studio Code, by installing the PlatformIO plugin.
+Once the code is opened in the IDE and the PlatformIO environment is correctly configured, simply upload the firmware to the target microcontroller. 
+No additional steps are required and the project should run as expected.
 
 ## Code Structure
 
