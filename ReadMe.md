@@ -1,5 +1,8 @@
 # HERMES Documentation
 
+![LOGO](images/HERMES-logo.png)
+
+
 ## Overview
 
 HERMES(Heterogeneous Application-Enabled Routing Middleware for Edge-IoT Systems) is a library built for ESP8266, ESP32, and Raspberry Pi based devices and is composed of two principal components. 
@@ -11,6 +14,8 @@ This enables IoT applications to customise the network layer according to their 
 For example, in edge computing applications, information about which nodes have higher processing capacity or are currently available for computation resides at the application layer. 
 This information directly affects how data should be handled, since packets are required to be processed by nodes with these characteristics. 
 HERMES enables this application-level knowledge to be taken into account during network formation and packet forwarding, for example by routing packets through intermediate processing nodes before they reach their final destination.
+
+![SystemArchitecture](images/sys_arch.png)
 
 ## Table of Contents
 1. [How to Run the Project](#how-to-run-the-project)
@@ -100,7 +105,7 @@ To enter the CLI, simply press "Enter" in the serial monitor of the node you wis
 Upon entering, a menu will be displayed with various options, such as visualizing the node’s routing and children tables or sending messages to other nodes within the network.
 
 <p align="center">
-    <img src="cli.png" alt="">
+    <img src="images/cli.png" alt="">
 
 **Note**: When in CLI mode, the node becomes "locked" in this mode and will not respond to or receive any network messages.
 
@@ -114,7 +119,7 @@ The program communicates with the root node via the serial monitor, reading and 
 When the visualization program is active, nodes report all network changes to the root, including new nodes joining, nodes leaving, and parent changes. 
 The root then relays this information to the visualization program, allowing for a dynamic, real-time representation of the network structure.
 
-![Network Topology Example](visualization_server_example.png)
+![Network Topology Example](images/visualization_server_example.png)
 
 Visualization program GitHub: [Network Visualization Program](https://github.com/jequinhatavares/NetViz)
 
