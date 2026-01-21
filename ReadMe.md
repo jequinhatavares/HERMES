@@ -1,7 +1,8 @@
 # HERMES Documentation
 
-![LOGO](images/HERMES-logo.png)
-
+<p align="center">
+  <img src="images/HERMES-logo.png" width="300" />
+</p>
 
 ## Overview
 
@@ -66,7 +67,8 @@ The root node is chosen manually by the user.
 
 
 ## Logging
-To facilitate debugging across different architectures (ESP devices, native environments, etc.), a unified logging module was developed. Since printing functions vary between architectures (e.g., `Serial.printf` for ESPs vs. `printf` for native platforms), this module abstracts logging to ensure consistency.
+To facilitate debugging across different architectures (ESP devices, native environments, etc.), a unified logging module was developed. 
+Since printing functions vary between architectures (e.g., `Serial.printf` for ESPs vs. `printf` for native platforms), this module abstracts logging to ensure consistency.
 
 #### Log Categories
 The logging system is divided into different log categories, each corresponding to a specific aspect of the system:
