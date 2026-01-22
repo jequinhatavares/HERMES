@@ -302,7 +302,10 @@ These components are orchestrated internally by the `network` class, which abstr
 Each node maintains a routing table that includes all nodes in the network (including itself), the next hop IP address to reach each node, 
 and the hop distance to that node. When a packet arrives at a node, it is forwarded to the next hop IP specified in the corresponding routing table entry.
 
-![Routing Table](images/routing_table_representation.png)
+
+<p align="center">
+  <img src="images/routing_table_representation.png" width="300" />
+</p>
 
 **Note**: All IPs in the routing tables are AP IPs
 
@@ -323,15 +326,16 @@ The root node is chosen manually by the user.
 
 #### Parent Node Failure Handling Procedure 
 
-![Routing Table](images/Lost_Parent_Procedure.png)
+
+![LostParent](images/Lost_Parent_Procedure.png)
+
 
 #### Child Node Disconnection Handling Procedure
 
 
 ## Node Lifecycle (State Machine)
 
-![Routing Table](images/state_machine.png)
-
+![StateMachine](images/state_machine.png)
 
 ## Logging
 To facilitate debugging across different architectures (ESP devices, native environments, etc.), a unified logging module was developed. 
