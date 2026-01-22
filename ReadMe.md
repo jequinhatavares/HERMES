@@ -36,10 +36,77 @@ The project can also be built and uploaded using other IDEs, such as Visual Stud
 Once the code is opened in the IDE and the PlatformIO environment is correctly configured, simply upload the firmware to the target microcontroller. 
 No additional steps are required and the project should run as expected.
 
+The `Network` class is the main interface exposed by HERMES and is used to integrate a device into the network.  
+A minimal example of how to initialise and run a node is shown below.
+
+```cpp
+#include "network.h"
+
+Network network;
+
+void setup() {
+    network.setAsRoot(false);   // Set to true if this node is the root
+    network.init();             // Initialise network parameters
+    network.begin();            // Join and integrate the node into the network
+}
+
+void loop() {
+    network.run();              // Must be called continuously
+}
+```
+
+<table>
+  <thead>
+    <tr>
+      <th>Function</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>setAsRoot(bool isRoot)</code></td>
+      <td>Configures the node as a root or non-root node. This must be called before <code>begin()</code>.</td>
+    </tr>
+    <tr>
+      <td><code>init()</code></td>
+      <td>Initialises node parameters such as IP configuration, interfaces, and transport layer setup.</td>
+    </tr>
+    <tr>
+      <td><code>begin()</code></td>
+      <td>Integrates the node into the HERMES network and starts network operation.</td>
+    </tr>
+    <tr>
+      <td><code>run()</code></td>
+      <td>Executes the network logic and must be called repeatedly inside the main loop.</td>
+    </tr>
+    <tr>
+      <td><code>stop()</code></td>
+      <td>Terminates the node’s connection to the network and stops network operation.</td>
+    </tr>
+    <tr>
+      <td><code>onDataReceived(callback)</code></td>
+      <td>Registers a callback function to handle incoming data messages.</td>
+    </tr>
+    <tr>
+      <td><code>onPeriodicAppTask(callback)</code></td>
+      <td>Registers a periodic application-level task callback.</td>
+    </tr>
+    <tr>
+      <td><code>onNetworkJoin(callback)</code></td>
+      <td>Registers a callback triggered when the node joins the network.</td>
+    </tr>
+    <tr>
+      <td><code>onChildConnect(callback)</code></td>
+      <td>Registers a callback triggered when a new child node connects.</td>
+    </tr>
+  </tbody>
+</table>
+
+
 ## Code Structure
 
 The library is organised in a modular way to clearly separate responsibilities and simplify extension and maintenance.  
-The main entry point for users of the library is the `network` class, defined in `network.h` and implemented in `network.cpp`.  
+The main entry point for users of the library is the `network` class, defined in `network.h` and implemented in `network.cpp`.
 This class represents the core interface through which an application integrates a node into the HERMES network.  
 Users interact exclusively with this class to initialise the network, manage node behaviour, and exchange data.
 
@@ -49,16 +116,16 @@ The internal structure of the library is organised as follows:
 examples/                     # Usage examples and demos
 src/
 ├── core/                     # Internal network implementation
-│   ├── circular_buffer/      # Buffering utilities for packet handling
+│   ├── circular_buffer/      # Circular buffer implementation
 │   ├── cli/                  # Command-line interface for debugging and control
-│   ├── ip_tools/             # IP address and networking utilities
+│   ├── ip_tools/             # IP address utilities
 │   ├── lifecycle/            # Node lifecycle management
-│   ├── logger/               # Logging and debugging utilities
-│   ├── middleware/           # Application-defined metrics and policies
+│   ├── logger/               # Logging utilities
+│   ├── middleware/           # Middleware Layer implementation
 │   ├── network_monitoring/   # Network state and performance monitoring
-│   ├── routing/              # Multi-hop routing logic
-│   ├── state_machine/        # Internal state machines
-│   ├── table/                # Routing and neighbour tables
+│   ├── routing/              # Routing logic
+│   ├── state_machine/        # State machine implementation
+│   ├── table/                # Custom table implementation
 │   ├── time_hal/             # Time abstraction layer
 │   ├── transport_hal/        # Transport abstraction layer
 │   └── wifi_hal/             # Wi-Fi hardware abstraction layer
@@ -66,13 +133,10 @@ src/
 └── network.h                 # Network class interface
 </pre>
 
-
-
 The `core` directory contains the internal building blocks of the system.  
 Each submodule is responsible for a specific aspect of the network, such as routing, lifecycle management, middleware logic, transport abstraction, and hardware-specific functionality.  
 These components are orchestrated internally by the `network` class, which abstracts the underlying complexity from the application layer.
 
-This structure allows the network logic to remain decoupled from application code, while still enabling flexibility through well-defined internal modules and the middleware layer.
 
 ## Routing Protocol Documentation
 ### Routing Table
