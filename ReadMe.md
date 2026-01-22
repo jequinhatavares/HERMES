@@ -239,7 +239,7 @@ All methods available in the `Network` class are detailed in the table below.
   </tr>
 
   <tr>
-    <th colspan="2" >Middleware: Strategy Topology</th>
+    <th colspan="2" >Middleware: Topology Strategy</th>
   </tr>
   <tr>
     <td><code>initMiddlewareStrategyTopology(...)</code></td>
@@ -302,6 +302,8 @@ These components are orchestrated internally by the `network` class, which abstr
 Each node maintains a routing table that includes all nodes in the network (including itself), the next hop IP address to reach each node, 
 and the hop distance to that node. When a packet arrives at a node, it is forwarded to the next hop IP specified in the corresponding routing table entry.
 
+![Routing Table](images/routing_table_representation.png)
+
 **Note**: All IPs in the routing tables are AP IPs
 
 ### Children Table
@@ -320,9 +322,16 @@ If multiple potential parents share the same hop count, the node then selects th
 The root node is chosen manually by the user.
 
 #### Parent Node Failure Handling Procedure 
+
+![Routing Table](images/Lost_Parent_Procedure.png)
+
 #### Child Node Disconnection Handling Procedure
 
+
 ## Node Lifecycle (State Machine)
+
+![Routing Table](images/state_machine.png)
+
 
 
 ## Logging
