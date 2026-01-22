@@ -36,17 +36,16 @@ The project can also be built and uploaded using other IDEs, such as Visual Stud
 Once the code is opened in the IDE and the PlatformIO environment is correctly configured, simply upload the firmware to the target microcontroller. 
 No additional steps are required and the project should run as expected.
 
-The `Network` class is the main interface exposed by HERMES and is used to integrate a device into the network.  
-A minimal example of how to initialise and run a node is shown below.
-
+The `network` class is the main interface exposed by HERMES and is used to integrate a device into the network.  
+The following example illustrates the basic steps required to initialise a node and integrate it into the network.
 ```cpp
 #include "network.h"
 
 Network network;
 
 void setup() {
-    network.setAsRoot(false);   // Set to true if this node is the root
-    network.init();             // Initialise network parameters
+    network.setAsRoot(true);    // Set to true if this node is the root
+    network.init();             // Initialize network parameters
     network.begin();            // Join and integrate the node into the network
 }
 
@@ -56,50 +55,86 @@ void loop() {
 ```
 
 <table>
-  <thead>
-    <tr>
-      <th>Function</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>setAsRoot(bool isRoot)</code></td>
-      <td>Configures the node as a root or non-root node. This must be called before <code>begin()</code>.</td>
-    </tr>
-    <tr>
-      <td><code>init()</code></td>
-      <td>Initialises node parameters such as IP configuration, interfaces, and transport layer setup.</td>
-    </tr>
-    <tr>
-      <td><code>begin()</code></td>
-      <td>Integrates the node into the HERMES network and starts network operation.</td>
-    </tr>
-    <tr>
-      <td><code>run()</code></td>
-      <td>Executes the network logic and must be called repeatedly inside the main loop.</td>
-    </tr>
-    <tr>
-      <td><code>stop()</code></td>
-      <td>Terminates the node’s connection to the network and stops network operation.</td>
-    </tr>
-    <tr>
-      <td><code>onDataReceived(callback)</code></td>
-      <td>Registers a callback function to handle incoming data messages.</td>
-    </tr>
-    <tr>
-      <td><code>onPeriodicAppTask(callback)</code></td>
-      <td>Registers a periodic application-level task callback.</td>
-    </tr>
-    <tr>
-      <td><code>onNetworkJoin(callback)</code></td>
-      <td>Registers a callback triggered when the node joins the network.</td>
-    </tr>
-    <tr>
-      <td><code>onChildConnect(callback)</code></td>
-      <td>Registers a callback triggered when a new child node connects.</td>
-    </tr>
-  </tbody>
+  <tr>
+    <th>Function</th>
+    <th>Description</th>
+  </tr>
+
+  <tr>
+    <th colspan="2">Network Basics</th>
+  </tr>
+  <tr>
+    <td><code>setAsRoot(bool isRoot)</code></td>
+    <td>Configures the node as a root or non-root node. Must be called before <code>begin()</code>.</td>
+  </tr>
+  <tr>
+    <td><code>init()</code></td>
+    <td>Initializes node parameters such as IP configuration, Wi-Fi interfaces, and transport layer setup.</td>
+  </tr>
+  <tr>
+    <td><code>begin()</code></td>
+    <td>Integrates the node into the HERMES network and starts network operation.</td>
+  </tr>
+  <tr>
+    <td><code>run()</code></td>
+    <td>Runs the network logic and must be called repeatedly inside the main loop.</td>
+  </tr>
+  <tr>
+    <td><code>stop()</code></td>
+    <td>Terminates the node’s connection to the network.</td>
+  </tr>
+
+  <tr>
+    <th colspan="2">Callbacks</th>
+  </tr>
+  <tr>
+    <td><code>onDataReceived(callback)</code></td>
+    <td>Registers a callback to handle incoming application-layer messages.</td>
+  </tr>
+  <tr>
+    <td><code>onPeriodicAppTask(callback)</code></td>
+    <td>Registers a periodic application-level task.</td>
+  </tr>
+  <tr>
+    <td><code>onNetworkJoin(callback)</code></td>
+    <td>Triggered when the node successfully joins the network.</td>
+  </tr>
+  <tr>
+    <td><code>onChildConnect(callback)</code></td>
+    <td>Triggered when a new child node connects.</td>
+ </tr>
+
+<tr>
+    <th colspan="2">Network Information</th>
+  </tr>
+  <tr>
+    <td><code>getHopDistanceToNode(uint8_t*nodeIP)</code></td>
+    <td>Returns the number of hops required to reach a specific node.</td>
+  </tr>
+  <tr>
+    <td><code>getHopDistanceToRoot()</code></td>
+    <td>Returns the number of hops required to reach the root node.</td>
+  </tr>
+  <tr>
+    <td><code>getNumberOfChildren()</code></td>
+    <td>Returns the number of direct child nodes. </td>
+  </tr>
+  <tr>
+    <td><code>getNodeMAC(uint8_t *MAC)</code></td>
+    <td>Fills the provided array with the node’s MAC address.</td>
+  </tr>
+  <tr>
+    <td><code>getNodeIP(uint8_t *IP) </code></td>
+    <td>Fills the provided array with the current node’s IP address.</td>
+  </tr>
+  <tr>
+    <td><code>getParentIP(uint8_t *IP)</code></td>
+    <td>Fills the provided array with the IP address of the node’s parent.</td>
+  </tr>
+  <tr>
+    <td><code>getRootIP(uint8_t *IP)</code></td>
+    <td>Fills the provided array with the IP address of the root node.</td>
+  </tr>
 </table>
 
 
