@@ -38,6 +38,42 @@ No additional steps are required and the project should run as expected.
 
 ## Code Structure
 
+The library is organised in a modular way to clearly separate responsibilities and simplify extension and maintenance.  
+The main entry point for users of the library is the `network` class, defined in `network.h` and implemented in `network.cpp`.  
+This class represents the core interface through which an application integrates a node into the HERMES network.  
+Users interact exclusively with this class to initialise the network, manage node behaviour, and exchange data.
+
+The internal structure of the library is organised as follows:
+
+<pre>
+examples/                     # Usage examples and demos
+src/
+├── core/                     # Internal network implementation
+│   ├── circular_buffer/      # Buffering utilities for packet handling
+│   ├── cli/                  # Command-line interface for debugging and control
+│   ├── ip_tools/             # IP address and networking utilities
+│   ├── lifecycle/            # Node lifecycle management
+│   ├── logger/               # Logging and debugging utilities
+│   ├── middleware/           # Application-defined metrics and policies
+│   ├── network_monitoring/   # Network state and performance monitoring
+│   ├── routing/              # Multi-hop routing logic
+│   ├── state_machine/        # Internal state machines
+│   ├── table/                # Routing and neighbour tables
+│   ├── time_hal/             # Time abstraction layer
+│   ├── transport_hal/        # Transport abstraction layer
+│   └── wifi_hal/             # Wi-Fi hardware abstraction layer
+├── network.cpp               # Network class implementation
+└── network.h                 # Network class interface
+</pre>
+
+
+
+The `core` directory contains the internal building blocks of the system.  
+Each submodule is responsible for a specific aspect of the network, such as routing, lifecycle management, middleware logic, transport abstraction, and hardware-specific functionality.  
+These components are orchestrated internally by the `network` class, which abstracts the underlying complexity from the application layer.
+
+This structure allows the network logic to remain decoupled from application code, while still enabling flexibility through well-defined internal modules and the middleware layer.
+
 ## Routing Protocol Documentation
 ### Routing Table
 Each node maintains a routing table that includes all nodes in the network (including itself), the next hop IP address to reach each node, 
