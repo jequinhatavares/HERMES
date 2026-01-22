@@ -333,7 +333,6 @@ The root node is chosen manually by the user.
 ![Routing Table](images/state_machine.png)
 
 
-
 ## Logging
 To facilitate debugging across different architectures (ESP devices, native environments, etc.), a unified logging module was developed. 
 Since printing functions vary between architectures (e.g., `Serial.printf` for ESPs vs. `printf` for native platforms), this module abstracts logging to ensure consistency.
