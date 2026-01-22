@@ -36,7 +36,7 @@ The project can also be built and uploaded using other IDEs, such as Visual Stud
 Once the code is opened in the IDE and the PlatformIO environment is correctly configured, simply upload the firmware to the target microcontroller. 
 No additional steps are required and the project should run as expected.
 
-The `network` class is the main interface exposed by HERMES and is used to integrate a device into the network.  
+The `Network` class is the main interface exposed by HERMES and is used to integrate a device into the network.  
 The following example illustrates the basic steps required to initialise a node and integrate it into the network.
 ```cpp
 #include "network.h"
@@ -53,6 +53,8 @@ void loop() {
     network.run();              // Must be called continuously
 }
 ```
+
+All methods available in the `Network` class are detailed in the table below.
 
 <table>
   <tr>
@@ -104,8 +106,8 @@ void loop() {
     <td>Triggered when a new child node connects.</td>
  </tr>
 
-<tr>
-    <th colspan="2">Network Information</th>
+  <tr>
+    <th colspan="2" >Network Information</th>
   </tr>
   <tr>
     <td><code>getHopDistanceToNode(uint8_t*nodeIP)</code></td>
@@ -135,6 +137,136 @@ void loop() {
     <td><code>getRootIP(uint8_t *IP)</code></td>
     <td>Fills the provided array with the IP address of the root node.</td>
   </tr>
+
+  <tr>
+    <th colspan="2" >Message Delivery</th>
+  </tr>
+  <tr>
+    <td><code>sendMessageToRoot(char* messageBuffer,size_t bufferSize,const char* messagePayload)</code></td>
+    <td>Sends a message to the root node. The message is prepared in <code>messageBuffer</code> with the provided payload.</td>
+  </tr>
+  <tr>
+    <td><code>sendMessageToParent(char* messageBuffer,size_t bufferSize,const char* messagePayload)</code></td>
+    <td>Sends a message to the parent node.</td>
+  </tr>
+  <tr>
+    <td><code>sendMessageToChildren(char* messageBuffer,size_t bufferSize,const char* messagePayload)</code></td>
+    <td> Sends a message to all direct child nodes.</td>
+  </tr>
+   <tr>
+    <td><code>sendMessageToNode(char* messageBuffer,size_t bufferSize,const char* messagePayload, uint8_t* nodeIP)</code></td>
+    <td> Sends a message to a specific node.</td>
+  </tr>
+   <tr>
+    <td><code>broadcastMessage(char* messageBuffer,size_t bufferSize,const char* messagePayload)</code></td>
+    <td> Sends a message to all nodes in the network.</td>
+  </tr>
+   <tr>
+    <td><code>encodeDataMessage(char* encodeBuffer,size_t bufferSize,const char* messagePayload, uint8_t *destinationIP)</code></td>
+    <td> Encodes a data message with the provided payload addressed to the specified recipient.</td>
+  </tr>
+
+  <tr>
+    <th colspan="2" >Middleware</th>
+  </tr>
+  <tr>
+    <td><code>getActiveMiddlewareStrategy()</code></td>
+    <td>Returns the currently active middleware strategy.</td>
+  </tr>
+  <tr>
+    <td><code>middlewareSelectStrategy(StrategyType strategyType)</code></td>
+    <td>Sets the middleware strategy based on the specified <code>strategyType</code>.</td>
+  </tr>
+  <tr>
+    <td><code>middlewarePrintInfo()</code></td>
+    <td>Prints information about the active middleware strategy.</td>
+  </tr>
+
+  <tr>
+    <th colspan="2" >Middleware: Strategy Inject</th>
+  </tr>
+  <tr>
+    <td><code>initMiddlewareStrategyInject(...)</code></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><code>injectMetric(void*metric)</code></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><code>influenceRoutingStrategyInject(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload, uint8_t *destinationIP)</code></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><code>isDataMessageEncapsulated(char* dataMessage)</code></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><code>parseDataMessage(char*dataMessage,uint8_t* senderIP,uint8_t*destinationIP,char*payload,size_t payloadSize)</code></td>
+    <td> </td>
+  </tr>
+
+  <tr>
+    <th colspan="2" >Middleware: Strategy Publish and Subscribe</th>
+  </tr>
+  <tr>
+    <td><code>initMiddlewareStrategyPubSub(...)</code></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><code>influenceRoutingStrategyPubSub(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload)</code></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><code>subscribeToTopic(int8_t topic)</code></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><code>unsubscribeToTopic(int8_t topic)</code></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><code>advertiseTopic(int8_t topic)</code></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><code>advertiseTopic(int8_t topic)</code></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><code>advertiseTopic(int8_t topic)</code></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><code>unadvertiseTopic(int8_t topic)</code></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><code>subscribeAndPublishTopics(int8_t *subscribeList, int subCount, int8_t *publishList, int pubCount)</code></td>
+    <td> </td>
+  </tr>
+
+  <tr>
+    <th colspan="2" >Middleware: Strategy Topology</th>
+  </tr>
+  <tr>
+    <td><code>initMiddlewareStrategyTopology(...)</code></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><code>setParentMetric(void*metric)</code></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><code>getParentMetric(uint8_t *nodeIP)</code></td>
+    <td> </td>
+  </tr>
+  <tr>
+    <td><code>getParentNode(uint8_t *nodeIP,uint8_t *parentIP)</code></td>
+    <td> </td>
+  </tr>
+
+
 </table>
 
 
