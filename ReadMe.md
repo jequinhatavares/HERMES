@@ -183,67 +183,59 @@ All methods available in the `Network` class are detailed in the table below.
   </tr>
 
   <tr>
-    <th colspan="2" >Middleware: Strategy Inject</th>
+    <th colspan="2" >Middleware: Inject Strategy</th>
   </tr>
   <tr>
     <td><code>initMiddlewareStrategyInject(...)</code></td>
-    <td></td>
+    <td>Initializes the Inject Strategy with required structures and parameters.</td>
   </tr>
   <tr>
     <td><code>injectMetric(void*metric)</code></td>
-    <td></td>
+    <td>Injects a custom metric used to influence path selection.</td>
   </tr>
   <tr>
     <td><code>influenceRoutingStrategyInject(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload, uint8_t *destinationIP)</code></td>
-    <td> </td>
+    <td>Applies the Inject strategy’s routing influence when preparing a message for a specific destination. </td>
   </tr>
   <tr>
     <td><code>isDataMessageEncapsulated(char* dataMessage)</code></td>
-    <td> </td>
+    <td>Checks whether a data message is encapsulated inside another data message. </td>
   </tr>
   <tr>
     <td><code>parseDataMessage(char*dataMessage,uint8_t* senderIP,uint8_t*destinationIP,char*payload,size_t payloadSize)</code></td>
-    <td> </td>
+    <td>Extracts sender, destination, and payload information from an encapsulated data message.</td>
   </tr>
 
   <tr>
-    <th colspan="2" >Middleware: Strategy Publish and Subscribe</th>
+    <th colspan="2" >Middleware: Publish and Subscribe Strategy</th>
   </tr>
   <tr>
     <td><code>initMiddlewareStrategyPubSub(...)</code></td>
-    <td></td>
+    <td> Initializes the Publish/Subscribe Strategy with required parameters.</td>
   </tr>
   <tr>
     <td><code>influenceRoutingStrategyPubSub(char* messageEncodeBuffer,size_t encodeBufferSize,char* dataMessagePayload)</code></td>
-    <td></td>
+    <td>Influences routing according to the Pub/Sub Strategy.</td>
   </tr>
   <tr>
     <td><code>subscribeToTopic(int8_t topic)</code></td>
-    <td> </td>
+    <td>Subscribed to a specif topic.</td>
   </tr>
   <tr>
     <td><code>unsubscribeToTopic(int8_t topic)</code></td>
-    <td> </td>
+    <td>Removes the subscription for a specific topic.</td>
   </tr>
   <tr>
     <td><code>advertiseTopic(int8_t topic)</code></td>
-    <td> </td>
-  </tr>
-  <tr>
-    <td><code>advertiseTopic(int8_t topic)</code></td>
-    <td> </td>
-  </tr>
-  <tr>
-    <td><code>advertiseTopic(int8_t topic)</code></td>
-    <td> </td>
+    <td>Makes a node a publisher for a specific topic.</td>
   </tr>
   <tr>
     <td><code>unadvertiseTopic(int8_t topic)</code></td>
-    <td> </td>
+    <td> Stops advertising a topic, ceasing publication for that topic.</td>
   </tr>
   <tr>
     <td><code>subscribeAndPublishTopics(int8_t *subscribeList, int subCount, int8_t *publishList, int pubCount)</code></td>
-    <td> </td>
+    <td> Registers multiple topics for subscription and publication simultaneously.</td>
   </tr>
 
   <tr>
@@ -251,19 +243,19 @@ All methods available in the `Network` class are detailed in the table below.
   </tr>
   <tr>
     <td><code>initMiddlewareStrategyTopology(...)</code></td>
-    <td></td>
+    <td>Initializes the Topology Strategy with required structures and parameters.</td>
   </tr>
   <tr>
     <td><code>setParentMetric(void*metric)</code></td>
-    <td></td>
+    <td>Sets a custom metric for the node.</td>
   </tr>
   <tr>
     <td><code>getParentMetric(uint8_t *nodeIP)</code></td>
-    <td> </td>
+    <td> Retrieves the metric associated with a given node. </td>
   </tr>
   <tr>
     <td><code>getParentNode(uint8_t *nodeIP,uint8_t *parentIP)</code></td>
-    <td> </td>
+    <td>Retrieves the IP address of a specified node's parent. </td>
   </tr>
 
 
