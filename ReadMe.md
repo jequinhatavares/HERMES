@@ -186,7 +186,7 @@ All methods available in the `Network` class are detailed in the table below.
     <th colspan="2" >Middleware: Inject Strategy</th>
   </tr>
   <tr>
-    <td><code>initMiddlewareStrategyInject( void *metricStruct, size_t metricStructSize, void (*setValueFunction)(void*,void*), void (*encodeMetricFunction)(char*,size_t,void *), void (*decodeMetricFunction)(char*,void *), int(*compareMetricsFunction)(void*,void*), void (*printMetricStruct)(TableEntry*) )</code></td>
+    <td><code>initMiddlewareStrategyInject( void *metricStruct, size_t metricStructSize, void (*setValueFunction)(void*,void*), void (*encodeMetricFunction)(char*,size_t,void *), void(*decodeMetricFunction)(char*,void *), int(*compareMetricsFunction)(void*,void*), void (*printMetricStruct)(TableEntry*) )</code></td>
     <td>Initializes the Inject Strategy with required structures and parameters.</td>
   </tr>
   <tr>
@@ -210,7 +210,7 @@ All methods available in the `Network` class are detailed in the table below.
     <th colspan="2" >Middleware: Publish and Subscribe Strategy</th>
   </tr>
   <tr>
-    <td><code>initMiddlewareStrategyPubSub( void (*decodeTopicFunction)(char*,int8_t *) )</code></td>
+    <td><code>initMiddlewareStrategyPubSub( void (*decodeTopicFunction)(char*,int8_t *))</code></td>
     <td> Initializes the Publish/Subscribe Strategy with required parameters.</td>
   </tr>
   <tr>
