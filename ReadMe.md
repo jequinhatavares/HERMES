@@ -210,7 +210,7 @@ All methods available in the `Network` class are detailed in the table below.
     <th colspan="2" >Middleware: Publish and Subscribe Strategy</th>
   </tr>
   <tr>
-    <td><code>initMiddlewareStrategyPubSub(...)</code></td>
+    <td><code>initMiddlewareStrategyPubSub(void (*decodeTopicFunction)(char*,int8_t *))</code></td>
     <td> Initializes the Publish/Subscribe Strategy with required parameters.</td>
   </tr>
   <tr>
@@ -242,7 +242,7 @@ All methods available in the `Network` class are detailed in the table below.
     <th colspan="2" >Middleware: Topology Strategy</th>
   </tr>
   <tr>
-    <td><code>initMiddlewareStrategyTopology(...)</code></td>
+    <td><code>initMiddlewareStrategyTopology(void *topologyMetricValues, size_t topologyMetricStructSize, void (*setValueFunction)(void*,void*),void (*encodeTopologyMetricFunction)(char*,size_t,void *), void (*decodeTopologyMetricFunction)(char*,void *), void (*printMetricFunction)(TableEntry*), uint8_t * (*selectParentFunction)(uint8_t *, uint8_t (*)[4], uint8_t))</code></td>
     <td>Initializes the Topology Strategy with required structures and parameters.</td>
   </tr>
   <tr>
